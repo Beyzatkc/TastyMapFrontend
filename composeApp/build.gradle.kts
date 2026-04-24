@@ -1,3 +1,4 @@
+
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
@@ -51,8 +52,8 @@ kotlin {
         androidMain.dependencies {
             implementation(libs.compose.uiToolingPreview)
             implementation(libs.androidx.activity.compose)
+            implementation(libs.koin.android)
             implementation(libs.ktor.client.okhttp)
-            implementation(libs.sqldelight.android)
             implementation(libs.sqldelight.android)
 
         }
@@ -84,6 +85,7 @@ kotlin {
             implementation(libs.ktor.client.content.negotiation)
             implementation(libs.ktor.serialization.kotlinx.json)
             implementation(libs.ktor.client.logging)
+            implementation(libs.ktor.client.auth)
 
             implementation(libs.voyager.navigator)
             implementation(libs.voyager.screenmodel)
@@ -93,6 +95,8 @@ kotlin {
             implementation(libs.androidx.paging.common)
             implementation(libs.androidx.paging.compose)
             implementation(libs.sqldelight.coroutines)
+
+            implementation(libs.multiplatform.settings)
 
 
 
@@ -130,6 +134,7 @@ android {
         targetCompatibility = JavaVersion.VERSION_11
     }
 }
+
 
 dependencies {
     debugImplementation(libs.compose.uiTooling)
