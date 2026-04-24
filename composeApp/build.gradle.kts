@@ -97,6 +97,7 @@ kotlin {
             implementation(libs.sqldelight.coroutines)
 
             implementation(libs.multiplatform.settings)
+            implementation(compose.materialIconsExtended)
 
 
 
