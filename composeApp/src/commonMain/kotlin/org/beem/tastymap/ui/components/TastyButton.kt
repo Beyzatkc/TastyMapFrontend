@@ -8,8 +8,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-
-// Senior Notu: Butonun stilini belirlemek için bir 'isPrimary' flag'i ekledik.
 @Composable
 fun TastyButton(
     text: String,
@@ -17,7 +15,10 @@ fun TastyButton(
     modifier: Modifier = Modifier,
     isPrimary: Boolean = true, // true ise koyu Teal, false ise Outlined
     isLoading: Boolean = false,
-    enabled: Boolean = true
+    enabled: Boolean = true,
+    backcolor: Color,
+    textcolor:Color,
+    strokecolor:Color
 ) {
     val buttonShape = RoundedCornerShape(50.dp)
 
@@ -28,7 +29,7 @@ fun TastyButton(
             enabled = enabled && !isLoading,
             shape = buttonShape,
             colors = ButtonDefaults.buttonColors(
-                containerColor = MaterialTheme.colorScheme.primary, // Teal
+                containerColor = backcolor, // Teal
                 contentColor = Color.White
             )
         ) {
@@ -40,12 +41,12 @@ fun TastyButton(
             modifier = modifier.fillMaxWidth().height(56.dp),
             enabled = enabled && !isLoading,
             shape = buttonShape,
-            border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary), // Teal çizgi
+            border = BorderStroke(1.dp, strokecolor), // Teal çizgi
             colors = ButtonDefaults.outlinedButtonColors(
-                contentColor = MaterialTheme.colorScheme.primary // Teal yazı
+                contentColor = textcolor
             )
         ) {
-            ButtonContent(text, isLoading, MaterialTheme.colorScheme.primary)
+            ButtonContent(text, isLoading, textcolor)
         }
     }
 }

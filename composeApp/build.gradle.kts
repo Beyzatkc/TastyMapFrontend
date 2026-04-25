@@ -92,6 +92,7 @@ kotlin {
             implementation(libs.voyager.koin)
             implementation(libs.voyager.transitions)
 
+
             implementation(libs.androidx.paging.common)
             implementation(libs.androidx.paging.compose)
             implementation(libs.sqldelight.coroutines)

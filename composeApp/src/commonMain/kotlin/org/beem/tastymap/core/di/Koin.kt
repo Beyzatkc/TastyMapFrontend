@@ -7,8 +7,9 @@ import org.beem.tastymap.core.local.TokenManager
 import org.beem.tastymap.core.local.TokenManagerImpl
 import org.beem.tastymap.data.remote.AuthDataSource
 import org.beem.tastymap.data.repository.AuthRepository
-import org.beem.tastymap.data.viewmodel.AuthViewModel
+import org.beem.tastymap.ui.auth.AuthScreenModel
 import kotlin.text.get
+import org.koin.core.module.dsl.factoryOf
 
 val appModule = module {
     single { Settings() }
@@ -19,5 +20,5 @@ val appModule = module {
 
     single { AuthDataSource(get()) }
     single { AuthRepository(get(), get()) }
-    factory { AuthViewModel(get()) }
+    factory { AuthScreenModel(get(),get()) }
 }
