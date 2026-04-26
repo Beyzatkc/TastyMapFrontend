@@ -1,6 +1,7 @@
 package org.beem.tastymap
 import android.app.Application
 import org.beem.tastymap.core.di.appModule
+import org.beem.tastymap.di.androidModule
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.context.startKoin
 
@@ -10,7 +11,7 @@ class TastyMapApp : Application() {
 
         startKoin {
             androidContext(this@TastyMapApp)
-            modules(appModule)
+            modules(appModule,androidModule)
         }
     }
 }

@@ -44,6 +44,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Password
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.VerifiedUser
 import cafe.adriel.voyager.core.model.rememberScreenModel
 import cafe.adriel.voyager.koin.getScreenModel
@@ -347,10 +348,10 @@ fun FooterLinks(navyIcons: Color) {
         TastyTextField(
             value = vm.loginUsername,
             onValueChange = { vm.loginUsername = it },
-            label = "E posta",
+            label = "Kullanıcı adı",
             leadingIcon = {
                 Icon(
-                    imageVector = Icons.Default.VerifiedUser,
+                    imageVector = Icons.Default.Person,
                     contentDescription = null
                 )
             },

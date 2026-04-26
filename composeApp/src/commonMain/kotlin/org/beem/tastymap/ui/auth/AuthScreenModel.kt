@@ -81,8 +81,10 @@ class AuthScreenModel(
             val request = LoginRequest(
                 username = loginUsername,
                 password = loginPassword,
-                deviceInfoProvider.getDeviceId(),
-                deviceInfoProvider.getFcmToken()
+                " ",
+                " "
+                //deviceInfoProvider.getDeviceId(),
+                //deviceInfoProvider.getFcmToken()
             )
             val result = repository.login(request,userAgent)
             result.onSuccess {response ->

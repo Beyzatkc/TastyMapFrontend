@@ -62,7 +62,7 @@ kotlin {
             implementation(libs.sqldelight.native)
         }
 
-        wasmJsMain.dependencies { // Eğer Wasm kullanıyorsan
+        wasmJsMain.dependencies {
             implementation(libs.ktor.client.js)
             implementation(libs.sqldelight.web)
         }
