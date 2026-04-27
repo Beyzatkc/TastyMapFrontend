@@ -3,6 +3,9 @@ package org.beem.tastymap.core
 import org.beem.tastymap.core.provider.DeviceInfoProvider
 import platform.Foundation.NSBundle
 import platform.UIKit.UIDevice
+import dev.gitlive.firebase.Firebase
+import dev.gitlive.firebase.messaging.messaging
+
 
 
 class IosDeviceInfoProvider: DeviceInfoProvider {
@@ -22,7 +25,4 @@ class IosDeviceInfoProvider: DeviceInfoProvider {
         return "$appName/$appVersion ($model; $sysName $sysVersion; ${device.name})"
     }
 
-    override suspend fun getFcmToken(): String {
-        return " "
-    }
 }

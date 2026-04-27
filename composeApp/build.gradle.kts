@@ -1,5 +1,4 @@
 
-import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
@@ -10,6 +9,7 @@ plugins {
     alias(libs.plugins.composeCompiler)
     alias(libs.plugins.sqldelight)
     kotlin("plugin.serialization") version "2.0.21"
+    id("com.google.gms.google-services")
 }
 sqldelight {
     databases {
@@ -47,6 +47,24 @@ kotlin {
         browser()
         binaries.executable()
     }
+/*
+    cocoapods {
+        summary = "TastyMap Shared Library"
+        homepage = "https://github.com/beyza/tastymap"
+        ios.deploymentTarget = "15.0"
+        framework {
+            baseName = "ComposeApp"
+            isStatic = true
+        }
+
+        // --- Firebase Pod'larını Buraya Yazıyoruz ---
+        pod("FirebaseCore")
+        pod("FirebaseAuth")     // Kullanıcı girişi yapacaksan
+        pod("FirebaseMessaging") // Bildirimler için
+        // Mackbookum olmadııg iicn hata verıyoooor
+    }
+
+ */
     
     sourceSets {
         androidMain.dependencies {
@@ -55,11 +73,15 @@ kotlin {
             implementation(libs.koin.android)
             implementation(libs.ktor.client.okhttp)
             implementation(libs.sqldelight.android)
+            implementation(libs.firebase.gitlive.messaging)
+            implementation(project.dependencies.platform(libs.firebase.bom))
+            implementation(libs.firebase.messaging.android)
 
         }
         iosMain.dependencies {
             implementation(libs.ktor.client.darwin)
             implementation(libs.sqldelight.native)
+            implementation(libs.firebase.gitlive.messaging)
         }
 
         wasmJsMain.dependencies {

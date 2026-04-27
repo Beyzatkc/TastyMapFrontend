@@ -21,7 +21,4 @@ class AndroidDeviceInfoProvider(private val context: Context): DeviceInfoProvide
         return customUA;
     }
 
-    override suspend fun getFcmToken(): String {
-        //return com.google.firebase.messaging.FirebaseMessaging.getInstance().token.await()
-    }
 }

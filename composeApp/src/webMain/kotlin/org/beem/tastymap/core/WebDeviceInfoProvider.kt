@@ -1,5 +1,6 @@
 package org.beem.tastymap.core
 import org.beem.tastymap.core.provider.DeviceInfoProvider
+
 private external val window: Window
 private external val localStorage: Storage
 
@@ -32,10 +33,8 @@ class WebDeviceInfoProvider: DeviceInfoProvider {
     }
 
     override fun getUserAgent(): String {
-        TODO("Not yet implemented")
+        return window.navigator.userAgent
     }
 
-    override suspend fun getFcmToken(): String {
-        return " "
-    }
+
 }
