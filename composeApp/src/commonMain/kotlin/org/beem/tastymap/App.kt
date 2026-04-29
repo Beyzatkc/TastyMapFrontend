@@ -22,6 +22,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import cafe.adriel.voyager.navigator.Navigator
 import org.beem.tastymap.ui.auth.LoginScreen
+import org.beem.tastymap.ui.components.AppToast
 import org.beem.tastymap.ui.components.TastyTextField
 import org.beem.tastymap.ui.theme.TastyTheme
 import org.jetbrains.compose.resources.painterResource
@@ -36,6 +37,8 @@ fun App() {
 
     TastyTheme(useDarkTheme = isDark) {
         Navigator(LoginScreen())
+        AppToast()
+
 
     }
 }

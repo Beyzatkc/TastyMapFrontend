@@ -25,4 +25,8 @@ class IosDeviceInfoProvider: DeviceInfoProvider {
         return "$appName/$appVersion ($model; $sysName $sysVersion; ${device.name})"
     }
 
+    override suspend fun getFcmToken(): String {
+        return Firebase.messaging.getToken() ?: ""
+    }
+
 }

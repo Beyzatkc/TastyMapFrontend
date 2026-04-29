@@ -3,6 +3,8 @@ package org.beem.tastymap.core
 import android.content.Context
 import android.os.Build
 import org.beem.tastymap.core.provider.DeviceInfoProvider
+import dev.gitlive.firebase.Firebase
+import dev.gitlive.firebase.messaging.messaging
 
 class AndroidDeviceInfoProvider(private val context: Context): DeviceInfoProvider {
     override fun getDeviceId(): String {
@@ -21,4 +23,25 @@ class AndroidDeviceInfoProvider(private val context: Context): DeviceInfoProvide
         return customUA;
     }
 
+    override suspend fun getFcmToken(): String {
+        return Firebase.messaging.getToken() ?: ""
+    }
+
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

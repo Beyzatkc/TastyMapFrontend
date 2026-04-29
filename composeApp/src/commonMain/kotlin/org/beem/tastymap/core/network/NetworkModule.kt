@@ -3,6 +3,7 @@
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.plugins.DefaultRequest
+import io.ktor.client.plugins.HttpTimeout
 import io.ktor.client.plugins.auth.Auth
 import io.ktor.client.plugins.auth.providers.BearerTokens
 import io.ktor.client.plugins.auth.providers.bearer
@@ -19,6 +20,12 @@ import org.beem.tastymap.core.util.AppConfig
 import org.beem.tastymap.data.model.RefreshTokenResponseDTO
 
 fun createHTTPClient(tokenManager: TokenManager) = HttpClient {
+
+    install(HttpTimeout) {
+        requestTimeoutMillis = 10000
+        connectTimeoutMillis = 10000
+        socketTimeoutMillis = 10000
+    }
     install(ContentNegotiation) {
         json(Json {
             ignoreUnknownKeys = true

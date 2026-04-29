@@ -1,5 +1,4 @@
 package org.beem.tastymap.ui.auth
-
 import TastyButton
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.SizeTransform
@@ -45,10 +44,8 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Password
 import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.VerifiedUser
 import cafe.adriel.voyager.core.model.rememberScreenModel
-import cafe.adriel.voyager.koin.getScreenModel
-import cafe.adriel.voyager.koin.koinScreenModel
+import cafe.adriel.voyager.navigator.Navigator
 import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.sin
@@ -142,11 +139,17 @@ class LoginScreen : Screen {
                             },
                             label = "FormAnim"
                         ) { targetIsLogin ->
-                            if (targetIsLogin) LoginForm(navyIcons,screenModel) else RegisterForm(navyIcons,screenModel)
+                            if (targetIsLogin) {
+                                LoginForm(navyIcons, screenModel)
+                                screenModel.clearRegisterForm()
+                            } else{
+                                RegisterForm(navyIcons,screenModel)
+                                screenModel.clearLoginForm()
+                            }
                         }
                     }
                 }
-                Spacer(modifier = Modifier.weight(1f)) // Esnek boşluk: Form kısaysa footer'ı en alta iter
+                Spacer(modifier = Modifier.weight(1f))
 
                 FooterLinks(navyIcons)
 
@@ -155,6 +158,25 @@ class LoginScreen : Screen {
         }
     }
 }
+/*
+@Composable
+fun AuthEffectHandler(
+    screenModel: AuthScreenModel,
+    navigator: Navigator
+) {
+    LaunchedEffect(Unit) {
+        screenModel.effect.collect { effect ->
+            when (effect) {
+                is AuthEffect.NavigateToHome -> navigator.push(HomeScreen())
+                is AuthEffect.NavigateToLogin -> { /* ... */ }
+                is AuthEffect.NavigateToPending -> { /* ... */ }
+                is AuthEffect.ShowMessage ->
+            }
+        }
+    }
+}
+
+ */
 @Composable
 fun MapHeaderSection(
     modifier: Modifier,
@@ -347,7 +369,10 @@ fun FooterLinks(navyIcons: Color) {
     Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
         TastyTextField(
             value = vm.loginUsername,
-            onValueChange = { vm.loginUsername = it },
+            onValueChange = {
+                vm.loginUsername = it
+                vm.loginUsernameError = null
+                            },
             label = "Kullanıcı adı",
             leadingIcon = {
                 Icon(
@@ -361,7 +386,10 @@ fun FooterLinks(navyIcons: Color) {
 
         TastyTextField(
             value = vm.loginPassword,
-            onValueChange = {vm.loginPassword = it},
+            onValueChange = {
+                vm.loginPassword = it
+                vm.logPasswordError = null
+                            },
             label = "Şifre",
             leadingIcon = {
                 Icon(
@@ -436,20 +464,47 @@ fun RegisterForm(color: Color,vm: AuthScreenModel) {
             if (currentStep == 1) {
                 TastyTextField(
                     value = vm.regName,
-                    onValueChange = { vm.regName = it },
+                    onValueChange = {
+                        vm.regName = it
+                        vm.regnameError = null
+                                    },
                     label = "Ad",
+                    leadingIcon = {
+                        Icon(
+                            imageVector = Icons.Default.Person,
+                            contentDescription = null
+                        )
+                    },
                     error = vm.regnameError
                 )
                 TastyTextField(
                     value = vm.regSurname,
-                    onValueChange = { vm.regSurname = it },
+                    onValueChange = {
+                        vm.regSurname = it
+                        vm.regSurnameError = null
+                                    },
                     label = "Soyad",
+                    leadingIcon = {
+                        Icon(
+                            imageVector = Icons.Default.Person,
+                            contentDescription = null
+                        )
+                    },
                     error=vm.regSurnameError
                 )
                 TastyTextField(
                     value = vm.regUsername,
-                    onValueChange = { vm.regUsername = it },
+                    onValueChange = {
+                        vm.regUsername = it
+                        vm.regusernameError = null
+                                    },
                     label = "Kullanıcı Adı",
+                    leadingIcon = {
+                        Icon(
+                            imageVector = Icons.Default.Person,
+                            contentDescription = null
+                        )
+                    },
                     error=vm.regusernameError
                 )
 
@@ -469,14 +524,20 @@ fun RegisterForm(color: Color,vm: AuthScreenModel) {
             } else {
                 TastyTextField(
                     value = vm.regEmail,
-                    onValueChange = { vm.regEmail = it },
+                    onValueChange = {
+                        vm.regEmail = it
+                        vm.regEmailError = null
+                                    },
                     label = "Email",
                     leadingIcon = { Icon(Icons.Default.Email, null) },
                     error=vm.regEmailError
                 )
                 TastyTextField(
                     value = vm.regPassword,
-                    onValueChange = { vm.regPassword = it },
+                    onValueChange = {
+                        vm.regPassword = it
+                        vm.regPasswordError = null
+                                    },
                     label = "Şifre",
                     leadingIcon = { Icon(Icons.Default.Password, null) },
                     isPassword = true,

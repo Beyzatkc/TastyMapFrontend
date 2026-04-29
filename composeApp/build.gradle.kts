@@ -1,6 +1,10 @@
 
+import org.gradle.declarative.dsl.schema.FqName.Empty.packageName
 import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import java.util.Properties
+
+
 
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
@@ -10,7 +14,23 @@ plugins {
     alias(libs.plugins.sqldelight)
     kotlin("plugin.serialization") version "2.0.21"
     id("com.google.gms.google-services")
+    id("com.codingfeline.buildkonfig") version "0.15.1"
 }
+buildkonfig {
+    packageName = "org.beem.tastymap.core.util"
+
+    val props = Properties()
+    val localPropertiesFile = project.rootProject.file("local.properties")
+    if (localPropertiesFile.exists()) {
+        props.load(localPropertiesFile.inputStream())
+    }
+
+    defaultConfigs {
+        buildConfigField(com.codingfeline.buildkonfig.compiler.FieldSpec.Type.STRING, "VAPID_KEY", props.getProperty("VAPID_KEY") ?: "")
+    }
+}
+
+
 sqldelight {
     databases {
         create("TastyDatabase") {
@@ -121,6 +141,8 @@ kotlin {
 
             implementation(libs.multiplatform.settings)
             implementation(compose.materialIconsExtended)
+
+            implementation(libs.kotlinx.coroutines.core)
 
 
 

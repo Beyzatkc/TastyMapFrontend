@@ -13,7 +13,9 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import org.beem.tastymap.core.network.ResultWrapper
 import org.beem.tastymap.core.provider.DeviceInfoProvider
+import org.beem.tastymap.core.util.ToastManager
 import org.beem.tastymap.data.model.LoginRequest
 import org.beem.tastymap.data.model.LoginStatus
 import org.beem.tastymap.data.model.RegisterRequest
@@ -41,60 +43,63 @@ class AuthScreenModel(
     var regPasswordError by mutableStateOf<String?>(null)
 
     var isLoading by mutableStateOf(false)
-    var globalError by mutableStateOf<String?>(null)
 
     private val _effect = Channel<AuthEffect>()
     val effect = _effect.receiveAsFlow()
 
-    fun register(){
+    fun register() {
+        if (isLoading) return
         screenModelScope.launch {
             if (validateRegisterStep2()) {
-                isLoading = true
-                globalError = null
+                    isLoading = true
 
-                val request = RegisterRequest(
-                    username = regUsername,
-                    name = regName,
-                    surname = regSurname,
-                    email = regEmail,
-                    password = regPassword,
-                    null,
-                    null,
-                    "USER",
-                    true
-                )
-                val result = repository.register(request)
-                result.onSuccess { response ->
-                    _effect.send(AuthEffect.NavigateToLogin)
-                }.onFailure { error ->
-                    globalError = error.message ?: "Kayıt başarısız."
+                    val request = RegisterRequest(
+                        username = regUsername,
+                        name = regName,
+                        surname = regSurname,
+                        email = regEmail,
+                        password = regPassword,
+                        null, null, "USER", true
+                    )
+
+                    when (val result = repository.register(request)) {
+                        is ResultWrapper.Success -> {
+                            ToastManager.show("Kayıt başarılı!")
+                            _effect.send(AuthEffect.NavigateToLogin)
+                        }
+
+                        is ResultWrapper.Error -> {
+                            ToastManager.show(result.message ?: "Kayıt başarısız.")
+                        }
+                    }
+                    isLoading = false
                 }
-                isLoading = false
             }
         }
-    }
+
     fun login(userAgent:String){
+        if (isLoading) return
         screenModelScope.launch {
             isLoading = true
-            globalError = null
 
             val request = LoginRequest(
                 username = loginUsername,
                 password = loginPassword,
-                " ",
-                " "
-                //deviceInfoProvider.getDeviceId(),
-                //deviceInfoProvider.getFcmToken()
+                deviceInfoProvider.getDeviceId(),
+                deviceInfoProvider.getFcmToken()
             )
-            val result = repository.login(request,userAgent)
-            result.onSuccess {response ->
-                if (response.status == LoginStatus.SUCCESS) {
-                    _effect.send(AuthEffect.NavigateToHome)
-                } else {
-                    _effect.send(AuthEffect.NavigateToPending)
+            when(val result = repository.login(request,userAgent)){
+                is ResultWrapper.Success -> {
+                    ToastManager.show("Giriş başarılı!")
+                    if (result.data.status == LoginStatus.SUCCESS) {
+                        _effect.send(AuthEffect.NavigateToHome)
+                    } else {
+                        _effect.send(AuthEffect.NavigateToPending)
+                    }
                 }
-            }.onFailure { error ->
-                globalError = error.message ?: "Giriş başarısız."
+                is ResultWrapper.Error -> {
+                    ToastManager.show(result.message ?: "Giriş başarısız.")
+                }
             }
             isLoading = false
         }
@@ -132,6 +137,25 @@ class AuthScreenModel(
         logPasswordError = (pResult as? ValidationResult.Invalid)?.message
         return eResult is ValidationResult.Valid &&
                 pResult is ValidationResult.Valid
+    }
+    fun clearRegisterForm() {
+        regName = ""
+        regnameError = null
+        regSurname = ""
+        regSurnameError = null
+        regUsername = ""
+        regusernameError = null
+        regEmail = ""
+        regEmailError = null
+        regPassword = ""
+        regPasswordError = null
+    }
+
+    fun clearLoginForm() {
+        loginUsername = ""
+        loginUsernameError = null
+        loginPassword = ""
+        logPasswordError = null
     }
 
 }
