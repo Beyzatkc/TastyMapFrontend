@@ -25,6 +25,9 @@ class AuthScreenModel(
     private val repository: AuthRepository,
     private val deviceInfoProvider: DeviceInfoProvider
 ) : ScreenModel{
+
+    var registerStep by mutableStateOf(1)
+        private set
     var loginUsername by mutableStateOf("")
     var loginUsernameError by mutableStateOf<String?>(null)
     var loginPassword by mutableStateOf("")
@@ -44,8 +47,19 @@ class AuthScreenModel(
 
     var isLoading by mutableStateOf(false)
 
+
     private val _effect = Channel<AuthEffect>()
     val effect = _effect.receiveAsFlow()
+
+    fun nextRegisterStep() {
+        if (validateRegisterStep1()) {
+            registerStep = 2
+        }
+    }
+
+    fun previousRegisterStep() {
+        registerStep = 1
+    }
 
     fun register() {
         if (isLoading) return
@@ -77,31 +91,34 @@ class AuthScreenModel(
             }
         }
 
-    fun login(userAgent:String){
+    fun login(){
         if (isLoading) return
-        screenModelScope.launch {
-            isLoading = true
 
-            val request = LoginRequest(
-                username = loginUsername,
-                password = loginPassword,
-                deviceInfoProvider.getDeviceId(),
-                deviceInfoProvider.getFcmToken()
-            )
-            when(val result = repository.login(request,userAgent)){
-                is ResultWrapper.Success -> {
-                    ToastManager.show("Giriş başarılı!")
-                    if (result.data.status == LoginStatus.SUCCESS) {
-                        _effect.send(AuthEffect.NavigateToHome)
-                    } else {
-                        _effect.send(AuthEffect.NavigateToPending)
+        if(validateLogin()) {
+            screenModelScope.launch {
+                isLoading = true
+
+                val request = LoginRequest(
+                    username = loginUsername,
+                    password = loginPassword,
+                    deviceInfoProvider.getDeviceId(),
+                    deviceInfoProvider.getFcmToken()
+                )
+                when (val result = repository.login(request, deviceInfoProvider.getUserAgent())) {
+                    is ResultWrapper.Success -> {
+                        ToastManager.show("Giriş başarılı!")
+                        if (result.data.status == LoginStatus.SUCCESS) {
+                            _effect.send(AuthEffect.NavigateToHome)
+                        } else {
+                            _effect.send(AuthEffect.NavigateToPending)
+                        }
+                    }
+                    is ResultWrapper.Error -> {
+                        ToastManager.show(result.message ?: "Giriş başarısız.")
                     }
                 }
-                is ResultWrapper.Error -> {
-                    ToastManager.show(result.message ?: "Giriş başarısız.")
-                }
+                isLoading = false
             }
-            isLoading = false
         }
     }
 

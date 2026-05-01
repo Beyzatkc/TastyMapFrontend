@@ -50,11 +50,13 @@ import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.sin
 import org.koin.compose.koinInject
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.ui.graphics.CompositingStrategy
+import androidx.compose.ui.graphics.graphicsLayer
 
 class LoginScreen : Screen {
     @Composable
     override fun Content() {
-        var isLoginTab by remember { mutableStateOf(true) }
         val koinInstance = koinInject<AuthScreenModel>()
         val screenModel = rememberScreenModel { koinInstance }
 
@@ -63,7 +65,12 @@ class LoginScreen : Screen {
         val darkGrayLines = Color(0xFF444444).copy(alpha = 0.2f)
         val backBackgroundBlue = Color(0xFFF2F2F2)
 
-        Box(modifier = Modifier.fillMaxSize().background(backBackgroundBlue)) {
+        AuthEffectHandler(screenModel)
+
+        Box(modifier = Modifier.fillMaxSize()
+            .background(backBackgroundBlue)
+            .imePadding(),)
+        {
 
             MapHeaderSection(
                 modifier = Modifier.fillMaxWidth().height(280.dp),
@@ -71,6 +78,7 @@ class LoginScreen : Screen {
                 lineColor = darkGrayLines,
                 iconColor = navyIcons
             )
+            var isLoginTab by remember { mutableStateOf(true) }
 
             Column(
                 modifier = Modifier
@@ -79,24 +87,7 @@ class LoginScreen : Screen {
                     .padding(top = 260.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Column(
-                    modifier = Modifier.widthIn(max = 400.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Text(
-                        text = "Tasty Map",
-                        style = MaterialTheme.typography.displaySmall.copy(
-                            fontWeight = FontWeight.Black,
-                            color = navyIcons
-                        )
-                    )
-                    Text(
-                        text = "Lezzeti Keşfet",
-                        style = MaterialTheme.typography.titleMedium.copy(
-                            color = navyIcons.copy(alpha = 0.6f)
-                        )
-                    )
-                }
+                HeaderTitles(navyIcons)
 
                 Spacer(modifier = Modifier.height(5.dp))
 
@@ -109,8 +100,8 @@ class LoginScreen : Screen {
                             elevation = 20.dp,
                             shape = RoundedCornerShape(28.dp),
                             spotColor = navyIcons.copy(alpha = 0.25f)
-                        )
-                        .animateContentSize(),
+                        ),
+                        //.animateContentSize(),
                     shape = RoundedCornerShape(28.dp),
                     colors = CardDefaults.cardColors(containerColor = Color.White),
                 ) {
@@ -119,32 +110,37 @@ class LoginScreen : Screen {
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(48.dp)
-                                .background(Color(0xFFF5F5F5), RoundedCornerShape(24.dp))
-                                .padding(4.dp)
-                        ) {
-                            Row(modifier = Modifier.fillMaxSize()) {
-                                TabButton("Giriş", isLoginTab, Modifier.weight(1f), navyIcons) { isLoginTab = true }
-                                TabButton("Kayıt", !isLoginTab, Modifier.weight(1f), navyIcons) { isLoginTab = false }
+                        AuthTabBar(isLoginTab, navyIcons,
+                            onLoginClick = {
+                                isLoginTab = true
+                                screenModel.clearRegisterForm()
+                                screenModel.previousRegisterStep()
+                            },
+                            onRegisterClick = {
+                                isLoginTab = false
+                                screenModel.clearLoginForm()
                             }
-                        }
+                        )
 
                         AnimatedContent(
                             targetState = isLoginTab,
                             transitionSpec = {
-                                fadeIn(tween(300)) togetherWith fadeOut(tween(300))
+                                if (targetState > initialState) {
+                                    (slideInHorizontally { -it } + fadeIn()) togetherWith
+                                            (slideOutHorizontally { +it } + fadeOut())
+                                } else {
+                                    (slideInHorizontally { +it } + fadeIn()) togetherWith
+                                            (slideOutHorizontally { -it } + fadeOut())
+                                }.using(SizeTransform(clip = false))
                             },
                             label = "FormAnim"
                         ) { targetIsLogin ->
-                            if (targetIsLogin) {
-                                LoginForm(navyIcons, screenModel)
-                                screenModel.clearRegisterForm()
-                            } else{
-                                RegisterForm(navyIcons,screenModel)
-                                screenModel.clearLoginForm()
+                            key(targetIsLogin) {
+                                if (targetIsLogin) {
+                                    LoginForm(navyIcons, screenModel)
+                                } else {
+                                    RegisterForm(navyIcons, screenModel)
+                                }
                             }
                         }
                     }
@@ -158,25 +154,64 @@ class LoginScreen : Screen {
         }
     }
 }
-/*
+
+@Composable
+fun AuthTabBar(
+    isLoginTab: Boolean,
+    navyIcons: Color,
+    onLoginClick: () -> Unit,
+    onRegisterClick: () -> Unit
+) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(48.dp)
+            .background(Color(0xFFF5F5F5), RoundedCornerShape(24.dp))
+            .padding(4.dp)
+    ) {
+        Row(modifier = Modifier.fillMaxSize()) {
+            TabButton("Giriş", isLoginTab, Modifier.weight(1f), navyIcons, onLoginClick)
+            TabButton("Kayıt", !isLoginTab, Modifier.weight(1f), navyIcons, onRegisterClick)
+        }
+    }
+}
+@Composable
+fun HeaderTitles(navyIcons: Color) {
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        Text(
+            text = "Tasty Map",
+            style = MaterialTheme.typography.displaySmall.copy(
+                fontWeight = FontWeight.Black, color = navyIcons
+            )
+        )
+        Text(
+            text = "Lezzeti Keşfet",
+            style = MaterialTheme.typography.titleMedium.copy(
+                color = navyIcons.copy(alpha = 0.6f)
+            )
+        )
+    }
+}
+
 @Composable
 fun AuthEffectHandler(
-    screenModel: AuthScreenModel,
-    navigator: Navigator
+    screenModel: AuthScreenModel
 ) {
     LaunchedEffect(Unit) {
         screenModel.effect.collect { effect ->
             when (effect) {
-                is AuthEffect.NavigateToHome -> navigator.push(HomeScreen())
+                is AuthEffect.NavigateToHome -> {}//navigator.push(HomeScreen())
                 is AuthEffect.NavigateToLogin -> { /* ... */ }
                 is AuthEffect.NavigateToPending -> { /* ... */ }
-                is AuthEffect.ShowMessage ->
+                is AuthEffect.ShowMessage ->{
+
+                }
             }
         }
     }
 }
 
- */
+
 @Composable
 fun MapHeaderSection(
     modifier: Modifier,
@@ -184,130 +219,132 @@ fun MapHeaderSection(
     lineColor: Color,
     iconColor: Color
 ) {
-    val infiniteTransition = rememberInfiniteTransition(label = "wave")
-    val waveOffset by infiniteTransition.animateFloat(
-        initialValue = 0f,
-        targetValue = (2 * PI).toFloat(),
-        animationSpec = infiniteRepeatable(
-            animation = tween(4000, easing = LinearEasing),
-            repeatMode = RepeatMode.Restart
-        ),
-        label = "offset"
-    )
+    Box(modifier = modifier.graphicsLayer(compositingStrategy = CompositingStrategy.Offscreen)) {
+        val infiniteTransition = rememberInfiniteTransition(label = "wave")
+        val waveOffset by infiniteTransition.animateFloat(
+            initialValue = 0f,
+            targetValue = (2 * PI).toFloat(),
+            animationSpec = infiniteRepeatable(
+                animation = tween(4000, easing = LinearEasing),
+                repeatMode = RepeatMode.Restart
+            ),
+            label = "offset"
+        )
 
-    BoxWithConstraints(modifier = modifier.fillMaxWidth()) {
-        val w = constraints.maxWidth.toFloat()
-        val h = constraints.maxHeight.toFloat()
-        Canvas(modifier = Modifier.fillMaxSize()) {
-            val amplitude = 45f
+        BoxWithConstraints(modifier = modifier.fillMaxWidth()) {
+            val w = constraints.maxWidth.toFloat()
+            val h = constraints.maxHeight.toFloat()
+            Canvas(modifier = Modifier.fillMaxSize()) {
+                val amplitude = 45f
 
 
-            val wave1 = sin(waveOffset.toDouble()).toFloat() * amplitude
-            val wave2 = cos(waveOffset.toDouble()).toFloat() * amplitude
+                val wave1 = sin(waveOffset.toDouble()).toFloat() * amplitude
+                val wave2 = cos(waveOffset.toDouble()).toFloat() * amplitude
 
-            val bgPath = Path().apply {
-                moveTo(0f, 0f)
-                lineTo(0f, (h * 0.75f) + wave1)
+                val bgPath = Path().apply {
+                    moveTo(0f, 0f)
+                    lineTo(0f, (h * 0.75f) + wave1)
 
-                cubicTo(
-                    w * 0.3f, (h * 0.95f) + wave2,
-                    w * 0.7f, (h * 0.55f) - wave1,
-                    w, (h * 0.80f) + wave2
-                )
-
-                lineTo(w, 0f)
-                close()
-            }
-            drawPath(bgPath, bgColor)
-
-            clipPath(bgPath) {
-                val mainRoad = Stroke(width = 4.dp.toPx())
-                val secondaryRoad = Stroke(width = 1.5.dp.toPx())
-
-                fun road(
-                    start: Offset,
-                    cp1: Offset,
-                    cp2: Offset,
-                    end: Offset,
-                    style: Stroke,
-                    alpha: Float = 1f
-                ) {
-                    val path = Path().apply {
-                        moveTo(start.x, start.y)
-                        cubicTo(cp1.x, cp1.y, cp2.x, cp2.y, end.x, end.y)
-                    }
-                    drawPath(path, lineColor.copy(alpha = alpha), style = style)
-                }
-
-                road(
-                    Offset(w * 0.3f, 0f),
-                    Offset(w * 0.2f, h * 0.4f),
-                    Offset(w * 0.5f, h * 0.7f),
-                    Offset(w * 0.4f, h),
-                    mainRoad, 0.4f
-                )
-
-                road(
-                    Offset(0f, h * 0.4f),
-                    Offset(w * 0.3f, h * 0.35f),
-                    Offset(w * 0.7f, h * 0.6f),
-                    Offset(w, h * 0.5f),
-                    mainRoad, 0.4f
-                )
-                road(
-                    Offset(0f, h * 0.8f),
-                    Offset(w * 0.7f, h * 0.6f),
-                    Offset(w * 0.3f, h * 0.35f),
-                    Offset(w, h * 0.7f),
-                    mainRoad, 0.1f
-                )
-
-                road(
-                    Offset(w * 0.4f, h * 0.45f),
-                    Offset(w * 0.6f, h * 0.2f),
-                    Offset(w * 0.8f, h * 0.3f),
-                    Offset(w, h * 0.1f),
-                    secondaryRoad, 0.3f
-                )
-
-                road(
-                    Offset(w * 0.25f, h * 0.2f),
-                    Offset(w * 0.1f, h * 0.5f),
-                    Offset(w * 0.3f, h * 0.8f),
-                    Offset(0f, h * 0.9f),
-                    secondaryRoad, 0.2f
-                )
-
-                road(
-                    Offset(w * 0.7f, 0f),
-                    Offset(w * 0.9f, h * 0.4f),
-                    Offset(w * 0.6f, h * 0.6f),
-                    Offset(w * 0.8f, h),
-                    secondaryRoad, 0.2f
-                )
-
-                val junctions = listOf(
-                    Offset(w * 0.28f, h * 0.38f),
-                    Offset(w * 0.55f, h * 0.52f),
-                    Offset(w * 0.78f, h * 0.38f)
-                )
-
-                junctions.forEach {
-                    drawCircle(
-                        color = lineColor.copy(alpha = 0.5f),
-                        radius = 5.dp.toPx(),
-                        center = it
+                    cubicTo(
+                        w * 0.3f, (h * 0.95f) + wave2,
+                        w * 0.7f, (h * 0.55f) - wave1,
+                        w, (h * 0.80f) + wave2
                     )
+
+                    lineTo(w, 0f)
+                    close()
+                }
+                drawPath(bgPath, bgColor)
+
+                clipPath(bgPath) {
+                    val mainRoad = Stroke(width = 4.dp.toPx())
+                    val secondaryRoad = Stroke(width = 1.5.dp.toPx())
+
+                    fun road(
+                        start: Offset,
+                        cp1: Offset,
+                        cp2: Offset,
+                        end: Offset,
+                        style: Stroke,
+                        alpha: Float = 1f
+                    ) {
+                        val path = Path().apply {
+                            moveTo(start.x, start.y)
+                            cubicTo(cp1.x, cp1.y, cp2.x, cp2.y, end.x, end.y)
+                        }
+                        drawPath(path, lineColor.copy(alpha = alpha), style = style)
+                    }
+
+                    road(
+                        Offset(w * 0.3f, 0f),
+                        Offset(w * 0.2f, h * 0.4f),
+                        Offset(w * 0.5f, h * 0.7f),
+                        Offset(w * 0.4f, h),
+                        mainRoad, 0.4f
+                    )
+
+                    road(
+                        Offset(0f, h * 0.4f),
+                        Offset(w * 0.3f, h * 0.35f),
+                        Offset(w * 0.7f, h * 0.6f),
+                        Offset(w, h * 0.5f),
+                        mainRoad, 0.4f
+                    )
+                    road(
+                        Offset(0f, h * 0.8f),
+                        Offset(w * 0.7f, h * 0.6f),
+                        Offset(w * 0.3f, h * 0.35f),
+                        Offset(w, h * 0.7f),
+                        mainRoad, 0.1f
+                    )
+
+                    road(
+                        Offset(w * 0.4f, h * 0.45f),
+                        Offset(w * 0.6f, h * 0.2f),
+                        Offset(w * 0.8f, h * 0.3f),
+                        Offset(w, h * 0.1f),
+                        secondaryRoad, 0.3f
+                    )
+
+                    road(
+                        Offset(w * 0.25f, h * 0.2f),
+                        Offset(w * 0.1f, h * 0.5f),
+                        Offset(w * 0.3f, h * 0.8f),
+                        Offset(0f, h * 0.9f),
+                        secondaryRoad, 0.2f
+                    )
+
+                    road(
+                        Offset(w * 0.7f, 0f),
+                        Offset(w * 0.9f, h * 0.4f),
+                        Offset(w * 0.6f, h * 0.6f),
+                        Offset(w * 0.8f, h),
+                        secondaryRoad, 0.2f
+                    )
+
+                    val junctions = listOf(
+                        Offset(w * 0.28f, h * 0.38f),
+                        Offset(w * 0.55f, h * 0.52f),
+                        Offset(w * 0.78f, h * 0.38f)
+                    )
+
+                    junctions.forEach {
+                        drawCircle(
+                            color = lineColor.copy(alpha = 0.5f),
+                            radius = 5.dp.toPx(),
+                            center = it
+                        )
+                    }
                 }
             }
-        }
 
-        IconMarker(Icons.Default.Restaurant, 0.18f, 0.10f, iconColor)
-        IconMarker(Icons.Default.LocationOn, 0.52f, 0.45f, iconColor)
-        IconMarker(Icons.Default.Restaurant, 0.85f, 0.25f, iconColor)
-        IconMarker(Icons.Default.LocationOn, 0.15f, 0.55f, iconColor)
-        IconMarker(Icons.Default.Restaurant, 0.40f, 0.20f, iconColor)
-        IconMarker(Icons.Default.LocationOn, 0.60f, 0.18f, iconColor)
+            IconMarker(Icons.Default.Restaurant, 0.18f, 0.10f, iconColor)
+            IconMarker(Icons.Default.LocationOn, 0.52f, 0.45f, iconColor)
+            IconMarker(Icons.Default.Restaurant, 0.85f, 0.25f, iconColor)
+            IconMarker(Icons.Default.LocationOn, 0.15f, 0.55f, iconColor)
+            IconMarker(Icons.Default.Restaurant, 0.40f, 0.20f, iconColor)
+            IconMarker(Icons.Default.LocationOn, 0.60f, 0.18f, iconColor)
+        }
     }
 }
 @Composable
@@ -405,9 +442,7 @@ fun FooterLinks(navyIcons: Color) {
             text = "Giriş Yap",
             isLoading = vm.isLoading,
             onClick = {
-                if (vm.validateLogin()) {
-
-                }
+                vm.login()
             },
             isPrimary = true,
             backcolor = color,
@@ -427,10 +462,9 @@ fun FooterLinks(navyIcons: Color) {
 
 @Composable
 fun RegisterForm(color: Color,vm: AuthScreenModel) {
-    var step by remember { mutableIntStateOf(1) }
 
     AnimatedContent(
-        targetState = step,
+        targetState = vm.registerStep,
         transitionSpec = {
             if (targetState > initialState) {
                 (slideInHorizontally { it } + fadeIn()) togetherWith
@@ -512,10 +546,7 @@ fun RegisterForm(color: Color,vm: AuthScreenModel) {
                 TastyButton(
                     text = "Devam Et",
                     onClick = {
-                        if (vm.validateRegisterStep1()) {
-                            step = 2
-                        }
-                              },
+                        vm.nextRegisterStep() },
                     isPrimary = true,
                     backcolor = color,
                     textcolor = Color.White,
@@ -560,7 +591,7 @@ fun RegisterForm(color: Color,vm: AuthScreenModel) {
 
                 TastyButton(
                     text = "Geri Dön",
-                    onClick = { step = 1 },
+                    onClick = { vm.previousRegisterStep() },
                     isPrimary = false,
                     backcolor = Color.White,
                     textcolor = color,

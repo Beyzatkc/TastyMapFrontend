@@ -1,4 +1,4 @@
-// commonMain/src/commonMain/kotlin/org/beem/tastymap/di/NetworkModule.kt
+
 
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
@@ -13,6 +13,7 @@ import io.ktor.client.request.header
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.http.HttpStatusCode
+import io.ktor.http.encodedPath
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.json.Json
 import org.beem.tastymap.core.local.TokenManager
@@ -21,6 +22,7 @@ import org.beem.tastymap.data.model.RefreshTokenResponseDTO
 
 fun createHTTPClient(tokenManager: TokenManager) = HttpClient {
 
+    expectSuccess = true
     install(HttpTimeout) {
         requestTimeoutMillis = 10000
         connectTimeoutMillis = 10000
@@ -31,6 +33,7 @@ fun createHTTPClient(tokenManager: TokenManager) = HttpClient {
             ignoreUnknownKeys = true
             isLenient = true
             prettyPrint = true
+
         })
     }
 
@@ -47,6 +50,12 @@ fun createHTTPClient(tokenManager: TokenManager) = HttpClient {
 
     install(Auth) {
         bearer {
+            sendWithoutRequest { request ->
+                val url = request.url.encodedPath
+                        url.contains("/login") ||
+                        url.contains("/register") ||
+                        url.contains("/refresh")
+            }
             loadTokens {
                 val access = tokenManager.getAccessToken()
                 val refresh = tokenManager.getRefreshToken()
