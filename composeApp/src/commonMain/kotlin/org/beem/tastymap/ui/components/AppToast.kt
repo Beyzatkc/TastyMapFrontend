@@ -49,7 +49,7 @@ fun AppToast() {
             displayEvent?.let { toast ->
                 Surface(
                     color = Color.Gray.copy(alpha = 0.7f),
-                    shape = RoundedCornerShape(16.dp),
+                    shape = RoundedCornerShape(24.dp),
                     modifier = Modifier
                         .padding(horizontal = 48.dp)
                         .wrapContentSize()
@@ -59,7 +59,9 @@ fun AppToast() {
                             color = Color.White,
                             fontSize = 14.sp,
                             fontWeight = FontWeight.Medium,
-                            textAlign = TextAlign.Center
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier
+                                .padding(vertical = 12.dp, horizontal = 24.dp)
                         )
                     }
                 }
