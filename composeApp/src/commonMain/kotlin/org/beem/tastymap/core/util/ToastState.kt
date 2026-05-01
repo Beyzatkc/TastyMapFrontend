@@ -6,6 +6,6 @@ sealed class ToastState {
     data class ToastEvent(
         val message: String,
         val type: ToastType = ToastType.INFO,
-        val duration: Long = 2500L
+        val duration: Long = 1500L
     )
 }

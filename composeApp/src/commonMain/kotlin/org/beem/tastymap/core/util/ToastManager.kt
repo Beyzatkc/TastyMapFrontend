@@ -12,7 +12,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 object ToastManager {
-    // Singleton scope: Uygulama açık olduğu sürece yaşar, leak yapmaz.
     private val scope = CoroutineScope(Dispatchers.Main + SupervisorJob())
 
     private val _toastEvents = MutableSharedFlow<ToastState.ToastEvent?>(replay = 0)
