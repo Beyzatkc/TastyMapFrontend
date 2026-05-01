@@ -5,6 +5,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import org.beem.tastymap.data.model.Restaurant
 
 @Composable
 fun rememberTastyMapState(): TastyMapState{
@@ -19,5 +20,8 @@ class TastyMapState {
     }
     fun userMarker(lat: Double, lng: Double, title: String, bearing: Float){
         controller?.userMarker(lat, lng, title, bearing)
+    }
+    fun updateRestaurants(restaurants: List<Restaurant>){
+        controller?.setRestaurants(restaurants)
     }
 }

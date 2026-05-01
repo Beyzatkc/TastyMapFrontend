@@ -1,13 +1,16 @@
 package org.beem.tastymap.map
 
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
+import cafe.adriel.voyager.core.model.ScreenModel
+import cafe.adriel.voyager.core.model.screenModelScope
 import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import org.beem.tastymap.data.model.LocationData
+import org.beem.tastymap.data.model.Restaurant
 import kotlin.math.PI
 import kotlin.math.abs
 import kotlin.math.atan2
@@ -15,11 +18,11 @@ import kotlin.math.cos
 import kotlin.math.sin
 import kotlin.math.sqrt
 
-class MapViewModel(
+class MapScreenModel(
     private val locationTracker: LocationTracker
-): ViewModel() {
+): ScreenModel {
     val userLocation = locationTracker.locationState
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), LocationData(0.0, 0.0))
+        .stateIn(screenModelScope, SharingStarted.WhileSubscribed(5000), LocationData(0.0, 0.0))
 
     private val _event = MutableSharedFlow<MapEvent>()
 
@@ -30,6 +33,10 @@ class MapViewModel(
     private var lastEmittedBearing = 0f
 
 
+    private val _restaurants = MutableStateFlow<List<Restaurant>>(emptyList())
+    val restaurants = _restaurants.asStateFlow()
+
+
     val event = _event.asSharedFlow()
 
     fun startObservingLocation(){
@@ -37,7 +44,7 @@ class MapViewModel(
     }
 
     init {
-        viewModelScope.launch {
+        screenModelScope.launch {
             userLocation.collect { location ->
 
                 if (location.latitude == 0.0 && location.longitude == 0.0) return@collect
@@ -74,10 +81,16 @@ class MapViewModel(
                 }
             }
         }
+
+        _restaurants.value = listOf(
+            Restaurant("1", "Tiritçi Mithat", "Tirit", 37.874, 32.493, 4.8),
+            Restaurant("2", "Ferah Etli Ekmek", "Etli Ekmek", 37.871, 32.485, 4.5),
+            Restaurant("3", "Kuzucu Ali", "Kebap", 37.880, 32.500, 4.9)
+        )
     }
 
     fun onCenterMapClicked(){
-        viewModelScope.launch {
+        screenModelScope.launch {
             lastEmittedLocation?.let { safeLocation ->
                 _event.emit(MapEvent.CenterOn(
                     lat = safeLocation.latitude,
@@ -88,6 +101,15 @@ class MapViewModel(
                     lat = userLocation.value.latitude,
                     lng = userLocation.value.longitude
                 ))
+            }
+        }
+    }
+
+    fun onRestaurantClicked(restaurantId: String) {
+        val restaurant = _restaurants.value.find { it.id == restaurantId }
+        restaurant?.let {
+            screenModelScope.launch {
+                _event.emit(MapEvent.CenterOn(it.latitude, it.longitude))
             }
         }
     }

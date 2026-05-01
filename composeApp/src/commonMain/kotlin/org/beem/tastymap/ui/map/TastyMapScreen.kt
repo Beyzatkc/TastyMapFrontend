@@ -19,8 +19,9 @@ import androidx.compose.material3.Icon
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.MyLocation
 import cafe.adriel.voyager.core.screen.Screen
+import cafe.adriel.voyager.koin.koinScreenModel
 import org.beem.tastymap.map.MapEvent
-import org.beem.tastymap.map.MapViewModel
+import org.beem.tastymap.map.MapScreenModel
 import org.beem.tastymap.map.rememberTastyMapState
 import org.koin.compose.viewmodel.koinViewModel
 
@@ -30,29 +31,37 @@ class TastyMapScreen : Screen {
     override fun Content() {
         val myMaps = "https://api.maptiler.com/maps/019dbfbf-86a2-7d38-869e-bd6ebbcee298/style.json?key=DNr5GYdtJfA7ecaMmrh1"
 
-        val mapViewModel: MapViewModel = koinViewModel()
+        val mapScreenModel: MapScreenModel = koinScreenModel()
         val mapState = rememberTastyMapState()
 
-        val userLocation by mapViewModel.userLocation.collectAsState()
+        val restaurants by mapScreenModel.restaurants.collectAsState()
+        val userLocation by mapScreenModel.userLocation.collectAsState()
 
         LaunchedEffect(Unit){
-            mapViewModel.event.collect{ event ->
+            mapScreenModel.event.collect{ event ->
                 when(event){
                     is MapEvent.CenterOn -> {
                         mapState.centerOn(event.lat, event.lng)
+                        mapState.updateRestaurants(restaurants)
                     }
                     is MapEvent.UserMarker -> {
                         mapState.userMarker(event.lat, event.lng, event.title, event.bearing)
                     }
                 }
             }
-            mapViewModel.startObservingLocation()
+            mapScreenModel.startObservingLocation()
+        }
+
+        LaunchedEffect(restaurants) {
+            if (restaurants.isNotEmpty()) {
+                mapState.updateRestaurants(restaurants)
+            }
         }
 
         MaterialTheme {
             LocationPermissionWrapper(
                 onPermissionGranted = {
-                    mapViewModel.startObservingLocation()
+                    mapScreenModel.startObservingLocation()
                 }
             ) {
                 Scaffold(
@@ -75,7 +84,7 @@ class TastyMapScreen : Screen {
                                 .align(Alignment.BottomEnd)
                                 .padding(16.dp),
                             onClick = {
-                                mapViewModel.onCenterMapClicked()
+                                mapScreenModel.onCenterMapClicked()
                             },
                             containerColor = MaterialTheme.colorScheme.primary
                         ) {

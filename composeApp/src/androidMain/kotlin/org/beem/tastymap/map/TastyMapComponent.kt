@@ -23,6 +23,10 @@ import org.maplibre.geojson.Feature
 import org.maplibre.geojson.Point
 import android.animation.ValueAnimator
 import org.beem.tastymap.data.model.LocationData
+import org.beem.tastymap.data.model.Restaurant
+import org.maplibre.geojson.FeatureCollection
+import setupRestaurantLayer
+import setupUserLocationLayer
 
 
 private var lastLat = 0.0
@@ -44,10 +48,6 @@ actual fun TastyMapComponent(
     val ICON_ID = "user-navigation-icon"
 
 
-    val userIconBitmap = remember(context) {
-        createMarkerBitmap(context, navigation, 30)
-    }
-
     val mapView = remember { MapView(context) }
 
     LaunchedEffect(mapView) {
@@ -57,22 +57,24 @@ actual fun TastyMapComponent(
                     mapUrl
                 )
             ) { style ->
-                userIconBitmap?.let{
-                    style.addImage(ICON_ID, it)
-                }
-                val geoJsonSource = GeoJsonSource(SOURCE_ID)
-                style.addSource(geoJsonSource)
-
-                val symbolLayer = SymbolLayer(LAYER_ID, SOURCE_ID).withProperties(
-                    PropertyFactory.iconImage(ICON_ID),
-                    PropertyFactory.iconRotate(Expression.get("bearing")),
-                    PropertyFactory.iconRotationAlignment(Property.ICON_ROTATION_ALIGNMENT_MAP),
-                    PropertyFactory.iconAllowOverlap(true),
-                    PropertyFactory.iconIgnorePlacement(true)
-                )
-                style.addLayer(symbolLayer)
+                style.setupUserLocationLayer(context, "user-icon", navigation)
+                style.setupRestaurantLayer(context, "res-icon", navigation)
 
                 state.controller = object : MapController {
+
+                    override fun setRestaurants(restaurants: List<Restaurant>) {
+                        val features = restaurants.map { res ->
+                            Feature.fromGeometry(Point.fromLngLat(res.longitude, res.latitude)).apply {
+                                addStringProperty("id", res.id)
+                                addStringProperty("name", res.name)
+                            }
+                        }
+                        println(features)
+                        style.getSourceAs<GeoJsonSource>("restaurant-source")?.setGeoJson(
+                            FeatureCollection.fromFeatures(features)
+                        )
+                    }
+
                     override fun animateTo(lat: Double, lng: Double, zoom: Float) {
                         val pos = CameraPosition.Builder()
                             .target(LatLng(lat, lng))
@@ -123,18 +125,4 @@ actual fun TastyMapComponent(
         factory = { mapView },
         modifier = modifier
     )
-}
-
-
-private fun createMarkerBitmap(context: Context, resId: Int, sizeDp: Int): android.graphics.Bitmap? {
-    val drawable = androidx.core.content.ContextCompat.getDrawable(context, resId) ?: return null
-
-    val density = context.resources.displayMetrics.density
-    val px = (sizeDp * density).toInt()
-
-    val bitmap = android.graphics.Bitmap.createBitmap(px, px, android.graphics.Bitmap.Config.ARGB_8888)
-    val canvas = android.graphics.Canvas(bitmap)
-    drawable.setBounds(0, 0, canvas.width, canvas.height)
-    drawable.draw(canvas)
-    return bitmap
 }
