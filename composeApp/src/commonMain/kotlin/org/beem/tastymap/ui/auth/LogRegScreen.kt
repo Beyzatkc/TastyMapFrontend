@@ -53,10 +53,15 @@ import org.koin.compose.koinInject
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.ui.graphics.CompositingStrategy
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.zIndex
+import cafe.adriel.voyager.navigator.LocalNavigator
+import cafe.adriel.voyager.navigator.currentOrThrow
 
-class LoginScreen : Screen {
+class LogRegScreen : Screen {
     @Composable
     override fun Content() {
+        val navigator = LocalNavigator.currentOrThrow
         val koinInstance = koinInject<AuthScreenModel>()
         val screenModel = rememberScreenModel { koinInstance }
 
@@ -65,7 +70,7 @@ class LoginScreen : Screen {
         val darkGrayLines = Color(0xFF444444).copy(alpha = 0.2f)
         val backBackgroundBlue = Color(0xFFF2F2F2)
 
-        AuthEffectHandler(screenModel)
+        AuthEffectHandler(screenModel,navigator)
 
         Box(modifier = Modifier.fillMaxSize()
             .background(backBackgroundBlue)
@@ -101,12 +106,12 @@ class LoginScreen : Screen {
                             shape = RoundedCornerShape(28.dp),
                             spotColor = navyIcons.copy(alpha = 0.25f)
                         ),
-                        //.animateContentSize(),
+
                     shape = RoundedCornerShape(28.dp),
                     colors = CardDefaults.cardColors(containerColor = Color.White),
                 ) {
                     Column(
-                        modifier = Modifier.padding(24.dp), // İç padding
+                        modifier = Modifier.padding(24.dp),
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
@@ -151,10 +156,27 @@ class LoginScreen : Screen {
 
                 Spacer(modifier = Modifier.height(50.dp))
             }
+            FullScreenLoading(isLoading = screenModel.isLoading)
         }
     }
 }
 
+@Composable
+fun FullScreenLoading(isLoading: Boolean){
+    if(isLoading){
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .pointerInput(Unit){}
+                .background(Color.Black.copy(alpha = 0.4f))
+                .zIndex(10f),
+            contentAlignment = Alignment.Center
+        ){
+
+        }
+    }
+
+}
 @Composable
 fun AuthTabBar(
     isLoginTab: Boolean,
@@ -195,16 +217,20 @@ fun HeaderTitles(navyIcons: Color) {
 
 @Composable
 fun AuthEffectHandler(
-    screenModel: AuthScreenModel
+    screenModel: AuthScreenModel,
+    navigator: Navigator
 ) {
     LaunchedEffect(Unit) {
         screenModel.effect.collect { effect ->
             when (effect) {
-                is AuthEffect.NavigateToHome -> {}//navigator.push(HomeScreen())
+                is AuthEffect.NavigateToHome -> {}
                 is AuthEffect.NavigateToLogin -> { /* ... */ }
                 is AuthEffect.NavigateToPending -> { /* ... */ }
                 is AuthEffect.ShowMessage ->{
 
+                }
+                AuthEffect.NavigateToValidate -> {
+                    navigator.replace(EmailVerificationScreen(screenModel.regEmail))
                 }
             }
         }

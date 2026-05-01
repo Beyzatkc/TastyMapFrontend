@@ -6,6 +6,7 @@ sealed interface AuthEffect {
     object NavigateToLogin : AuthEffect
 
     object NavigateToPending : AuthEffect
+    object NavigateToValidate : AuthEffect
 
     data class ShowMessage(val message: String) : AuthEffect
 }

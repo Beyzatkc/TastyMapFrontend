@@ -79,7 +79,7 @@ class AuthScreenModel(
                     when (val result = repository.register(request)) {
                         is ResultWrapper.Success -> {
                             ToastManager.show("Kayıt başarılı!")
-                            _effect.send(AuthEffect.NavigateToLogin)
+                            _effect.send(AuthEffect.NavigateToValidate)
                         }
 
                         is ResultWrapper.Error -> {
