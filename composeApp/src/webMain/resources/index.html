@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TastyMap</title>
+    <link type="text/css" rel="stylesheet" href="styles.css">
+</head>
+<body style="text-align: center; align-content: center">
+<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 50 50" role="presentation">
+    <circle cx="25" cy="25" r="20" stroke="#ccc" stroke-width="4" fill="none"/>
+    <circle cx="25" cy="25" r="20" stroke="#333" stroke-width="4" fill="none" stroke-linecap="round"
+            stroke-dasharray="90 125">
+        <animateTransform attributeName="transform" type="rotate" from="0 25 25" to="360 25 25" dur="1s"
+                          repeatCount="indefinite"/>
+    </circle>
+</svg>
+   <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getMessaging, getToken } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-messaging.js";
+
+        // import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
+        // import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-analytics.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyBM8iUX0bRKR7cWTrPr79-hiB3wn8qLIGI",
+        authDomain: "tastymap-12dfb.firebaseapp.com",
+        projectId: "tastymap-12dfb",
+        storageBucket: "tastymap-12dfb.firebasestorage.app",
+        messagingSenderId: "733188538534",
+        appId: "1:733188538534:web:7d9004b772de2b0b697467",
+        measurementId: "G-J13MMYEGZF"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    // const analytics = getAnalytics(app);
+    const messaging = getMessaging(app);
+
+
+    window.getFcmTokenJs = async function(vapidKey) {
+        try {
+            // Bildirim izni iste
+            const permission = await Notification.requestPermission();
+            if (permission === 'granted') {
+                const token = await getToken(messaging, { vapidKey: vapidKey });
+                return token;
+            } else {
+                console.log("Bildirim izni reddedildi.");
+                return "";
+            }
+        } catch (error) {
+            console.error("FCM Token alınırken hata oluştu:", error);
+            return "";
+        }
+    };
+</script>
+<script type="application/javascript" src="composeApp.js"></script>
+</body>
+</html>
