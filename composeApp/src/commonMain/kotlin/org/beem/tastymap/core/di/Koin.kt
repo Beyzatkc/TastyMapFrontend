@@ -8,9 +8,11 @@ import org.beem.tastymap.core.local.TokenManager
 import org.beem.tastymap.core.local.TokenManagerImpl
 import org.beem.tastymap.data.remote.AuthDataSource
 import org.beem.tastymap.data.repository.AuthRepository
+import org.beem.tastymap.map.MapViewModel
 import org.beem.tastymap.ui.auth.AuthScreenModel
 import kotlin.text.get
 import org.koin.core.module.dsl.factoryOf
+import org.koin.core.module.dsl.viewModelOf
 import org.koin.core.qualifier.named
 
 val appModule = module {
@@ -26,4 +28,6 @@ val appModule = module {
 
     single { AuthRepository(get(), get()) }
     factory { AuthScreenModel(get(),get()) }
+
+    viewModelOf(::MapViewModel)
 }
