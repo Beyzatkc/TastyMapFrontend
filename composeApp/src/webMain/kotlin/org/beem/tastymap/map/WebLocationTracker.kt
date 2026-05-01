@@ -4,7 +4,7 @@ import kotlinx.browser.window
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import org.beem.tastymap.model.LocationData
+import org.beem.tastymap.data.model.LocationData
 import kotlin.js.JsAny
 
 class WebLocationTracker: LocationTracker {
