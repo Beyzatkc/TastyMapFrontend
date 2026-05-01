@@ -1,6 +1,7 @@
 
 
 import io.ktor.client.HttpClient
+import io.ktor.client.HttpClientConfig
 import io.ktor.client.call.body
 import io.ktor.client.plugins.DefaultRequest
 import io.ktor.client.plugins.HttpTimeout
@@ -20,8 +21,7 @@ import org.beem.tastymap.core.local.TokenManager
 import org.beem.tastymap.core.util.AppConfig
 import org.beem.tastymap.data.model.RefreshTokenResponseDTO
 
-fun createHTTPClient(tokenManager: TokenManager) = HttpClient {
-
+fun HttpClientConfig<*>.commonConfig() {
     expectSuccess = true
     install(HttpTimeout) {
         requestTimeoutMillis = 10000
@@ -33,43 +33,37 @@ fun createHTTPClient(tokenManager: TokenManager) = HttpClient {
             ignoreUnknownKeys = true
             isLenient = true
             prettyPrint = true
-
         })
     }
-
     install(Logging) {
         level = LogLevel.ALL
         logger = Logger.DEFAULT
     }
-
     install(DefaultRequest) {
         url(AppConfig.BASE_URL)
         header("ngrok-skip-browser-warning", "true")
         header("Content-Type", "application/json")
     }
+}
+fun createNoAuthClient() = HttpClient {
+    commonConfig()
+}
+fun createAuthClient(tokenManager: TokenManager, noAuthClient: HttpClient) = HttpClient {
+    commonConfig()
 
     install(Auth) {
         bearer {
-            sendWithoutRequest { request ->
-                val url = request.url.encodedPath
-                        url.contains("/login") ||
-                        url.contains("/register") ||
-                        url.contains("/refresh")
-            }
             loadTokens {
                 val access = tokenManager.getAccessToken()
                 val refresh = tokenManager.getRefreshToken()
-                if (access != null && refresh != null) {
-                    BearerTokens(access, refresh)
-                } else null
+                if (access != null && refresh != null) BearerTokens(access, refresh) else null
             }
 
             refreshTokens {
                 val deviceId = tokenManager.getDeviceId() ?: "unknown_device"
                 val refreshToken = tokenManager.getRefreshToken()
 
-                val response = client.post("/api/users/refresh") {
-                    markAsRefreshTokenRequest()
+                val response = noAuthClient.post("api/users/refresh") {
                     setBody(mapOf(
                         "refreshToken" to refreshToken,
                         "deviceId" to deviceId
@@ -79,11 +73,7 @@ fun createHTTPClient(tokenManager: TokenManager) = HttpClient {
                 if (response.status == HttpStatusCode.OK) {
                     val newTokens = response.body<RefreshTokenResponseDTO>()
                     tokenManager.saveTokens(newTokens.accessToken, newTokens.refreshToken)
-
-                    BearerTokens(
-                        accessToken = newTokens.accessToken,
-                        refreshToken = newTokens.refreshToken
-                    )
+                    BearerTokens(newTokens.accessToken, newTokens.refreshToken)
                 } else {
                     tokenManager.clear()
                     null
