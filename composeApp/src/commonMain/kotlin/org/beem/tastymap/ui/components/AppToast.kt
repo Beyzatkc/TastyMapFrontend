@@ -33,20 +33,15 @@ import org.beem.tastymap.core.util.ToastState
 
 @Composable
 fun AppToast() {
-    val event by ToastManager.toastEvents.collectAsState(null)
-    var displayEvent by remember { mutableStateOf<ToastState.ToastEvent?>(null) }
-
-    if (event != null) {
-        displayEvent = event
-    }
+    val toastEvent by ToastManager.toastEvents.collectAsState()
 
     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         AnimatedVisibility(
-            visible = event != null,
+            visible = toastEvent != null,
             enter = fadeIn() + scaleIn(initialScale = 0.9f),
             exit = fadeOut() + scaleOut(targetScale = 0.9f)
         ){
-            displayEvent?.let { toast ->
+            toastEvent?.let { toast ->
                 Surface(
                     color = Color.Gray.copy(alpha = 0.7f),
                     shape = RoundedCornerShape(24.dp),

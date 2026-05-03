@@ -2,15 +2,21 @@ package org.beem.tastymap.ui.auth
 
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.viewModelScope
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.receiveAsFlow
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import org.beem.tastymap.core.network.ResultWrapper
@@ -46,10 +52,30 @@ class AuthScreenModel(
     var regPasswordError by mutableStateOf<String?>(null)
 
     var isLoading by mutableStateOf(false)
+    private val _timeLeft = MutableStateFlow(0)
+    val timeLeft: StateFlow<Int> = _timeLeft
+    private var timerJob: Job? = null
+    private val _navigationEvent = Channel<Boolean>()
+    val navigationEvent = _navigationEvent.receiveAsFlow()
+    fun startTime() {
+        if (_timeLeft.value > 0) return
+
+        timerJob?.cancel()
+
+        timerJob = screenModelScope.launch {
+            _timeLeft.value = 60
+
+            while (_timeLeft.value > 0) {
+                delay(1000)
+                _timeLeft.value--
+            }
+        }
+    }
 
 
     private val _effect = Channel<AuthEffect>()
     val effect = _effect.receiveAsFlow()
+
 
     fun nextRegisterStep() {
         if (validateRegisterStep1()) {
@@ -119,6 +145,46 @@ class AuthScreenModel(
                 }
                 isLoading = false
             }
+        }
+    }
+    fun resendMail(email: String){
+        if(isLoading)return
+        screenModelScope.launch {
+            isLoading=true
+            when(val result = repository.resendEmail(email)){
+                is ResultWrapper.Success -> {
+                    ToastManager.show(result.data)
+                }
+                is ResultWrapper.Error -> {
+                    ToastManager.show(result.message ?: "Bir hata oluştu")
+                }
+            }
+            isLoading = false
+        }
+    }
+    fun verifyEmail(token: String){
+        if(isLoading){
+            println("DEBUG: Still loading, skipping...")
+            return
+        }
+        screenModelScope.launch {
+            isLoading=true
+            val result = repository.verifyEmail(token)
+            println("DEBUG: API Result: $result")
+            when(result){
+
+                is ResultWrapper.Success -> {
+
+                    ToastManager.show(result.data["message"] ?: "Başarılı")
+                    _navigationEvent.send(true)
+                }
+                is ResultWrapper.Error -> {
+                    ToastManager.show(result.message ?: "Bir hata oluştu")
+                    println("DEBUG: Verification Error: ${result.message}")
+                    _navigationEvent.send(false)
+                }
+            }
+            isLoading = false
         }
     }
 

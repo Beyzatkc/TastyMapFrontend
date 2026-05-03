@@ -107,6 +107,7 @@ kotlin {
         wasmJsMain.dependencies {
             implementation(libs.ktor.client.js)
             implementation(libs.sqldelight.web)
+            implementation(libs.kotlinx.browser)
         }
         commonMain.dependencies {
             implementation(libs.compose.runtime)

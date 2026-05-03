@@ -1,5 +1,4 @@
 package org.beem.tastymap.ui.auth
-
 import TastyButton
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -20,18 +19,33 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import cafe.adriel.voyager.core.model.rememberScreenModel
 import cafe.adriel.voyager.core.screen.Screen
+import cafe.adriel.voyager.navigator.LocalNavigator
+import cafe.adriel.voyager.navigator.currentOrThrow
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
+import org.koin.compose.koinInject
 
 class EmailVerificationScreen(val email: String) : Screen {
     @Composable
     override fun Content() {
         val navyIcons = Color(0xFF001970)
+        val navigator = LocalNavigator.currentOrThrow
+        val koinInstance = koinInject<AuthScreenModel>()
+        val screenModel = rememberScreenModel { koinInstance }
 
         Box(
             modifier = Modifier.fillMaxSize()
@@ -85,19 +99,50 @@ class EmailVerificationScreen(val email: String) : Screen {
 
                 Spacer(modifier = Modifier.height(24.dp))
 
+                ResendSection(
+                    navyIcons= navyIcons,
+                    screenModel = screenModel,
+                    onResendClick = {
+                       screenModel.resendMail(email)
+                    }
+                )
+
                 TastyButton(
                     text = "Giriş Ekranına Dön",
-                    onClick = { /* Navigator.popUntilRoot() veya Login'e yönlendir */ },
+                    onClick = {
+                        navigator.replace(LogRegScreen())
+                    },
                     isPrimary = true,
                     backcolor = navyIcons,
                     textcolor = navyIcons,
                     strokecolor = navyIcons
                 )
 
-                TextButton(onClick = { /* Yeniden gönderim logic'i */ }) {
-                    Text("E-posta gelmedi mi? Tekrar gönder", color = navyIcons)
+            }
+        }
+    }
+}
+@Composable
+fun ResendSection(onResendClick: () -> Unit, navyIcons: Color, screenModel: AuthScreenModel,) {
+    val timeLeft by screenModel.timeLeft.collectAsState()
+    val isButtonEnabled = timeLeft == 0
+
+    Column (horizontalAlignment = Alignment.CenterHorizontally){
+        TextButton(
+            enabled = isButtonEnabled,
+            onClick = {
+                if (isButtonEnabled) {
+                    screenModel.startTime()
+                    onResendClick()
                 }
             }
+        ){
+            Text(
+                text = if (isButtonEnabled) "E-posta gelmedi mi? Tekrar gönder"
+                else "Tekrar göndermek için bekleyin: ${timeLeft}s",
+                color = if (isButtonEnabled) navyIcons else Color.Gray,
+                style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium)
+            )
         }
     }
 }

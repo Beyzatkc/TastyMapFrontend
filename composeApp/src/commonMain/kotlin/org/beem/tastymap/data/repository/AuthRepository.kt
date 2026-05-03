@@ -1,6 +1,7 @@
 package org.beem.tastymap.data.repository
 
 import androidx.compose.animation.core.rememberTransition
+import io.ktor.client.statement.HttpResponse
 import org.beem.tastymap.core.local.TokenManager
 import org.beem.tastymap.core.network.ResultWrapper
 import org.beem.tastymap.core.network.safeApiCall
@@ -29,6 +30,18 @@ class AuthRepository(
                 tokenManager.saveDeviceId(loginRequest.deviceId)
             }
 
+            response
+        }
+    }
+    suspend fun resendEmail(email: String): ResultWrapper<String>{
+        return safeApiCall {
+            val response = dataSource.resendMail(email)
+            response
+        }
+    }
+    suspend fun verifyEmail(token: String): ResultWrapper<Map<String, String>>{
+        return safeApiCall {
+            val response = dataSource.verifyEmail(token)
             response
         }
     }

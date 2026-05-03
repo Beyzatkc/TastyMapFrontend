@@ -172,7 +172,6 @@ fun FullScreenLoading(isLoading: Boolean){
                 .zIndex(10f),
             contentAlignment = Alignment.Center
         ){
-
         }
     }
 

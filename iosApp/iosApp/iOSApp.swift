@@ -8,6 +8,9 @@ init() {
     var body: some Scene {
         WindowGroup {
             ContentView()
+            .onOpenURL { url in
+               DeepLinkManager.shared.handleLink(url: url.absoluteString)
+            }
         }
     }
 }

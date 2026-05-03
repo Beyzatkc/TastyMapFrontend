@@ -14,18 +14,18 @@ import kotlinx.coroutines.launch
 object ToastManager {
     private val scope = CoroutineScope(Dispatchers.Main + SupervisorJob())
 
-    private val _toastEvents = MutableSharedFlow<ToastState.ToastEvent?>(replay = 0)
-    val toastEvents = _toastEvents.asSharedFlow()
+    private val _toastEvents = MutableStateFlow<ToastState.ToastEvent?>(null)
+    val toastEvents = _toastEvents.asStateFlow()
     private var currentJob: Job? = null
 
     fun show(message: String, type: ToastState.ToastType = ToastState.ToastType.INFO) {
-        currentJob?.cancel()
+        currentJob?.cancel() 
         currentJob = scope.launch {
             val event = ToastState.ToastEvent(message, type)
-            _toastEvents.emit(event)
+            _toastEvents.value = event
 
-            delay(event.duration)
-            _toastEvents.emit(null)
+            delay(3000)
+            _toastEvents.value = null
         }
     }
 }
