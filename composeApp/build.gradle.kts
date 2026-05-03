@@ -87,6 +87,18 @@ kotlin {
  */
     
     sourceSets {
+        val webMain by creating {
+            dependsOn(commonMain.get())
+            dependencies {
+                implementation("org.jetbrains.kotlinx:kotlinx-browser:0.3")
+            }
+        }
+
+        wasmJsMain.get().apply {
+            dependsOn(webMain)
+        }
+
+
         androidMain.dependencies {
             implementation(libs.compose.uiToolingPreview)
             implementation(libs.androidx.activity.compose)
@@ -106,6 +118,9 @@ kotlin {
             implementation("io.insert-koin:koin-android:3.5.0")
             implementation("io.insert-koin:koin-androidx-compose:3.5.0")
 
+        }
+        webMain.dependencies {
+            implementation("org.jetbrains.kotlinx:kotlinx-browser:0.3")
         }
         iosMain.dependencies {
             implementation(libs.ktor.client.darwin)

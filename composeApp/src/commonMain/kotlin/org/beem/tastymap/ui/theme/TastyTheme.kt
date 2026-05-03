@@ -12,10 +12,12 @@ private val LightColors = lightColorScheme(
     primary = TealPrimary,
     onPrimary = Color.White,
     secondary = Color(0xFF00796B),
-    background = Color.White,
-    surface = Color.White,
+    /*background = Color.White,
+    surface = Color.White,*/
     onSurface = TealPrimary,
-    error = Color(0xFFBA1A1A)
+    error = Color(0xFFBA1A1A),
+    background = Color.Transparent,
+    surface = Color.Transparent
 )
 
 private val DarkColors = darkColorScheme(
@@ -39,6 +41,7 @@ fun TastyTheme(
     content: @Composable () -> Unit
 ) {
     val colors = LightColors
+
 
     MaterialTheme(
         colorScheme = colors,

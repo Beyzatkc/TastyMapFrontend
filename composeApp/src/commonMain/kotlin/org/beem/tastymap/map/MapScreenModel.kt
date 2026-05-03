@@ -9,8 +9,12 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import org.beem.tastymap.core.network.ResultWrapper
+import org.beem.tastymap.core.network.safeApiCall
 import org.beem.tastymap.data.model.LocationData
 import org.beem.tastymap.data.model.Restaurant
+import org.beem.tastymap.map.model.MapRequest
+import org.beem.tastymap.map.repository.MapRepository
 import kotlin.math.PI
 import kotlin.math.abs
 import kotlin.math.atan2
@@ -19,7 +23,8 @@ import kotlin.math.sin
 import kotlin.math.sqrt
 
 class MapScreenModel(
-    private val locationTracker: LocationTracker
+    private val locationTracker: LocationTracker,
+    private val repository: MapRepository
 ): ScreenModel {
     val userLocation = locationTracker.locationState
         .stateIn(screenModelScope, SharingStarted.WhileSubscribed(5000), LocationData(0.0, 0.0))
@@ -33,8 +38,11 @@ class MapScreenModel(
     private var lastEmittedBearing = 0f
 
 
-    private val _restaurants = MutableStateFlow<List<Restaurant>>(emptyList())
-    val restaurants = _restaurants.asStateFlow()
+    private val _selectedRestaurant = MutableStateFlow<Restaurant?>(null)
+    val selectedRestaurant = _selectedRestaurant.asStateFlow()
+
+    private val _showDetails = MutableStateFlow(false)
+    val showDetails = _showDetails.asStateFlow()
 
 
     val event = _event.asSharedFlow()
@@ -81,12 +89,6 @@ class MapScreenModel(
                 }
             }
         }
-
-        _restaurants.value = listOf(
-            Restaurant("1", "Tiritçi Mithat", "Tirit", 37.874, 32.493, 4.8),
-            Restaurant("2", "Ferah Etli Ekmek", "Etli Ekmek", 37.871, 32.485, 4.5),
-            Restaurant("3", "Kuzucu Ali", "Kebap", 37.880, 32.500, 4.9)
-        )
     }
 
     fun onCenterMapClicked(){
@@ -105,13 +107,36 @@ class MapScreenModel(
         }
     }
 
-    fun onRestaurantClicked(restaurantId: String) {
-        val restaurant = _restaurants.value.find { it.id == restaurantId }
-        restaurant?.let {
-            screenModelScope.launch {
-                _event.emit(MapEvent.CenterOn(it.latitude, it.longitude))
+    fun fetchNearbyRestaurants(lat: Double, lng: Double) {
+        screenModelScope.launch {
+            val request = MapRequest(
+                lat = lat,
+                lng = lng,
+                radius = 500,
+                keywords = listOf("restaurant", "meal_takeaway", "cafe")
+            )
+            val response = repository.searchMap(request)
+            when(response){
+                is ResultWrapper.Success -> {
+                    _event.emit(MapEvent.UpdateMapGeoSource(
+                        source = response.data.geoJson.toString()
+                    ))
+                }
+                is ResultWrapper.Error -> {
+                    println("Hata Oluştu: ${response.message}")
+                }
             }
         }
+    }
+
+    fun onMarkerClicked(restaurant: Restaurant) {
+        _selectedRestaurant.value = restaurant
+        _showDetails.value = true
+    }
+
+    fun closeDetails() {
+        _showDetails.value = false
+        _selectedRestaurant.value = null
     }
 
 

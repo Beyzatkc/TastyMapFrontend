@@ -8,4 +8,7 @@ sealed class MapEvent{
         val title: String,
         val bearing: Float,
     ) : MapEvent()
+    data class UpdateMapGeoSource(
+        val source: String
+    ): MapEvent()
 }

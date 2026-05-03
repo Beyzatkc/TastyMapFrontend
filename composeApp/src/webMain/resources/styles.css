@@ -1,7 +1,25 @@
-html, body {
-    width: 100%;
-    height: 100%;
+body {
     margin: 0;
     padding: 0;
     overflow: hidden;
+    position: relative;
+}
+
+#map-container {
+    position: absolute;
+    top: 0; left: 0; width: 100vw; height: 100vh;
+    z-index: 1; /* Harita Altta */
+}
+
+#compose-target canvas {
+    mix-blend-mode: multiply;
+    background: none !important;
+}
+
+#compose-target {
+    position: absolute;
+    top: 0; left: 0; width: 100vw; height: 100vh;
+    z-index: 100; /* Compose Üstte */
+    background: transparent !important;
+    pointer-events: none; /* Haritaya dokunuşların geçebilmesi için zemin şeffaf olmalı */
 }

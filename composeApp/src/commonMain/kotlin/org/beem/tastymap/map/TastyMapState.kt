@@ -21,7 +21,10 @@ class TastyMapState {
     fun userMarker(lat: Double, lng: Double, title: String, bearing: Float){
         controller?.userMarker(lat, lng, title, bearing)
     }
-    fun updateRestaurants(restaurants: List<Restaurant>){
-        controller?.setRestaurants(restaurants)
+    fun updateMapData(geoJson: String){
+        controller?.updateMapData(geoJson)
+    }
+    fun onClickMarker(onMarkerClicked: (Restaurant) -> Unit){
+        controller?.onClickMarker(onMarkerClicked)
     }
 }

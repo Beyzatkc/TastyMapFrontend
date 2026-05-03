@@ -1,6 +1,12 @@
 package org.beem.tastymap
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.Surface
 import androidx.compose.runtime.*
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import cafe.adriel.voyager.navigator.Navigator
 import org.beem.tastymap.ui.auth.LoginScreen
@@ -15,16 +21,16 @@ fun App() {
     val devChooseScreen = "Map"
 
     TastyTheme(useDarkTheme = isDark) {
-        when(devChooseScreen){
-            "Map" -> {
-                Navigator(TastyMapScreen())
+        Box(modifier = Modifier
+            .fillMaxSize()
+            .background(Color.Transparent)
+        ) {
+            when(devChooseScreen){
+                "Map" -> Navigator(TastyMapScreen())
+                "Auth" -> Navigator(LoginScreen())
             }
-            "Auth" -> {
-                Navigator(LoginScreen())
-            }
+           //AppToast()
         }
-        AppToast()
-
 
     }
 }
