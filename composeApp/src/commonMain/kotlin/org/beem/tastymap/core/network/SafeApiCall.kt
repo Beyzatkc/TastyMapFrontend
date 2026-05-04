@@ -11,6 +11,7 @@ suspend fun <T> safeApiCall(
     return withContext(Dispatchers.Default) {
         try {
             ResultWrapper.Success(call())
+
         } catch (e: Exception) {
             when (e) {
                 is io.ktor.client.network.sockets.ConnectTimeoutException,

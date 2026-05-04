@@ -67,6 +67,8 @@ kotlin {
         browser()
         binaries.executable()
     }
+    @OptIn(ExperimentalWasmDsl::class)
+
 /*
     cocoapods {
         summary = "TastyMap Shared Library"
@@ -87,6 +89,16 @@ kotlin {
  */
     
     sourceSets {
+        val webMain by creating {
+            dependsOn(commonMain.get())
+            dependencies {
+                implementation("org.jetbrains.kotlinx:kotlinx-browser:0.3")
+            }
+        }
+
+        wasmJsMain.get().apply {
+            dependsOn(webMain)
+        }
         androidMain.dependencies {
             implementation(libs.compose.uiToolingPreview)
             implementation(libs.androidx.activity.compose)
@@ -107,8 +119,12 @@ kotlin {
         wasmJsMain.dependencies {
             implementation(libs.ktor.client.js)
             implementation(libs.sqldelight.web)
+        }
+        webMain.dependencies {
             implementation(libs.kotlinx.browser)
         }
+
+
         commonMain.dependencies {
             implementation(libs.compose.runtime)
             implementation(libs.compose.foundation)

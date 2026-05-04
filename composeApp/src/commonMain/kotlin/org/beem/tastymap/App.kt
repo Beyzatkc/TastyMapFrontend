@@ -30,8 +30,9 @@ fun App() {
                     if (isAlreadyOnVerify) {
                         navigator.replace(screen)
                     } else {
-                        navigator.replaceAll(screen)
+                        navigator.push(screen)
                     }
+                    DeepLinkManager.clear()
                 }
             }
             CurrentScreen()

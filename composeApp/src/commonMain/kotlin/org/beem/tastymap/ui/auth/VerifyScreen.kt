@@ -68,7 +68,7 @@ class VerifyScreen(val token: String) : Screen{
                 )
 
                 Text(
-                    text = "Lütfen bekleyiniz, ana sayfaya yönlendiriliyorsunuz.",
+                    text = "Lütfen bekleyiniz, giriş sayfaya yönlendiriliyorsunuz.",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
