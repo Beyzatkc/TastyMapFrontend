@@ -64,13 +64,15 @@ class LogRegScreen : Screen {
         val navigator = LocalNavigator.currentOrThrow
         val koinInstance = koinInject<AuthScreenModel>()
         val screenModel = rememberScreenModel { koinInstance }
+        val regState by screenModel.registerState.collectAsState()
+        val logState by screenModel.loginState.collectAsState()
 
         val navyIcons = Color(0xFF001970)
         val mapBackgroundBlue = Color(0xFFE3F2FD)
         val darkGrayLines = Color(0xFF444444).copy(alpha = 0.2f)
         val backBackgroundBlue = Color(0xFFF2F2F2)
 
-        AuthEffectHandler(screenModel,navigator)
+        AuthEffectHandler(screenModel,regState,navigator)
 
         Box(modifier = Modifier.fillMaxSize()
             .background(backBackgroundBlue)
@@ -142,9 +144,9 @@ class LogRegScreen : Screen {
                         ) { targetIsLogin ->
                             key(targetIsLogin) {
                                 if (targetIsLogin) {
-                                    LoginForm(navyIcons, screenModel)
+                                    LoginForm(navyIcons, screenModel,logState)
                                 } else {
-                                    RegisterForm(navyIcons, screenModel)
+                                    RegisterForm(navyIcons, screenModel,regState)
                                 }
                             }
                         }
@@ -156,7 +158,8 @@ class LogRegScreen : Screen {
 
                 Spacer(modifier = Modifier.height(50.dp))
             }
-            FullScreenLoading(isLoading = screenModel.isLoading)
+            val currentLoading = if (isLoginTab) logState.isLoading else regState.isLoading
+            FullScreenLoading(isLoading = currentLoading)
         }
     }
 }
@@ -217,6 +220,7 @@ fun HeaderTitles(navyIcons: Color) {
 @Composable
 fun AuthEffectHandler(
     screenModel: AuthScreenModel,
+    state : RegisterUiState,
     navigator: Navigator
 ) {
     LaunchedEffect(Unit) {
@@ -229,7 +233,7 @@ fun AuthEffectHandler(
 
                 }
                 AuthEffect.NavigateToValidate -> {
-                    navigator.replace(EmailVerificationScreen(screenModel.regEmail))
+                    navigator.replace(EmailVerificationScreen(state.regEmail))
                 }
             }
         }
@@ -427,13 +431,12 @@ fun FooterLinks(navyIcons: Color) {
         Text(text = "Destek", modifier = Modifier.padding(horizontal = 8.dp), style = linkStyle)
     }
 }
-@Composable fun LoginForm(color: Color,vm: AuthScreenModel) {
+@Composable fun LoginForm(color: Color,vm: AuthScreenModel,state: LoginUiState,) {
     Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
         TastyTextField(
-            value = vm.loginUsername,
+            value = state.loginUsername,
             onValueChange = {
-                vm.loginUsername = it
-                vm.loginUsernameError = null
+                vm.onLoginEvent(LoginEvent.UsernameChanged(it))
                             },
             label = "Kullanıcı adı",
             leadingIcon = {
@@ -443,14 +446,13 @@ fun FooterLinks(navyIcons: Color) {
                 )
             },
             isPassword = false,
-            error = vm.loginUsernameError
+            error = state.loginUsernameError
         )
 
         TastyTextField(
-            value = vm.loginPassword,
+            value = state.loginPassword,
             onValueChange = {
-                vm.loginPassword = it
-                vm.logPasswordError = null
+                vm.onLoginEvent(LoginEvent.PasswordChanged(it))
                             },
             label = "Şifre",
             leadingIcon = {
@@ -460,12 +462,12 @@ fun FooterLinks(navyIcons: Color) {
                 )
             },
             isPassword = true,
-            error = vm.logPasswordError
+            error = state.logPasswordError
         )
         Spacer(modifier = Modifier.height(5.dp))
         TastyButton(
             text = "Giriş Yap",
-            isLoading = vm.isLoading,
+            isLoading = state.isLoading,
             onClick = {
                 vm.login()
             },
@@ -486,10 +488,10 @@ fun FooterLinks(navyIcons: Color) {
 }
 
 @Composable
-fun RegisterForm(color: Color,vm: AuthScreenModel) {
+fun RegisterForm(color: Color,vm: AuthScreenModel,state: RegisterUiState) {
 
     AnimatedContent(
-        targetState = vm.registerStep,
+        targetState = state.step,
         transitionSpec = {
             if (targetState > initialState) {
                 (slideInHorizontally { it } + fadeIn()) togetherWith
@@ -522,11 +524,9 @@ fun RegisterForm(color: Color,vm: AuthScreenModel) {
 
             if (currentStep == 1) {
                 TastyTextField(
-                    value = vm.regName,
+                    value = state.regName,
                     onValueChange = {
-                        vm.regName = it
-                        vm.regnameError = null
-                                    },
+                        vm.onRegisterEvent(RegisterEvent.NameChanged(it)) },
                     label = "Ad",
                     leadingIcon = {
                         Icon(
@@ -534,13 +534,12 @@ fun RegisterForm(color: Color,vm: AuthScreenModel) {
                             contentDescription = null
                         )
                     },
-                    error = vm.regnameError
+                    error = state.regnameError
                 )
                 TastyTextField(
-                    value = vm.regSurname,
+                    value = state.regSurname,
                     onValueChange = {
-                        vm.regSurname = it
-                        vm.regSurnameError = null
+                        vm.onRegisterEvent(RegisterEvent.SurnameChanged(it))
                                     },
                     label = "Soyad",
                     leadingIcon = {
@@ -549,13 +548,12 @@ fun RegisterForm(color: Color,vm: AuthScreenModel) {
                             contentDescription = null
                         )
                     },
-                    error=vm.regSurnameError
+                    error=state.regSurnameError
                 )
                 TastyTextField(
-                    value = vm.regUsername,
+                    value = state.regUsername,
                     onValueChange = {
-                        vm.regUsername = it
-                        vm.regusernameError = null
+                        vm.onRegisterEvent(RegisterEvent.UsernameChanged(it))
                                     },
                     label = "Kullanıcı Adı",
                     leadingIcon = {
@@ -564,7 +562,7 @@ fun RegisterForm(color: Color,vm: AuthScreenModel) {
                             contentDescription = null
                         )
                     },
-                    error=vm.regusernameError
+                    error=state.regusernameError
                 )
 
                 Spacer(modifier = Modifier.height(8.dp))
@@ -579,32 +577,28 @@ fun RegisterForm(color: Color,vm: AuthScreenModel) {
                 )
             } else {
                 TastyTextField(
-                    value = vm.regEmail,
+                    value = state.regEmail,
                     onValueChange = {
-                        vm.regEmail = it
-                        vm.regEmailError = null
-                                    },
+                        vm.onRegisterEvent(RegisterEvent.EmailChanged(it)) },
                     label = "Email",
                     leadingIcon = { Icon(Icons.Default.Email, null) },
-                    error=vm.regEmailError
+                    error=state.regEmailError
                 )
                 TastyTextField(
-                    value = vm.regPassword,
+                    value = state.regPassword,
                     onValueChange = {
-                        vm.regPassword = it
-                        vm.regPasswordError = null
-                                    },
+                        vm.onRegisterEvent(RegisterEvent.PasswordChanged(it)) },
                     label = "Şifre",
                     leadingIcon = { Icon(Icons.Default.Password, null) },
                     isPassword = true,
-                    error=vm.regPasswordError
+                    error=state.regPasswordError
                 )
 
                 Spacer(modifier = Modifier.height(5.dp))
 
                 TastyButton(
                     text = "Kayıt Ol",
-                    isLoading = vm.isLoading,
+                    isLoading = state.isLoading,
                     onClick = {
                         vm.register()
                     },

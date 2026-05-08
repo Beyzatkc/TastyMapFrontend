@@ -8,7 +8,9 @@ object DeepLinkManager {
     private val _navigationEvents = MutableSharedFlow<Screen>(replay = 1, extraBufferCapacity = 1)
     val navigationEvents = _navigationEvents.asSharedFlow()
 
-    /*
+    var pendingInitialScreen: Screen? = null
+
+    //androdı icin
     fun handleLink(url: String) {
         val uri = url.split("?").getOrNull(1)
         val params = uri?.split("&")?.associate {
@@ -19,11 +21,14 @@ object DeepLinkManager {
         val token = params?.get("token")
 
         if (!token.isNullOrEmpty() && url.contains("/auth/verify")) {
-            _navigationEvents.tryEmit(VerifyScreen(token))
+            val screen = VerifyScreen(token)
+            pendingInitialScreen = screen
+            _navigationEvents.tryEmit(screen)
         }
     }
 
-     */
+
+    /* web iicn
     fun handleLink(url: String) {
         if (url.contains("#verify")) {
             val queryString = url.substringAfter("?", "")
@@ -39,6 +44,8 @@ object DeepLinkManager {
         }
     }
     // DeepLinkManager.kt
+
+     */
 
     fun clear() {
         _navigationEvents.resetReplayCache()

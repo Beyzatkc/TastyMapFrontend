@@ -18,24 +18,25 @@ import org.beem.tastymap.ui.theme.TastyTheme
 @Preview
 fun App() {
     var isDark by remember { mutableStateOf(false) }
+    var startScreen by remember { mutableStateOf<cafe.adriel.voyager.core.screen.Screen?>(null) }
+
+    LaunchedEffect(Unit) {
+        startScreen = DeepLinkManager.pendingInitialScreen ?: LogRegScreen()
+        DeepLinkManager.pendingInitialScreen = null
+    }
 
     TastyTheme(useDarkTheme = isDark) {
-        //Navigator(LogRegScreen())
-
-        Navigator(LogRegScreen()) { navigator ->
-            LaunchedEffect(navigator) {
-                DeepLinkManager.navigationEvents.collect { screen ->
-                    val isAlreadyOnVerify = navigator.lastItem is VerifyScreen
-
-                    if (isAlreadyOnVerify) {
-                        navigator.replace(screen)
-                    } else {
-                        navigator.push(screen)
+        startScreen?.let { initial ->
+            Navigator(initial) { navigator ->
+                LaunchedEffect(navigator) {
+                    DeepLinkManager.navigationEvents.collect { screen ->
+                        if (navigator.lastItem::class != screen::class) {
+                            navigator.replaceAll(screen)
+                        }
                     }
-                    DeepLinkManager.clear()
                 }
+                CurrentScreen()
             }
-            CurrentScreen()
         }
         AppToast()
 

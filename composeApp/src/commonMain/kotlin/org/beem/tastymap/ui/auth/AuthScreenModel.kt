@@ -32,26 +32,12 @@ class AuthScreenModel(
     private val deviceInfoProvider: DeviceInfoProvider
 ) : ScreenModel{
 
-    var registerStep by mutableStateOf(1)
-        private set
-    var loginUsername by mutableStateOf("")
-    var loginUsernameError by mutableStateOf<String?>(null)
-    var loginPassword by mutableStateOf("")
-    var logPasswordError by mutableStateOf<String?>(null)
+    private val _loginState = MutableStateFlow(LoginUiState())
+    val loginState = _loginState.asStateFlow()
 
-    var regName by mutableStateOf("")
-    var regnameError by mutableStateOf<String?>(null)
-    var regSurname by mutableStateOf("")
-    var regSurnameError by mutableStateOf<String?>(null)
-    var regUsername by mutableStateOf("")
-    var regusernameError by mutableStateOf<String?>(null)
+    private val _registerState = MutableStateFlow(RegisterUiState())
+    val registerState = _registerState.asStateFlow()
 
-    var regEmail by mutableStateOf("")
-    var regEmailError by mutableStateOf<String?>(null)
-    var regPassword by mutableStateOf("")
-    var regPasswordError by mutableStateOf<String?>(null)
-
-    var isLoading by mutableStateOf(false)
     private val _timeLeft = MutableStateFlow(0)
     val timeLeft: StateFlow<Int> = _timeLeft
     private var timerJob: Job? = null
@@ -79,26 +65,26 @@ class AuthScreenModel(
 
     fun nextRegisterStep() {
         if (validateRegisterStep1()) {
-            registerStep = 2
+            _registerState.update { it.copy(step = 2) }
         }
     }
 
     fun previousRegisterStep() {
-        registerStep = 1
+        _registerState.update { it.copy(step = 1) }
     }
 
     fun register() {
-        if (isLoading) return
         screenModelScope.launch {
             if (validateRegisterStep2()) {
-                    isLoading = true
+                _registerState.update { it.copy(isLoading = true) }
+                val state = _registerState.value
 
                     val request = RegisterRequest(
-                        username = regUsername,
-                        name = regName,
-                        surname = regSurname,
-                        email = regEmail,
-                        password = regPassword,
+                        username = state.regUsername,
+                        name = state.regName,
+                        surname = state.regSurname,
+                        email = state.regEmail,
+                        password = state.regPassword,
                         null, null, "USER", true
                     )
 
@@ -112,21 +98,20 @@ class AuthScreenModel(
                             ToastManager.show(result.message ?: "Kayıt başarısız.")
                         }
                     }
-                    isLoading = false
+                  _registerState.update { it.copy(isLoading = false) }
                 }
             }
         }
 
     fun login(){
-        if (isLoading) return
-
         if(validateLogin()) {
             screenModelScope.launch {
-                isLoading = true
+                _loginState.update { it.copy(isLoading = true) }
+                val currentState = _loginState.value
 
                 val request = LoginRequest(
-                    username = loginUsername,
-                    password = loginPassword,
+                    username = currentState.loginUsername,
+                    password = currentState.loginPassword,
                     deviceInfoProvider.getDeviceId(),
                     deviceInfoProvider.getFcmToken()
                 )
@@ -143,14 +128,14 @@ class AuthScreenModel(
                         ToastManager.show(result.message ?: "Giriş başarısız.")
                     }
                 }
-                isLoading = false
+                _loginState.update { it.copy(isLoading = false) }
             }
         }
     }
     fun resendMail(email: String){
-        if(isLoading)return
+        if (_registerState.value.isLoading) return
         screenModelScope.launch {
-            isLoading=true
+            _registerState.update { it.copy(isLoading = true) }
             when(val result = repository.resendEmail(email)){
                 is ResultWrapper.Success -> {
                     ToastManager.show(result.data)
@@ -159,86 +144,162 @@ class AuthScreenModel(
                     ToastManager.show(result.message ?: "Bir hata oluştu")
                 }
             }
-            isLoading = false
+            _registerState.update { it.copy(isLoading = false) }
         }
     }
     fun verifyEmail(token: String){
-        if(isLoading){
-            println("DEBUG: Still loading, skipping...")
+        if(_registerState.value.isLoading){
             return
         }
         screenModelScope.launch {
-            isLoading=true
+            _registerState.update { it.copy(isLoading = true, verificationError = null) }
             val result = repository.verifyEmail(token)
-            println("DEBUG: API Result: $result")
             when(result){
-
                 is ResultWrapper.Success -> {
-
                     ToastManager.show(result.data["message"] ?: "Başarılı")
                     _navigationEvent.send(true)
                 }
                 is ResultWrapper.Error -> {
-                    ToastManager.show(result.message ?: "Bir hata oluştu")
-                    println("DEBUG: Verification Error: ${result.message}")
+                    //ToastManager.show(result.message ?: "Bir hata oluştu")
+                    _registerState.update {
+                        it.copy(
+                            isLoading = false,
+                            verificationError = result.message ?: "Doğrulama başarısız oldu."
+                        )
+                    }
                     _navigationEvent.send(false)
                 }
             }
-            isLoading = false
+            _registerState.update { it.copy(isLoading = false) }
         }
     }
 
     fun validateRegisterStep1(): Boolean {
-        val uResult = AuthValidator.validateUsername(regUsername)
-        val nResult = AuthValidator.validateName(regName)
-        val sResult = AuthValidator.validateSurname(regSurname)
+        val currentState=_registerState.value
+        val uResult = AuthValidator.validateUsername(currentState.regUsername)
+        val nResult = AuthValidator.validateName(currentState.regName)
+        val sResult = AuthValidator.validateSurname(currentState.regSurname)
 
-        regusernameError = (uResult as? ValidationResult.Invalid)?.message
-        regnameError = (nResult as? ValidationResult.Invalid)?.message
-        regSurnameError = (sResult as? ValidationResult.Invalid)?.message
+        val usernameError = (uResult as? ValidationResult.Invalid)?.message
+        val nameError = (nResult as? ValidationResult.Invalid)?.message
+        val surnameError = (sResult as? ValidationResult.Invalid)?.message
+
+        _registerState.update {
+            it.copy(
+                regusernameError = usernameError,
+                regSurnameError = surnameError,
+                regnameError = nameError
+            )
+        }
 
         return uResult is ValidationResult.Valid &&
                 nResult is ValidationResult.Valid &&
                 sResult is ValidationResult.Valid
     }
     fun validateRegisterStep2(): Boolean {
-        val eResult = AuthValidator.validateEmail(regEmail)
-        val pResult = AuthValidator.validatePassword(regPassword)
+        val currentState=_registerState.value
+        val eResult = AuthValidator.validateEmail(currentState.regEmail)
+        val pResult = AuthValidator.validatePassword(currentState.regPassword)
 
 
-        regEmailError = (eResult as? ValidationResult.Invalid)?.message
-        regPasswordError = (pResult as? ValidationResult.Invalid)?.message
+        val regEmailError = (eResult as? ValidationResult.Invalid)?.message
+        val regPasswordError = (pResult as? ValidationResult.Invalid)?.message
 
+        _registerState.update {
+            it.copy(
+                regEmailError = regEmailError,
+                regPasswordError = regPasswordError,
+            )
+        }
 
         return eResult is ValidationResult.Valid &&
                 pResult is ValidationResult.Valid
     }
     fun validateLogin(): Boolean {
-        val eResult = AuthValidator.validateUsername(loginUsername)
-        val pResult = AuthValidator.validatePassword(loginPassword)
-        loginUsernameError = (eResult as? ValidationResult.Invalid)?.message
-        logPasswordError = (pResult as? ValidationResult.Invalid)?.message
-        return eResult is ValidationResult.Valid &&
-                pResult is ValidationResult.Valid
+        val state = _loginState.value
+        val uResult = AuthValidator.validateUsername(state.loginUsername)
+        val pResult = AuthValidator.validatePassword(state.loginPassword)
+
+        val usernameError = (uResult as? ValidationResult.Invalid)?.message
+        val passwordError = (pResult as? ValidationResult.Invalid)?.message
+
+        _loginState.update {
+            it.copy(
+                loginUsernameError = usernameError,
+                logPasswordError = passwordError
+            )
+        }
+        return uResult is ValidationResult.Valid && pResult is ValidationResult.Valid
     }
     fun clearRegisterForm() {
-        regName = ""
-        regnameError = null
-        regSurname = ""
-        regSurnameError = null
-        regUsername = ""
-        regusernameError = null
-        regEmail = ""
-        regEmailError = null
-        regPassword = ""
-        regPasswordError = null
+        _registerState.update {
+            it.copy(
+            regName = "",
+            regnameError = null,
+            regSurname = "",
+            regSurnameError = null,
+            regUsername = "",
+            regusernameError = null,
+            regEmail = "",
+            regEmailError = null,
+            regPassword = "",
+            regPasswordError = null,
+            )
+        }
     }
 
     fun clearLoginForm() {
-        loginUsername = ""
-        loginUsernameError = null
-        loginPassword = ""
-        logPasswordError = null
+        _loginState.update {
+            it.copy(
+                loginUsername = "",
+                loginUsernameError = null,
+                loginPassword = "",
+                logPasswordError = null
+            )
+        }
+    }
+    fun onRegisterEvent(event: RegisterEvent) {
+        _registerState.update { currentState ->
+            when (event) {
+                is RegisterEvent.NameChanged ->
+                    currentState.copy(regName = event.value, regnameError = null)
+
+                is RegisterEvent.SurnameChanged ->
+                    currentState.copy(regSurname = event.value, regSurnameError = null)
+
+                is RegisterEvent.UsernameChanged ->
+                    currentState.copy(regUsername = event.value, regusernameError = null)
+
+                is RegisterEvent.EmailChanged ->
+                    currentState.copy(regEmail = event.value, regEmailError = null)
+
+                is RegisterEvent.PasswordChanged ->
+                    currentState.copy(regPassword = event.value, regPasswordError = null)
+
+            }
+        }
     }
 
+    fun onLoginEvent(event: LoginEvent) {
+        _loginState.update { currentState ->
+            when (event) {
+                is LoginEvent.UsernameChanged ->
+                    currentState.copy(loginUsername = event.value, loginUsernameError = null)
+                is LoginEvent.PasswordChanged ->
+                    currentState.copy(loginPassword = event.value, logPasswordError = null)
+            }
+        }
+    }
+}
+sealed class LoginEvent {
+    data class UsernameChanged(val value: String) : LoginEvent()
+    data class PasswordChanged(val value: String) : LoginEvent()
+}
+sealed class RegisterEvent {
+    data class NameChanged(val value: String) : RegisterEvent()
+    data class SurnameChanged(val value: String) : RegisterEvent()
+    data class UsernameChanged(val value: String) : RegisterEvent()
+
+    data class EmailChanged(val value: String) : RegisterEvent()
+    data class PasswordChanged(val value: String) : RegisterEvent()
 }
