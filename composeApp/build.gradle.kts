@@ -108,6 +108,8 @@ kotlin {
             implementation(libs.firebase.gitlive.messaging)
             implementation(project.dependencies.platform(libs.firebase.bom))
             implementation(libs.firebase.messaging.android)
+            implementation(libs.androidx.security.crypto)
+            implementation("androidx.core:core-splashscreen:1.0.1")
 
         }
         iosMain.dependencies {

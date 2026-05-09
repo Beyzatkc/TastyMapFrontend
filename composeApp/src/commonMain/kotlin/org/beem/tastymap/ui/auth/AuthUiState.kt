@@ -22,5 +22,30 @@ data class RegisterUiState(
     val regPassword: String = "",
     val regPasswordError: String? = null,
     val isLoading: Boolean = false,
-    val verificationError: String? = null
-    )
+)
+data class VerifiacationUiState(
+    val verificationError: String? = null,
+    val isEmailVerified: Boolean = false,
+    val isLogin: Boolean = false,
+    val isLoading: Boolean = false,
+)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

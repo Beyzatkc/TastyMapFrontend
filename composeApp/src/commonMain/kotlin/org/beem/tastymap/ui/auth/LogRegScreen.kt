@@ -57,6 +57,7 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.zIndex
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
+import org.beem.tastymap.ui.animations.TastyAnimations
 
 class LogRegScreen : Screen {
     @Composable
@@ -72,7 +73,7 @@ class LogRegScreen : Screen {
         val darkGrayLines = Color(0xFF444444).copy(alpha = 0.2f)
         val backBackgroundBlue = Color(0xFFF2F2F2)
 
-        AuthEffectHandler(screenModel,regState,navigator)
+        AuthEffectHandler(screenModel,navigator)
 
         Box(modifier = Modifier.fillMaxSize()
             .background(backBackgroundBlue)
@@ -133,11 +134,9 @@ class LogRegScreen : Screen {
                             targetState = isLoginTab,
                             transitionSpec = {
                                 if (targetState > initialState) {
-                                    (slideInHorizontally { -it } + fadeIn()) togetherWith
-                                            (slideOutHorizontally { +it } + fadeOut())
+                                    TastyAnimations.slideInForward()
                                 } else {
-                                    (slideInHorizontally { +it } + fadeIn()) togetherWith
-                                            (slideOutHorizontally { -it } + fadeOut())
+                                    TastyAnimations.slideInBackward()
                                 }.using(SizeTransform(clip = false))
                             },
                             label = "FormAnim"
@@ -220,7 +219,6 @@ fun HeaderTitles(navyIcons: Color) {
 @Composable
 fun AuthEffectHandler(
     screenModel: AuthScreenModel,
-    state : RegisterUiState,
     navigator: Navigator
 ) {
     LaunchedEffect(Unit) {
@@ -229,11 +227,9 @@ fun AuthEffectHandler(
                 is AuthEffect.NavigateToHome -> {}
                 is AuthEffect.NavigateToLogin -> { /* ... */ }
                 is AuthEffect.NavigateToPending -> { /* ... */ }
-                is AuthEffect.ShowMessage ->{
 
-                }
-                AuthEffect.NavigateToValidate -> {
-                    navigator.replace(EmailVerificationScreen(state.regEmail))
+                is AuthEffect.NavigateToValidate -> {
+                    navigator.push(EmailVerificationScreen(effect.email))
                 }
             }
         }
@@ -452,8 +448,7 @@ fun FooterLinks(navyIcons: Color) {
         TastyTextField(
             value = state.loginPassword,
             onValueChange = {
-                vm.onLoginEvent(LoginEvent.PasswordChanged(it))
-                            },
+                vm.onLoginEvent(LoginEvent.PasswordChanged(it)) },
             label = "Şifre",
             leadingIcon = {
                 Icon(

@@ -6,4 +6,7 @@ import org.koin.dsl.module
 
 val iosModule = module {
     single<DeviceInfoProvider> { IosDeviceInfoProvider() }
+    single<Settings> {
+        KeychainSettings(service = "TastyMapService")
+    }
 }

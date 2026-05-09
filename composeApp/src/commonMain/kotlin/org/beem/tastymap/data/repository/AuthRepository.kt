@@ -3,6 +3,7 @@ package org.beem.tastymap.data.repository
 import androidx.compose.animation.core.rememberTransition
 import io.ktor.client.statement.HttpResponse
 import org.beem.tastymap.core.local.TokenManager
+import org.beem.tastymap.core.local.UserManager
 import org.beem.tastymap.core.network.ResultWrapper
 import org.beem.tastymap.core.network.safeApiCall
 import org.beem.tastymap.data.model.LoginRequest
@@ -14,7 +15,8 @@ import org.beem.tastymap.data.remote.AuthDataSource
 
 class AuthRepository(
     private val dataSource: AuthDataSource,
-    private val tokenManager: TokenManager
+    private val tokenManager: TokenManager,
+    private val userManager: UserManager
 ) {
     suspend fun register(request: RegisterRequest): ResultWrapper<RegisterResponse> {
         return safeApiCall {
@@ -28,8 +30,15 @@ class AuthRepository(
             if (response.status == LoginStatus.SUCCESS && response.accessToken != null) {
                 tokenManager.saveTokens(response.accessToken, response.refreshToken)
                 tokenManager.saveDeviceId(loginRequest.deviceId)
+                userManager.saveUser(response.status.toString(),response.message,
+                    response.userResponseDTO?.id,
+                    response.userResponseDTO?.username,
+                    response.userResponseDTO?.name,
+                    response.userResponseDTO?.surname,
+                    response.userResponseDTO?.profile,
+                    response.userResponseDTO?.role, response.userResponseDTO?.date, response.userResponseDTO?.biography
+                )
             }
-
             response
         }
     }
@@ -44,5 +53,10 @@ class AuthRepository(
             val response = dataSource.verifyEmail(token)
             response
         }
+    }
+     fun isUserLoggedIn(): Boolean {
+        val token = tokenManager.getAccessToken()
+        val userId = userManager.getUserId()
+        return !token.isNullOrBlank() && userId != -1L
     }
 }

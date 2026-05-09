@@ -59,23 +59,28 @@ fun createAuthClient(tokenManager: TokenManager, noAuthClient: HttpClient) = Htt
                 if (access != null && refresh != null) BearerTokens(access, refresh) else null
             }
 
+
             refreshTokens {
                 val deviceId = tokenManager.getDeviceId() ?: "unknown_device"
                 val refreshToken = tokenManager.getRefreshToken()
 
-                val response = noAuthClient.post("api/users/refresh") {
-                    setBody(mapOf(
-                        "refreshToken" to refreshToken,
-                        "deviceId" to deviceId
-                    ))
-                }
+                try {
+                    val response = noAuthClient.post("api/users/refresh") {
+                        setBody(mapOf(
+                            "refreshToken" to refreshToken,
+                            "deviceId" to deviceId
+                        ))
+                    }
 
-                if (response.status == HttpStatusCode.OK) {
-                    val newTokens = response.body<RefreshTokenResponseDTO>()
-                    tokenManager.saveTokens(newTokens.accessToken, newTokens.refreshToken)
-                    BearerTokens(newTokens.accessToken, newTokens.refreshToken)
-                } else {
-                    tokenManager.clear()
+                    if (response.status == HttpStatusCode.OK) {
+                        val newTokens = response.body<RefreshTokenResponseDTO>()
+                        tokenManager.saveTokens(newTokens.accessToken, newTokens.refreshToken)
+                        BearerTokens(newTokens.accessToken, newTokens.refreshToken)
+                    } else {
+                        tokenManager.clear()
+                        null
+                    }
+                } catch (e: Exception) {
                     null
                 }
             }

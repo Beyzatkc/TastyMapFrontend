@@ -38,11 +38,14 @@ class AuthScreenModel(
     private val _registerState = MutableStateFlow(RegisterUiState())
     val registerState = _registerState.asStateFlow()
 
+    private val _verificationState = MutableStateFlow(VerifiacationUiState())
+    val verificationState = _verificationState.asStateFlow()
+
     private val _timeLeft = MutableStateFlow(0)
     val timeLeft: StateFlow<Int> = _timeLeft
     private var timerJob: Job? = null
-    private val _navigationEvent = Channel<Boolean>()
-    val navigationEvent = _navigationEvent.receiveAsFlow()
+
+    //UYGULAMA İLK AICLDIIGINDA LOGİN EDİLMİS Mİ KONTROLU OLCAK BURDA EDİLMİSSE ONA GORE VERİFİCATİONA TRUE VEYA FALSE YAPCAL
     fun startTime() {
         if (_timeLeft.value > 0) return
 
@@ -91,7 +94,7 @@ class AuthScreenModel(
                     when (val result = repository.register(request)) {
                         is ResultWrapper.Success -> {
                             ToastManager.show("Kayıt başarılı!")
-                            _effect.send(AuthEffect.NavigateToValidate)
+                            _effect.send(AuthEffect.NavigateToValidate(state.regEmail))
                         }
 
                         is ResultWrapper.Error -> {
@@ -119,6 +122,7 @@ class AuthScreenModel(
                     is ResultWrapper.Success -> {
                         ToastManager.show("Giriş başarılı!")
                         if (result.data.status == LoginStatus.SUCCESS) {
+                            _verificationState.update {it.copy(isLogin = true) }
                             _effect.send(AuthEffect.NavigateToHome)
                         } else {
                             _effect.send(AuthEffect.NavigateToPending)
@@ -148,29 +152,33 @@ class AuthScreenModel(
         }
     }
     fun verifyEmail(token: String){
-        if(_registerState.value.isLoading){
+        if(_verificationState.value.isLoading){
             return
         }
         screenModelScope.launch {
-            _registerState.update { it.copy(isLoading = true, verificationError = null) }
+            _verificationState.update { it.copy(isLoading = true, verificationError = null) }
             val result = repository.verifyEmail(token)
             when(result){
                 is ResultWrapper.Success -> {
+                    _verificationState.update {
+                        it.copy(
+                            isLoading = false,
+                            isEmailVerified = true
+                        )
+                    }
                     ToastManager.show(result.data["message"] ?: "Başarılı")
-                    _navigationEvent.send(true)
                 }
                 is ResultWrapper.Error -> {
                     //ToastManager.show(result.message ?: "Bir hata oluştu")
-                    _registerState.update {
+                    _verificationState.update {
                         it.copy(
                             isLoading = false,
-                            verificationError = result.message ?: "Doğrulama başarısız oldu."
+                            verificationError = result.message ?: "Doğrulama başarısız oldu.",
+                            isEmailVerified = false
                         )
                     }
-                    _navigationEvent.send(false)
                 }
             }
-            _registerState.update { it.copy(isLoading = false) }
         }
     }
 

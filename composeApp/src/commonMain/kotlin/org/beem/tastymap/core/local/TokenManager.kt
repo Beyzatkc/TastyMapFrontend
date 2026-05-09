@@ -34,8 +34,7 @@ class TokenManagerImpl(private val settings: Settings) : TokenManager {
 
 
     override fun clear() {
-        settings.remove(KEY_ACCESS_TOKEN)
-        settings.remove(KEY_REFRESH_TOKEN)
+        settings.clear()
     }
 
 }

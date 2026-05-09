@@ -7,13 +7,18 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ErrorOutline
 import androidx.compose.material3.CircularProgressIndicator
@@ -31,11 +36,13 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import cafe.adriel.voyager.core.model.rememberScreenModel
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import kotlinx.coroutines.delay
+import org.beem.tastymap.ui.animations.TastyAnimations.scaleFade
 import org.koin.compose.koinInject
 
 class VerifyScreen(val token: String) : Screen{
@@ -45,96 +52,128 @@ class VerifyScreen(val token: String) : Screen{
         val navigator = LocalNavigator.currentOrThrow
         val koinInstance = koinInject<AuthScreenModel>()
         val screenModel = rememberScreenModel { koinInstance }
-        val state by screenModel.registerState.collectAsState()
+        val state by screenModel.verificationState.collectAsState()
 
         LaunchedEffect(token) {
             screenModel.verifyEmail(token)
-        }
-
-        LaunchedEffect(Unit) {
-            screenModel.navigationEvent.collect { isSuccess ->
-                if (isSuccess) {
-                    delay(1000)
-                    //navigator.replaceAll(HomeScreen())
-                } else {
-
-                    //navigator.replaceAll(LogRegScreen())
-                }
-            }
         }
 
         Surface(
             modifier = Modifier.fillMaxSize(),
             color = MaterialTheme.colorScheme.background
         ) {
-            Column(
-                modifier = Modifier.fillMaxSize(),
-                verticalArrangement = Arrangement.Center,
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                AnimatedContent(
-                    targetState = state.verificationError != null,
-                    transitionSpec = {
-                        (fadeIn(animationSpec = tween(500)) + scaleIn(initialScale = 0.92f))
-                            .togetherWith(fadeOut(animationSpec = tween(500)))
-                    },
-                    label = "VerifyStateAnim"
-                ) { isError ->
-                    Column(
-                        modifier = Modifier.fillMaxSize().padding(32.dp),
-                        verticalArrangement = Arrangement.Center,
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        if (!isError) {
-                            CircularProgressIndicator(
-                                color = MaterialTheme.colorScheme.primary,
-                                strokeWidth = 4.dp
-                            )
 
-                            Spacer(modifier = Modifier.height(24.dp))
+        Box(
+            modifier = Modifier.fillMaxSize().padding(24.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            AnimatedContent(
+                targetState = state.verificationError != null,
+                transitionSpec = {
+                    scaleFade()
+                },
+                label = "VerifyStateAnim"
+            ) { isError ->
 
-                            Text(
-                                text = "Hesabınız Doğrulanıyor...",
-                                style = MaterialTheme.typography.headlineSmall
-                            )
+                Column(
+                    modifier = Modifier
+                        .widthIn(max = 440.dp)
+                        .fillMaxWidth(),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    if (!isError) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(54.dp),
+                            color = MaterialTheme.colorScheme.primary,
+                            strokeWidth = 4.dp
+                        )
 
-                            Text(
-                                text = "Lütfen bekleyiniz, giriş sayfaya yönlendiriliyorsunuz.",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        } else {
+                        Spacer(modifier = Modifier.height(32.dp))
 
-                            Icon(
-                                imageVector = Icons.Default.ErrorOutline, // Import gerekli
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.error,
-                                modifier = Modifier.size(80.dp)
-                            )
-                            Spacer(modifier = Modifier.height(16.dp))
-                            Text(
-                                text = "Bir Sorun Oluştu",
-                                style = MaterialTheme.typography.headlineSmall,
-                                color = MaterialTheme.colorScheme.error,
-                                fontWeight = FontWeight.Bold
-                            )
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Text(
-                                text = state.verificationError ?: "Bilinmeyen bir hata",
-                                style = MaterialTheme.typography.bodyMedium,
-                                textAlign = TextAlign.Center,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
+                        Text(
+                            text = "Hesabınız Doğrulanıyor",
+                            style = MaterialTheme.typography.headlineSmall,
+                            textAlign = TextAlign.Center,
+                            fontWeight = FontWeight.Bold
+                        )
 
-                            Spacer(modifier = Modifier.height(32.dp))
+                        Spacer(modifier = Modifier.height(12.dp))
 
-                            TastyButton(
-                                text = "Geri Dön",
-                                onClick = { navigator.replaceAll(LogRegScreen()) },
-                                backcolor = MaterialTheme.colorScheme.error,
-                                textcolor = Color.White,
-                                strokecolor = MaterialTheme.colorScheme.error
-                            )
+                        Text(
+                            text = "Lütfen bekleyiniz, giriş sayfasına yönlendiriliyorsunuz.",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            textAlign = TextAlign.Center,
+                            lineHeight = 22.sp
+                        )
+                    }else {
+                            Column(
+                                modifier = Modifier
+                                    .widthIn(max = 440.dp)
+                                    .fillMaxWidth()
+                                    .padding(24.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(100.dp)
+                                        .background(
+                                            color = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.4f),
+                                            shape = CircleShape
+                                        ),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.ErrorOutline,
+                                        contentDescription = null,
+                                        tint = MaterialTheme.colorScheme.error,
+                                        modifier = Modifier.size(56.dp)
+                                    )
+                                }
+
+                                Spacer(modifier = Modifier.height(24.dp))
+
+                                Text(
+                                    text = "Bir Sorun Oluştu",
+                                    style = MaterialTheme.typography.headlineMedium,
+                                    color = MaterialTheme.colorScheme.error,
+                                    fontWeight = FontWeight.ExtraBold,
+                                    textAlign = TextAlign.Center
+                                )
+
+                                Spacer(modifier = Modifier.height(12.dp))
+
+                                Text(
+                                    text = state.verificationError ?: "Beklenmedik bir hata ile karşılaşıldı. Lütfen internet bağlantınızı kontrol edip tekrar deneyiniz.",
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    textAlign = TextAlign.Center,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    lineHeight = 24.sp
+                                )
+
+                                Spacer(modifier = Modifier.height(40.dp))
+
+                                TastyButton(
+                                    modifier = Modifier
+                                        .fillMaxWidth(0.8f),
+                                    text = "Geri Dön",
+                                    onClick = {
+                                        if(state.isEmailVerified && state.isLogin )/*&& giris ypaılmıs mı*/{
+                                            //navigator.replaceAll(HomeScreen())
+                                        }else{
+                                            if (navigator.canPop) {
+                                                navigator.pop()
+                                            } else {
+                                                navigator.replaceAll(LogRegScreen())
+                                            }
+                                        }
+                                    },
+                                    backcolor = MaterialTheme.colorScheme.error,
+                                    textcolor = Color.White,
+                                    strokecolor = MaterialTheme.colorScheme.error
+                                )
+                            }
                         }
                     }
                 }
