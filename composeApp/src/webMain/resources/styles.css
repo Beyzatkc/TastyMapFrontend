@@ -1,25 +1,66 @@
-body {
-    margin: 0;
-    padding: 0;
-    overflow: hidden;
-    position: relative;
+body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: transparent;
+        }
+
+        /* Harita en altta ve tam ekran */
+        #maplibre-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 1;
+        }
+
+        /* Compose'un çizildiği Canvas/Container */
+        #compose-root {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 2;
+            pointer-events: none; /* Tıklamalar boş yerlerde haritaya geçsin */
+        }
+
+        /* Skiko Canvas'ın kendisini transparan yapalım */
+        canvas {
+            background-color: transparent !important;
+        }
+
+/* TastyMap Modern FAB */
+.tastymap-fab {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    outline: none;
+
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
 }
 
-#map-container {
-    position: absolute;
-    top: 0; left: 0; width: 100vw; height: 100vh;
-    z-index: 1; /* Harita Altta */
+/* Mouse üzerine gelince (Hover) */
+.tastymap-fab:hover {
+    transform: scale(1.1) rotate(5deg); /* Hafif büyüt ve döndür */
+    box-shadow: 0 8px 15px rgba(0,0,0,0.4);
+    filter: brightness(1.1); /* Biraz parlat */
 }
 
-#compose-target canvas {
-    mix-blend-mode: multiply;
-    background: none !important;
+/* Tıklayınca (Active) */
+.tastymap-fab:active {
+    transform: scale(0.95); /* Hafifçe içeri basılma hissi */
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
 }
 
-#compose-target {
-    position: absolute;
-    top: 0; left: 0; width: 100vw; height: 100vh;
-    z-index: 100; /* Compose Üstte */
-    background: transparent !important;
-    pointer-events: none; /* Haritaya dokunuşların geçebilmesi için zemin şeffaf olmalı */
+/* İkon için ufak bir animasyon (isteğe bağlı) */
+.tastymap-fab span {
+    transition: transform 0.3s ease;
+}
+
+.tastymap-fab:hover span {
+    transform: scale(1.2);
 }

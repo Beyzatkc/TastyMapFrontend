@@ -5,35 +5,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TastyMap</title>
 
-    <!-- Stiller -->
+    <link href="https://unpkg.com/maplibre-gl@latest/dist/maplibre-gl.css" rel="stylesheet" />
+    <script src="https://unpkg.com/maplibre-gl@latest/dist/maplibre-gl.js"></script>
     <link type="text/css" rel="stylesheet" href="styles.css">
-    <link href='https://unpkg.com/maplibre-gl@latest/dist/maplibre-gl.css' rel='stylesheet' />
-
-    <!-- MapLibre JS -->
-    <script src='https://unpkg.com/maplibre-gl@latest/dist/maplibre-gl.js'></script>
+    <script src="tasty-bridge.js"></script>
 </head>
-<body>
+<body style="margin: 0; padding: 0; background-color: transparent;">
 
-<div id="map-container" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 1;"></div>
-
-<!-- 2. CAM (Compose) -->
-<div id="compose-target" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 10; pointer-events: none;"></div>
-
-<!-- 3. SCRIPT -->
-<script type="application/javascript" src="composeApp.js"></script>
-
-<!-- 3. YÜKLEME EKRANI (İş bitince display: none yapılacak) -->
-<div id="loading-spinner" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 1000;">
-    <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 50 50" role="presentation">
-        <circle cx="25" cy="25" r="20" stroke="#ccc" stroke-width="4" fill="none"/>
-        <circle cx="25" cy="25" r="20" stroke="#333" stroke-width="4" fill="none" stroke-linecap="round" stroke-dasharray="90 125">
-            <animateTransform attributeName="transform" type="rotate" from="0 25 25" to="360 25 25" dur="1s" repeatCount="indefinite"/>
-        </circle>
-    </svg>
+<div id="compose-root" style="position: absolute; width: 1px; height: 1px; z-index: 1; opacity: 0;">
+    <script type="application/javascript" src="composeApp.js"></script>
 </div>
 
-
-<!-- Firebase Yapılandırması -->
+<!-- Firebase Script'in aynı kalsın (Değişmedi) -->
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
     import { getMessaging, getToken } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-messaging.js";
@@ -54,57 +37,14 @@
             if (permission === 'granted') {
                 return await getToken(messaging, { vapidKey: vapidKey });
             } else {
-                console.log("Bildirim izni reddedildi.");
                 return "";
             }
         } catch (error) {
-            console.error("FCM Token alınırken hata oluştu:", error);
             return "";
         }
     };
 </script>
 
-<!-- Shadow DOM CSS Injector (Tek ve Temiz Hali) -->
-<script>
-    function injectShadowStyles() {
-        const target = document.getElementById('compose-target');
-        if (!target || !target.shadowRoot) {
-            setTimeout(injectShadowStyles, 100);
-            return;
-        }
-        const style = document.createElement('style');
-        style.textContent = `
-            /* 1. Skia'nın oluşturduğu tüm hayalet div'leri zorla şeffaf yap */
-            div {
-                background-color: transparent !important;
-                background: transparent !important;
-                border: none !important;
-                box-shadow: none !important;
-            }
-
-            /* 2. Canvas'ı (çizim motorunu) şeffaf yap */
-            canvas {
-                background-color: transparent !important;
-                background: transparent !important;
-                pointer-events: none !important;
-            }
-
-            /* 3. Sadece butonu (Merkez) görünür ve tıklanabilir tut */
-            [role="button"], .composable-button {
-                pointer-events: auto !important;
-                opacity: 1 !important;
-            }
-        `;
-        target.shadowRoot.appendChild(style);
-
-        // Yükleme ekranını kapat
-        const spinner = document.getElementById('loading-spinner');
-        if(spinner) spinner.style.display = 'none';
-
-        console.log('Agresif şeffaflık enjekte edildi ✓');
-    }
-    injectShadowStyles();
-</script>
 
 </body>
 </html>

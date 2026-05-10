@@ -9,12 +9,19 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.jsonArray
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 import org.beem.tastymap.core.network.ResultWrapper
 import org.beem.tastymap.core.network.safeApiCall
 import org.beem.tastymap.data.model.LocationData
 import org.beem.tastymap.data.model.Restaurant
 import org.beem.tastymap.map.model.MapRequest
 import org.beem.tastymap.map.repository.MapRepository
+import org.beem.tastymap.ui.components.TastyMapIcon
 import kotlin.math.PI
 import kotlin.math.abs
 import kotlin.math.atan2
@@ -119,7 +126,7 @@ class MapScreenModel(
             when(response){
                 is ResultWrapper.Success -> {
                     _event.emit(MapEvent.UpdateMapGeoSource(
-                        source = response.data.geoJson.toString()
+                        source = rebuildGeoJson(response.data.geoJson)
                     ))
                 }
                 is ResultWrapper.Error -> {
@@ -130,6 +137,15 @@ class MapScreenModel(
     }
 
     fun onMarkerClicked(restaurant: Restaurant) {
+        repository.getPlaceById(restaurant.id)?.let { place ->
+            restaurant.rating = place.rating
+            restaurant.address = place.vicinity ?: ""
+            restaurant.types = place.types
+            restaurant.status = place.business_status ?: ""
+            restaurant.latitude = place.geometry?.location?.lat ?: 0.0
+            restaurant.longitude = place.geometry?.location?.lng ?: 0.0
+            restaurant.totalRatings = place.user_ratings_total
+        }
         _selectedRestaurant.value = restaurant
         _showDetails.value = true
     }
@@ -137,6 +153,31 @@ class MapScreenModel(
     fun closeDetails() {
         _showDetails.value = false
         _selectedRestaurant.value = null
+    }
+
+    private fun rebuildGeoJson(geoJson: JsonObject): String {
+        val features = geoJson["features"]?.jsonArray ?: return geoJson.toString()
+
+        val updatedFeatures = features.map { it.jsonObject }.map { feature ->
+            val properties = feature["properties"]?.jsonObject?.toMutableMap() ?: mutableMapOf()
+            val category = properties["category"]?.jsonPrimitive?.content ?: "default"
+
+            val tastyMapIcon = TastyMapIcon.entries.find {
+                it.name.lowercase() == category
+            } ?: TastyMapIcon.DEFAULT
+
+            properties["icon_to_use"] = JsonPrimitive(tastyMapIcon.iconName)
+            properties["icon_scale"] = JsonPrimitive(tastyMapIcon.iconScale)
+
+            JsonObject(feature.toMutableMap().apply {
+                this["properties"] = JsonObject(properties)
+            })
+        }
+
+        return JsonObject(mapOf(
+            "type" to JsonPrimitive("FeatureCollection"),
+            "features" to JsonArray(updatedFeatures)
+        )).toString()
     }
 
 

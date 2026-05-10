@@ -1,34 +1,22 @@
 package org.beem.tastymap.ui.map
 
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.systemBars
-import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import org.beem.tastymap.map.TastyMapComponent
 import org.beem.tastymap.permission.LocationPermissionWrapper
-import androidx.compose.material3.Icon
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.MyLocation
-import androidx.compose.material3.rememberModalBottomSheetState
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.zIndex
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.koin.koinScreenModel
 import org.beem.tastymap.map.MapEvent
 import org.beem.tastymap.map.MapScreenModel
 import org.beem.tastymap.map.rememberTastyMapState
-import org.koin.compose.viewmodel.koinViewModel
+import org.beem.tastymap.ui.components.TastyMapFab
+import org.beem.tastymap.ui.map.bottomsheet.RestaurantAction
+import org.beem.tastymap.ui.components.RestaurantDetailSheet
+import org.beem.tastymap.ui.map.bottomsheet.RestaurantDetailState
 
 
 class TastyMapScreen : Screen {
@@ -40,6 +28,8 @@ class TastyMapScreen : Screen {
         val mapState = rememberTastyMapState()
 
         val userLocation by mapScreenModel.userLocation.collectAsState()
+
+        val selectedRestaurant by mapScreenModel.selectedRestaurant.collectAsState()
 
 
         LaunchedEffect(Unit){
@@ -55,6 +45,10 @@ class TastyMapScreen : Screen {
                     is MapEvent.UpdateMapGeoSource -> {
                         mapState.updateMapData(event.source)
                     }
+
+                    is MapEvent.PlaceData -> {
+
+                    }
                 }
             }
             mapScreenModel.startObservingLocation()
@@ -64,46 +58,51 @@ class TastyMapScreen : Screen {
             mapScreenModel.onMarkerClicked(restaurant)
         }
 
-
-        MaterialTheme {
-            LocationPermissionWrapper(
-                onPermissionGranted = {
-                    mapScreenModel.startObservingLocation()
-                }
+        LocationPermissionWrapper(
+            onPermissionGranted = {
+                mapScreenModel.startObservingLocation()
+            }
+        ) {
+            Box(modifier = Modifier.fillMaxSize()
             ) {
+                TastyMapComponent(
+                    modifier = Modifier.fillMaxSize(),
+                    mapUrl = myMaps,
+                    state = mapState,
+                    userLocation = userLocation,
+                )
+                if (selectedRestaurant != null) {
+                    RestaurantDetailSheet(
+                        restaurant = selectedRestaurant!!,
+                        onAction = { action ->
+                            when (action) {
+                                RestaurantAction.GetDirections ->{
 
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .background(Color.Transparent)
-                    ) {
-                        TastyMapComponent(
-                            modifier = Modifier.fillMaxSize(),
-                            mapUrl = myMaps,
-                            state = mapState,
-                            userLocation = userLocation,
-                        )
-                        //RestaurantDetailsSheet(mapScreenModel)
-                        FloatingActionButton(
-                            modifier = Modifier
-                                .background(Color.Transparent)
-                                .align(Alignment.BottomEnd)
-                                .padding(16.dp),
-                            onClick = {
-                                mapScreenModel.onCenterMapClicked()
-                                mapScreenModel.fetchNearbyRestaurants(
-                                    userLocation.latitude,
-                                    userLocation.longitude
-                                )
-                            },
-                            containerColor = MaterialTheme.colorScheme.primary
-                        ) {
-                            Icon(
-                                imageVector = Icons.Filled.MyLocation,
-                                contentDescription = "Merkez"
-                            )
+                                }
+                                RestaurantAction.Share ->{
+
+                                }
+                                RestaurantAction.ToggleFavorite ->{
+
+                                }
+                            }
+                        },
+                        onDismiss = {
+                            mapScreenModel.closeDetails()
                         }
-                    }
+                    )
+                }
+                TastyMapFab(
+                    modifier = Modifier.align(Alignment.BottomEnd),
+                    onClick = {
+                        mapScreenModel.onCenterMapClicked()
+                        mapScreenModel.fetchNearbyRestaurants(
+                            userLocation.latitude,
+                            userLocation.longitude
+                        )
+                    },
+                    backgroundColor = "#00008B"
+                )
             }
         }
     }

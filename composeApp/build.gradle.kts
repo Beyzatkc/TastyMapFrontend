@@ -87,6 +87,7 @@ kotlin {
  */
     
     sourceSets {
+
         val webMain by creating {
             dependsOn(commonMain.get())
             dependencies {

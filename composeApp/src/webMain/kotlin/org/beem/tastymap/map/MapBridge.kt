@@ -1,6 +1,9 @@
 package org.beem.tastymap.map
 
-external fun initializeMapLibreJS(containerId: String)
-external fun updateWebSource(sourceId: String, geoJson: String)
-external fun flyToWeb(lat: Double, lng: Double, zoom: Float)
-external fun listenMarkerClick(layerId: String, callback: (String, String, Double, Double) -> Unit)
+external object TastyMapBridge {
+    fun initializeMap(containerId: String, mapUrl: String)
+    fun flyTo(lat: Double, lng: Double, zoom: Double)
+    fun updateGeoJson(sourceId: String, data: String)
+    fun onMarkerClick(layerId: String, callback: (String) -> Unit)
+    fun updateUserMarker(lat: Double, lng: Double, bearing: Float)
+}

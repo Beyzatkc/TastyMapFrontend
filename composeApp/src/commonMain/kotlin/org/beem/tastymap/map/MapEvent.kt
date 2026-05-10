@@ -11,4 +11,7 @@ sealed class MapEvent{
     data class UpdateMapGeoSource(
         val source: String
     ): MapEvent()
+    data class PlaceData(
+        val varIste: String
+    ): MapEvent()
 }

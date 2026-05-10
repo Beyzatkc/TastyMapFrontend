@@ -20,17 +20,27 @@ fun App() {
     var isDark by remember { mutableStateOf(false) }
     val devChooseScreen = "Map"
 
-    TastyTheme(useDarkTheme = isDark) {
+    TastyMapScreen().Content()
+
+    /*
+    Box(modifier = Modifier.fillMaxSize().background(Color.Transparent)){
+        TastyMapScreen().Content()
+    }
+
+     */
+
+
+
+    /*
         Box(modifier = Modifier
             .fillMaxSize()
             .background(Color.Transparent)
         ) {
-            when(devChooseScreen){
-                "Map" -> Navigator(TastyMapScreen())
-                "Auth" -> Navigator(LoginScreen())
+            Box(modifier = Modifier.fillMaxSize().background(Color.Transparent)) {
+                when(devChooseScreen){
+                    "Map" -> Navigator(TastyMapScreen())
+                    "Auth" -> Navigator(LoginScreen())
+                }
             }
-           //AppToast()
-        }
-
-    }
+        }*/
 }

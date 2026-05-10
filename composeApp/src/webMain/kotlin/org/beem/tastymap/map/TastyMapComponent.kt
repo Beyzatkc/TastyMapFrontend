@@ -1,15 +1,17 @@
 package org.beem.tastymap.map
 
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.*
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
-import kotlinx.browser.document
 import org.beem.tastymap.data.model.LocationData
-import org.w3c.dom.HTMLDivElement
+import androidx.compose.ui.viewinterop.WebElementView
+import kotlinx.browser.window
+import kotlinx.coroutines.delay
+import org.w3c.dom.HTMLElement
+
+
 
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
@@ -19,21 +21,38 @@ actual fun TastyMapComponent(
     userLocation: LocationData,
     state: TastyMapState
 ) {
-    var provider by remember { mutableStateOf<MapProvider?>(null) }
-    val mapDiv = remember { document.getElementById("map-container") as? HTMLDivElement }
+    val mapId = "tastymap-actual-container"
+    var isMapInitialized by remember { mutableStateOf(false) }
 
-    LaunchedEffect(mapUrl) {
-        if (provider == null && mapDiv != null) {
-            // Sadece haritayı başlat, div ile oynama
-            provider = MapProvider(
-                container = mapDiv,
-                url = mapUrl,
-                lat = userLocation.latitude,
-                lng = userLocation.longitude
+    SideEffect {
+        if (kotlinx.browser.document.getElementById(mapId) == null) {
+            val mapDiv = kotlinx.browser.document.createElement("div") as HTMLElement
+            mapDiv.id = mapId
+            mapDiv.setAttribute("style", """
+                position: absolute;
+                top: 0; left: 0;
+                width: 100vw; height: 100vh;
+                z-index: 100;
+            """.trimIndent())
+            kotlinx.browser.document.body?.appendChild(mapDiv)
+
+            val controller = WebMapController()
+            controller.init(mapId, mapUrl)
+            state.controller = controller
+
+
+        }
+    }
+
+    LaunchedEffect(userLocation, isMapInitialized) {
+        if (isMapInitialized) {
+            TastyMapBridge.flyTo(
+                userLocation.latitude.toDouble(),
+                userLocation.longitude.toDouble(),
+                15.0
             )
         }
     }
 
-    // UI tarafında hiçbir şey kaplamasın, sadece mantık çalışsın
-    Spacer(modifier = Modifier.size(0.dp))
+    Box(modifier = modifier)
 }

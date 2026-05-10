@@ -9,6 +9,7 @@ data class PlaceResult(
     val rating: Double? = null,
     val vicinity: String? = null,
     val business_status: String? = null,
+    val user_ratings_total: Int? = null,
     val types: List<String>? = null,
     val geometry: GeometryContainer? = null,
     val photos: List<PhotoResult>? = null
