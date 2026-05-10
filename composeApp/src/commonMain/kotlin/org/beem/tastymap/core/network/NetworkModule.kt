@@ -9,19 +9,25 @@ import io.ktor.client.plugins.auth.Auth
 import io.ktor.client.plugins.auth.providers.BearerTokens
 import io.ktor.client.plugins.auth.providers.bearer
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.client.plugins.cookies.HttpCookies
 import io.ktor.client.plugins.logging.*
 import io.ktor.client.request.header
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.http.HttpStatusCode
-import io.ktor.http.encodedPath
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.json.Json
 import org.beem.tastymap.core.local.TokenManager
 import org.beem.tastymap.core.util.AppConfig
 import org.beem.tastymap.data.model.RefreshTokenResponseDTO
+import org.beem.tastymap.getPlatform
+import org.beem.tastymap.platformConfig
 
 fun HttpClientConfig<*>.commonConfig() {
+    install(HttpCookies) {
+
+    }
+    platformConfig()
     expectSuccess = true
     install(HttpTimeout) {
         requestTimeoutMillis = 10000
@@ -50,10 +56,14 @@ fun createNoAuthClient() = HttpClient {
 }
 fun createAuthClient(tokenManager: TokenManager, noAuthClient: HttpClient) = HttpClient {
     commonConfig()
+    val platform = getPlatform()
+
 
     install(Auth) {
         bearer {
             loadTokens {
+                if (platform.isWeb) return@loadTokens null
+
                 val access = tokenManager.getAccessToken()
                 val refresh = tokenManager.getRefreshToken()
                 if (access != null && refresh != null) BearerTokens(access, refresh) else null
@@ -66,10 +76,12 @@ fun createAuthClient(tokenManager: TokenManager, noAuthClient: HttpClient) = Htt
 
                 try {
                     val response = noAuthClient.post("api/users/refresh") {
-                        setBody(mapOf(
-                            "refreshToken" to refreshToken,
-                            "deviceId" to deviceId
-                        ))
+                        setBody(buildMap {
+                            put("deviceId", deviceId)
+                            if (!platform.isWeb) {
+                                put("refreshToken", refreshToken ?: "")
+                            }
+                        })
                     }
 
                     if (response.status == HttpStatusCode.OK) {

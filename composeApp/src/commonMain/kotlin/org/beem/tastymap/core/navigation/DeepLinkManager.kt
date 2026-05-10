@@ -11,6 +11,7 @@ object DeepLinkManager {
     var pendingInitialScreen: Screen? = null
 
     //androdı icin
+    /*
     fun handleLink(url: String) {
         val uri = url.split("?").getOrNull(1)
         val params = uri?.split("&")?.associate {
@@ -27,8 +28,10 @@ object DeepLinkManager {
         }
     }
 
+     */
 
-    /* web iicn
+
+    // web iicn
     fun handleLink(url: String) {
         if (url.contains("#verify")) {
             val queryString = url.substringAfter("?", "")
@@ -45,7 +48,6 @@ object DeepLinkManager {
     }
     // DeepLinkManager.kt
 
-     */
 
     fun clear() {
         _navigationEvents.resetReplayCache()

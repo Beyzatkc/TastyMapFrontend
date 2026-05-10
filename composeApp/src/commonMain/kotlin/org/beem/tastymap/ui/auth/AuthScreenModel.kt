@@ -45,7 +45,7 @@ class AuthScreenModel(
     val timeLeft: StateFlow<Int> = _timeLeft
     private var timerJob: Job? = null
 
-    //UYGULAMA İLK AICLDIIGINDA LOGİN EDİLMİS Mİ KONTROLU OLCAK BURDA EDİLMİSSE ONA GORE VERİFİCATİONA TRUE VEYA FALSE YAPCAL
+
     fun startTime() {
         if (_timeLeft.value > 0) return
 

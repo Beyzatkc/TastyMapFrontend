@@ -2,11 +2,6 @@ package org.beem.tastymap.ui.auth
 
 import TastyButton
 import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.scaleIn
-import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -53,6 +48,17 @@ class VerifyScreen(val token: String) : Screen{
         val koinInstance = koinInject<AuthScreenModel>()
         val screenModel = rememberScreenModel { koinInstance }
         val state by screenModel.verificationState.collectAsState()
+
+        LaunchedEffect(state.isEmailVerified) {
+            if (state.isEmailVerified) {
+                delay(2000)
+                if (navigator.canPop) {
+                    navigator.pop()
+                } else {
+                    navigator.replaceAll(LogRegScreen())
+                }
+            }
+        }
 
         LaunchedEffect(token) {
             screenModel.verifyEmail(token)
@@ -159,7 +165,7 @@ class VerifyScreen(val token: String) : Screen{
                                         .fillMaxWidth(0.8f),
                                     text = "Geri Dön",
                                     onClick = {
-                                        if(state.isEmailVerified && state.isLogin )/*&& giris ypaılmıs mı*/{
+                                        if(state.isEmailVerified && state.isLogin ){
                                             //navigator.replaceAll(HomeScreen())
                                         }else{
                                             if (navigator.canPop) {
