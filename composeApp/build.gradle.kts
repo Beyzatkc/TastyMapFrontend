@@ -124,6 +124,8 @@ kotlin {
         }
         webMain.dependencies {
             implementation(libs.kotlinx.browser)
+            implementation("io.ktor:ktor-client-core:3.0.0")
+            implementation("io.ktor:ktor-client-js:3.0.0")
         }
 
 

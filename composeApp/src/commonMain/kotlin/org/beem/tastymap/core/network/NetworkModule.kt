@@ -23,10 +23,8 @@ import org.beem.tastymap.data.model.RefreshTokenResponseDTO
 import org.beem.tastymap.getPlatform
 import org.beem.tastymap.platformConfig
 
+val platform = getPlatform()
 fun HttpClientConfig<*>.commonConfig() {
-    install(HttpCookies) {
-
-    }
     platformConfig()
     expectSuccess = true
     install(HttpTimeout) {
@@ -49,51 +47,62 @@ fun HttpClientConfig<*>.commonConfig() {
         url(AppConfig.BASE_URL)
         header("ngrok-skip-browser-warning", "true")
         header("Content-Type", "application/json")
+
+        if (platform.isWeb) {
+            header("X-Client-Type", "WEB")
+        } else {
+            header("X-Client-Type", "MOBILE")
+        }
     }
 }
+
 fun createNoAuthClient() = HttpClient {
     commonConfig()
 }
 fun createAuthClient(tokenManager: TokenManager, noAuthClient: HttpClient) = HttpClient {
     commonConfig()
-    val platform = getPlatform()
 
-
-    install(Auth) {
-        bearer {
-            loadTokens {
-                if (platform.isWeb) return@loadTokens null
-
-                val access = tokenManager.getAccessToken()
-                val refresh = tokenManager.getRefreshToken()
-                if (access != null && refresh != null) BearerTokens(access, refresh) else null
+    if (!platform.isWeb) {
+        install(DefaultRequest) {
+            tokenManager.getAccessToken()?.let { token ->
+                header("Authorization", "Bearer $token")
             }
+        }
+
+        install(Auth) {
+            bearer {
+                loadTokens {
+                    if (platform.isWeb) return@loadTokens null
+
+                    val access = tokenManager.getAccessToken()
+                    val refresh = tokenManager.getRefreshToken()
+                    if (access != null && refresh != null) BearerTokens(access, refresh) else null
+                }
 
 
-            refreshTokens {
-                val deviceId = tokenManager.getDeviceId() ?: "unknown_device"
-                val refreshToken = tokenManager.getRefreshToken()
+                refreshTokens {
+                    val deviceId = tokenManager.getDeviceId() ?: "unknown_device"
+                    val refreshToken = tokenManager.getRefreshToken()
 
-                try {
-                    val response = noAuthClient.post("api/users/refresh") {
-                        setBody(buildMap {
-                            put("deviceId", deviceId)
-                            if (!platform.isWeb) {
+                    try {
+                        val response = noAuthClient.post("api/users/refresh") {
+                            setBody(buildMap {
+                                put("deviceId", deviceId)
                                 put("refreshToken", refreshToken ?: "")
-                            }
-                        })
-                    }
+                            })
+                        }
 
-                    if (response.status == HttpStatusCode.OK) {
-                        val newTokens = response.body<RefreshTokenResponseDTO>()
-                        tokenManager.saveTokens(newTokens.accessToken, newTokens.refreshToken)
-                        BearerTokens(newTokens.accessToken, newTokens.refreshToken)
-                    } else {
-                        tokenManager.clear()
+                        if (response.status == HttpStatusCode.OK) {
+                            val newTokens = response.body<RefreshTokenResponseDTO>()
+                            tokenManager.saveTokens(newTokens.accessToken, newTokens.refreshToken)
+                            BearerTokens(newTokens.accessToken, newTokens.refreshToken)
+                        } else {
+                            tokenManager.clear()
+                            null
+                        }
+                    } catch (e: Exception) {
                         null
                     }
-                } catch (e: Exception) {
-                    null
                 }
             }
         }
