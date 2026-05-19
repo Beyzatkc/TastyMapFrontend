@@ -16,6 +16,7 @@ import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.http.HttpStatusCode
 import io.ktor.serialization.kotlinx.json.json
+import io.ktor.util.AttributeKey
 import kotlinx.serialization.json.Json
 import org.beem.tastymap.core.local.TokenManager
 import org.beem.tastymap.core.util.AppConfig
@@ -24,6 +25,7 @@ import org.beem.tastymap.getPlatform
 import org.beem.tastymap.platformConfig
 
 val platform = getPlatform()
+val JsFetchCredentials = AttributeKey<String>("js.fetch.credentials")
 fun HttpClientConfig<*>.commonConfig() {
     platformConfig()
     expectSuccess = true
@@ -49,6 +51,9 @@ fun HttpClientConfig<*>.commonConfig() {
         header("Content-Type", "application/json")
 
         if (platform.isWeb) {
+            setAttributes {
+                this.put(JsFetchCredentials, "include")
+            }
             header("X-Client-Type", "WEB")
         } else {
             header("X-Client-Type", "MOBILE")

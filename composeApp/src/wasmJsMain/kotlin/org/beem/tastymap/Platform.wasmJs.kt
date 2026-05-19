@@ -4,8 +4,10 @@ import io.ktor.client.HttpClient
 import io.ktor.client.HttpClientConfig
 import io.ktor.client.engine.js.*
 import io.ktor.client.engine.js.JsClientEngineConfig
+import io.ktor.client.plugins.DefaultRequest
 import io.ktor.client.plugins.cookies.AcceptAllCookiesStorage
 import io.ktor.client.plugins.cookies.HttpCookies
+import io.ktor.util.AttributeKey
 
 
 class WasmPlatform: Platform {
@@ -20,7 +22,11 @@ actual fun HttpClientConfig<*>.platformConfig() {
     install(HttpCookies) {
         storage = AcceptAllCookiesStorage()
     }
+
     (this as? HttpClientConfig<JsClientEngineConfig>)?.engine {
+        // Fetch API'nin çerezlerle birlikte istek atmasını sağlar
 
     }
+
+
 }
