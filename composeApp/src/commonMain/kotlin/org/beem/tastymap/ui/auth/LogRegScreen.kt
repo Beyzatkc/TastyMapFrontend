@@ -3,7 +3,6 @@ import TastyButton
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.SizeTransform
 import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
@@ -58,6 +57,7 @@ import androidx.compose.ui.zIndex
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import org.beem.tastymap.ui.animations.TastyAnimations
+import org.beem.tastymap.ui.post.PostScreen
 
 class LogRegScreen : Screen {
     @Composable
@@ -156,6 +156,28 @@ class LogRegScreen : Screen {
                 FooterLinks(navyIcons)
 
                 Spacer(modifier = Modifier.height(50.dp))
+
+
+                Spacer(modifier = Modifier.height(20.dp))
+
+                Button(
+                    onClick = {
+                        navigator.push(PostScreen())
+                    },
+                    modifier = Modifier
+                        .widthIn(max = 300.dp)
+                        .fillMaxWidth()
+                        .height(50.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = navyIcons)
+                ) {
+                    Text("Keşfetmeye Başla", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                }
+
+
+
+
+
+
             }
             val currentLoading = if (isLoginTab) logState.isLoading else regState.isLoading
             FullScreenLoading(isLoading = currentLoading)

@@ -9,11 +9,12 @@ import org.beem.tastymap.core.local.TokenManagerImpl
 import org.beem.tastymap.core.local.UserManager
 import org.beem.tastymap.core.local.UserManagerImpl
 import org.beem.tastymap.data.remote.AuthDataSource
+import org.beem.tastymap.data.remote.UserDataSource
 import org.beem.tastymap.data.repository.AuthRepository
+import org.beem.tastymap.data.repository.PostRepository
 import org.beem.tastymap.ui.auth.AuthScreenModel
 import org.beem.tastymap.ui.auth.Splash.SplashScreenModel
-import kotlin.text.get
-import org.koin.core.module.dsl.factoryOf
+import org.beem.tastymap.ui.post.PostScreenModel
 import org.koin.core.qualifier.named
 
 val appModule = module {
@@ -25,9 +26,12 @@ val appModule = module {
     single(named("auth")) { createAuthClient(get(), get(named("noAuth"))) }
 
     single { AuthDataSource(get(named("noAuth"))) }
-    //single { UserDataSource(get(named("auth"))) }
+    single { UserDataSource(get(named("auth"))) }
 
     single { AuthRepository(get(), get(),get()) }
+    single { PostRepository(get()) }
+
     factory { AuthScreenModel(get(),get()) }
+    factory { PostScreenModel (get())}
     factory { SplashScreenModel(get()) }
 }
