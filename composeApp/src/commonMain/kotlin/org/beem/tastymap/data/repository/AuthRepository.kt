@@ -6,6 +6,7 @@ import org.beem.tastymap.core.local.TokenManager
 import org.beem.tastymap.core.local.UserManager
 import org.beem.tastymap.core.network.ResultWrapper
 import org.beem.tastymap.core.network.safeApiCall
+import org.beem.tastymap.core.provider.AuthValidator
 import org.beem.tastymap.data.model.LoginRequest
 import org.beem.tastymap.data.model.LoginResponse
 import org.beem.tastymap.data.model.LoginStatus
@@ -16,7 +17,8 @@ import org.beem.tastymap.data.remote.AuthDataSource
 class AuthRepository(
     private val dataSource: AuthDataSource,
     private val tokenManager: TokenManager,
-    private val userManager: UserManager
+    private val userManager: UserManager,
+    private val authValidator: AuthValidator
 ) {
     suspend fun register(request: RegisterRequest): ResultWrapper<RegisterResponse> {
         return safeApiCall {
@@ -54,9 +56,8 @@ class AuthRepository(
             response
         }
     }
-     fun isUserLoggedIn(): Boolean {
-        val token = tokenManager.getAccessToken()
-        val userId = userManager.getUserId()
-        return !token.isNullOrBlank() && userId != -1L
+    suspend fun isUserLoggedIn(): Boolean {
+        return authValidator.isUserLoggedIn()
     }
+
 }

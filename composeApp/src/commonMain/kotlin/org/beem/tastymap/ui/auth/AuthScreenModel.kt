@@ -1,22 +1,14 @@
 package org.beem.tastymap.ui.auth
 
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
-import androidx.lifecycle.viewModelScope
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.receiveAsFlow
-import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import org.beem.tastymap.core.network.ResultWrapper
@@ -184,9 +176,9 @@ class AuthScreenModel(
 
     fun validateRegisterStep1(): Boolean {
         val currentState=_registerState.value
-        val uResult = AuthValidator.validateUsername(currentState.regUsername)
-        val nResult = AuthValidator.validateName(currentState.regName)
-        val sResult = AuthValidator.validateSurname(currentState.regSurname)
+        val uResult = CheckValidator.validateUsername(currentState.regUsername)
+        val nResult = CheckValidator.validateName(currentState.regName)
+        val sResult = CheckValidator.validateSurname(currentState.regSurname)
 
         val usernameError = (uResult as? ValidationResult.Invalid)?.message
         val nameError = (nResult as? ValidationResult.Invalid)?.message
@@ -206,8 +198,8 @@ class AuthScreenModel(
     }
     fun validateRegisterStep2(): Boolean {
         val currentState=_registerState.value
-        val eResult = AuthValidator.validateEmail(currentState.regEmail)
-        val pResult = AuthValidator.validatePassword(currentState.regPassword)
+        val eResult = CheckValidator.validateEmail(currentState.regEmail)
+        val pResult = CheckValidator.validatePassword(currentState.regPassword)
 
 
         val regEmailError = (eResult as? ValidationResult.Invalid)?.message
@@ -225,8 +217,8 @@ class AuthScreenModel(
     }
     fun validateLogin(): Boolean {
         val state = _loginState.value
-        val uResult = AuthValidator.validateUsername(state.loginUsername)
-        val pResult = AuthValidator.validatePassword(state.loginPassword)
+        val uResult = CheckValidator.validateUsername(state.loginUsername)
+        val pResult = CheckValidator.validatePassword(state.loginPassword)
 
         val usernameError = (uResult as? ValidationResult.Invalid)?.message
         val passwordError = (pResult as? ValidationResult.Invalid)?.message

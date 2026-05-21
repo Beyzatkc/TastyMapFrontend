@@ -8,4 +8,8 @@ class IOSPlatform: Platform {
 }
 
 actual fun getPlatform(): Platform = IOSPlatform()
-actual fun HttpClientConfig<*>.platformConfig() { }
+actual fun HttpClientConfig<*>.platformConfig() {
+        install(DefaultRequest) {
+            header("X-Client-Type", "MOBILE")
+        }
+}

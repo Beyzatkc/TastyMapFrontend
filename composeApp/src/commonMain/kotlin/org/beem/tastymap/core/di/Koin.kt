@@ -1,13 +1,13 @@
 package org.beem.tastymap.core.di
 
 import org.koin.dsl.module
-import com.russhwolf.settings.Settings
-import createAuthClient
 import createNoAuthClient
+import io.ktor.client.HttpClient
 import org.beem.tastymap.core.local.TokenManager
 import org.beem.tastymap.core.local.TokenManagerImpl
 import org.beem.tastymap.core.local.UserManager
 import org.beem.tastymap.core.local.UserManagerImpl
+import org.beem.tastymap.core.provider.HttpClientFactory
 import org.beem.tastymap.data.remote.AuthDataSource
 import org.beem.tastymap.data.remote.UserDataSource
 import org.beem.tastymap.data.repository.AuthRepository
@@ -23,7 +23,11 @@ val appModule = module {
     single<UserManager> { UserManagerImpl(get()) }
 
     single(named("noAuth")) { createNoAuthClient() }
-    single(named("auth")) { createAuthClient(get(), get(named("noAuth"))) }
+    single(named("auth")) {
+        val factory = get<HttpClientFactory>()
+        val noAuth = get<HttpClient>(named("noAuth"))
+        factory.createAuthClient(noAuth)
+    }
 
     single { AuthDataSource(get(named("noAuth"))) }
     single { UserDataSource(get(named("auth"))) }

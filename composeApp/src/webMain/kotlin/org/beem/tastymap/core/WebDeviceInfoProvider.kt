@@ -7,6 +7,13 @@ import org.beem.tastymap.core.util.await
 import kotlin.js.JsString
 import kotlin.js.Promise
 
+external interface Crypto {
+    fun randomUUID(): String
+}
+
+@Suppress("UNCHECKED_CAST_TO_EXTERNAL_INTERFACE")
+val crypto = js("window.crypto") as Crypto
+
 
 external fun getFcmTokenJs(vapidKey: String): Promise<JsString>
 class WebDeviceInfoProvider: DeviceInfoProvider {
@@ -17,10 +24,11 @@ class WebDeviceInfoProvider: DeviceInfoProvider {
         return if (existingId != null && existingId.isNotBlank()) {
             existingId
         } else {
-            val newId = "web-${(1..12).map { ('a'..'z').random() }.joinToString("")}"
+            val newId = "web-" + crypto.randomUUID()
             localStorage.setItem(key, newId)
             newId
         }
+
     }
 
     override fun getUserAgent(): String {
@@ -32,6 +40,4 @@ class WebDeviceInfoProvider: DeviceInfoProvider {
         val token = jsPromise.await()
         return token.toString()
     }
-
-
 }

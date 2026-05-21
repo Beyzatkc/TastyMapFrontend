@@ -1,6 +1,6 @@
 package org.beem.tastymap.ui.auth
 
-object AuthValidator {
+object CheckValidator {
     private val USERNAME_PATTERN = Regex("^[a-zA-Z0-9._]+$")
     private val NAME_PATTERN = Regex("^[a-zA-ZçÇğĞıİöÖşŞüÜ ]+$")
     private val SURNAME_PATTERN = Regex("^[a-zA-ZçÇğĞıİöÖşŞüÜ]+$") // Soyad boşluk içeremez

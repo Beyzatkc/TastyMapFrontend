@@ -2,6 +2,8 @@ package org.beem.tastymap
 
 import android.os.Build
 import io.ktor.client.HttpClientConfig
+import io.ktor.client.plugins.DefaultRequest
+import io.ktor.client.request.header
 
 class AndroidPlatform : Platform {
     override val name: String = "Android ${Build.VERSION.SDK_INT}"
@@ -9,4 +11,8 @@ class AndroidPlatform : Platform {
 }
 
 actual fun getPlatform(): Platform = AndroidPlatform()
-actual fun HttpClientConfig<*>.platformConfig() { }
+actual fun HttpClientConfig<*>.platformConfig() {
+    install(DefaultRequest) {
+        header("X-Client-Type", "MOBILE")
+    }
+}
