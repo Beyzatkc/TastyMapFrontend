@@ -10,12 +10,16 @@ import org.beem.tastymap.map.api.MapDataSource
 import org.beem.tastymap.map.model.MapRequest
 import org.beem.tastymap.map.model.MapResponse
 import org.beem.tastymap.map.model.PlaceResult
+import org.beem.tastymap.map.model.Feature
 
 class MapRepository(
     private val dataSource: MapDataSource
 ) {
 
     private val _places = MutableStateFlow<List<PlaceResult>>(emptyList())
+
+    private val _features = MutableStateFlow<List<Feature>>(emptyList())
+
     val places: StateFlow<List<PlaceResult>> = _places.asStateFlow()
 
     private val cachedIds = mutableSetOf<String>()
@@ -23,16 +27,28 @@ class MapRepository(
     suspend fun searchMap(request: MapRequest): ResultWrapper<MapResponse>{
         return safeApiCall {
             val response = dataSource.searchMap(request)
-            updatePlaces(response.results)
+            updatePlaces(
+                newPlaces = response.results,
+                newFeature = response.geoJson.features
+            )
             response
         }
     }
 
     fun getPlaceById(placeId: String): PlaceResult? {
-        return _places.value.find { it.place_id == placeId }
+        println(placeId)
+        val place = _places.value.find { it.place_id == placeId }
+        println(place)
+        return place
     }
 
-    private fun updatePlaces(newPlaces: List<PlaceResult>) {
+    private fun updatePlaces(
+        newPlaces: List<PlaceResult>,
+        newFeature: List<Feature>
+    ) {
+        val filteredFeatures = newFeature.filter { feature ->
+            feature.properties.id !in cachedIds
+        }
         val filteredPlaces = newPlaces.filter { place ->
             place.place_id !in cachedIds
         }
@@ -45,6 +61,9 @@ class MapRepository(
             )
             _places.update {
                 it + filteredPlaces
+            }
+            _features.update {
+                it + filteredFeatures
             }
         }
     }

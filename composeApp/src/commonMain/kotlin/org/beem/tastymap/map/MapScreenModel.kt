@@ -9,6 +9,8 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
@@ -19,6 +21,7 @@ import org.beem.tastymap.core.network.ResultWrapper
 import org.beem.tastymap.core.network.safeApiCall
 import org.beem.tastymap.data.model.LocationData
 import org.beem.tastymap.data.model.Restaurant
+import org.beem.tastymap.map.model.GeoJson
 import org.beem.tastymap.map.model.MapRequest
 import org.beem.tastymap.map.repository.MapRepository
 import org.beem.tastymap.ui.components.TastyMapIcon
@@ -37,6 +40,11 @@ class MapScreenModel(
         .stateIn(screenModelScope, SharingStarted.WhileSubscribed(5000), LocationData(0.0, 0.0))
 
     private val _event = MutableSharedFlow<MapEvent>()
+
+    private val jsonConfig = Json {
+        encodeDefaults = true
+        prettyPrint = false
+    }
 
     private val ALPHA = 0.2f
     private var lastSmoothedLocation: LocationData? = null
@@ -147,7 +155,16 @@ class MapScreenModel(
             restaurant.totalRatings = place.user_ratings_total
         }
         _selectedRestaurant.value = restaurant
+        println(_selectedRestaurant.value)
         _showDetails.value = true
+
+        screenModelScope.launch{
+            _event.emit(MapEvent.CenterOn(
+                lat = restaurant.latitude,
+                lng = restaurant.longitude,
+                zoom = 17f
+            ))
+        }
     }
 
     fun closeDetails() {
@@ -155,29 +172,25 @@ class MapScreenModel(
         _selectedRestaurant.value = null
     }
 
-    private fun rebuildGeoJson(geoJson: JsonObject): String {
-        val features = geoJson["features"]?.jsonArray ?: return geoJson.toString()
-
-        val updatedFeatures = features.map { it.jsonObject }.map { feature ->
-            val properties = feature["properties"]?.jsonObject?.toMutableMap() ?: mutableMapOf()
-            val category = properties["category"]?.jsonPrimitive?.content ?: "default"
+    private fun rebuildGeoJson(geoJson: GeoJson): String {
+        val updatedFeatures = geoJson.features.map { feature ->
+            val category = feature.properties.category
 
             val tastyMapIcon = TastyMapIcon.entries.find {
                 it.name.lowercase() == category
             } ?: TastyMapIcon.DEFAULT
 
-            properties["icon_to_use"] = JsonPrimitive(tastyMapIcon.iconName)
-            properties["icon_scale"] = JsonPrimitive(tastyMapIcon.iconScale)
+            val updatedProperties = feature.properties.copy(
+                iconToUse = tastyMapIcon.iconName,
+                iconScale = tastyMapIcon.iconScale
+            )
 
-            JsonObject(feature.toMutableMap().apply {
-                this["properties"] = JsonObject(properties)
-            })
+            feature.copy(properties = updatedProperties)
         }
 
-        return JsonObject(mapOf(
-            "type" to JsonPrimitive("FeatureCollection"),
-            "features" to JsonArray(updatedFeatures)
-        )).toString()
+        val updatedGeoJson = geoJson.copy(features = updatedFeatures)
+
+        return jsonConfig.encodeToString(updatedGeoJson)
     }
 
 

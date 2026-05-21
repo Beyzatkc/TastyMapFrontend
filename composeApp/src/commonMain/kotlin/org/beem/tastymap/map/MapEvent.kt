@@ -1,7 +1,11 @@
 package org.beem.tastymap.map
 
 sealed class MapEvent{
-    data class CenterOn(val lat: Double, val lng: Double) : MapEvent()
+    data class CenterOn(
+        val lat: Double,
+        val lng: Double,
+        val zoom: Float = 15f
+    ) : MapEvent()
     data class UserMarker(
         val lat: Double,
         val lng: Double,

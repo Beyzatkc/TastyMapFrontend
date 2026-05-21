@@ -15,8 +15,8 @@ fun rememberTastyMapState(): TastyMapState{
 class TastyMapState {
     var controller: MapController? by mutableStateOf(null)
 
-    fun centerOn(lat: Double, lng: Double){
-        controller?.animateTo(lat, lng)
+    fun centerOn(lat: Double, lng: Double, zoom: Float = 15f){
+        controller?.animateTo(lat, lng, zoom)
     }
     fun userMarker(lat: Double, lng: Double, title: String, bearing: Float){
         controller?.userMarker(lat, lng, title, bearing)

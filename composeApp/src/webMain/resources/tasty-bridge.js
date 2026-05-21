@@ -144,6 +144,7 @@
 
         flyTo: function(lat, lng, zoom) {
             if (this.map) {
+                console.log(`zoom değeri: ${zoom}`)
                 this.map.flyTo({
                     center: [lng, lat],
                     zoom: zoom,

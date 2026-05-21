@@ -36,7 +36,7 @@ class TastyMapScreen : Screen {
             mapScreenModel.event.collect{ event ->
                 when(event){
                     is MapEvent.CenterOn -> {
-                        mapState.centerOn(event.lat, event.lng)
+                        mapState.centerOn(event.lat, event.lng, event.zoom)
                     }
                     is MapEvent.UserMarker -> {
                         mapState.userMarker(event.lat, event.lng, event.title, event.bearing)
