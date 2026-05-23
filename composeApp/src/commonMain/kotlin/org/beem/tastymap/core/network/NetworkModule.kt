@@ -1,5 +1,4 @@
 
-
 import io.ktor.client.HttpClient
 import io.ktor.client.HttpClientConfig
 import io.ktor.client.plugins.DefaultRequest
@@ -11,7 +10,6 @@ import io.ktor.serialization.kotlinx.json.json
 import io.ktor.util.AttributeKey
 import kotlinx.serialization.json.Json
 import org.beem.tastymap.core.util.AppConfig
-import org.beem.tastymap.getPlatform
 import org.beem.tastymap.platformConfig
 
 val JsFetchCredentials = AttributeKey<String>("js.fetch.credentials")

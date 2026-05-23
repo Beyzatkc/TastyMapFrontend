@@ -5,8 +5,6 @@ import createNoAuthClient
 import io.ktor.client.HttpClient
 import org.beem.tastymap.core.local.TokenManager
 import org.beem.tastymap.core.local.TokenManagerImpl
-import org.beem.tastymap.core.local.UserManager
-import org.beem.tastymap.core.local.UserManagerImpl
 import org.beem.tastymap.core.provider.HttpClientFactory
 import org.beem.tastymap.data.remote.AuthDataSource
 import org.beem.tastymap.data.remote.UserDataSource
@@ -20,7 +18,6 @@ import org.koin.core.qualifier.named
 val appModule = module {
 
     single<TokenManager> { TokenManagerImpl(get()) }
-    single<UserManager> { UserManagerImpl(get()) }
 
     single(named("noAuth")) { createNoAuthClient() }
     single(named("auth")) {
@@ -32,7 +29,7 @@ val appModule = module {
     single { AuthDataSource(get(named("noAuth"))) }
     single { UserDataSource(get(named("auth"))) }
 
-    single { AuthRepository(get(), get(),get()) }
+    single { AuthRepository(get(), get(),get(),get()) }
     single { PostRepository(get()) }
 
     factory { AuthScreenModel(get(),get()) }

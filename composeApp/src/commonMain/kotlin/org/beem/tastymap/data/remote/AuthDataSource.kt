@@ -11,12 +11,12 @@ import io.ktor.client.request.setBody
 import org.beem.tastymap.data.model.LoginRequest
 import org.beem.tastymap.data.model.LoginResponse
 import org.beem.tastymap.data.model.RegisterRequest
-import org.beem.tastymap.data.model.RegisterResponse
+import org.beem.tastymap.data.model.UserResponse
 
 
 class AuthDataSource(private val client: HttpClient) {
 
-    suspend fun register(request: RegisterRequest): RegisterResponse{
+    suspend fun register(request: RegisterRequest): UserResponse {
         return client.post("api/users/register"){
             setBody(request)
         }.body()

@@ -4,7 +4,7 @@ import org.beem.tastymap.core.local.TokenManager
 import org.beem.tastymap.core.local.UserManager
 import org.beem.tastymap.core.provider.AuthValidator
 
-class MobileAuthValidator(
+class MobileSessionValidator(
     private val tokenManager: TokenManager,
     private val userManager: UserManager
 ): AuthValidator {

@@ -1,9 +1,8 @@
 package org.beem.tastymap.data.repository
 
-import androidx.compose.animation.core.rememberTransition
-import io.ktor.client.statement.HttpResponse
 import org.beem.tastymap.core.local.TokenManager
 import org.beem.tastymap.core.local.UserManager
+import org.beem.tastymap.core.local.UserSession
 import org.beem.tastymap.core.network.ResultWrapper
 import org.beem.tastymap.core.network.safeApiCall
 import org.beem.tastymap.core.provider.AuthValidator
@@ -11,7 +10,7 @@ import org.beem.tastymap.data.model.LoginRequest
 import org.beem.tastymap.data.model.LoginResponse
 import org.beem.tastymap.data.model.LoginStatus
 import org.beem.tastymap.data.model.RegisterRequest
-import org.beem.tastymap.data.model.RegisterResponse
+import org.beem.tastymap.data.model.UserResponse
 import org.beem.tastymap.data.remote.AuthDataSource
 
 class AuthRepository(
@@ -20,7 +19,7 @@ class AuthRepository(
     private val userManager: UserManager,
     private val authValidator: AuthValidator
 ) {
-    suspend fun register(request: RegisterRequest): ResultWrapper<RegisterResponse> {
+    suspend fun register(request: RegisterRequest): ResultWrapper<UserResponse> {
         return safeApiCall {
             dataSource.register(request)
         }
@@ -32,14 +31,15 @@ class AuthRepository(
             if (response.status == LoginStatus.SUCCESS && response.accessToken != null) {
                 tokenManager.saveTokens(response.accessToken, response.refreshToken)
                 tokenManager.saveDeviceId(loginRequest.deviceId)
-                userManager.saveUser(response.status.toString(),response.message,
+                val user = UserSession(response.status.toString(),response.message,
                     response.userResponseDTO?.id,
                     response.userResponseDTO?.username,
                     response.userResponseDTO?.name,
                     response.userResponseDTO?.surname,
                     response.userResponseDTO?.profile,
-                    response.userResponseDTO?.role, response.userResponseDTO?.date, response.userResponseDTO?.biography
-                )
+                    response.userResponseDTO?.role, response.userResponseDTO?.date, response.userResponseDTO?.biography)
+
+                userManager.saveUser(user)
             }
             response
         }

@@ -10,4 +10,6 @@ val iosModule = module {
     single<Settings> {
         KeychainSettings(service = "TastyMapService")
     }
+    single<UserManager> { MobileUserManager(get()) }
+    single <AuthValidator>{ MobileAuthValidator(get(),get()) }
 }

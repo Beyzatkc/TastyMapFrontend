@@ -14,8 +14,9 @@ data class RegisterRequest(
     val role:String,
     val privateProfile: Boolean
 )
+
 @Serializable
-data class RegisterResponse(
+data class UserResponse(
     val id:Long,
     val username:String,
     val email:String,
@@ -45,7 +46,7 @@ data class LoginRequest(
 data class LoginResponse(
     val accessToken: String? = null,
     val refreshToken: String? = null,
-    val userResponseDTO: RegisterResponse? = null,
+    val userResponseDTO: UserResponse? = null,
     val status: LoginStatus = LoginStatus.SUCCESS,
     val message: String? = null
 )
