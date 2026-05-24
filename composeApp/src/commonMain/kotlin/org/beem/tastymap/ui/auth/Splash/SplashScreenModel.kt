@@ -11,7 +11,6 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import org.beem.tastymap.core.navigation.DeepLinkManager
 
-
 class SplashScreenModel(
     private val authRepository: AuthRepository
 ) : ScreenModel {
@@ -22,7 +21,6 @@ class SplashScreenModel(
     init {
         checkAuthentication()
     }
-
     private fun checkAuthentication() {
         screenModelScope.launch {
             val deepLinkScreen = DeepLinkManager.pendingInitialScreen

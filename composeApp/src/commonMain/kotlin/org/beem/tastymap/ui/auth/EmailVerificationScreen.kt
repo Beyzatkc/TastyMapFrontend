@@ -2,7 +2,6 @@ package org.beem.tastymap.ui.auth
 import TastyButton
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -24,9 +23,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -38,8 +34,8 @@ import cafe.adriel.voyager.core.model.rememberScreenModel
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.MutableStateFlow
+import org.beem.tastymap.core.constants.AuthConstants.MSG_VERIFICATION_FINISHED
+import org.beem.tastymap.core.navigation.PlatformMessenger
 import org.koin.compose.koinInject
 
 class EmailVerificationScreen(val email: String) : Screen {
@@ -48,7 +44,16 @@ class EmailVerificationScreen(val email: String) : Screen {
         val navyIcons = Color(0xFF001970)
         val navigator = LocalNavigator.currentOrThrow
         val koinInstance = koinInject<AuthScreenModel>()
+        val messenger = koinInject<PlatformMessenger>()
         val screenModel = rememberScreenModel { koinInstance }
+        val receivedMessage by messenger.listen().collectAsState()
+
+        LaunchedEffect(receivedMessage) {
+            if (receivedMessage == MSG_VERIFICATION_FINISHED) {
+                navigator.replaceAll(VerificationSuccessScreen())
+                messenger.close()
+            }
+        }
 
         Column(
             modifier = Modifier

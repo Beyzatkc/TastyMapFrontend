@@ -22,6 +22,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -37,6 +38,9 @@ import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import kotlinx.coroutines.delay
+import org.beem.tastymap.core.constants.AuthConstants.MSG_VERIFICATION_FINISHED
+import org.beem.tastymap.core.navigation.DeepLinkManager
+import org.beem.tastymap.core.navigation.PlatformMessenger
 import org.beem.tastymap.ui.animations.TastyAnimations.scaleFade
 import org.koin.compose.koinInject
 
@@ -46,12 +50,16 @@ class VerifyScreen(val token: String) : Screen{
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
         val koinInstance = koinInject<AuthScreenModel>()
+        val messenger = koinInject<PlatformMessenger>()
         val screenModel = rememberScreenModel { koinInstance }
         val state by screenModel.verificationState.collectAsState()
 
+
         LaunchedEffect(state.isEmailVerified) {
             if (state.isEmailVerified) {
+                messenger.post(MSG_VERIFICATION_FINISHED)
                 delay(2000)
+
                 if (navigator.canPop) {
                     navigator.pop()
                 } else {
@@ -59,8 +67,13 @@ class VerifyScreen(val token: String) : Screen{
                 }
             }
         }
+        DisposableEffect(Unit) {
+            onDispose {
+                DeepLinkManager.clear()
+            }
+        }
 
-        LaunchedEffect(token) {
+        LaunchedEffect(Unit) {
             screenModel.verifyEmail(token)
         }
 

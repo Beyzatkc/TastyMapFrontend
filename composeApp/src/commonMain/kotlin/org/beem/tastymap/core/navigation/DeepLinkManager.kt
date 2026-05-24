@@ -10,8 +10,9 @@ object DeepLinkManager {
 
     var pendingInitialScreen: Screen? = null
 
-    //androdı icin
+
     /*
+    //androdı icin
     fun handleLink(url: String) {
         val uri = url.split("?").getOrNull(1)
         val params = uri?.split("&")?.associate {
@@ -27,6 +28,7 @@ object DeepLinkManager {
             _navigationEvents.tryEmit(screen)
         }
     }
+
 
      */
 
@@ -47,6 +49,7 @@ object DeepLinkManager {
         }
     }
     // DeepLinkManager.kt
+
 
 
     fun clear() {

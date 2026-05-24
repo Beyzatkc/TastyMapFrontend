@@ -56,6 +56,7 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.zIndex
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
+import org.beem.tastymap.core.navigation.PlatformMessenger
 import org.beem.tastymap.ui.animations.TastyAnimations
 import org.beem.tastymap.ui.post.PostScreen
 
@@ -68,12 +69,24 @@ class LogRegScreen : Screen {
         val regState by screenModel.registerState.collectAsState()
         val logState by screenModel.loginState.collectAsState()
 
+        /*
         val navyIcons = Color(0xFF001970)
         val mapBackgroundBlue = Color(0xFFE3F2FD)
         val darkGrayLines = Color(0xFF444444).copy(alpha = 0.2f)
         val backBackgroundBlue = Color(0xFFF2F2F2)
 
+         */
+        val navyIcons = Color(0xFF001970)
+
+        val mapBackgroundBlue = Color(0xFFEAF2FF)
+
+        val backBackgroundBlue = Color(0xFFF6F8FC)
+
+        val darkGrayLines = Color(0xFF64748B).copy(alpha = 0.22f)
+        val waveColor = Color(0xFFD6E4FF)
+
         AuthEffectHandler(screenModel,navigator)
+
 
         Box(modifier = Modifier.fillMaxSize()
             .background(backBackgroundBlue)
@@ -82,7 +95,8 @@ class LogRegScreen : Screen {
 
             MapHeaderSection(
                 modifier = Modifier.fillMaxWidth().height(280.dp),
-                bgColor = mapBackgroundBlue,
+                //bgColor = mapBackgroundBlue,
+                bgColor = waveColor,
                 lineColor = darkGrayLines,
                 iconColor = navyIcons
             )
@@ -105,9 +119,9 @@ class LogRegScreen : Screen {
                         .widthIn(max = 400.dp)
                         .fillMaxWidth()
                         .shadow(
-                            elevation = 20.dp,
+                            elevation = 12.dp,
                             shape = RoundedCornerShape(28.dp),
-                            spotColor = navyIcons.copy(alpha = 0.25f)
+                            spotColor = navyIcons.copy(alpha = 0.08f)
                         ),
 
                     shape = RoundedCornerShape(28.dp),
@@ -134,9 +148,9 @@ class LogRegScreen : Screen {
                             targetState = isLoginTab,
                             transitionSpec = {
                                 if (targetState > initialState) {
-                                    TastyAnimations.slideInForward()
-                                } else {
                                     TastyAnimations.slideInBackward()
+                                } else {
+                                    TastyAnimations.slideInForward()
                                 }.using(SizeTransform(clip = false))
                             },
                             label = "FormAnim"
@@ -172,10 +186,6 @@ class LogRegScreen : Screen {
                 ) {
                     Text("Keşfetmeye Başla", fontSize = 16.sp, fontWeight = FontWeight.Bold)
                 }
-
-
-
-
 
 
             }
@@ -301,7 +311,11 @@ fun MapHeaderSection(
                     lineTo(w, 0f)
                     close()
                 }
-                drawPath(bgPath, bgColor)
+                //drawPath(bgPath, bgColor)
+                drawPath(
+                    path = bgPath,
+                    color = bgColor
+                )
 
                 clipPath(bgPath) {
                     val mainRoad = Stroke(width = 4.dp.toPx())

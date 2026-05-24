@@ -11,8 +11,7 @@ external interface Crypto {
     fun randomUUID(): String
 }
 
-@Suppress("UNCHECKED_CAST_TO_EXTERNAL_INTERFACE")
-val crypto = js("window.crypto") as Crypto
+private fun getCrypto(): Crypto = js("window.crypto")
 
 
 external fun getFcmTokenJs(vapidKey: String): Promise<JsString>
@@ -24,7 +23,7 @@ class WebDeviceInfoProvider: DeviceInfoProvider {
         return if (existingId != null && existingId.isNotBlank()) {
             existingId
         } else {
-            val newId = "web-" + crypto.randomUUID()
+            val newId = "web-" + getCrypto().randomUUID()
             localStorage.setItem(key, newId)
             newId
         }

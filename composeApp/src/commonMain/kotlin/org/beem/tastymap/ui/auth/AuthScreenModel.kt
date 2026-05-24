@@ -144,9 +144,8 @@ class AuthScreenModel(
         }
     }
     fun verifyEmail(token: String){
-        if(_verificationState.value.isLoading){
-            return
-        }
+        if (_verificationState.value.isEmailVerified || _verificationState.value.isLoading) return
+
         screenModelScope.launch {
             _verificationState.update { it.copy(isLoading = true, verificationError = null) }
             val result = repository.verifyEmail(token)
@@ -158,6 +157,7 @@ class AuthScreenModel(
                             isEmailVerified = true
                         )
                     }
+                    delay(2000)
                     ToastManager.show(result.data["message"] ?: "Başarılı")
                 }
                 is ResultWrapper.Error -> {
