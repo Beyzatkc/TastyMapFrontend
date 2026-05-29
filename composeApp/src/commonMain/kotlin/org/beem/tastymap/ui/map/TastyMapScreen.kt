@@ -14,6 +14,7 @@ import org.beem.tastymap.map.MapEvent
 import org.beem.tastymap.map.MapScreenModel
 import org.beem.tastymap.map.rememberTastyMapState
 import org.beem.tastymap.ui.components.TastyMapFab
+import org.beem.tastymap.ui.tastyview.SheetDisplayMode
 import org.beem.tastymap.ui.tastyview.TastyBottomSheet
 import org.beem.tastymap.ui.tastyview.TastyBottomSheetState
 import org.beem.tastymap.ui.tastyview.buildRestaurantSheetUI
@@ -72,47 +73,27 @@ class TastyMapScreen : Screen {
                     state = mapState,
                     userLocation = userLocation,
                 )
+                val sheetState = remember(selectedRestaurant?.id) { TastyBottomSheetState() }
                 if (selectedRestaurant != null) {
-                    val mySheetState = remember { TastyBottomSheetState() }
                     TastyBottomSheet(
                         widthPercentage = 90,
                         cornerRadius = 24,
+                        displayMode = SheetDisplayMode.STACK,
                         backgroundColor = "#FFFFFF",
                         onDismiss = {
                             mapScreenModel.closeDetails()
                         },
-                        sheetState = mySheetState,
+                        sheetState = sheetState,
                         content = {
                             buildRestaurantSheetUI(
                                 restaurant = selectedRestaurant!!,
-                                sheetState = mySheetState,
+                                sheetState = sheetState,
                                 palette = TastyMapSheetPalette(),
                                 onAction = { action ->
                                 }
                             )
                         }
                     )
-                    /*
-                    RestaurantDetailSheet(
-                        restaurant = selectedRestaurant!!,
-                        onAction = { action ->
-                            when (action) {
-                                RestaurantAction.GetDirections ->{
-
-                                }
-                                RestaurantAction.Share ->{
-
-                                }
-                                RestaurantAction.ToggleFavorite ->{
-
-                                }
-                            }
-                        }
-                    ) {
-                        mapScreenModel.closeDetails()
-                    }
-
-                     */
                 }
                 TastyMapFab(
                     modifier = Modifier.align(Alignment.BottomEnd),

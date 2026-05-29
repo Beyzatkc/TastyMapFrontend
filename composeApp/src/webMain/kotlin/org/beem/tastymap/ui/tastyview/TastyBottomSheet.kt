@@ -6,25 +6,29 @@ import androidx.compose.runtime.SideEffect
 import org.w3c.dom.HTMLElement
 import org.w3c.dom.TouchEvent
 import org.w3c.dom.events.MouseEvent
+import kotlinx.browser.document
+import kotlinx.browser.window
 
 @Composable
 actual fun TastyBottomSheet(
     sheetState: TastyBottomSheetState,
+    displayMode: SheetDisplayMode,
     widthPercentage: Int,
     cornerRadius: Int,
     backgroundColor: String,
     onDismiss: () -> Unit,
     content: () -> TastyView
 ) {
-    val sheetId = "tasty-sheet-${sheetState.hashCode()}"
+    val sheetUniqueId = "tasty-sheet-${sheetState.hashCode()}"
+    val dragHandleColor = "#4B5563"
     val builtUI = content()
-    val dragHandleColor = "#CCCCCC"
 
     SideEffect {
-        var sheet = kotlinx.browser.document.getElementById(sheetId) as? HTMLElement
+        val allSheets = document.querySelectorAll(".tasty-base-sheet")
+        val activeSheet = if (allSheets.length > 0) allSheets.item(allSheets.length - 1) as? HTMLElement else null
 
         val dragHandleHtml = """
-            <div id="drag-handle-$sheetId" style="
+            <div id="drag-handle-$sheetUniqueId" style="
                 width: 100%; height: 24px; display: flex; justify-content: center; 
                 align-items: center; cursor: grab; user-select: none; margin-bottom: 4px;
             ">
@@ -34,110 +38,113 @@ actual fun TastyBottomSheet(
 
         val fullHtml = dragHandleHtml + (builtUI.render() as String)
 
-        // 🎯 İŞTE EN ASİL KISIM: Animasyonlu kapatma fonksiyonunu yerel olarak yazıp,
-        // dışarıdaki o jenerik Kotlin State nesnesinin kalbine enjekte ediyoruz!
         val closeWithAnimation = {
-            val liveSheet = kotlinx.browser.document.getElementById(sheetId) as? HTMLElement
+            val liveSheet = document.getElementById(sheetUniqueId) as? HTMLElement
             if (liveSheet != null) {
-                liveSheet.style.setProperty("transition", "transform 0.3s ease-out")
+                liveSheet.style.setProperty("transition", "transform 0.3s cubic-bezier(0.36, 0.07, 0.19, 0.97)")
                 liveSheet.style.transform = "translate(-50%, 100%)"
-                kotlinx.browser.window.setTimeout({
+
+                window.setTimeout({
+                    liveSheet.remove()
                     onDismiss()
+
+                    val remainingSheets = document.querySelectorAll(".tasty-base-sheet")
+                    if (remainingSheets.length > 0) {
+                        val previousSheet = remainingSheets.item(remainingSheets.length - 1) as? HTMLElement
+                        if (previousSheet != null) {
+                            previousSheet.style.setProperty("transition", "transform 0.3s ease-out, filter 0.3s, opacity 0.3s")
+                            previousSheet.style.transform = "translate(-50%, 0px) scale(1)"
+                            previousSheet.style.filter = "none"
+                            previousSheet.style.opacity = "1"
+                        }
+                    }
                     null
                 }, 300)
             }
         }
-
-        // Kütüphaneyi kullanan adam .close() dediği an bu yukarıdaki lambda çalışacak!
         sheetState.nativeCloseHandler = closeWithAnimation
 
-        if (sheet == null) {
-            sheet = (kotlinx.browser.document.createElement("div") as HTMLElement).apply {
-                id = sheetId
+        fun createNewSheet(initialZIndex: Int): HTMLElement {
+            return (document.createElement("div") as HTMLElement).apply {
+                id = sheetUniqueId
+                className = "tasty-base-sheet"
                 setAttribute("style", """
                     position: absolute; bottom: 0; left: 50%; 
                     transform: translate(-50%, 100%); width: $widthPercentage%; max-width: 500px;
                     background: $backgroundColor; border-radius: ${cornerRadius}px ${cornerRadius}px 0 0;
-                    z-index: 1001; box-shadow: 0 -5px 20px rgba(0,0,0,0.1);
+                    z-index: $initialZIndex; box-shadow: 0 -5px 25px rgba(0,0,0,0.15);
                     padding: 8px 24px 32px 24px; box-sizing: border-box; font-family: 'Inter', sans-serif;
                 """.trimIndent())
-                style.setProperty("transition", "transform 0.4s cubic-bezier(0.22, 1, 0.36, 1)")
-
+                style.setProperty("transition", "transform 0.4s cubic-bezier(0.22, 1, 0.36, 1), filter 0.4s, opacity 0.4s")
                 innerHTML = fullHtml
-
-                kotlinx.browser.window.requestAnimationFrame {
-                    style.transform = "translate(-50%, 0)"
-                }
-                kotlinx.browser.document.body?.appendChild(this)
             }
-            // Sürükleme handle ID'sini de benzersiz gönderiyoruz
-            bindSheetCoreEvents_V3(sheet, "drag-handle-$sheetId", closeWithAnimation)
-        } else {
-            sheet.innerHTML = fullHtml
-            bindSheetCoreEvents_V3(sheet, "drag-handle-$sheetId", closeWithAnimation)
         }
-    }
 
-    DisposableEffect(sheetState) {
-        onDispose {
-            kotlinx.browser.document.getElementById(sheetId)?.remove()
-            sheetState.nativeCloseHandler = null
+        if (activeSheet == null) {
+            println("activeSheet == null")
+            val sheet = createNewSheet(1001)
+            printSheetId(sheet.id)
+            kotlinx.browser.document.body?.appendChild(sheet)
+            bindSheetCoreEvents_V3(sheet, "drag-handle-$sheetUniqueId", closeWithAnimation)
+            kotlinx.browser.window.requestAnimationFrame { sheet.style.transform = "translate(-50%, 0)" }
         }
-    }
 
-    /*
+        // DURUM 2: Ekranda sheet var ve kullanıcı BAŞKA bir aksiyon tetikledi
+        else if (activeSheet.id != sheetUniqueId) {
+            println("activeSheet.id != sheetUniqueId")
+            printSheetId(activeSheet.id)
 
-    SideEffect {
-        var sheet = kotlinx.browser.document.getElementById(sheetId) as? HTMLElement
+            if (displayMode == SheetDisplayMode.REPLACE) {
+                println("Display Mode: REPLACE")
+                // 🎯 REPLACE MODU: Eskisini aşağı kaydır, yok et, yenisini koy
+                activeSheet.style.setProperty("transition", "transform 0.25s ease-in")
+                activeSheet.style.transform = "translate(-50%, 100%)"
 
-        if (sheet == null) {
-            sheet = (kotlinx.browser.document.createElement("div") as HTMLElement).apply {
-                id = sheetId
-                setAttribute("style", """
-                    position: absolute; 
-                    bottom: 0;
-                    left: 50%; 
-                    transform: translate(-50%, 100%);
-                    width: $widthPercentage%;
-                    max-width: 500px;
-                    background: $backgroundColor; 
-                    border-radius: ${cornerRadius}px ${cornerRadius}px 0 0;
-                    z-index: 1001; 
-                    box-shadow: 0 -5px 20px rgba(0,0,0,0.1);
-                    padding: 12px 24px 32px 24px;
-                    box-sizing: border-box;
-                    font-family: 'Inter', sans-serif;
-                """.trimIndent())
-                style.setProperty("transition", "transform 0.4s cubic-bezier(0.22, 1, 0.36, 1)")
+                kotlinx.browser.window.setTimeout({
+                    activeSheet.remove()
+                    val sheet = createNewSheet(1001)
+                    kotlinx.browser.document.body?.appendChild(sheet)
+                    bindSheetCoreEvents_V3(sheet, "drag-handle-$sheetUniqueId", closeWithAnimation)
+                    kotlinx.browser.window.requestAnimationFrame { sheet.style.transform = "translate(-50%, 0)" }
+                    null
+                }, 250)
 
-                innerHTML = builtUI.render() as String
+            } else {
+                println("Display Mode: STACK")
+                // 🎯 STACK MODU (EFSANE KISIM): Alttakini silme! Arkaya it, yenisini üste bindir
+                activeSheet.style.setProperty("transition", "transform 0.4s cubic-bezier(0.22, 1, 0.36, 1), filter 0.4s, opacity 0.4s")
+                // Alttakini hafif küçültüyoruz, biraz opacity verip arkaya gömüyoruz (iOS stili premium derinlik)
+                activeSheet.style.transform = "translate(-50%, 10px) scale(0.94)"
+                activeSheet.style.filter = "blur(1px)"
+                activeSheet.style.opacity = "0.6"
 
-                kotlinx.browser.window.requestAnimationFrame {
-                    style.transform = "translate(-50%, 0)"
-                }
-                kotlinx.browser.document.body?.appendChild(this)
-            }
-            // Yaşayan mekanizmayı (Drag-drop/Scroll) bu jenerik konteynere bağlıyoruz!
-            bindSheetCoreEvents(sheet, onDismiss)
-        } else {
-            // Eğer sheet zaten varsa sadece içeriğini tazele
-            sheet.style.transform = "translate(-50%, 100%)"
-            kotlinx.browser.window.setTimeout({
-                sheet.innerHTML = builtUI.render() as String
-                bindSheetCoreEvents(sheet, onDismiss)
+                // Yeni katmanın z-index'ini bir tık yüksek yapıyoruz ki üste otursun
+                val currentZIndex = (activeSheet.style.zIndex.toIntOrNull() ?: 1001) + 1
+                val sheet = createNewSheet(currentZIndex)
+
+                kotlinx.browser.document.body?.appendChild(sheet)
+                bindSheetCoreEvents_V3(sheet, "drag-handle-$sheetUniqueId", closeWithAnimation)
+
                 kotlinx.browser.window.requestAnimationFrame {
                     sheet.style.transform = "translate(-50%, 0)"
                 }
-                null
-            }, 250)
+            }
+        }
+
+        // DURUM 3: Aynı sheet güncelleniyor
+        else {
+            println("activeSheet.id == sheetUniqueId")
+            printSheetId(activeSheet.id)
+            activeSheet.innerHTML = fullHtml
+            bindSheetCoreEvents_V3(activeSheet, "drag-handle-$sheetUniqueId", closeWithAnimation)
         }
     }
 
     DisposableEffect(Unit) {
         onDispose {
-            kotlinx.browser.document.getElementById(sheetId)?.remove()
+            kotlinx.browser.document.getElementById(sheetUniqueId)?.remove()
         }
-    }*/
+    }
 }
 
 private fun bindSheetCoreEvents(sheet: HTMLElement, onDismiss: () -> Unit) {
@@ -254,4 +261,8 @@ private fun bindSheetCoreEvents_V3(sheet: HTMLElement, handleId: String, closeAc
     dragHandle?.addEventListener("mousedown", { e -> onDragStart((e as MouseEvent).clientY.toDouble()) })
     kotlinx.browser.window.addEventListener("mousemove", { e -> onDragMove((e as MouseEvent).clientY.toDouble()) })
     kotlinx.browser.window.addEventListener("mouseup", { _ -> onDragEnd() })
+}
+
+fun printSheetId(sheetId: String){
+    println("Sheet ID: $sheetId")
 }
