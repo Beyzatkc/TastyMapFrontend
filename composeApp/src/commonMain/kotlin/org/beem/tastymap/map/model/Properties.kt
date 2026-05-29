@@ -9,7 +9,7 @@ data class Properties(
     @SerialName("min_zoom")
     val minZoom: Double,
     val name: String,
-    val rating: Double,
+    val rating: Double?,
     val id: String,
     val category: String,
     val priority: Double,

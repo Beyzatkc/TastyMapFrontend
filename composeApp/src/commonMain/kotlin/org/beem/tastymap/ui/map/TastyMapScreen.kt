@@ -14,9 +14,10 @@ import org.beem.tastymap.map.MapEvent
 import org.beem.tastymap.map.MapScreenModel
 import org.beem.tastymap.map.rememberTastyMapState
 import org.beem.tastymap.ui.components.TastyMapFab
-import org.beem.tastymap.ui.map.bottomsheet.RestaurantAction
-import org.beem.tastymap.ui.components.RestaurantDetailSheet
-import org.beem.tastymap.ui.map.bottomsheet.RestaurantDetailState
+import org.beem.tastymap.ui.tastyview.TastyBottomSheet
+import org.beem.tastymap.ui.tastyview.TastyBottomSheetState
+import org.beem.tastymap.ui.tastyview.buildRestaurantSheetUI
+import org.beem.tastymap.ui.theme.TastyMapSheetPalette
 
 
 class TastyMapScreen : Screen {
@@ -72,6 +73,26 @@ class TastyMapScreen : Screen {
                     userLocation = userLocation,
                 )
                 if (selectedRestaurant != null) {
+                    val mySheetState = remember { TastyBottomSheetState() }
+                    TastyBottomSheet(
+                        widthPercentage = 90,
+                        cornerRadius = 24,
+                        backgroundColor = "#FFFFFF",
+                        onDismiss = {
+                            mapScreenModel.closeDetails()
+                        },
+                        sheetState = mySheetState,
+                        content = {
+                            buildRestaurantSheetUI(
+                                restaurant = selectedRestaurant!!,
+                                sheetState = mySheetState,
+                                palette = TastyMapSheetPalette(),
+                                onAction = { action ->
+                                }
+                            )
+                        }
+                    )
+                    /*
                     RestaurantDetailSheet(
                         restaurant = selectedRestaurant!!,
                         onAction = { action ->
@@ -86,11 +107,12 @@ class TastyMapScreen : Screen {
 
                                 }
                             }
-                        },
-                        onDismiss = {
-                            mapScreenModel.closeDetails()
                         }
-                    )
+                    ) {
+                        mapScreenModel.closeDetails()
+                    }
+
+                     */
                 }
                 TastyMapFab(
                     modifier = Modifier.align(Alignment.BottomEnd),

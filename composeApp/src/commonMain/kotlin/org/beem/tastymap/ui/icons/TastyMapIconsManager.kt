@@ -5,19 +5,16 @@ import org.jetbrains.compose.resources.ExperimentalResourceApi
 import tastymap.composeapp.generated.resources.Res
 
 object TastyMapIconsManager {
-
     private var _loadedIcons = mutableStateOf<Map<TastyMapIcons, String>>(emptyMap())
-    val loadedIcons: State<Map<TastyMapIcons, String>> = _loadedIcons
 
-    private var isPreloadingStarted = false
+    var isReady = mutableStateOf(false)
+        private set
 
     @OptIn(ExperimentalResourceApi::class)
     @Composable
     fun initialize() {
-        if (isPreloadingStarted) return
-        isPreloadingStarted = true
-
         LaunchedEffect(Unit) {
+            if (isReady.value) return@LaunchedEffect
             val tempMap = mutableMapOf<TastyMapIcons, String>()
             try {
                 TastyMapIcons.values().forEach { icon ->
@@ -25,15 +22,14 @@ object TastyMapIconsManager {
                     tempMap[icon] = rawBytes.decodeToString()
                 }
                 _loadedIcons.value = tempMap
+                isReady.value = true
             } catch (e: Exception) {
                 e.printStackTrace()
             }
         }
     }
 
-
-    fun getHtmlIcon(icon: TastyMapIcons): String {
-        val rawSvg = _loadedIcons.value[icon] ?: return ""
-        return icon.toHtmlEmbedded(rawSvg)
+    fun getRawSvg(icon: TastyMapIcons): String {
+        return _loadedIcons.value[icon] ?: ""
     }
 }
