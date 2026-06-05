@@ -11,7 +11,7 @@ actual class TastyIconButton actual constructor(
 
     private val buttonId = "icon_btn_${Random.nextInt(100000, 999999)}"
 
-    actual override fun render(): Any {
+    actual override fun render(): TastyPlatformView {
         // Tıklama fonksiyonunu o kurduğumuz güvenli Kotlin haritamıza kaydediyoruz
         TastyButtonRegistry.register(buttonId, onClick)
 

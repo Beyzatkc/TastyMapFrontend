@@ -4,7 +4,7 @@ actual class TastySpacer actual constructor(
     private val sizePx: Int
 ) : TastyView {
 
-    actual override fun render(): Any {
+    actual override fun render(): TastyPlatformView {
         return """
             <div class="tasty-spacer" style="
                 width: ${sizePx}px; 

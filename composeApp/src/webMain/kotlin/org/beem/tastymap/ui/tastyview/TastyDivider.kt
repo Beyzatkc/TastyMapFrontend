@@ -6,7 +6,7 @@ actual class TastyDivider actual constructor(
     private val marginTop: Int,
     private val marginBottom: Int
 ) : TastyView {
-    actual override fun render(): Any {
+    actual override fun render(): TastyPlatformView {
         return """
             <div style="width: 100%; height: ${thicknessPx}px; background-color: $color; margin-top: ${marginTop}px; margin-bottom: ${marginBottom}px;"></div>
         """.trimIndent()

@@ -11,7 +11,7 @@ actual class TastyButton actual constructor(
 ) : TastyView {
     private val buttonId = "btn_${Random.nextInt(100000, 999999)}"
 
-    actual override fun render(): Any {
+    actual override fun render(): TastyPlatformView {
         val iconHtml = if (icon != null) "<span>$icon</span>" else ""
 
         TastyButtonRegistry.register(buttonId, onClick)

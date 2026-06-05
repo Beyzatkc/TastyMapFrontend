@@ -7,5 +7,5 @@ expect class TastyButton(
     textColor: String = "#FFFFFF",
     onClick: () -> Unit
 ) : TastyView {
-    override fun render(): Any
+    override fun render(): TastyPlatformView
 }

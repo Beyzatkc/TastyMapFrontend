@@ -1,6 +1,6 @@
 package org.beem.tastymap.ui.tastyview
 
 
-interface TastyView {
-    fun render(): Any
+interface TastyView{
+    fun render(): TastyPlatformView
 }

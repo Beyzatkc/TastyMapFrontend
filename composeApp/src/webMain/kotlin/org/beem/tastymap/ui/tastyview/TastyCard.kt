@@ -7,11 +7,9 @@ actual class TastyCard actual constructor(
     private val children: List<TastyView>
 ) : TastyView {
 
-    actual override fun render(): Any {
-        // Kartın içindeki tüm alt bileşenleri render edip tek bir string'de topluyoruz
-        val childrenHtml = children.joinToString("") { it.render() as String }
+    actual override fun render(): TastyPlatformView {
+        val childrenHtml = children.joinToString("") { it.render() }
 
-        // Dışarıdan gelen parametrelerle tamamen dinamikleşen o şık kart gövdesi
         return """
             <div class="tasty-card" style="
                 background: $backgroundColor; 

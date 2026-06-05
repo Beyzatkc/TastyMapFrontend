@@ -8,7 +8,7 @@ actual class TastyIcon actual constructor(
     private val sizePx: Int
 ) : TastyView {
 
-    actual override fun render(): Any {
+    actual override fun render(): TastyPlatformView {
         val rawIconHtml = icon.getHtmlIcon()
 
         return """

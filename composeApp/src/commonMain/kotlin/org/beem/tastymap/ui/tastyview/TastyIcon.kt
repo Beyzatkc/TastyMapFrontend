@@ -7,5 +7,5 @@ expect class TastyIcon(
     color: String,
     sizePx: Int = 18
 ) : TastyView {
-    override fun render(): Any
+    override fun render(): TastyPlatformView
 }

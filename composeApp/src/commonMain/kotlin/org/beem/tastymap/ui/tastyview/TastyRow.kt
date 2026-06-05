@@ -6,5 +6,5 @@ expect class TastyRow(
     modifier: TastyModifier = TastyModifier(),
     children: List<TastyView>
 ) : TastyView {
-    override fun render(): Any
+    override fun render(): TastyPlatformView
 }

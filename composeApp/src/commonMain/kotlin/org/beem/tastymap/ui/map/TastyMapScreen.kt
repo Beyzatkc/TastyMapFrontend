@@ -76,10 +76,6 @@ class TastyMapScreen : Screen {
                 val sheetState = remember(selectedRestaurant?.id) { TastyBottomSheetState() }
                 if (selectedRestaurant != null) {
                     TastyBottomSheet(
-                        widthPercentage = 90,
-                        cornerRadius = 24,
-                        displayMode = SheetDisplayMode.STACK,
-                        backgroundColor = "#FFFFFF",
                         onDismiss = {
                             mapScreenModel.closeDetails()
                         },

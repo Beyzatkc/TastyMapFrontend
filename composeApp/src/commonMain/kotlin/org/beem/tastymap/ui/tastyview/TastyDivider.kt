@@ -6,5 +6,5 @@ expect class TastyDivider(
     marginTop: Int = 14,
     marginBottom: Int = 14
 ) : TastyView {
-    override fun render(): Any
+    override fun render(): TastyPlatformView
 }

@@ -6,7 +6,7 @@ actual class TastyText actual constructor(
     private val color: String?
 ) : TastyView {
 
-    actual override fun render(): Any {
+    actual override fun render(): TastyPlatformView {
         val textColorStyle = if (color != null) "color: $color;" else ""
 
         return when (style) {

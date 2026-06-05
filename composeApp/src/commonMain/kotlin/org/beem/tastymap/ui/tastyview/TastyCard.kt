@@ -5,6 +5,6 @@ expect class TastyCard(
     cornerRadius: Int = 12,
     padding: Int = 12,
     children: List<TastyView>
-) : TastyView {
-    override fun render(): Any
+): TastyView {
+    override fun render(): TastyPlatformView
 }

@@ -7,5 +7,5 @@ expect class TastyIconButton(
     iconColor: String,
     onClick: () -> Unit
 ) : TastyView {
-    override fun render(): Any
+    override fun render(): TastyPlatformView
 }

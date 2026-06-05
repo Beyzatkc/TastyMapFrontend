@@ -5,5 +5,5 @@ expect class TastyText(
     style: TastyTextStyle = TastyTextStyle.BODY,
     color: String? = null
 ) : TastyView {
-    override fun render(): Any
+    override fun render(): TastyPlatformView
 }
