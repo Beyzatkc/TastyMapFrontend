@@ -59,12 +59,7 @@ class VerifyScreen(val token: String) : Screen{
             if (state.isEmailVerified) {
                 messenger.post(MSG_VERIFICATION_FINISHED)
                 delay(2000)
-
-                if (navigator.canPop) {
-                    navigator.pop()
-                } else {
-                    navigator.replaceAll(LogRegScreen())
-                }
+                navigator.replaceAll(VerificationSuccessScreen())
             }
         }
         DisposableEffect(Unit) {
@@ -120,7 +115,7 @@ class VerifyScreen(val token: String) : Screen{
                         Spacer(modifier = Modifier.height(12.dp))
 
                         Text(
-                            text = "Lütfen bekleyiniz, giriş sayfasına yönlendiriliyorsunuz.",
+                            text = "Lütfen bekleyiniz.",
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             textAlign = TextAlign.Center,
@@ -171,27 +166,6 @@ class VerifyScreen(val token: String) : Screen{
                                     lineHeight = 24.sp
                                 )
 
-                                Spacer(modifier = Modifier.height(40.dp))
-
-                                TastyButton(
-                                    modifier = Modifier
-                                        .fillMaxWidth(0.8f),
-                                    text = "Geri Dön",
-                                    onClick = {
-                                        if(state.isEmailVerified && state.isLogin ){
-                                            //navigator.replaceAll(HomeScreen())
-                                        }else{
-                                            if (navigator.canPop) {
-                                                navigator.pop()
-                                            } else {
-                                                navigator.replaceAll(LogRegScreen())
-                                            }
-                                        }
-                                    },
-                                    backcolor = MaterialTheme.colorScheme.error,
-                                    textcolor = Color.White,
-                                    strokecolor = MaterialTheme.colorScheme.error
-                                )
                             }
                         }
                     }

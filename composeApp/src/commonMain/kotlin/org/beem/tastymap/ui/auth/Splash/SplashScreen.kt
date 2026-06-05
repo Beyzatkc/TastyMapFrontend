@@ -18,6 +18,7 @@ import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.koin.getScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
+import kotlinx.coroutines.delay
 import org.beem.tastymap.ui.auth.LogRegScreen
 import org.jetbrains.compose.resources.painterResource
 import tastymap.composeapp.generated.resources.Res
@@ -33,6 +34,7 @@ class SplashScreen: Screen {
 
         LaunchedEffect(effect) {
             effect?.let {
+                delay(2000)
                 when (it) {
                     is SplashEffect.NavigateToDeepLink -> navigator.replaceAll(it.screen)
                     is SplashEffect.NavigateToLogin -> navigator.replaceAll(LogRegScreen())

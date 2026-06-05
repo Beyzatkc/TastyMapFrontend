@@ -63,7 +63,7 @@ class VerificationSuccessScreen(): Screen {
             Spacer(modifier = Modifier.height(16.dp))
 
             Text(
-                text = "E-postanız başarıyla doğrulandı.Sekmeyi kapatabilirsiniz.",
+                text = "Hesabınız başarıyla doğrulandı. Bu sekmeyi kapatıp uygulamadaki giriş ekranına dönerek oturum açabilirsiniz.",
                 textAlign = TextAlign.Center,
                 style = MaterialTheme.typography.bodyLarge,
                 color = Color.Gray,

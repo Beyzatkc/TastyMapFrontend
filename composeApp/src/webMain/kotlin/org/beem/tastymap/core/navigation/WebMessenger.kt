@@ -11,7 +11,6 @@ class WebMessenger : PlatformMessenger {
 
     init {
         channel.onmessage = { event ->
-            println("WebMessenger: Mesaj geldi -> ${event.data}")
             _messageFlow.value = event.data
         }
     }

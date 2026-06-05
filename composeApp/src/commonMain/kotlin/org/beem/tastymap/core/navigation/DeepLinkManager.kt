@@ -1,14 +1,17 @@
 package org.beem.tastymap.core.navigation
 import cafe.adriel.voyager.core.screen.Screen
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.receiveAsFlow
 import org.beem.tastymap.ui.auth.VerifyScreen
 
 object DeepLinkManager {
-    private val _navigationEvents = MutableSharedFlow<Screen>(replay = 1, extraBufferCapacity = 1)
-    val navigationEvents = _navigationEvents.asSharedFlow()
+    private val _navigationEvents = Channel<Screen>(Channel.BUFFERED)
+    val navigationEvents = _navigationEvents.receiveAsFlow()
 
     var pendingInitialScreen: Screen? = null
+
 
 
     /*
@@ -44,15 +47,13 @@ object DeepLinkManager {
 
             val token = params["token"]
             if (!token.isNullOrEmpty()) {
-                _navigationEvents.tryEmit(VerifyScreen(token))
+                val screen = VerifyScreen(token)
+                pendingInitialScreen = screen
+                _navigationEvents.trySend(screen)
             }
         }
     }
-    // DeepLinkManager.kt
-
-
-
     fun clear() {
-        _navigationEvents.resetReplayCache()
+        pendingInitialScreen = null
     }
 }

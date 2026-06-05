@@ -50,7 +50,7 @@ class EmailVerificationScreen(val email: String) : Screen {
 
         LaunchedEffect(receivedMessage) {
             if (receivedMessage == MSG_VERIFICATION_FINISHED) {
-                navigator.replaceAll(VerificationSuccessScreen())
+                navigator.replaceAll(LogRegScreen())
                 messenger.close()
             }
         }
