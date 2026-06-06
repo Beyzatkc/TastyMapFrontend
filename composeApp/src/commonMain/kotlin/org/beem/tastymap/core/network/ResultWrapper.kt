@@ -14,6 +14,8 @@ sealed class ResultWrapper<out T> {
 enum class ErrorType {
     EMAIL_NOT_VERIFIED,
     WRONG_REGISTER,
+    UNKNOWN_ERROR,
+
     SERVER_ERROR,
     NETWORK_ERROR,
     EMPTY_RESPONSE

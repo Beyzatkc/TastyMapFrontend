@@ -112,8 +112,8 @@ class AuthScreenModel(
                 )
                 when (val result = repository.login(request, deviceInfoProvider.getUserAgent())) {
                     is ResultWrapper.Success -> {
-                        ToastManager.show("Giriş başarılı!")
                         if (result.data.status == LoginStatus.SUCCESS) {
+                            ToastManager.show("Giriş başarılı!")
                             _verificationState.update {it.copy(isLogin = true) }
                             _effect.send(AuthEffect.NavigateToHome)
                         } else {

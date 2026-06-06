@@ -1,41 +1,40 @@
 package org.beem.tastymap.core.network
 
+import io.ktor.client.call.body
+import io.ktor.client.plugins.ResponseException
 import io.ktor.client.statement.bodyAsText
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.io.IOException
+import kotlinx.serialization.SerializationException
+import org.beem.tastymap.data.model.ErrorResponse
 
 suspend fun <T> safeApiCall(
     call: suspend () -> T
-): ResultWrapper<T> {
-    return withContext(Dispatchers.Default) {
-        try {
-            ResultWrapper.Success(call())
+): ResultWrapper<T> = withContext(Dispatchers.Default) {
+    try {
+        ResultWrapper.Success(call())
+    } catch (e: Exception) {
+        when (e) {
+            is IOException, is io.ktor.client.network.sockets.ConnectTimeoutException -> {
+                ResultWrapper.Error("İnternet bağlantınızı kontrol edin.", ErrorType.NETWORK_ERROR)
+            }
 
-        } catch (e: Exception) {
-            when (e) {
-                is io.ktor.client.network.sockets.ConnectTimeoutException,
-                is io.ktor.utils.io.errors.IOException -> {
-                    ResultWrapper.Error("Bağlantı hatası", ErrorType.NETWORK_ERROR)
+            is ResponseException -> {
+                val errorMessage = try {
+                    e.response.body<ErrorResponse>().message ?: "Sunucu hatası: ${e.response.status.value}"
+                } catch (_: Exception) {
+                    "Sunucu ile iletişimde bir sorun oluştu."
                 }
-                is io.ktor.client.plugins.ResponseException -> {
-                    val errorBody = e.response.bodyAsText()
+                ResultWrapper.Error(errorMessage, ErrorType.SERVER_ERROR)
+            }
 
-                    val cleanMessage = if (errorBody.contains("\"message\"")) {
-                        errorBody.substringAfter("\"message\":\"").substringBefore("\"")
-                    } else {
-                        "Sunucu hatası: ${e.response.status.value}"
-                    }
+            is SerializationException -> {
+                ResultWrapper.Error("Veri formatı hatası.", ErrorType.SERVER_ERROR)
+            }
 
-                    ResultWrapper.Error(cleanMessage, ErrorType.SERVER_ERROR)
-                }
-                is kotlinx.serialization.SerializationException -> {
-                    ResultWrapper.Error("Veri işleme hatası oluştu.", ErrorType.SERVER_ERROR)
-                }
-                else -> {
-                    println("Gizli Hata Detayı: ${e.message}")
-                    ResultWrapper.Error("Bir hata oluştu.", ErrorType.SERVER_ERROR)
-                }
+            else -> {
+                ResultWrapper.Error("Beklenmeyen bir hata oluştu.", ErrorType.UNKNOWN_ERROR)
             }
         }
     }
