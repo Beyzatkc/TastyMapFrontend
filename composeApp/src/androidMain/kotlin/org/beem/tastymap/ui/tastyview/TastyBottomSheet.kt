@@ -49,6 +49,6 @@ actual fun TastyBottomSheet(
             )
         }
     ) {
-        content().render()
+        content().render().content()
     }
 }

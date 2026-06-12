@@ -51,8 +51,11 @@ class MapControllerImp(
                         name = name,
                         longitude = geometry.longitude(),
                         latitude = geometry.latitude(),
-                        cuisine = "",
-                        rating = 0.0
+                        rating = 0.0,
+                        totalRatings = 0,
+                        address = "",
+                        status = "",
+                        category = ""
                     )
                     onMarkerClicked(restaurant)
                     true
