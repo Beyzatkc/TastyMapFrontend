@@ -12,6 +12,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 
 actual class TastyLazyColumn actual constructor(
+    override val modifier: TastyModifier,
     private val key: String,
     private val items: List<TastyView>,
     private val onLoadMore: () -> Unit

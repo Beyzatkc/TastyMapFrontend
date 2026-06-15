@@ -3,6 +3,7 @@ package org.beem.tastymap.ui.tastyview
 
 
 expect class TastyLazyColumn(
+    modifier: TastyModifier,
     key: String,
     items: List<TastyView>,
     onLoadMore: () -> Unit

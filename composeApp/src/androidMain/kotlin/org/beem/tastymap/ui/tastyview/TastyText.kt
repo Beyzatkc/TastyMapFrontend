@@ -9,7 +9,8 @@ import androidx.compose.ui.unit.sp
 actual class TastyText actual constructor(
     private val text: String,
     private val style: TastyTextStyle,
-    private val color: String?
+    private val color: String?,
+    override val modifier: TastyModifier
 ) : TastyView {
 
     override actual fun render(): TastyPlatformView {

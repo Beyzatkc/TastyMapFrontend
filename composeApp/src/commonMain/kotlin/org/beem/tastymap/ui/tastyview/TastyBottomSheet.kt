@@ -10,5 +10,5 @@ expect fun TastyBottomSheet(
     cornerRadius: Int = 24,
     backgroundColor: String = "#FFFFFF",
     onDismiss: () -> Unit,
-    content: () -> TastyView
+    content: () -> TastyView,
 )

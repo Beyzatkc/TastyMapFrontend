@@ -7,10 +7,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 
 actual class TastyDivider actual constructor(
+    override val modifier: TastyModifier,
     private val color: String,
-    private val thicknessPx: Int,
-    private val marginTop: Int,
-    private val marginBottom: Int
+    private val thickness: Int,
 ) : TastyView {
 
     override actual fun render(): TastyPlatformView {
@@ -21,8 +20,8 @@ actual class TastyDivider actual constructor(
 
         return TastyPlatformView {
             HorizontalDivider(
-                modifier = Modifier.padding(top = marginTop.dp, bottom = marginBottom.dp),
-                thickness = thicknessPx.dp,
+                modifier = modifier.toAndroidModifier(),
+                thickness = thickness.dp,
                 color = composeColor
             )
         }

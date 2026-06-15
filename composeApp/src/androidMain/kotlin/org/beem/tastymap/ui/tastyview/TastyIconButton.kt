@@ -20,6 +20,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 actual class TastyIconButton actual constructor(
+    override val modifier: TastyModifier,
     private val iconHtml: String,
     private val backgroundColor: String,
     private val iconColor: String,

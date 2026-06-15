@@ -1,40 +1,60 @@
+// androidMain / org.beem.tastymap.ui.tastyview / TastyRow.kt
 package org.beem.tastymap.ui.tastyview
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import org.beem.tastymap.ui.tastyview.tastylayoutenums.TastyHorizontalArrangement
+import org.beem.tastymap.ui.tastyview.tastylayoutenums.TastyVerticalAlignment
 
 actual class TastyRow actual constructor(
-    private val modifier: TastyModifier,
+    override val modifier: TastyModifier,
+    private val horizontalArrangement: TastyHorizontalArrangement,
+    private val verticalAlignment: TastyVerticalAlignment,
     private val children: List<TastyView>
 ) : TastyView {
 
     override actual fun render(): TastyPlatformView {
         return TastyPlatformView {
             val nativeModifier = modifier.toAndroidModifier()
-            val horizontalGap = modifier.gap.dp
 
-            val horizontalArrangement = when (modifier.justifyContent) {
-                "space-between" -> Arrangement.SpaceBetween
-                "center" -> Arrangement.Center
-                "flex-end" -> Arrangement.End
-                else -> Arrangement.spacedBy(horizontalGap)
+            // 🚀 Row İçin Yatay Düzenleme Eşlemesi
+            val composeArrangement = when (horizontalArrangement) {
+                is TastyHorizontalArrangement.Start -> Arrangement.Start
+                is TastyHorizontalArrangement.End -> Arrangement.End
+                is TastyHorizontalArrangement.Center -> Arrangement.Center
+                is TastyHorizontalArrangement.SpaceBetween -> Arrangement.SpaceBetween
+                is TastyHorizontalArrangement.SpaceAround -> Arrangement.SpaceAround
+                is TastyHorizontalArrangement.SpaceEvenly -> Arrangement.SpaceEvenly
+
+                // 🎯 Row içindeki elemanlar arası dinamik boşluk (Örn: SpacedBy(12))
+                is TastyHorizontalArrangement.SpacedBy -> Arrangement.spacedBy(horizontalArrangement.spaceDp.dp)
             }
 
-            val verticalAlign = when (modifier.alignItems) {
-                "center" -> Alignment.CenterVertically
-                "flex-end" -> Alignment.Bottom
-                else -> Alignment.Top
+            // 🚀 Row İçin Dikey Hizalama Eşlemesi
+            val composeAlignment = when (verticalAlignment) {
+                TastyVerticalAlignment.TOP -> Alignment.Top
+                TastyVerticalAlignment.CENTER -> Alignment.CenterVertically
+                TastyVerticalAlignment.BOTTOM -> Alignment.Bottom
             }
 
             Row(
-                modifier = nativeModifier, // 🚀 Kendi modifier'ımız burada da parlıyor!
-                horizontalArrangement = horizontalArrangement,
-                verticalAlignment = verticalAlign
+                modifier = nativeModifier,
+                horizontalArrangement = composeArrangement,
+                verticalAlignment = composeAlignment
             ) {
                 children.forEach { child ->
-                    child.render().content()
+                    val childWeight = child.modifier.weight
+                    if(childWeight != null && childWeight > 0f) {
+                        Row(modifier = Modifier.weight(childWeight)) {
+                            child.render().content()
+                        }
+                    }
+                    else {
+                        child.render().content()
+                    }
                 }
             }
         }

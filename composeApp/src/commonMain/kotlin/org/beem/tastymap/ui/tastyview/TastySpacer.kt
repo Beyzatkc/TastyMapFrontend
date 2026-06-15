@@ -1,5 +1,7 @@
 package org.beem.tastymap.ui.tastyview
 
-expect class TastySpacer(sizePx: Int) : TastyView {
+expect class TastySpacer(
+    modifier: TastyModifier = TastyModifier()
+) : TastyView {
     override fun render(): TastyPlatformView
 }
