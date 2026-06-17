@@ -1,7 +1,7 @@
 package org.beem.tastymap.ui.tastyview
 
 import org.beem.tastymap.data.model.Restaurant
-import org.beem.tastymap.ui.icons.TastyMapIcons
+import org.beem.tastymap.ui.tastyview.icons.TastyMapIcon
 import org.beem.tastymap.ui.theme.TastyMapSheetPalette
 import org.beem.tastymap.ui.map.bottomsheet.RestaurantAction
 
@@ -9,7 +9,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -19,8 +18,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import org.beem.tastymap.ui.tastyview.tastylayoutenums.TastyBoxAlignment
-import org.beem.tastymap.ui.tastyview.tastylayoutenums.TastyHorizontalAlignment
 import org.beem.tastymap.ui.tastyview.tastylayoutenums.TastyHorizontalArrangement
 import org.beem.tastymap.ui.tastyview.tastylayoutenums.TastyVerticalAlignment
 import org.beem.tastymap.ui.tastyview.tastylayoutenums.TastyVerticalArrangement
@@ -274,6 +271,7 @@ fun buildRestaurantSheetUI(
             .fillMaxWidth()
             .padding(16),
         verticalArrangement = TastyVerticalArrangement.SpacedBy(16),
+        scrollable = true,
         children = listOf(
 
             // 1. ÜST AKSİYON SATIRI: Rozet ve Kapatma Butonu
@@ -287,7 +285,7 @@ fun buildRestaurantSheetUI(
                         horizontalArrangement = TastyHorizontalArrangement.SpacedBy(8),
 
                         children = listOf(
-                            TastyIcon(icon = TastyMapIcons.STAR, color = "#F59E0B", sizePx = 20),
+                            TastyIcon(icon = TastyMapIcon.STAR, color = "#F59E0B", sizePx = 20),
                             TastyText(text = categoryText, style = TastyTextStyle.BADGE, color = "#F59E0B")
                         )
                     ),
@@ -344,7 +342,7 @@ fun buildRestaurantSheetUI(
                             verticalAlignment = TastyVerticalAlignment.CENTER,
                             horizontalArrangement = TastyHorizontalArrangement.SpacedBy(6),
                             children = listOf(
-                                TastyIcon(icon = TastyMapIcons.STAR, color = palette.ratingTextColor, sizePx = 16),
+                                TastyIcon(icon = TastyMapIcon.STAR, color = palette.ratingTextColor, sizePx = 16),
                                 TastyText(text = "$ratingText Skor", style = TastyTextStyle.BODY, color = palette.ratingTextColor)
                             )
                         )
@@ -362,7 +360,7 @@ fun buildRestaurantSheetUI(
                             verticalAlignment = TastyVerticalAlignment.CENTER,
                             horizontalArrangement = TastyHorizontalArrangement.SpacedBy(6),
                             children = listOf(
-                                TastyIcon(icon = TastyMapIcons.LOCATION, color = palette.primaryColor, sizePx = 16),
+                                TastyIcon(icon = TastyMapIcon.LOCATION, color = palette.primaryColor, sizePx = 16),
                                 TastyText(text = "Hızlı Rota", style = TastyTextStyle.BODY, color = palette.primaryColor)
                             )
                         )
@@ -377,7 +375,7 @@ fun buildRestaurantSheetUI(
             verticalAlignment = TastyVerticalAlignment.CENTER,
             horizontalArrangement = TastyHorizontalArrangement.SpacedBy(8),
             children = listOf(
-                TastyIcon(icon = TastyMapIcons.LOCATION, color = palette.primaryColor, sizePx = 18),
+                TastyIcon(icon = TastyMapIcon.LOCATION, color = palette.primaryColor, sizePx = 18),
                 TastyText(text = restaurant.address, style = TastyTextStyle.BODY, color = palette.subtitleColor)
             )
         ),
@@ -417,7 +415,7 @@ fun buildRestaurantSheetUI(
                                     verticalAlignment = TastyVerticalAlignment.CENTER,
                                     horizontalArrangement = TastyHorizontalArrangement.SpacedBy(4),
                                     children = listOf(
-                                        TastyIcon(icon = TastyMapIcons.STAR, color = "#F59E0B", sizePx = 12),
+                                        TastyIcon(icon = TastyMapIcon.STAR, color = "#F59E0B", sizePx = 12),
                                         TastyText(text = "5.0", style = TastyTextStyle.BODY, color = palette.ratingTextColor)
                                     )
                                 )
@@ -433,6 +431,246 @@ fun buildRestaurantSheetUI(
                 )
             )
         ),
+            TastyBox(
+                modifier = TastyModifier().fillMaxWidth()
+                    .background(palette.dividerColor)
+                    .borderRadius(12)
+                    .padding(14),
+                children = listOf(
+                    TastyColumn(
+                        verticalArrangement = TastyVerticalArrangement.SpacedBy(6),
+                        children = listOf(
+                            TastyRow(
+                                modifier = TastyModifier().fillMaxWidth(),
+                                horizontalArrangement = TastyHorizontalArrangement.SpaceBetween,
+                                verticalAlignment = TastyVerticalAlignment.CENTER,
+                                children = listOf(
+                                    TastyText(
+                                        modifier = TastyModifier().weight(1f),
+                                        text = "Ahmet Yılmaz",
+                                        style = TastyTextStyle.BODY,
+                                        color = palette.titleColor
+                                    ),
+                                    TastyRow(
+                                        verticalAlignment = TastyVerticalAlignment.CENTER,
+                                        horizontalArrangement = TastyHorizontalArrangement.SpacedBy(4),
+                                        children = listOf(
+                                            TastyIcon(icon = TastyMapIcon.STAR, color = "#F59E0B", sizePx = 12),
+                                            TastyText(text = "5.0", style = TastyTextStyle.BODY, color = palette.ratingTextColor)
+                                        )
+                                    )
+                                )
+                            ),
+
+                            TastyText(
+                                text = "\"Kahveleri gerçekten çok başarılı, harika bir atmosferi var. Tavsiye ederim!\"",
+                                style = TastyTextStyle.BODY,
+                                color = palette.subtitleColor
+                            )
+                        )
+                    )
+                )
+            ),
+            TastyBox(
+                modifier = TastyModifier().fillMaxWidth()
+                    .background(palette.dividerColor)
+                    .borderRadius(12)
+                    .padding(14),
+                children = listOf(
+                    TastyColumn(
+                        verticalArrangement = TastyVerticalArrangement.SpacedBy(6),
+                        children = listOf(
+                            TastyRow(
+                                modifier = TastyModifier().fillMaxWidth(),
+                                horizontalArrangement = TastyHorizontalArrangement.SpaceBetween,
+                                verticalAlignment = TastyVerticalAlignment.CENTER,
+                                children = listOf(
+                                    TastyText(
+                                        modifier = TastyModifier().weight(1f),
+                                        text = "Ahmet Yılmaz",
+                                        style = TastyTextStyle.BODY,
+                                        color = palette.titleColor
+                                    ),
+                                    TastyRow(
+                                        verticalAlignment = TastyVerticalAlignment.CENTER,
+                                        horizontalArrangement = TastyHorizontalArrangement.SpacedBy(4),
+                                        children = listOf(
+                                            TastyIcon(icon = TastyMapIcon.STAR, color = "#F59E0B", sizePx = 12),
+                                            TastyText(text = "5.0", style = TastyTextStyle.BODY, color = palette.ratingTextColor)
+                                        )
+                                    )
+                                )
+                            ),
+
+                            TastyText(
+                                text = "\"Kahveleri gerçekten çok başarılı, harika bir atmosferi var. Tavsiye ederim!\"",
+                                style = TastyTextStyle.BODY,
+                                color = palette.subtitleColor
+                            )
+                        )
+                    )
+                )
+            ),
+            TastyBox(
+                modifier = TastyModifier().fillMaxWidth()
+                    .background(palette.dividerColor)
+                    .borderRadius(12)
+                    .padding(14),
+                children = listOf(
+                    TastyColumn(
+                        verticalArrangement = TastyVerticalArrangement.SpacedBy(6),
+                        children = listOf(
+                            TastyRow(
+                                modifier = TastyModifier().fillMaxWidth(),
+                                horizontalArrangement = TastyHorizontalArrangement.SpaceBetween,
+                                verticalAlignment = TastyVerticalAlignment.CENTER,
+                                children = listOf(
+                                    TastyText(
+                                        modifier = TastyModifier().weight(1f),
+                                        text = "Ahmet Yılmaz",
+                                        style = TastyTextStyle.BODY,
+                                        color = palette.titleColor
+                                    ),
+                                    TastyRow(
+                                        verticalAlignment = TastyVerticalAlignment.CENTER,
+                                        horizontalArrangement = TastyHorizontalArrangement.SpacedBy(4),
+                                        children = listOf(
+                                            TastyIcon(icon = TastyMapIcon.STAR, color = "#F59E0B", sizePx = 12),
+                                            TastyText(text = "5.0", style = TastyTextStyle.BODY, color = palette.ratingTextColor)
+                                        )
+                                    )
+                                )
+                            ),
+
+                            TastyText(
+                                text = "\"Kahveleri gerçekten çok başarılı, harika bir atmosferi var. Tavsiye ederim!\"",
+                                style = TastyTextStyle.BODY,
+                                color = palette.subtitleColor
+                            )
+                        )
+                    )
+                )
+            ),
+            TastyBox(
+                modifier = TastyModifier().fillMaxWidth()
+                    .background(palette.dividerColor)
+                    .borderRadius(12)
+                    .padding(14),
+                children = listOf(
+                    TastyColumn(
+                        verticalArrangement = TastyVerticalArrangement.SpacedBy(6),
+                        children = listOf(
+                            TastyRow(
+                                modifier = TastyModifier().fillMaxWidth(),
+                                horizontalArrangement = TastyHorizontalArrangement.SpaceBetween,
+                                verticalAlignment = TastyVerticalAlignment.CENTER,
+                                children = listOf(
+                                    TastyText(
+                                        modifier = TastyModifier().weight(1f),
+                                        text = "Ahmet Yılmaz",
+                                        style = TastyTextStyle.BODY,
+                                        color = palette.titleColor
+                                    ),
+                                    TastyRow(
+                                        verticalAlignment = TastyVerticalAlignment.CENTER,
+                                        horizontalArrangement = TastyHorizontalArrangement.SpacedBy(4),
+                                        children = listOf(
+                                            TastyIcon(icon = TastyMapIcon.STAR, color = "#F59E0B", sizePx = 12),
+                                            TastyText(text = "5.0", style = TastyTextStyle.BODY, color = palette.ratingTextColor)
+                                        )
+                                    )
+                                )
+                            ),
+
+                            TastyText(
+                                text = "\"Kahveleri gerçekten çok başarılı, harika bir atmosferi var. Tavsiye ederim!\"",
+                                style = TastyTextStyle.BODY,
+                                color = palette.subtitleColor
+                            )
+                        )
+                    )
+                )
+            ),
+            TastyBox(
+                modifier = TastyModifier().fillMaxWidth()
+                    .background(palette.dividerColor)
+                    .borderRadius(12)
+                    .padding(14),
+                children = listOf(
+                    TastyColumn(
+                        verticalArrangement = TastyVerticalArrangement.SpacedBy(6),
+                        children = listOf(
+                            TastyRow(
+                                modifier = TastyModifier().fillMaxWidth(),
+                                horizontalArrangement = TastyHorizontalArrangement.SpaceBetween,
+                                verticalAlignment = TastyVerticalAlignment.CENTER,
+                                children = listOf(
+                                    TastyText(
+                                        modifier = TastyModifier().weight(1f),
+                                        text = "Ahmet Yılmaz",
+                                        style = TastyTextStyle.BODY,
+                                        color = palette.titleColor
+                                    ),
+                                    TastyRow(
+                                        verticalAlignment = TastyVerticalAlignment.CENTER,
+                                        horizontalArrangement = TastyHorizontalArrangement.SpacedBy(4),
+                                        children = listOf(
+                                            TastyIcon(icon = TastyMapIcon.STAR, color = "#F59E0B", sizePx = 12),
+                                            TastyText(text = "5.0", style = TastyTextStyle.BODY, color = palette.ratingTextColor)
+                                        )
+                                    )
+                                )
+                            ),
+
+                            TastyText(
+                                text = "\"Kahveleri gerçekten çok başarılı, harika bir atmosferi var. Tavsiye ederim!\"",
+                                style = TastyTextStyle.BODY,
+                                color = palette.subtitleColor
+                            )
+                        )
+                    )
+                )
+            ),
+            TastyBox(
+                modifier = TastyModifier().fillMaxWidth()
+                    .background(palette.dividerColor)
+                    .borderRadius(12)
+                    .padding(14),
+                children = listOf(
+                    TastyColumn(
+                        verticalArrangement = TastyVerticalArrangement.SpacedBy(6),
+                        children = listOf(
+                            TastyRow(
+                                modifier = TastyModifier().fillMaxWidth(),
+                                horizontalArrangement = TastyHorizontalArrangement.SpaceBetween,
+                                verticalAlignment = TastyVerticalAlignment.CENTER,
+                                children = listOf(
+                                    TastyText(
+                                        modifier = TastyModifier().weight(1f),
+                                        text = "Ahmet Yılmaz",
+                                        style = TastyTextStyle.BODY,
+                                        color = palette.titleColor
+                                    ),
+                                    TastyRow(
+                                        verticalAlignment = TastyVerticalAlignment.CENTER,
+                                        horizontalArrangement = TastyHorizontalArrangement.SpacedBy(4),
+                                        children = listOf(
+                                            TastyIcon(icon = TastyMapIcon.STAR, color = "#F59E0B", sizePx = 12),
+                                            TastyText(text = "5.0", style = TastyTextStyle.BODY, color = palette.ratingTextColor)
+                                        )
+                                    )
+                                )
+                            ),
+
+                            TastyText(
+                                text = "\"Kahveleri gerçekten çok başarılı, harika bir atmosferi var. Tavsiye ederim!\"",
+                                style = TastyTextStyle.BODY,
+                                color = palette.subtitleColor
+                            )
+                        )
+                    )
+                )
+            ),
     )
     )
 }

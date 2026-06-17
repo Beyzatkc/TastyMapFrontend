@@ -1,11 +1,11 @@
-package org.beem.tastymap.ui.icons
+package org.beem.tastymap.ui.tastyview.icons
 
 import androidx.compose.runtime.*
+import org.beem.tastymap.composeapp.generated.resources.Res
 import org.jetbrains.compose.resources.ExperimentalResourceApi
-import tastymap.composeapp.generated.resources.Res
 
 object TastyMapIconsManager {
-    private var _loadedIcons = mutableStateOf<Map<TastyMapIcons, String>>(emptyMap())
+    private var _loadedIcons = mutableStateOf<Map<TastyMapIcon, String>>(emptyMap())
 
     var isReady = mutableStateOf(false)
         private set
@@ -15,9 +15,9 @@ object TastyMapIconsManager {
     fun initialize() {
         LaunchedEffect(Unit) {
             if (isReady.value) return@LaunchedEffect
-            val tempMap = mutableMapOf<TastyMapIcons, String>()
+            val tempMap = mutableMapOf<TastyMapIcon, String>()
             try {
-                TastyMapIcons.values().forEach { icon ->
+                TastyMapIcon.values().forEach { icon ->
                     val rawBytes = Res.readBytes(icon.resPath)
                     tempMap[icon] = rawBytes.decodeToString()
                 }
@@ -29,7 +29,7 @@ object TastyMapIconsManager {
         }
     }
 
-    fun getRawSvg(icon: TastyMapIcons): String {
+    fun getRawSvg(icon: TastyMapIcon): String {
         return _loadedIcons.value[icon] ?: ""
     }
 }

@@ -1,8 +1,6 @@
-package org.beem.tastymap.ui.icons
+package org.beem.tastymap.ui.tastyview.icons
 
-import androidx.annotation.ColorLong
-
-enum class TastyMapIcons(
+enum class TastyMapIcon(
     val iconName: String,
     val resPath: String,
     val sizeDp: Int,

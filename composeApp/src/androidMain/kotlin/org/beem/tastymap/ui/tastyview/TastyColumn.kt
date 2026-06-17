@@ -1,9 +1,13 @@
 
 package org.beem.tastymap.ui.tastyview
 
+import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import org.beem.tastymap.ui.tastyview.tastylayoutenums.TastyHorizontalAlignment
 import org.beem.tastymap.ui.tastyview.tastylayoutenums.TastyVerticalArrangement
@@ -12,12 +16,17 @@ actual class TastyColumn actual constructor(
     override val modifier: TastyModifier,
     private val verticalArrangement: TastyVerticalArrangement,
     private val horizontalAlignment: TastyHorizontalAlignment,
+    private val scrollable: Boolean,
     private val children: List<TastyView>
 ) : TastyView {
 
     override actual fun render(): TastyPlatformView {
         return TastyPlatformView {
-            val nativeModifier = modifier.toAndroidModifier()
+            var nativeModifier = modifier.toAndroidModifier()
+
+            if(scrollable){
+                nativeModifier = nativeModifier.verticalScroll(rememberScrollState())
+            }
 
             val composeArrangement = when (verticalArrangement) {
                 is TastyVerticalArrangement.TOP -> Arrangement.Top

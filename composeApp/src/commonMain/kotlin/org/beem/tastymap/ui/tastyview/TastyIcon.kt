@@ -1,9 +1,9 @@
 package org.beem.tastymap.ui.tastyview
 
-import org.beem.tastymap.ui.icons.TastyMapIcons
+import org.beem.tastymap.ui.tastyview.icons.TastyMapIcon
 
 expect class TastyIcon(
-    icon: TastyMapIcons,
+    icon: TastyMapIcon,
     color: String,
     sizePx: Int = 18
 ) : TastyView {

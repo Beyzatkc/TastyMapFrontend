@@ -8,6 +8,7 @@ expect class TastyColumn(
     modifier: TastyModifier = TastyModifier(),
     verticalArrangement: TastyVerticalArrangement = TastyVerticalArrangement.TOP,
     horizontalAlignment: TastyHorizontalAlignment = TastyHorizontalAlignment.START,
+    scrollable: Boolean = false,
     children: List<TastyView>
 ) : TastyView {
     override fun render(): TastyPlatformView

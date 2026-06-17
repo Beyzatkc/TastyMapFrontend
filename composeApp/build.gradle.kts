@@ -178,6 +178,10 @@ kotlin {
     }
 }
 
+compose.resources{
+    publicResClass = true
+    packageOfResClass = "org.beem.tastymap.composeapp.generated.resources"
+}
 
 android {
     namespace = "org.beem.tastymap"

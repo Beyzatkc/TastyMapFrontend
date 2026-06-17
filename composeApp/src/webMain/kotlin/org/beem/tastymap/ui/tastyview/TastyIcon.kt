@@ -1,9 +1,9 @@
 package org.beem.tastymap.ui.tastyview
 
-import org.beem.tastymap.ui.icons.TastyMapIcons
+import org.beem.tastymap.ui.tastyview.icons.TastyMapIcon
 
 actual class TastyIcon actual constructor(
-    private val icon: TastyMapIcons,
+    private val icon: TastyMapIcon,
     private val color: String,
     private val sizePx: Int
 ) : TastyView {
