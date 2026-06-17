@@ -29,11 +29,9 @@ actual class TastyRow actual constructor(
                 is TastyHorizontalArrangement.SpaceAround -> Arrangement.SpaceAround
                 is TastyHorizontalArrangement.SpaceEvenly -> Arrangement.SpaceEvenly
 
-                // 🎯 Row içindeki elemanlar arası dinamik boşluk (Örn: SpacedBy(12))
                 is TastyHorizontalArrangement.SpacedBy -> Arrangement.spacedBy(horizontalArrangement.spaceDp.dp)
             }
 
-            // 🚀 Row İçin Dikey Hizalama Eşlemesi
             val composeAlignment = when (verticalAlignment) {
                 TastyVerticalAlignment.TOP -> Alignment.Top
                 TastyVerticalAlignment.CENTER -> Alignment.CenterVertically
@@ -48,7 +46,10 @@ actual class TastyRow actual constructor(
                 children.forEach { child ->
                     val childWeight = child.modifier.weight
                     if(childWeight != null && childWeight > 0f) {
-                        Row(modifier = Modifier.weight(childWeight)) {
+                        Row(
+                            modifier = Modifier.weight(childWeight, fill = true),
+                            verticalAlignment = composeAlignment,
+                        ) {
                             child.render().content()
                         }
                     }

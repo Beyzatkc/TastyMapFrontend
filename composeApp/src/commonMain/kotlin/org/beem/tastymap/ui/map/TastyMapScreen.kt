@@ -18,6 +18,9 @@ import org.beem.tastymap.ui.tastyview.TastyBottomSheet
 import org.beem.tastymap.ui.tastyview.TastyBottomSheetState
 import org.beem.tastymap.ui.tastyview.TastyButton
 import org.beem.tastymap.ui.tastyview.TestRestaurantSheetUI
+import org.beem.tastymap.ui.tastyview.buildChaosTestedSheetUI
+import org.beem.tastymap.ui.tastyview.buildChaosTestedSheetUI_V2
+import org.beem.tastymap.ui.tastyview.buildChaosTestedSheetUI_V3
 import org.beem.tastymap.ui.tastyview.buildRestaurantSheetUI
 import org.beem.tastymap.ui.theme.TastyMapSheetPalette
 
@@ -83,6 +86,8 @@ class TastyMapScreen : Screen {
                         sheetState = sheetState,
 
                         content = {
+                            buildChaosTestedSheetUI_V3()
+                            /*
                             buildRestaurantSheetUI(
                                 restaurant = selectedRestaurant!!,
                                 sheetState = sheetState,
@@ -90,6 +95,8 @@ class TastyMapScreen : Screen {
                                 onAction = { action ->
                                 }
                             )
+
+                             */
                         }
                     )
                 }

@@ -14,15 +14,14 @@ actual class TastyText actual constructor(
 ) : TastyView {
 
     override actual fun render(): TastyPlatformView {
-        val parseColor = { hex: String? ->
-            try {
-                if (hex != null) Color(android.graphics.Color.parseColor(hex)) else Color(0xFF111827) // Null ise koyu füme/siyah
-            } catch (_: Exception) {
-                Color(0xFF111827)
+        val composeColor = color?.toComposeColor()
+            ?: when (style) {
+                TastyTextStyle.TITLE -> Color.Black
+                TastyTextStyle.SUBTITLE -> Color.Black
+                TastyTextStyle.BODY -> Color.Black
+                TastyTextStyle.BADGE -> Color.Black
+                else -> Color.Black
             }
-        }
-
-        val composeColor = parseColor(color)
 
         return TastyPlatformView {
             // 🎯 TASARIM DİLİ MAPPING'İ:
@@ -38,7 +37,7 @@ actual class TastyText actual constructor(
 
             Text(
                 text = text,
-                color = composeColor,
+                color = composeColor!!,
                 fontSize = fontSize,
                 fontWeight = fontWeight,
                 letterSpacing = letterSpacing,
