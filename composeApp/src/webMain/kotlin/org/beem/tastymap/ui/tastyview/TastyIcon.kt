@@ -9,36 +9,26 @@ actual class TastyIcon actual constructor(
 ) : TastyView {
 
     actual override fun render(): TastyPlatformView {
-        val rawIconHtml = icon.getHtmlIcon()
+        val finalSize = sizePx
 
-        return """
+        val modifierCss = modifier.toCssStyle()
+
+        val svgHtml = icon.getHtmlIcon(color)
+
+        val html = """
             <div class="tasty-icon" style="
                 display: inline-flex;
                 align-items: center;
                 justify-content: center;
-                width: ${sizePx}px;
-                height: ${sizePx}px;
-                color: $color;
-                fill: $color;
+                width: ${finalSize}px;
+                height: ${finalSize}px;
                 flex-shrink: 0;
-                vertical-align: middle; 
-                position: relative;
-                top: -1px; 
+                $modifierCss
             ">
-                <style>
-                    .tasty-icon > div {
-                        margin-top: 0px !important; 
-                        width: 100% !important;
-                        height: 100% !important;
-                    }
-                    .tasty-icon svg { 
-                        width: 100%; 
-                        height: 100%; 
-                        display: block;
-                    }
-                </style>
-                $rawIconHtml
+                $svgHtml
             </div>
         """.trimIndent()
+
+        return html
     }
 }

@@ -1,6 +1,7 @@
 package org.beem.tastymap.ui.tastyview
 
 actual class TastyCard actual constructor(
+    override val modifier: TastyModifier,
     private val backgroundColor: String,
     private val cornerRadius: Int,
     private val padding: Int,

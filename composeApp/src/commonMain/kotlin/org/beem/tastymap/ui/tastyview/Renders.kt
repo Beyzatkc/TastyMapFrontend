@@ -57,13 +57,13 @@ fun TestRestaurantSheetUI(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                // TastyIcon(icon = TastyMapIcons.STAR, color = "#F59E0B", sizePx = 20)
+                // TastyIcon(icon = TastyMapIcons.STAR, defaultColor = "#F59E0B", sizePx = 20)
                 Text(
                     text = "★", // İkon mekanizmanızı simüle eden karakter veya gerçek Icon
                     color = Color(0xFFF59E0B),
                     fontSize = 20.sp
                 )
-                // TastyText(text = categoryText, style = TastyTextStyle.BADGE, color = "#F59E0B")
+                // TastyText(text = categoryText, style = TastyTextStyle.BADGE, defaultColor = "#F59E0B")
                 Text(
                     text = categoryText,
                     color = Color(0xFFF59E0B),
@@ -94,7 +94,7 @@ fun TestRestaurantSheetUI(
         // 2. ANA BAŞLIK ALANI (Tamamen API'den gelen Restoran İsmi)
         // TastyColumn(modifier = TastyModifier().layout(gapDp = 4))
         Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            // TastyText(text = restaurant.name, style = TastyTextStyle.TITLE, color = palette.titleColor)
+            // TastyText(text = restaurant.name, style = TastyTextStyle.TITLE, defaultColor = palette.titleColor)
             Text(
                 text = restaurant.name,
                 fontSize = 22.sp,
@@ -108,7 +108,7 @@ fun TestRestaurantSheetUI(
             ) {
                 // TastySpacer(sizePx = 2)
                 Spacer(modifier = Modifier.width(2.dp))
-                // TastyText(text = statusText, style = TastyTextStyle.BODY, color = palette.subtitleColor)
+                // TastyText(text = statusText, style = TastyTextStyle.BODY, defaultColor = palette.subtitleColor)
                 Text(
                     text = statusText,
                     fontSize = 14.sp,
@@ -182,7 +182,7 @@ fun TestRestaurantSheetUI(
             )
         }
 
-        // TastyDivider(color = palette.dividerColor, thicknessPx = 1, marginTop = 4, marginBottom = 4)
+        // TastyDivider(defaultColor = palette.dividerColor, thicknessPx = 1, marginTop = 4, marginBottom = 4)
         HorizontalDivider(
             modifier = Modifier.padding(top = 4.dp, bottom = 4.dp),
             thickness = 1.dp,
@@ -190,7 +190,7 @@ fun TestRestaurantSheetUI(
         )
 
         // 5. YORUMLAR BAŞLIĞI
-        // TastyText(text = "Öne Çıkan Yorumlar", style = TastyTextStyle.SUBTITLE, color = palette.titleColor)
+        // TastyText(text = "Öne Çıkan Yorumlar", style = TastyTextStyle.SUBTITLE, defaultColor = palette.titleColor)
         Text(
             text = "Öne Çıkan Yorumlar",
             fontSize = 16.sp,
@@ -239,7 +239,7 @@ fun TestRestaurantSheetUI(
 
                 // TastySpacer(sizePx = 6) -> Column'ın spacedBy(6.dp) kuralı bunu otomatik hallediyor zaten dayıcım
 
-                // Yorumun Kendisi: TastyText(text = "...", style = TastyTextStyle.BODY, color = palette.subtitleColor)
+                // Yorumun Kendisi: TastyText(text = "...", style = TastyTextStyle.BODY, defaultColor = palette.subtitleColor)
                 Text(
                     text = "\"Kahveleri gerçekten çok başarılı, harika bir atmosferi var. Tavsiye ederim!\"",
                     fontSize = 14.sp,
@@ -278,10 +278,10 @@ fun buildRestaurantSheetUI(
             TastyRow(
                 modifier = TastyModifier().fillMaxWidth(),
                 horizontalArrangement = TastyHorizontalArrangement.SpaceBetween,
-                verticalAlignment = TastyVerticalAlignment.CENTER,
+                verticalAlignment = TastyVerticalAlignment.Center,
                 children = listOf(
                     TastyRow(
-                        verticalAlignment = TastyVerticalAlignment.CENTER,
+                        verticalAlignment = TastyVerticalAlignment.Center,
                         horizontalArrangement = TastyHorizontalArrangement.SpacedBy(8),
 
                         children = listOf(
@@ -311,7 +311,7 @@ fun buildRestaurantSheetUI(
                 children = listOf(
                     TastyText(text = restaurant.name, style = TastyTextStyle.TITLE, color = palette.titleColor),
                     TastyRow(
-                        verticalAlignment = TastyVerticalAlignment.CENTER,
+                        verticalAlignment = TastyVerticalAlignment.Center,
                         horizontalArrangement = TastyHorizontalArrangement.SpacedBy(6),
 
                         children = listOf(
@@ -339,7 +339,7 @@ fun buildRestaurantSheetUI(
                         .padding(12),
                     children = listOf(
                         TastyRow(
-                            verticalAlignment = TastyVerticalAlignment.CENTER,
+                            verticalAlignment = TastyVerticalAlignment.Center,
                             horizontalArrangement = TastyHorizontalArrangement.SpacedBy(6),
                             children = listOf(
                                 TastyIcon(icon = TastyMapIcon.STAR, color = palette.ratingTextColor, sizePx = 16),
@@ -357,7 +357,7 @@ fun buildRestaurantSheetUI(
                         .padding(12),
                     children = listOf(
                         TastyRow(
-                            verticalAlignment = TastyVerticalAlignment.CENTER,
+                            verticalAlignment = TastyVerticalAlignment.Center,
                             horizontalArrangement = TastyHorizontalArrangement.SpacedBy(6),
                             children = listOf(
                                 TastyIcon(icon = TastyMapIcon.LOCATION, color = palette.primaryColor, sizePx = 16),
@@ -372,7 +372,7 @@ fun buildRestaurantSheetUI(
         // 4. ADRES SATIRI
         TastyRow(
             modifier = TastyModifier().fillMaxWidth(),
-            verticalAlignment = TastyVerticalAlignment.CENTER,
+            verticalAlignment = TastyVerticalAlignment.Center,
             horizontalArrangement = TastyHorizontalArrangement.SpacedBy(8),
             children = listOf(
                 TastyIcon(icon = TastyMapIcon.LOCATION, color = palette.primaryColor, sizePx = 18),
@@ -382,7 +382,8 @@ fun buildRestaurantSheetUI(
 
         TastyDivider(
             modifier = TastyModifier()
-                .padding(top = 4, bottom = 4),
+                .marginTop(4)
+                .marginBottom(4),
             color = palette.dividerColor,
             thickness = 1,
         ),
@@ -403,7 +404,7 @@ fun buildRestaurantSheetUI(
                         TastyRow(
                             modifier = TastyModifier().fillMaxWidth(),
                             horizontalArrangement = TastyHorizontalArrangement.SpaceBetween,
-                            verticalAlignment = TastyVerticalAlignment.CENTER,
+                            verticalAlignment = TastyVerticalAlignment.Center,
                             children = listOf(
                                 TastyText(
                                     modifier = TastyModifier().weight(1f),
@@ -412,7 +413,7 @@ fun buildRestaurantSheetUI(
                                     color = palette.titleColor
                                 ),
                                 TastyRow(
-                                    verticalAlignment = TastyVerticalAlignment.CENTER,
+                                    verticalAlignment = TastyVerticalAlignment.Center,
                                     horizontalArrangement = TastyHorizontalArrangement.SpacedBy(4),
                                     children = listOf(
                                         TastyIcon(icon = TastyMapIcon.STAR, color = "#F59E0B", sizePx = 12),
@@ -443,7 +444,7 @@ fun buildRestaurantSheetUI(
                             TastyRow(
                                 modifier = TastyModifier().fillMaxWidth(),
                                 horizontalArrangement = TastyHorizontalArrangement.SpaceBetween,
-                                verticalAlignment = TastyVerticalAlignment.CENTER,
+                                verticalAlignment = TastyVerticalAlignment.Center,
                                 children = listOf(
                                     TastyText(
                                         modifier = TastyModifier().weight(1f),
@@ -452,7 +453,7 @@ fun buildRestaurantSheetUI(
                                         color = palette.titleColor
                                     ),
                                     TastyRow(
-                                        verticalAlignment = TastyVerticalAlignment.CENTER,
+                                        verticalAlignment = TastyVerticalAlignment.Center,
                                         horizontalArrangement = TastyHorizontalArrangement.SpacedBy(4),
                                         children = listOf(
                                             TastyIcon(icon = TastyMapIcon.STAR, color = "#F59E0B", sizePx = 12),
@@ -483,7 +484,7 @@ fun buildRestaurantSheetUI(
                             TastyRow(
                                 modifier = TastyModifier().fillMaxWidth(),
                                 horizontalArrangement = TastyHorizontalArrangement.SpaceBetween,
-                                verticalAlignment = TastyVerticalAlignment.CENTER,
+                                verticalAlignment = TastyVerticalAlignment.Center,
                                 children = listOf(
                                     TastyText(
                                         modifier = TastyModifier().weight(1f),
@@ -492,7 +493,7 @@ fun buildRestaurantSheetUI(
                                         color = palette.titleColor
                                     ),
                                     TastyRow(
-                                        verticalAlignment = TastyVerticalAlignment.CENTER,
+                                        verticalAlignment = TastyVerticalAlignment.Center,
                                         horizontalArrangement = TastyHorizontalArrangement.SpacedBy(4),
                                         children = listOf(
                                             TastyIcon(icon = TastyMapIcon.STAR, color = "#F59E0B", sizePx = 12),
@@ -523,7 +524,7 @@ fun buildRestaurantSheetUI(
                             TastyRow(
                                 modifier = TastyModifier().fillMaxWidth(),
                                 horizontalArrangement = TastyHorizontalArrangement.SpaceBetween,
-                                verticalAlignment = TastyVerticalAlignment.CENTER,
+                                verticalAlignment = TastyVerticalAlignment.Center,
                                 children = listOf(
                                     TastyText(
                                         modifier = TastyModifier().weight(1f),
@@ -532,7 +533,7 @@ fun buildRestaurantSheetUI(
                                         color = palette.titleColor
                                     ),
                                     TastyRow(
-                                        verticalAlignment = TastyVerticalAlignment.CENTER,
+                                        verticalAlignment = TastyVerticalAlignment.Center,
                                         horizontalArrangement = TastyHorizontalArrangement.SpacedBy(4),
                                         children = listOf(
                                             TastyIcon(icon = TastyMapIcon.STAR, color = "#F59E0B", sizePx = 12),
@@ -563,7 +564,7 @@ fun buildRestaurantSheetUI(
                             TastyRow(
                                 modifier = TastyModifier().fillMaxWidth(),
                                 horizontalArrangement = TastyHorizontalArrangement.SpaceBetween,
-                                verticalAlignment = TastyVerticalAlignment.CENTER,
+                                verticalAlignment = TastyVerticalAlignment.Center,
                                 children = listOf(
                                     TastyText(
                                         modifier = TastyModifier().weight(1f),
@@ -572,7 +573,7 @@ fun buildRestaurantSheetUI(
                                         color = palette.titleColor
                                     ),
                                     TastyRow(
-                                        verticalAlignment = TastyVerticalAlignment.CENTER,
+                                        verticalAlignment = TastyVerticalAlignment.Center,
                                         horizontalArrangement = TastyHorizontalArrangement.SpacedBy(4),
                                         children = listOf(
                                             TastyIcon(icon = TastyMapIcon.STAR, color = "#F59E0B", sizePx = 12),
@@ -603,7 +604,7 @@ fun buildRestaurantSheetUI(
                             TastyRow(
                                 modifier = TastyModifier().fillMaxWidth(),
                                 horizontalArrangement = TastyHorizontalArrangement.SpaceBetween,
-                                verticalAlignment = TastyVerticalAlignment.CENTER,
+                                verticalAlignment = TastyVerticalAlignment.Center,
                                 children = listOf(
                                     TastyText(
                                         modifier = TastyModifier().weight(1f),
@@ -612,7 +613,7 @@ fun buildRestaurantSheetUI(
                                         color = palette.titleColor
                                     ),
                                     TastyRow(
-                                        verticalAlignment = TastyVerticalAlignment.CENTER,
+                                        verticalAlignment = TastyVerticalAlignment.Center,
                                         horizontalArrangement = TastyHorizontalArrangement.SpacedBy(4),
                                         children = listOf(
                                             TastyIcon(icon = TastyMapIcon.STAR, color = "#F59E0B", sizePx = 12),
@@ -643,7 +644,7 @@ fun buildRestaurantSheetUI(
                             TastyRow(
                                 modifier = TastyModifier().fillMaxWidth(),
                                 horizontalArrangement = TastyHorizontalArrangement.SpaceBetween,
-                                verticalAlignment = TastyVerticalAlignment.CENTER,
+                                verticalAlignment = TastyVerticalAlignment.Center,
                                 children = listOf(
                                     TastyText(
                                         modifier = TastyModifier().weight(1f),
@@ -652,7 +653,7 @@ fun buildRestaurantSheetUI(
                                         color = palette.titleColor
                                     ),
                                     TastyRow(
-                                        verticalAlignment = TastyVerticalAlignment.CENTER,
+                                        verticalAlignment = TastyVerticalAlignment.Center,
                                         horizontalArrangement = TastyHorizontalArrangement.SpacedBy(4),
                                         children = listOf(
                                             TastyIcon(icon = TastyMapIcon.STAR, color = "#F59E0B", sizePx = 12),

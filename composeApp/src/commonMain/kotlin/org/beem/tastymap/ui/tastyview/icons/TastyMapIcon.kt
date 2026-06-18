@@ -4,36 +4,30 @@ enum class TastyMapIcon(
     val iconName: String,
     val resPath: String,
     val sizeDp: Int,
-    val color: String
+    val defaultColor: String
 ) {
     LOCATION(
         iconName = "tm_location",
-        resPath = "drawable/location.svg",
+        resPath = "drawable/location_web.svg",
         sizeDp = 18,
-        color = "#f54254"
+        defaultColor = "#f54254"
     ),
     STAR(
         iconName = "tm_star",
-        resPath = "drawable/star.svg",
+        resPath = "drawable/star_web.svg",
         sizeDp = 18,
-        color = "#FFD700"
+        defaultColor = "#FFD700"
     );
 
 
-    fun getHtmlIcon(): String {
+    fun getHtmlIcon(finalColor: String = defaultColor): String {
         val rawSvg = TastyMapIconsManager.getRawSvg(this)
         if (rawSvg.isEmpty()) return ""
 
-        val processedSvg = rawSvg
-            .replace(Regex("""(?<!-)stroke="[^"]*""""), """stroke="$color"""")
-            .replace(Regex("""(?<!-)fill="(?!none\b)[^"]*""""), """fill="$color"""")
+        return rawSvg
+            .replace(Regex("""(?<!-)stroke="[^"]*""""), """stroke="$finalColor"""")
+            .replace(Regex("""(?<!-)fill="(?!none\b)[^"]*""""), """fill="$finalColor"""")
             .replace(Regex("""(?<!-)width="[^"]*""""), """width="100%"""")
             .replace(Regex("""(?<!-)height="[^"]*""""), """height="100%"""")
-
-        return """
-            <div style="width: ${sizeDp}px; height: ${sizeDp}px; margin-top: 3px; flex-shrink: 0; display: flex; align-items: center; justify-content: center;">
-                $processedSvg
-            </div>
-        """.trimIndent()
     }
 }

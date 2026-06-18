@@ -1,17 +1,18 @@
 package org.beem.tastymap.ui.tastyview
 
 actual class TastySpacer actual constructor(
-    private val sizePx: Int
+   override val modifier: TastyModifier
 ) : TastyView {
 
     actual override fun render(): TastyPlatformView {
-        return """
+        val html = """
             <div class="tasty-spacer" style="
-                width: ${sizePx}px; 
-                height: ${sizePx}px; 
                 flex-shrink: 0;
                 display: block;
+                ${modifier.toCssStyle()}
             "></div>
         """.trimIndent()
+
+        return html
     }
 }

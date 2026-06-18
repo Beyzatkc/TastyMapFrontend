@@ -6,8 +6,8 @@ import org.beem.tastymap.ui.tastyview.tastylayoutenums.TastyVerticalArrangement
 
 expect class TastyColumn(
     modifier: TastyModifier = TastyModifier(),
-    verticalArrangement: TastyVerticalArrangement = TastyVerticalArrangement.TOP,
-    horizontalAlignment: TastyHorizontalAlignment = TastyHorizontalAlignment.START,
+    verticalArrangement: TastyVerticalArrangement = TastyVerticalArrangement.Top,
+    horizontalAlignment: TastyHorizontalAlignment = TastyHorizontalAlignment.Start,
     scrollable: Boolean = false,
     children: List<TastyView>
 ) : TastyView {

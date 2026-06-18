@@ -1,13 +1,11 @@
 
 package org.beem.tastymap.ui.tastyview
 
-import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import org.beem.tastymap.ui.tastyview.tastylayoutenums.TastyHorizontalAlignment
 import org.beem.tastymap.ui.tastyview.tastylayoutenums.TastyVerticalArrangement
@@ -29,20 +27,20 @@ actual class TastyColumn actual constructor(
             }
 
             val composeArrangement = when (verticalArrangement) {
-                is TastyVerticalArrangement.TOP -> Arrangement.Top
-                is TastyVerticalArrangement.BOTTOM -> Arrangement.Bottom
-                is TastyVerticalArrangement.CENTER -> Arrangement.Center
-                is TastyVerticalArrangement.SPACE_BETWEEN -> Arrangement.SpaceBetween
-                is TastyVerticalArrangement.SPACE_AROUND -> Arrangement.SpaceAround
-                is TastyVerticalArrangement.SPACE_EVENLY -> Arrangement.SpaceEvenly
+                is TastyVerticalArrangement.Top -> Arrangement.Top
+                is TastyVerticalArrangement.Bottom -> Arrangement.Bottom
+                is TastyVerticalArrangement.Center -> Arrangement.Center
+                is TastyVerticalArrangement.SpaceBetween -> Arrangement.SpaceBetween
+                is TastyVerticalArrangement.SpaceAround -> Arrangement.SpaceAround
+                is TastyVerticalArrangement.SpaceEvenly -> Arrangement.SpaceEvenly
 
                 is TastyVerticalArrangement.SpacedBy -> Arrangement.spacedBy(verticalArrangement.spaceDp.dp)
             }
 
             val composeAlignment = when (horizontalAlignment) {
-                TastyHorizontalAlignment.START -> Alignment.Start
-                TastyHorizontalAlignment.CENTER -> Alignment.CenterHorizontally
-                TastyHorizontalAlignment.END -> Alignment.End
+                TastyHorizontalAlignment.Start -> Alignment.Start
+                TastyHorizontalAlignment.Center -> Alignment.CenterHorizontally
+                TastyHorizontalAlignment.End -> Alignment.End
             }
 
             Column(

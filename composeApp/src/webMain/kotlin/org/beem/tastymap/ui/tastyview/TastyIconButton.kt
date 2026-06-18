@@ -3,6 +3,7 @@ package org.beem.tastymap.ui.tastyview
 import kotlin.random.Random
 
 actual class TastyIconButton actual constructor(
+    override val modifier: TastyModifier,
     private val iconHtml: String,
     private val backgroundColor: String,
     private val iconColor: String,

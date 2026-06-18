@@ -1,14 +1,18 @@
 package org.beem.tastymap.ui.tastyview
 
 actual class TastyDivider actual constructor(
+    override val modifier: TastyModifier,
     private val color: String,
-    private val thicknessPx: Int,
-    private val marginTop: Int,
-    private val marginBottom: Int
+    private val thickness: Int,
 ) : TastyView {
+
     actual override fun render(): TastyPlatformView {
-        return """
-            <div style="width: 100%; height: ${thicknessPx}px; background-color: $color; margin-top: ${marginTop}px; margin-bottom: ${marginBottom}px;"></div>
+        val modifierCss = modifier.toCssStyle()
+
+        val html = """
+            <div style="width: 100%; height: ${thickness}px; background-color: $color; flex-shrink: 0; $modifierCss"></div>
         """.trimIndent()
+
+        return html
     }
 }

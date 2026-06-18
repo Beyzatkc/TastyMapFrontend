@@ -26,13 +26,23 @@ actual fun TastyBottomSheet(
             override val key = sheetUniqueId
             override val displayMode = displayMode
 
+
             override val wrapperStyle: String = """
                 position: absolute; bottom: 0; left: 50%; 
                 transform: translate(-50%, 100%); width: $widthPercentage%; max-width: 500px;
                 background: $backgroundColor; border-radius: ${cornerRadius}px ${cornerRadius}px 0 0;
-                box-shadow: 0 -5px 25px rgba(0,0,0,0.15); padding: 8px 24px 32px 24px; box-sizing: border-box;
+                box-shadow: 0 -5px 25px rgba(0,0,0,0.15); 
+                padding: 8px 24px 24px 24px;
+                box-sizing: border-box;
                 transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1), filter 0.4s, opacity 0.4s;
+                
+                height: auto;
+                max-height: 80vh;
+                display: flex;
+                flex-direction: column;
+                overflow: hidden;
             """.trimIndent()
+
 
             override val activeTransformStyle: String = "translate(-50%, 0px)"
 
@@ -42,7 +52,13 @@ actual fun TastyBottomSheet(
                         <div style="width: 44px; height: 5px; background: $dragHandleColor; border-radius: 100px;"></div>
                     </div>
                 """.trimIndent()
-                return dragHandleHtml + (builtUI.render() as String)
+
+                val innerContentHtml = """
+                    <div style="width: 100%; max-width: 100%; flex-grow: 1; display: flex; flex-direction: column; min-height: 0;">
+                        ${builtUI.render()}
+                    </div>
+                """.trimIndent()
+                return dragHandleHtml + innerContentHtml
             }
 
             override fun onTopCame(domElement: Any) {

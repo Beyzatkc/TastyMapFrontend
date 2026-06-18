@@ -35,7 +35,7 @@ actual class TastyRow actual constructor(
             val composeAlignment = when (verticalAlignment) {
                 TastyVerticalAlignment.TOP -> Alignment.Top
                 TastyVerticalAlignment.CENTER -> Alignment.CenterVertically
-                TastyVerticalAlignment.BOTTOM -> Alignment.Bottom
+                TastyVerticalAlignment.Bottom -> Alignment.Bottom
             }
 
             Row(
