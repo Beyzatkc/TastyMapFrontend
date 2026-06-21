@@ -4,9 +4,26 @@ import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 private val TealPrimary = Color(0xFF001970)
+
+data class CustomColors(
+    val navy: Color,
+    val backgroundBlue: Color,
+    val lineAlpha: Color,
+    val wave: Color
+)
+
+val LightCustomColors = CustomColors(
+    navy = AppColors.NavyBlue,
+    backgroundBlue = AppColors.BackBackgroundBlue,
+    lineAlpha = AppColors.DarkGrayLines.copy(alpha = 0.22f),
+    wave = AppColors.WaveColor
+)
+
+val LocalCustomColors = staticCompositionLocalOf { LightCustomColors }
 
 private val LightColors = lightColorScheme(
     primary = TealPrimary,

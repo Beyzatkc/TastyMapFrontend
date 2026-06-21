@@ -1,4 +1,4 @@
-package org.beem.tastymap.ui.auth
+package org.beem.tastymap.ui.auth.common
 
 data class LoginUiState(
     val loginUsername: String = "",

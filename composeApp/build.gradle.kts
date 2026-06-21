@@ -26,7 +26,14 @@ buildkonfig {
     }
 
     defaultConfigs {
-        buildConfigField(com.codingfeline.buildkonfig.compiler.FieldSpec.Type.STRING, "VAPID_KEY", props.getProperty("VAPID_KEY") ?: "")
+        buildConfigField(com.codingfeline.buildkonfig.compiler.FieldSpec.Type.STRING, "VAPID_KEY", props.getProperty("web.vapid.key") ?: "")
+        buildConfigField(com.codingfeline.buildkonfig.compiler.FieldSpec.Type.STRING, "API_HOST", props.getProperty("API_URL") ?: "10.0.2.2:8080")
+        buildConfigField(com.codingfeline.buildkonfig.compiler.FieldSpec.Type.STRING, "WS_PROTOCOL", "ws")
+    }
+    defaultConfigs("release") {
+        buildConfigField(com.codingfeline.buildkonfig.compiler.FieldSpec.Type.STRING, "API_HOST", props.getProperty("API_URL") ?: "10.0.2.2:8080")
+        buildConfigField(com.codingfeline.buildkonfig.compiler.FieldSpec.Type.STRING, "WS_PROTOCOL", "wss")
+        buildConfigField(com.codingfeline.buildkonfig.compiler.FieldSpec.Type.STRING, "VAPID_KEY", props.getProperty("web.vapid.key") ?: "")
     }
 }
 
@@ -164,8 +171,8 @@ kotlin {
             implementation(compose.materialIconsExtended)
 
             implementation(libs.kotlinx.coroutines.core)
-
-
+            implementation(libs.ktor.client.core)
+            implementation(libs.ktor.client.websockets)
 
         }
         commonTest.dependencies {

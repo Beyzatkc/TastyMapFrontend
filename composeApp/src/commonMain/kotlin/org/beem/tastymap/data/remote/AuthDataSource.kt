@@ -8,8 +8,12 @@ import io.ktor.client.request.header
 import io.ktor.client.request.parameter
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
+import io.ktor.http.ContentType
+import io.ktor.http.contentType
+import org.beem.tastymap.data.model.ApprovedRefreshRequestDTO
 import org.beem.tastymap.data.model.LoginRequest
 import org.beem.tastymap.data.model.LoginResponse
+import org.beem.tastymap.data.model.RefreshTokenResponseDTO
 import org.beem.tastymap.data.model.RegisterRequest
 import org.beem.tastymap.data.model.UserResponse
 
@@ -29,7 +33,7 @@ class AuthDataSource(private val client: HttpClient) {
 
     }
     suspend fun resendMail(email: String): String{
-        return client.post("api/users/resendMail") {
+        return client.post("auth/resendMail") {
             parameter("email",email)
         }.body()
     }
@@ -37,6 +41,13 @@ class AuthDataSource(private val client: HttpClient) {
     suspend fun verifyEmail(token: String): Map<String, String> {
         return client.get("auth/verify") {
             parameter("token", token)
+        }.body()
+    }
+    suspend fun verifyLogin(
+        request: ApprovedRefreshRequestDTO
+    ): LoginResponse {
+        return client.post("api/users/refresh/approved") {
+            setBody(request)
         }.body()
     }
 }

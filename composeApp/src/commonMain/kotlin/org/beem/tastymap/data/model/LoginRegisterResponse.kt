@@ -50,3 +50,5 @@ data class LoginResponse(
     val status: LoginStatus = LoginStatus.SUCCESS,
     val message: String? = null
 )
+
+

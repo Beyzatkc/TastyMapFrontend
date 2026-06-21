@@ -1,4 +1,4 @@
-package org.beem.tastymap.ui.auth
+package org.beem.tastymap.ui.auth.logReg
 import TastyButton
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.SizeTransform
@@ -56,9 +56,17 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.zIndex
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
-import org.beem.tastymap.core.navigation.PlatformMessenger
 import org.beem.tastymap.ui.animations.TastyAnimations
+import org.beem.tastymap.ui.auth.common.AuthEffect
+import org.beem.tastymap.ui.auth.common.AuthScreenModel
+import org.beem.tastymap.ui.auth.verification.EmailVerificationScreen
+import org.beem.tastymap.ui.auth.common.LoginEvent
+import org.beem.tastymap.ui.auth.common.LoginUiState
+import org.beem.tastymap.ui.auth.common.RegisterEvent
+import org.beem.tastymap.ui.auth.common.RegisterUiState
+import org.beem.tastymap.ui.auth.verification.PendingScreen
 import org.beem.tastymap.ui.post.PostScreen
+import org.beem.tastymap.ui.theme.LocalCustomColors
 
 class LogRegScreen : Screen {
     @Composable
@@ -68,37 +76,21 @@ class LogRegScreen : Screen {
         val screenModel = rememberScreenModel { koinInstance }
         val regState by screenModel.registerState.collectAsState()
         val logState by screenModel.loginState.collectAsState()
-
-        /*
-        val navyIcons = Color(0xFF001970)
-        val mapBackgroundBlue = Color(0xFFE3F2FD)
-        val darkGrayLines = Color(0xFF444444).copy(alpha = 0.2f)
-        val backBackgroundBlue = Color(0xFFF2F2F2)
-
-         */
-        val navyIcons = Color(0xFF001970)
-
-        val mapBackgroundBlue = Color(0xFFEAF2FF)
-
-        val backBackgroundBlue = Color(0xFFF6F8FC)
-
-        val darkGrayLines = Color(0xFF64748B).copy(alpha = 0.22f)
-        val waveColor = Color(0xFFD6E4FF)
+        val colors = LocalCustomColors.current
 
         AuthEffectHandler(screenModel,navigator)
 
 
         Box(modifier = Modifier.fillMaxSize()
-            .background(backBackgroundBlue)
+            .background(colors.backgroundBlue)
             .imePadding(),)
         {
 
             MapHeaderSection(
                 modifier = Modifier.fillMaxWidth().height(280.dp),
-                //bgColor = mapBackgroundBlue,
-                bgColor = waveColor,
-                lineColor = darkGrayLines,
-                iconColor = navyIcons
+                bgColor = colors.wave,
+                lineColor = colors.lineAlpha,
+                iconColor = colors.navy
             )
             var isLoginTab by remember { mutableStateOf(true) }
 
@@ -109,7 +101,7 @@ class LogRegScreen : Screen {
                     .padding(top = 260.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                HeaderTitles(navyIcons)
+                HeaderTitles(colors.navy)
 
                 Spacer(modifier = Modifier.height(5.dp))
 
@@ -121,7 +113,7 @@ class LogRegScreen : Screen {
                         .shadow(
                             elevation = 12.dp,
                             shape = RoundedCornerShape(28.dp),
-                            spotColor = navyIcons.copy(alpha = 0.08f)
+                            spotColor = colors.navy.copy(alpha = 0.08f)
                         ),
 
                     shape = RoundedCornerShape(28.dp),
@@ -132,7 +124,7 @@ class LogRegScreen : Screen {
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
-                        AuthTabBar(isLoginTab, navyIcons,
+                        AuthTabBar(isLoginTab, colors.navy,
                             onLoginClick = {
                                 isLoginTab = true
                                 screenModel.clearRegisterForm()
@@ -157,9 +149,9 @@ class LogRegScreen : Screen {
                         ) { targetIsLogin ->
                             key(targetIsLogin) {
                                 if (targetIsLogin) {
-                                    LoginForm(navyIcons, screenModel,logState)
+                                    LoginForm(colors.navy, screenModel,logState)
                                 } else {
-                                    RegisterForm(navyIcons, screenModel,regState)
+                                    RegisterForm(colors.navy, screenModel,regState)
                                 }
                             }
                         }
@@ -167,7 +159,7 @@ class LogRegScreen : Screen {
                 }
                 Spacer(modifier = Modifier.weight(1f))
 
-                FooterLinks(navyIcons)
+                FooterLinks(colors.navy)
 
                 Spacer(modifier = Modifier.height(50.dp))
 
@@ -182,7 +174,7 @@ class LogRegScreen : Screen {
                         .widthIn(max = 300.dp)
                         .fillMaxWidth()
                         .height(50.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = navyIcons)
+                    colors = ButtonDefaults.buttonColors(containerColor = colors.navy)
                 ) {
                     Text("Keşfetmeye Başla", fontSize = 16.sp, fontWeight = FontWeight.Bold)
                 }
@@ -258,8 +250,9 @@ fun AuthEffectHandler(
             when (effect) {
                 is AuthEffect.NavigateToHome -> {}
                 is AuthEffect.NavigateToLogin -> { /* ... */ }
-                is AuthEffect.NavigateToPending -> { /* ... */ }
-
+                is AuthEffect.NavigateToPending -> {
+                    navigator.replaceAll(PendingScreen(effect.approvedRefreshRequestDTO))
+                }
                 is AuthEffect.NavigateToValidate -> {
                     navigator.push(EmailVerificationScreen(effect.email))
                 }
@@ -463,7 +456,7 @@ fun FooterLinks(navyIcons: Color) {
         Text(text = "Destek", modifier = Modifier.padding(horizontal = 8.dp), style = linkStyle)
     }
 }
-@Composable fun LoginForm(color: Color,vm: AuthScreenModel,state: LoginUiState,) {
+@Composable fun LoginForm(color: Color, vm: AuthScreenModel, state: LoginUiState,) {
     Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
         TastyTextField(
             value = state.loginUsername,
@@ -519,7 +512,7 @@ fun FooterLinks(navyIcons: Color) {
 }
 
 @Composable
-fun RegisterForm(color: Color,vm: AuthScreenModel,state: RegisterUiState) {
+fun RegisterForm(color: Color, vm: AuthScreenModel, state: RegisterUiState) {
 
     AnimatedContent(
         targetState = state.step,

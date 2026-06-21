@@ -9,11 +9,12 @@ import org.beem.tastymap.core.navigation.EmptyMessenger
 import org.beem.tastymap.core.navigation.PlatformMessenger
 import org.beem.tastymap.core.provider.HttpClientFactory
 import org.beem.tastymap.data.remote.AuthDataSource
+import org.beem.tastymap.data.remote.AuthWebSocketClient
 import org.beem.tastymap.data.remote.UserDataSource
 import org.beem.tastymap.data.repository.AuthRepository
 import org.beem.tastymap.data.repository.PostRepository
-import org.beem.tastymap.ui.auth.AuthScreenModel
-import org.beem.tastymap.ui.auth.Splash.SplashScreenModel
+import org.beem.tastymap.ui.auth.common.AuthScreenModel
+import org.beem.tastymap.ui.auth.splash.SplashScreenModel
 import org.beem.tastymap.ui.post.PostScreenModel
 import org.koin.core.qualifier.named
 
@@ -33,8 +34,9 @@ val appModule = module {
 
     single { AuthRepository(get(), get(),get(),get()) }
     single { PostRepository(get()) }
+    single { AuthWebSocketClient(get()) }
 
-    factory { AuthScreenModel(get(),get()) }
+    factory { AuthScreenModel(get(),get(),get()) }
     factory { PostScreenModel (get())}
     factory { SplashScreenModel(get()) }
 

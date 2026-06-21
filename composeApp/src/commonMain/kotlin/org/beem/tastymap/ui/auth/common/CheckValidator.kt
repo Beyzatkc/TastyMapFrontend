@@ -1,4 +1,4 @@
-package org.beem.tastymap.ui.auth
+package org.beem.tastymap.ui.auth.common
 
 object CheckValidator {
     private val USERNAME_PATTERN = Regex("^[a-zA-Z0-9._]+$")

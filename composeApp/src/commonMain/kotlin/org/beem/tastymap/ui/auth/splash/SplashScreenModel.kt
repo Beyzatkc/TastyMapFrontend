@@ -1,13 +1,11 @@
-package org.beem.tastymap.ui.auth.Splash
+package org.beem.tastymap.ui.auth.splash
 
 import cafe.adriel.voyager.core.model.ScreenModel
 import org.beem.tastymap.data.repository.AuthRepository
 import cafe.adriel.voyager.core.model.screenModelScope
-import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import org.beem.tastymap.core.navigation.DeepLinkManager
 

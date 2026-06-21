@@ -1,4 +1,4 @@
-package org.beem.tastymap.ui.auth
+package org.beem.tastymap.ui.auth.verification
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -30,47 +30,47 @@ class VerificationSuccessScreen(): Screen {
     @Composable
     override fun Content() {
         Column(
-            modifier = Modifier
+            modifier = Modifier.Companion
                 .fillMaxSize()
-                .background(Color.White)
+                .background(Color.Companion.White)
                 .padding(24.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
+            horizontalAlignment = Alignment.Companion.CenterHorizontally,
             verticalArrangement = Arrangement.Center
-        ){
+        ) {
             Box(
-                modifier = Modifier
+                modifier = Modifier.Companion
                     .size(120.dp)
                     .background(Color(0xFFE8F5E9), CircleShape),
-                contentAlignment = Alignment.Center
-            ){
+                contentAlignment = Alignment.Companion.Center
+            ) {
                 Icon(
                     imageVector = Icons.Default.CheckCircle,
                     contentDescription = "Success",
-                    modifier = Modifier.size(64.dp),
+                    modifier = Modifier.Companion.size(64.dp),
                     tint = Color(0xFF4CAF50)
                 )
             }
-            Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.Companion.height(32.dp))
 
             Text(
                 text = "E-posta Doğrulandı!",
                 style = MaterialTheme.typography.headlineMedium,
-                fontWeight = FontWeight.ExtraBold,
+                fontWeight = FontWeight.Companion.ExtraBold,
                 color = Color(0xFF001970),
-                textAlign = TextAlign.Center
+                textAlign = TextAlign.Companion.Center
             )
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.Companion.height(16.dp))
 
             Text(
                 text = "Hesabınız başarıyla doğrulandı. Bu sekmeyi kapatıp uygulamadaki giriş ekranına dönerek oturum açabilirsiniz.",
-                textAlign = TextAlign.Center,
+                textAlign = TextAlign.Companion.Center,
                 style = MaterialTheme.typography.bodyLarge,
-                color = Color.Gray,
+                color = Color.Companion.Gray,
                 lineHeight = 24.sp,
-                modifier = Modifier.widthIn(max = 350.dp)
+                modifier = Modifier.Companion.widthIn(max = 350.dp)
             )
-            Spacer(modifier = Modifier.height(40.dp))
+            Spacer(modifier = Modifier.Companion.height(40.dp))
         }
     }
 }

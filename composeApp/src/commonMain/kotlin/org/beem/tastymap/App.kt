@@ -3,12 +3,10 @@ package org.beem.tastymap
 import androidx.compose.animation.core.tween
 import androidx.compose.runtime.*
 import androidx.compose.ui.tooling.preview.Preview
-import cafe.adriel.voyager.navigator.CurrentScreen
 import cafe.adriel.voyager.navigator.Navigator
 import cafe.adriel.voyager.transitions.SlideTransition
 import org.beem.tastymap.core.navigation.DeepLinkManager
-import org.beem.tastymap.ui.auth.LogRegScreen
-import org.beem.tastymap.ui.auth.Splash.SplashScreen
+import org.beem.tastymap.ui.auth.splash.SplashScreen
 import org.beem.tastymap.ui.components.AppToast
 import org.beem.tastymap.ui.theme.TastyTheme
 

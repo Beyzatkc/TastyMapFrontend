@@ -6,9 +6,11 @@ import org.beem.tastymap.core.local.UserSession
 import org.beem.tastymap.core.network.ResultWrapper
 import org.beem.tastymap.core.network.safeApiCall
 import org.beem.tastymap.core.provider.AuthValidator
+import org.beem.tastymap.data.model.ApprovedRefreshRequestDTO
 import org.beem.tastymap.data.model.LoginRequest
 import org.beem.tastymap.data.model.LoginResponse
 import org.beem.tastymap.data.model.LoginStatus
+import org.beem.tastymap.data.model.RefreshTokenResponseDTO
 import org.beem.tastymap.data.model.RegisterRequest
 import org.beem.tastymap.data.model.UserResponse
 import org.beem.tastymap.data.remote.AuthDataSource
@@ -56,8 +58,15 @@ class AuthRepository(
             response
         }
     }
+    suspend fun verifyLogin(approvedRefreshRequestDTO: ApprovedRefreshRequestDTO): ResultWrapper<LoginResponse>{
+        return safeApiCall {
+            val response = dataSource.verifyLogin(approvedRefreshRequestDTO)
+            response
+        }
+    }
     suspend fun isUserLoggedIn(): Boolean {
         return authValidator.isUserLoggedIn()
     }
+
 
 }

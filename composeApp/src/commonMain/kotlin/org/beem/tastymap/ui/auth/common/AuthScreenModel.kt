@@ -1,4 +1,4 @@
-package org.beem.tastymap.ui.auth
+package org.beem.tastymap.ui.auth.common
 
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
@@ -11,17 +11,26 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import org.beem.tastymap.core.local.TokenManager
+import org.beem.tastymap.core.local.UserManager
+import org.beem.tastymap.core.local.UserSession
 import org.beem.tastymap.core.network.ResultWrapper
 import org.beem.tastymap.core.provider.DeviceInfoProvider
 import org.beem.tastymap.core.util.ToastManager
+import org.beem.tastymap.data.model.ApprovedRefreshRequestDTO
 import org.beem.tastymap.data.model.LoginRequest
 import org.beem.tastymap.data.model.LoginStatus
 import org.beem.tastymap.data.model.RegisterRequest
+import org.beem.tastymap.data.model.domain.SecurityEventType
+import org.beem.tastymap.data.remote.AuthWebSocketClient
 import org.beem.tastymap.data.repository.AuthRepository
 
 class AuthScreenModel(
     private val repository: AuthRepository,
-    private val deviceInfoProvider: DeviceInfoProvider
+    private val deviceInfoProvider: DeviceInfoProvider,
+    private val authWebSocketClient: AuthWebSocketClient,
+    private val tokenManager: TokenManager,
+    private val userManager: UserManager
 ) : ScreenModel{
 
     private val _loginState = MutableStateFlow(LoginUiState())
@@ -32,6 +41,11 @@ class AuthScreenModel(
 
     private val _verificationState = MutableStateFlow(VerifiacationUiState())
     val verificationState = _verificationState.asStateFlow()
+
+
+    private val _effect = Channel<AuthEffect>()
+    val effect = _effect.receiveAsFlow()
+
 
     private val _timeLeft = MutableStateFlow(0)
     val timeLeft: StateFlow<Int> = _timeLeft
@@ -53,9 +67,6 @@ class AuthScreenModel(
         }
     }
 
-
-    private val _effect = Channel<AuthEffect>()
-    val effect = _effect.receiveAsFlow()
 
 
     fun nextRegisterStep() {
@@ -103,21 +114,29 @@ class AuthScreenModel(
             screenModelScope.launch {
                 _loginState.update { it.copy(isLoading = true) }
                 val currentState = _loginState.value
+                val deviceId = deviceInfoProvider.getDeviceId();
+                val fcmToken = deviceInfoProvider.getFcmToken()
+                val userAgent = deviceInfoProvider.getUserAgent()
 
                 val request = LoginRequest(
                     username = currentState.loginUsername,
                     password = currentState.loginPassword,
-                    deviceInfoProvider.getDeviceId(),
-                    deviceInfoProvider.getFcmToken()
+                    deviceId,
+                    fcmToken
                 )
-                when (val result = repository.login(request, deviceInfoProvider.getUserAgent())) {
+                when (val result = repository.login(request, userAgent)) {
                     is ResultWrapper.Success -> {
                         if (result.data.status == LoginStatus.SUCCESS) {
                             ToastManager.show("Giriş başarılı!")
                             _verificationState.update {it.copy(isLogin = true) }
                             _effect.send(AuthEffect.NavigateToHome)
                         } else {
-                            _effect.send(AuthEffect.NavigateToPending)
+                            val request = ApprovedRefreshRequestDTO(
+                                deviceId = deviceId,
+                                userAgent = userAgent,
+                                fcmToken = fcmToken ,
+                            )
+                            _effect.send(AuthEffect.NavigateToPending(request))
                         }
                     }
                     is ResultWrapper.Error -> {
@@ -127,6 +146,42 @@ class AuthScreenModel(
                 _loginState.update { it.copy(isLoading = false) }
             }
         }
+    }
+    fun startWebSocket(approvedRefreshRequestDTO: ApprovedRefreshRequestDTO){
+        screenModelScope.launch {
+            authWebSocketClient.connect(approvedRefreshRequestDTO.deviceId)
+            authWebSocketClient.events.collect {event ->
+                when (event.type) {
+                    SecurityEventType.LOGIN_APPROVED -> {
+                        when (  val result = repository.verifyLogin(approvedRefreshRequestDTO)) {
+                            is ResultWrapper.Success -> {
+                                val data = result.data
+                                tokenManager.saveTokens(data.accessToken, data.refreshToken)
+                                tokenManager.saveDeviceId(approvedRefreshRequestDTO.deviceId)
+                                val user = UserSession(
+                                    data.status.toString(),
+                                    data.message,
+                                    data.userResponseDTO?.id,
+                                    data.userResponseDTO?.username,
+                                    data.userResponseDTO?.name,
+                                    data.userResponseDTO?.surname,
+                                    data.userResponseDTO?.profile,
+                                    data.userResponseDTO?.role,
+                                    data.userResponseDTO?.date,
+                                    data.userResponseDTO?.biography)
+
+                                userManager.saveUser(user)
+                            }
+                            is ResultWrapper.Error -> {
+                                ToastManager.show(result.message ?: "Giriş başarısız.")
+                            }
+                        }
+                    }
+                    SecurityEventType.LOGIN_REJECTED -> TODO()
+                }
+            }
+        }
+
     }
     fun resendMail(email: String){
         if (_registerState.value.isLoading) return

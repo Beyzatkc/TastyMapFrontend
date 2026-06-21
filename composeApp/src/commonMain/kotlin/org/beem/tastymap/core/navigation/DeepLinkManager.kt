@@ -4,7 +4,7 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.receiveAsFlow
-import org.beem.tastymap.ui.auth.VerifyScreen
+import org.beem.tastymap.ui.auth.verification.VerifyScreen
 
 object DeepLinkManager {
     private val _navigationEvents = Channel<Screen>(Channel.BUFFERED)

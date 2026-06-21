@@ -1,4 +1,4 @@
-package org.beem.tastymap.ui.auth
+package org.beem.tastymap.ui.auth.verification
 import TastyButton
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -36,6 +36,8 @@ import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import org.beem.tastymap.core.constants.AuthConstants.MSG_VERIFICATION_FINISHED
 import org.beem.tastymap.core.navigation.PlatformMessenger
+import org.beem.tastymap.ui.auth.common.AuthScreenModel
+import org.beem.tastymap.ui.auth.logReg.LogRegScreen
 import org.koin.compose.koinInject
 
 class EmailVerificationScreen(val email: String) : Screen {
@@ -44,8 +46,8 @@ class EmailVerificationScreen(val email: String) : Screen {
         val navyIcons = Color(0xFF001970)
         val navigator = LocalNavigator.currentOrThrow
         val koinInstance = koinInject<AuthScreenModel>()
-        val messenger = koinInject<PlatformMessenger>()
         val screenModel = rememberScreenModel { koinInstance }
+        val messenger = koinInject<PlatformMessenger>()
         val receivedMessage by messenger.listen().collectAsState()
 
         LaunchedEffect(receivedMessage) {

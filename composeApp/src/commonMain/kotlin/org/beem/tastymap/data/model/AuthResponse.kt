@@ -8,3 +8,9 @@ data class RefreshTokenResponseDTO(
     val refreshToken: String,
     val message: String,
 )
+@Serializable
+data class ApprovedRefreshRequestDTO(
+    val deviceId: String,
+    val userAgent: String,
+    val fcmToken: String
+)
