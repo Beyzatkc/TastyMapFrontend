@@ -1,6 +1,8 @@
 package org.beem.tastymap.ui.tastyview
 
 class TastyModifier {
+    var internalId: String? = null ; private set
+
     var padding: Int = 0 ; private set
     var paddingBottom: Int = 0 ; private set
     var paddingTop: Int = 0 ; private set
@@ -22,6 +24,11 @@ class TastyModifier {
 
     var weight: Float? = null ; private set
 
+    var isStickyTrigger: Boolean = false ; private set
+
+    fun setInternalId(id: String){
+        this.internalId = id
+    }
 
     fun padding(dp: Int) = apply { this.padding = dp }
     fun padding(top: Int = 0, right: Int = 0, bottom: Int = 0, left: Int = 0) = apply {
@@ -56,6 +63,12 @@ class TastyModifier {
         this.alignItems = align
         this.gap = gapDp
     }
+
+    fun stickyTrigger() = apply{
+        this.isStickyTrigger = true
+
+    }
+
 
     companion object {
         val Instance = TastyModifier()

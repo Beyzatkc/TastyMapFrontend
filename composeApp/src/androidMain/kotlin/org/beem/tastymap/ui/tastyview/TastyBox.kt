@@ -17,15 +17,15 @@ actual class TastyBox actual constructor(
             val nativeModifier = modifier.toAndroidModifier()
 
             val composeAlignment = when (contentAlignment) {
-                TastyBoxAlignment.TOP_START -> Alignment.TopStart
-                TastyBoxAlignment.TOP_CENTER -> Alignment.TopCenter
-                TastyBoxAlignment.TOP_END -> Alignment.TopEnd
-                TastyBoxAlignment.CENTER_START -> Alignment.CenterStart
-                TastyBoxAlignment.CENTER -> Alignment.Center
-                TastyBoxAlignment.CENTER_END -> Alignment.CenterEnd
-                TastyBoxAlignment.BOTTOM_START -> Alignment.BottomStart
-                TastyBoxAlignment.BOTTOM_CENTER -> Alignment.BottomCenter
-                TastyBoxAlignment.BOTTOM_END -> Alignment.BottomEnd
+                TastyBoxAlignment.TopStart -> Alignment.TopStart
+                TastyBoxAlignment.TopCenter -> Alignment.TopCenter
+                TastyBoxAlignment.TopEnd -> Alignment.TopEnd
+                TastyBoxAlignment.CenterStart -> Alignment.CenterStart
+                TastyBoxAlignment.Center -> Alignment.Center
+                TastyBoxAlignment.CenterEnd -> Alignment.CenterEnd
+                TastyBoxAlignment.BottomStart -> Alignment.BottomStart
+                TastyBoxAlignment.BottomCenter -> Alignment.BottomCenter
+                TastyBoxAlignment.BottomEnd -> Alignment.BottomEnd
             }
 
 

@@ -2,6 +2,7 @@
 package org.beem.tastymap.ui.tastyview
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -19,8 +20,6 @@ actual class TastyRow actual constructor(
     override actual fun render(): TastyPlatformView {
         return TastyPlatformView {
             val nativeModifier = modifier.toAndroidModifier()
-
-            // 🚀 Row İçin Yatay Düzenleme Eşlemesi
             val composeArrangement = when (horizontalArrangement) {
                 is TastyHorizontalArrangement.Start -> Arrangement.Start
                 is TastyHorizontalArrangement.End -> Arrangement.End
@@ -38,6 +37,36 @@ actual class TastyRow actual constructor(
                 TastyVerticalAlignment.Bottom -> Alignment.Bottom
             }
 
+            Row(
+                modifier = nativeModifier, // Bizim dolgularımız ve genişliğimiz burada
+                horizontalArrangement = composeArrangement,
+                verticalAlignment = composeAlignment
+            ) {
+                children.forEach { child ->
+                    val childWeight = child.modifier.weight
+                    if (childWeight != null && childWeight > 0f) {
+                        // İç sarmalayıcı Row'un ana hizalamayı bozmaması için koruma
+                        Box(
+                            modifier = Modifier.weight(childWeight, fill = true),
+                            contentAlignment = when(composeAlignment) {
+                                Alignment.Top -> Alignment.TopStart
+                                Alignment.CenterVertically -> Alignment.CenterStart
+                                Alignment.Bottom -> Alignment.BottomStart
+                                else -> Alignment.CenterStart
+                            }
+                        ) {
+                            child.render().content()
+                        }
+                    } else {
+                        // 🎯 İşte o asil dokunuş: Çocukları doğrudan basıyoruz,
+                        // sarmalayıcı eklemediğimiz için Row'un SpaceBetween kuralı
+                        // ana Row'un padding sınırlarına çarparak durmak zorunda kalıyor!
+                        child.render().content()
+                    }
+                }
+            }
+
+            /*
             Row(
                 modifier = nativeModifier,
                 horizontalArrangement = composeArrangement,
@@ -58,6 +87,9 @@ actual class TastyRow actual constructor(
                     }
                 }
             }
+
+             */
         }
     }
+
 }

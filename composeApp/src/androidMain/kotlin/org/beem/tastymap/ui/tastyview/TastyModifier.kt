@@ -8,19 +8,21 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.positionInParent
 import androidx.compose.ui.unit.dp
 
 fun TastyModifier.toAndroidModifier(): Modifier {
     var m: Modifier = Modifier
 
+    if (this.fillMaxWidth) m = m.fillMaxWidth()
+    this.widthPx?.let { m = m.width(it.dp) }
+    this.heightPx?.let { m = m.height(it.dp) }
 
     if (this.marginTop > 0 || this.marginBottom > 0) {
         m = m.padding(top = this.marginTop.dp, bottom = this.marginBottom.dp)
     }
 
-    if (this.fillMaxWidth) m = m.fillMaxWidth()
-    this.widthPx?.let { m = m.width(it.dp) }
-    this.heightPx?.let { m = m.height(it.dp) }
 
 
     if (this.backgroundColor != null) {
@@ -33,9 +35,18 @@ fun TastyModifier.toAndroidModifier(): Modifier {
         m = m.padding(
             top = if (this.paddingTop > 0) this.paddingTop.dp else this.padding.dp,
             bottom = if (this.paddingBottom > 0) this.paddingBottom.dp else this.padding.dp,
-            start = this.padding.dp,
-            end = this.padding.dp
+            start = if (this.paddingLeft > 0) this.paddingLeft.dp else padding.dp,
+            end = if (this.paddingRight > 0) this.paddingRight.dp else padding.dp
         )
+    }
+
+    if(this.isStickyTrigger){
+        m = m.onGloballyPositioned{ coordinates ->
+            val coordinates = coordinates.positionInParent().y.toInt()
+            if(coordinates>0 && currentTriggerPixelOffset.value == 0){
+                currentTriggerPixelOffset.value = coordinates
+            }
+        }
     }
 
 

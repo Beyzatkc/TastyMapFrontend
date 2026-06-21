@@ -4,6 +4,7 @@ import org.beem.tastymap.ui.tastyview.tastylayoutenums.TastyHorizontalArrangemen
 import org.beem.tastymap.ui.tastyview.tastylayoutenums.TastyVerticalAlignment
 import org.beem.tastymap.ui.tastyview.to.toCssAlignItems
 import org.beem.tastymap.ui.tastyview.to.toCssJustifyContent
+import org.beem.tastymap.ui.tastyview.to.toHtmlAttributes
 
 actual class TastyRow actual constructor(
     override val modifier: TastyModifier,
@@ -23,11 +24,19 @@ actual class TastyRow actual constructor(
             }
         }
 
+        val attributes = modifier.toHtmlAttributes()
         val justify = horizontalArrangement.toCssJustifyContent()
         val align = verticalAlignment.toCssAlignItems()
 
         val html = """
-            <div style="display: flex; flex-direction: row; $justify $align ${modifier.toCssStyle()}">
+            <div $attributes style=
+                "display: flex;
+                flex-direction: row;
+                box-sizing: border-box;
+                $justify
+                $align
+                ${modifier.toCssStyle()}
+            ">
                 $childrenHtml
             </div>
         """.trimIndent()

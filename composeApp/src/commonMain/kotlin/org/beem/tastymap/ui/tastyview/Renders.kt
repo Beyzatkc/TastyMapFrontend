@@ -250,12 +250,56 @@ fun TestRestaurantSheetUI(
     }
 }
 
+
+fun StickyTest(
+    restaurant: Restaurant,
+    sheetState: TastyBottomSheetState,
+    palette: TastyMapSheetPalette,
+    onAction: (RestaurantAction) -> Unit
+): TastyView{
+    return TastyStickyContainer(
+        modifier = TastyModifier().fillMaxWidth(),
+
+        stickyHeader = TastyRow(
+            modifier = TastyModifier()
+                .fillMaxWidth()
+                .background(palette.backgroundColor) // Arkası opak olsun ki alttan kayan yazılar görünmesin
+                .padding(top = 12, bottom = 12, left = 16, right = 16),
+            horizontalArrangement = TastyHorizontalArrangement.SpaceBetween,
+            verticalAlignment = TastyVerticalAlignment.Center,
+            children = listOf(
+                // Sol tarafta küçük restoran ismi
+                TastyText(text = restaurant.name, style = TastyTextStyle.TITLE, color = palette.titleColor),
+
+                // Sağ tarafta o küçük kapatma butonu
+                TastyIconButton(
+                    modifier = TastyModifier()
+                        .size(32, 32)
+                        .background(palette.closeButtonBackground)
+                        .borderRadius(50),
+                    iconHtml = "&times;",
+                    backgroundColor = palette.closeButtonBackground,
+                    iconColor = palette.closeButtonIconColor,
+                    onClick = { sheetState.close() }
+                )
+            )
+        ),
+
+        scrollableContent = buildRestaurantSheetUI(
+            restaurant = restaurant,
+            sheetState = sheetState,
+            palette = palette,
+            onAction = onAction
+        )
+    )
+}
+
 fun buildRestaurantSheetUI(
     restaurant: Restaurant,
     sheetState: TastyBottomSheetState,
     palette: TastyMapSheetPalette,
     onAction: (RestaurantAction) -> Unit
-): TastyView {
+): TastyColumn {
     // 🎯 1. DUPDURU DURUM KONTROLÜ
     val isOperational = restaurant.status == "OPERATIONAL" || restaurant.status == "Açık"
     val statusText = if (isOperational) "Açık" else "Kapalı"
@@ -271,7 +315,7 @@ fun buildRestaurantSheetUI(
             .fillMaxWidth()
             .padding(16),
         verticalArrangement = TastyVerticalArrangement.SpacedBy(16),
-        scrollable = true,
+        scrollable = false,
         children = listOf(
 
             // 1. ÜST AKSİYON SATIRI: Rozet ve Kapatma Butonu
@@ -382,6 +426,7 @@ fun buildRestaurantSheetUI(
 
         TastyDivider(
             modifier = TastyModifier()
+                .stickyTrigger()
                 .marginTop(4)
                 .marginBottom(4),
             color = palette.dividerColor,
@@ -632,46 +677,54 @@ fun buildRestaurantSheetUI(
                     )
                 )
             ),
-            TastyBox(
-                modifier = TastyModifier().fillMaxWidth()
-                    .background(palette.dividerColor)
-                    .borderRadius(12)
-                    .padding(14),
-                children = listOf(
-                    TastyColumn(
-                        verticalArrangement = TastyVerticalArrangement.SpacedBy(6),
-                        children = listOf(
-                            TastyRow(
-                                modifier = TastyModifier().fillMaxWidth(),
-                                horizontalArrangement = TastyHorizontalArrangement.SpaceBetween,
-                                verticalAlignment = TastyVerticalAlignment.Center,
-                                children = listOf(
-                                    TastyText(
-                                        modifier = TastyModifier().weight(1f),
-                                        text = "Ahmet Yılmaz",
-                                        style = TastyTextStyle.BODY,
-                                        color = palette.titleColor
-                                    ),
-                                    TastyRow(
-                                        verticalAlignment = TastyVerticalAlignment.Center,
-                                        horizontalArrangement = TastyHorizontalArrangement.SpacedBy(4),
-                                        children = listOf(
-                                            TastyIcon(icon = TastyMapIcon.STAR, color = "#F59E0B", sizePx = 12),
-                                            TastyText(text = "5.0", style = TastyTextStyle.BODY, color = palette.ratingTextColor)
-                                        )
-                                    )
-                                )
-                            ),
+            ahmetYilmaz(palette),
+            ahmetYilmaz(palette),
+            ahmetYilmaz(palette),
+            ahmetYilmaz(palette)
+    )
+    )
+}
 
+
+fun ahmetYilmaz(palette: TastyMapSheetPalette): TastyView{
+    return TastyBox(
+        modifier = TastyModifier().fillMaxWidth()
+            .background(palette.dividerColor)
+            .borderRadius(12)
+            .padding(14),
+        children = listOf(
+            TastyColumn(
+                verticalArrangement = TastyVerticalArrangement.SpacedBy(6),
+                children = listOf(
+                    TastyRow(
+                        modifier = TastyModifier().fillMaxWidth(),
+                        horizontalArrangement = TastyHorizontalArrangement.SpaceBetween,
+                        verticalAlignment = TastyVerticalAlignment.Center,
+                        children = listOf(
                             TastyText(
-                                text = "\"Kahveleri gerçekten çok başarılı, harika bir atmosferi var. Tavsiye ederim!\"",
+                                modifier = TastyModifier().weight(1f),
+                                text = "Ahmet Yılmaz",
                                 style = TastyTextStyle.BODY,
-                                color = palette.subtitleColor
+                                color = palette.titleColor
+                            ),
+                            TastyRow(
+                                verticalAlignment = TastyVerticalAlignment.Center,
+                                horizontalArrangement = TastyHorizontalArrangement.SpacedBy(4),
+                                children = listOf(
+                                    TastyIcon(icon = TastyMapIcon.STAR, color = "#F59E0B", sizePx = 12),
+                                    TastyText(text = "5.0", style = TastyTextStyle.BODY, color = palette.ratingTextColor)
+                                )
                             )
                         )
+                    ),
+
+                    TastyText(
+                        text = "\"Kahveleri gerçekten çok başarılı, harika bir atmosferi var. Tavsiye ederim!\"",
+                        style = TastyTextStyle.BODY,
+                        color = palette.subtitleColor
                     )
                 )
-            ),
-    )
+            )
+        )
     )
 }

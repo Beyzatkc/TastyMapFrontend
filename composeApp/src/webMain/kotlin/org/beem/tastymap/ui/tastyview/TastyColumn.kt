@@ -10,7 +10,7 @@ actual class TastyColumn actual constructor(
     private val verticalArrangement: TastyVerticalArrangement,
     private val horizontalAlignment: TastyHorizontalAlignment,
     private val scrollable: Boolean,
-    private val children: List<TastyView>
+    val children: List<TastyView>
 ) : TastyView {
     actual override fun render(): TastyPlatformView {
         val childrenHtml = children.joinToString("") { child ->

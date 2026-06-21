@@ -14,6 +14,7 @@ import org.beem.tastymap.map.MapEvent
 import org.beem.tastymap.map.MapScreenModel
 import org.beem.tastymap.map.rememberTastyMapState
 import org.beem.tastymap.ui.components.TastyMapFab
+import org.beem.tastymap.ui.tastyview.StickyTest
 import org.beem.tastymap.ui.tastyview.TastyBottomSheet
 import org.beem.tastymap.ui.tastyview.TastyBottomSheetState
 import org.beem.tastymap.ui.tastyview.TastyButton
@@ -83,7 +84,7 @@ class TastyMapScreen : Screen {
                         sheetState = sheetState,
 
                         content = {
-                            buildRestaurantSheetUI(
+                            StickyTest(
                                 restaurant = selectedRestaurant!!,
                                 sheetState = sheetState,
                                 palette = TastyMapSheetPalette(),
