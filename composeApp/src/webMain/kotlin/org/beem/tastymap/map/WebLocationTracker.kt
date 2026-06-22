@@ -19,6 +19,13 @@ class WebLocationTracker: LocationTracker {
         val navigator = window.navigator as NavigatorWithGeolocation
         val geolocation = navigator.geolocation
 
+        val fakeLocationData = LocationData(
+            latitude = 37.946978,
+            longitude = 32.519940,
+            accuracy = 0f,
+            isAvailable = true
+        )
+
         val success: (GeolocationPosition) -> Unit = { position ->
             val locationData = LocationData(
                 latitude = position.coords.latitude,
@@ -26,7 +33,7 @@ class WebLocationTracker: LocationTracker {
                 accuracy = position.coords.accuracy.toFloat(),
                 isAvailable = true
             )
-            _locationState.value = locationData
+            _locationState.value = fakeLocationData
             println("Konum bilgisi alındı: $locationData")
         }
 

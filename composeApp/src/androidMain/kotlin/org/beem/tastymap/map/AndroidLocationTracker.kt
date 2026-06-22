@@ -19,6 +19,13 @@ class AndroidLocationTracker (
 
     override val locationState: StateFlow<LocationData> = _locationState.asStateFlow()
 
+    val fakeLocationData = LocationData(
+        latitude = 37.946978,
+        longitude = 32.519940,
+        accuracy = 0f,
+        isAvailable = true
+    )
+
     @SuppressLint("MissingPermission")
     override fun startTracking() {
         val request = LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, 5000L)
@@ -28,13 +35,15 @@ class AndroidLocationTracker (
         val callBack = object : LocationCallback() {
             override fun onLocationResult(result: LocationResult) {
                 result.lastLocation?.let {
-                    _locationState.value = LocationData(
+                    _locationState.value = fakeLocationData
+                    /*LocationData(
                         latitude = it.latitude,
                         longitude = it.longitude,
                         accuracy = it.accuracy,
                         isAvailable = true,
                         bearing = it.bearing
                     )
+                    */
                 }
             }
         }

@@ -18,9 +18,13 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import org.beem.tastymap.ui.tastyview.paginglist.TastyPagingController
+import org.beem.tastymap.ui.tastyview.paginglist.TastyPagingList
 import org.beem.tastymap.ui.tastyview.tastylayoutenums.TastyHorizontalArrangement
 import org.beem.tastymap.ui.tastyview.tastylayoutenums.TastyVerticalAlignment
 import org.beem.tastymap.ui.tastyview.tastylayoutenums.TastyVerticalArrangement
+import org.beem.tastymap.ui.tastyview.test.Test
+import org.beem.tastymap.ui.tastyview.test.TestService
 
 @Composable
 fun TestRestaurantSheetUI(
@@ -248,6 +252,44 @@ fun TestRestaurantSheetUI(
             }
         }
     }
+}
+
+fun PagingTest(
+    restaurant: Restaurant,
+    sheetState: TastyBottomSheetState,
+    palette: TastyMapSheetPalette,
+    onAction: (RestaurantAction) -> Unit
+): TastyView{
+    val testService = TestService()
+
+    return TastyPagingList<Test>(
+        modifier = TastyModifier().fillMaxWidth(),
+        controller = TastyPagingController(pageSize = 10) { page, pageSize ->
+            testService.getTestList(page, pageSize)
+        },
+        headerTemplate = {
+            StickyTest(
+                restaurant = restaurant,
+                sheetState = sheetState,
+                palette = palette,
+                onAction = onAction
+            )
+        },
+        itemTemplate = { test ->
+            TestItem(item = test)
+        },
+        loadingTemplate = {
+            TastyRow(
+                modifier = TastyModifier().fillMaxWidth().padding(16),
+                children =
+                listOf(TastyText(text = "Yeni yorumlar yükleniyor, canını sıkma...", style = TastyTextStyle.BODY))
+            )
+        }
+    )
+}
+
+fun TestItem(item: Test): TastyView{
+    return TastyText(text = item.content, style = TastyTextStyle.BODY)
 }
 
 
