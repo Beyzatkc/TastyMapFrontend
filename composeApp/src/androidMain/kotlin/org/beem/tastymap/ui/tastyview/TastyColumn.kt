@@ -23,8 +23,12 @@ actual class TastyColumn actual constructor(
             var nativeModifier = modifier.toAndroidModifier()
 
             val inheritedScrollState = LocalTastyScrollState.current
-            if (scrollable && inheritedScrollState == null) {
-                nativeModifier = nativeModifier.verticalScroll(rememberScrollState())
+            val isPagingActive = LocalIsPagingActive.current
+
+            if(!isPagingActive) {
+                if (scrollable && inheritedScrollState == null) {
+                    nativeModifier = nativeModifier.verticalScroll(rememberScrollState())
+                }
             }
 
             val composeArrangement = when (verticalArrangement) {

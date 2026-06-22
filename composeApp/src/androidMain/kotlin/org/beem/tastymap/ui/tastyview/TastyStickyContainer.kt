@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
@@ -16,6 +17,7 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -28,16 +30,16 @@ actual class TastyStickyContainer actual constructor(
 ): TastyView{
     actual override fun render(): TastyPlatformView {
         return TastyPlatformView{
-            val scrollState = rememberScrollState()
+            val scrollPixelHolder = remember { mutableStateOf(0) }
 
             LaunchedEffect(Unit) {
                 currentTriggerPixelOffset.value = 0
             }
 
 
-            val isDividerPassed by remember {
+            val isDividerPassed by remember(scrollPixelHolder) {
                 derivedStateOf {
-                    val scrollPosition = scrollState.value
+                    val scrollPosition = scrollPixelHolder.value
                     val triggerTarget = currentTriggerPixelOffset.value
 
                     val shouldOpen = triggerTarget > 0 && scrollPosition >= (triggerTarget)
@@ -54,10 +56,12 @@ actual class TastyStickyContainer actual constructor(
             ) {
                 val availableMaxHeight = maxHeight
                 Box(modifier = Modifier.fillMaxWidth()
-                    .heightIn(max = availableMaxHeight)
-                    .verticalScroll(scrollState)
+                    .height(availableMaxHeight)
                 ) {
-                    CompositionLocalProvider(LocalTastyScrollState provides scrollState) {
+                    CompositionLocalProvider(
+                        LocalTastyScrollState provides scrollPixelHolder,
+                        LocalIsPagingActive provides false
+                    ) {
                         scrollableContent.render().content()
                     }
                 }
