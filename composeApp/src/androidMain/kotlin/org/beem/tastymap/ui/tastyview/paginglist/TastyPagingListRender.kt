@@ -22,7 +22,6 @@ import org.beem.tastymap.ui.tastyview.toAndroidModifier
 @Suppress("UNCHECKED_CAST")
 internal actual fun <T> platformRender(pagingList: TastyPagingList<T>): TastyPlatformView {
     return TastyPlatformView {
-        val inheritedScrollPixels = LocalTastyScrollState.current
 
         val lazyListState = rememberLazyListState()
         val controller = pagingList.controller
@@ -39,12 +38,12 @@ internal actual fun <T> platformRender(pagingList: TastyPagingList<T>): TastyPla
                 val totalItemsCount = layoutInfo.totalItemsCount
                 val lastVisibleItemIndex = (layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: 0) + 1
 
-                totalItemsCount > 0 && lastVisibleItemIndex >= (totalItemsCount - 2)
+                totalItemsCount > 0 && lastVisibleItemIndex >= (totalItemsCount - 3)
             }
         }
 
-        LaunchedEffect(shouldLoadNextPage) {
-            if (shouldLoadNextPage) {
+        LaunchedEffect(shouldLoadNextPage, controller.isLoading, controller.isEndOfTheList) {
+            if (shouldLoadNextPage && !controller.isLoading && !controller.isEndOfTheList) {
                 controller.loadNextPage()
             }
         }
@@ -52,14 +51,15 @@ internal actual fun <T> platformRender(pagingList: TastyPagingList<T>): TastyPla
         CompositionLocalProvider(
             LocalIsPagingActive provides true
         ) {
-            if (inheritedScrollPixels != null) {
+            val currentScrollPixels = LocalTastyScrollState.current
+            if (currentScrollPixels != null) {
                 LaunchedEffect(lazyListState) {
                     snapshotFlow {
                         val index = lazyListState.firstVisibleItemIndex
                         val offset = lazyListState.firstVisibleItemScrollOffset
                         (index * 600) + offset
                     }.collect { calculatedPixels ->
-                        inheritedScrollPixels.value = calculatedPixels
+                        currentScrollPixels.value = calculatedPixels
                     }
                 }
             }

@@ -21,12 +21,13 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import org.beem.tastymap.ui.tastyview.contractual.TastyStickyScrollableContent
 
 
 actual class TastyStickyContainer actual constructor(
     override val modifier: TastyModifier,
     private val stickyHeader: TastyView,
-    private val scrollableContent: TastyView
+    private val scrollableContent: TastyStickyScrollableContent
 ): TastyView{
     actual override fun render(): TastyPlatformView {
         return TastyPlatformView{
@@ -37,7 +38,7 @@ actual class TastyStickyContainer actual constructor(
             }
 
 
-            val isDividerPassed by remember(scrollPixelHolder) {
+            val isDividerPassed by remember {
                 derivedStateOf {
                     val scrollPosition = scrollPixelHolder.value
                     val triggerTarget = currentTriggerPixelOffset.value

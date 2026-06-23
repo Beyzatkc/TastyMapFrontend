@@ -13,14 +13,12 @@ import cafe.adriel.voyager.koin.koinScreenModel
 import org.beem.tastymap.map.MapEvent
 import org.beem.tastymap.map.MapScreenModel
 import org.beem.tastymap.map.rememberTastyMapState
+import org.beem.tastymap.place.RestaurantDetailScreenModel
 import org.beem.tastymap.ui.components.TastyMapFab
-import org.beem.tastymap.ui.tastyview.PagingTest
-import org.beem.tastymap.ui.tastyview.StickyTest
+import org.beem.tastymap.ui.map.bottomsheet.RestaurantDetailSheet
+import org.beem.tastymap.ui.tastyview.PagingTest_V2
 import org.beem.tastymap.ui.tastyview.TastyBottomSheet
 import org.beem.tastymap.ui.tastyview.TastyBottomSheetState
-import org.beem.tastymap.ui.tastyview.TastyButton
-import org.beem.tastymap.ui.tastyview.TestRestaurantSheetUI
-import org.beem.tastymap.ui.tastyview.buildRestaurantSheetUI
 import org.beem.tastymap.ui.theme.TastyMapSheetPalette
 
 
@@ -30,6 +28,9 @@ class TastyMapScreen : Screen {
         val myMaps = "https://api.maptiler.com/maps/019dbfbf-86a2-7d38-869e-bd6ebbcee298/style.json?key=DNr5GYdtJfA7ecaMmrh1"
 
         val mapScreenModel: MapScreenModel = koinScreenModel()
+
+        val detailScreenModel: RestaurantDetailScreenModel = koinScreenModel()
+
         val mapState = rememberTastyMapState()
 
         val userLocation by mapScreenModel.userLocation.collectAsState()
@@ -85,12 +86,11 @@ class TastyMapScreen : Screen {
                         sheetState = sheetState,
 
                         content = {
-                            PagingTest(
+                            RestaurantDetailSheet(
                                 restaurant = selectedRestaurant!!,
                                 sheetState = sheetState,
                                 palette = TastyMapSheetPalette(),
-                                onAction = { action ->
-                                }
+                                detailScreenModel = detailScreenModel
                             )
                         }
                     )

@@ -7,6 +7,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.unit.dp
+import org.beem.tastymap.ui.tastyview.contractual.TastyStickyScrollableContent
 import org.beem.tastymap.ui.tastyview.tastylayoutenums.TastyHorizontalAlignment
 import org.beem.tastymap.ui.tastyview.tastylayoutenums.TastyVerticalArrangement
 
@@ -16,7 +17,7 @@ actual class TastyColumn actual constructor(
     private val horizontalAlignment: TastyHorizontalAlignment,
     private val scrollable: Boolean,
     val children: List<TastyView>
-) : TastyView {
+) : TastyView, TastyStickyScrollableContent {
 
     override actual fun render(): TastyPlatformView {
         return TastyPlatformView {

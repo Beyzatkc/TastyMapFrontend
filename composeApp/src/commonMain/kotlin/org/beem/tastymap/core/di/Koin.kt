@@ -1,6 +1,5 @@
 package org.beem.tastymap.core.di
 
-import cafe.adriel.voyager.core.registry.screenModule
 import org.koin.dsl.module
 import com.russhwolf.settings.Settings
 import createAuthClient
@@ -12,10 +11,10 @@ import org.beem.tastymap.data.repository.AuthRepository
 import org.beem.tastymap.map.MapScreenModel
 import org.beem.tastymap.map.api.MapDataSource
 import org.beem.tastymap.map.repository.MapRepository
+import org.beem.tastymap.place.RestaurantDetailScreenModel
+import org.beem.tastymap.place.api.PlaceDataSource
+import org.beem.tastymap.place.repository.PlaceRepository
 import org.beem.tastymap.ui.auth.AuthScreenModel
-import kotlin.text.get
-import org.koin.core.module.dsl.factoryOf
-import org.koin.core.module.dsl.viewModelOf
 import org.koin.core.qualifier.named
 
 val appModule = module {
@@ -35,4 +34,9 @@ val appModule = module {
     single { MapDataSource(get(named("auth"))) }
     single { MapRepository(get()) }
     factory { MapScreenModel(get(), get()) }
+
+    single { PlaceDataSource(get(named("auth"))) }
+    single { PlaceRepository(get()) }
+    factory { RestaurantDetailScreenModel(get()) }
+
 }

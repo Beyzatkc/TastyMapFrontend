@@ -1,5 +1,6 @@
 package org.beem.tastymap.ui.tastyview
 
+import org.beem.tastymap.ui.tastyview.contractual.TastyStickyScrollableContent
 import org.beem.tastymap.ui.tastyview.tastylayoutenums.TastyHorizontalAlignment
 import org.beem.tastymap.ui.tastyview.tastylayoutenums.TastyVerticalArrangement
 import org.beem.tastymap.ui.tastyview.to.toCssAlignItems
@@ -11,7 +12,7 @@ actual class TastyColumn actual constructor(
     private val horizontalAlignment: TastyHorizontalAlignment,
     private val scrollable: Boolean,
     val children: List<TastyView>
-) : TastyView {
+) : TastyView, TastyStickyScrollableContent {
     actual override fun render(): TastyPlatformView {
         val childrenHtml = children.joinToString("") { child ->
             val childHtml = child.render()

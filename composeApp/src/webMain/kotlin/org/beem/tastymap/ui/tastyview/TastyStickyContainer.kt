@@ -3,12 +3,13 @@ package org.beem.tastymap.ui.tastyview
 import kotlinx.browser.document
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
+import org.beem.tastymap.ui.tastyview.contractual.TastyStickyScrollableContent
 import org.beem.tastymap.ui.tastyview.to.initIntersectionObserverWasm
 
 actual class TastyStickyContainer actual constructor(
     override val modifier: TastyModifier,
     private val stickyHeader: TastyView,
-    private val scrollableContent: TastyView
+    private val scrollableContent: TastyStickyScrollableContent
 ): TastyView{
 
     private val uniqueTriggerId = "tasty-trigger-${hashCode()}"
