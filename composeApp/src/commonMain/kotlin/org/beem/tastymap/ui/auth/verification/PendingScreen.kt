@@ -7,19 +7,29 @@ import androidx.compose.material.icons.outlined.CheckCircle
 import androidx.compose.material.icons.outlined.Security
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 import cafe.adriel.voyager.core.annotation.InternalVoyagerApi
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.koin.getScreenModel
+import cafe.adriel.voyager.navigator.LocalNavigator
+import cafe.adriel.voyager.navigator.currentOrThrow
 import cafe.adriel.voyager.navigator.internal.BackHandler
 import org.beem.tastymap.data.model.ApprovedRefreshRequestDTO
+import org.beem.tastymap.ui.auth.common.AuthEffect
+import org.beem.tastymap.ui.auth.common.AuthLifecycleEvent
 import org.beem.tastymap.ui.auth.common.AuthScreenModel
+import org.beem.tastymap.ui.auth.logReg.LogRegScreen
+import org.beem.tastymap.ui.auth.splash.SplashScreen
 import org.beem.tastymap.ui.theme.LocalCustomColors
 
 class PendingScreen(val approvedRefreshRequestDTO: ApprovedRefreshRequestDTO) : Screen {
@@ -28,9 +38,55 @@ class PendingScreen(val approvedRefreshRequestDTO: ApprovedRefreshRequestDTO) : 
     @Composable
     override fun Content() {
         val screenModel = getScreenModel<AuthScreenModel>()
+        val lifecycleOwner = LocalLifecycleOwner.current
+        val navigator = LocalNavigator.currentOrThrow
 
         LaunchedEffect(Unit) {
-            screenModel.startWebSocket(approvedRefreshRequestDTO)
+            screenModel.pendingLogin.collect { pendingLogin ->
+                when (pendingLogin) {
+                    is AuthEffect.NavigateToHome -> {navigator.replaceAll(SplashScreen())}
+                    is AuthEffect.NavigateToLogin -> { navigator.replaceAll(LogRegScreen())}
+                    is AuthEffect.NavigateToPending -> {
+                        navigator.replaceAll(PendingScreen(pendingLogin.approvedRefreshRequestDTO))
+                    }
+                    is AuthEffect.NavigateToValidate -> {
+                        navigator.push(EmailVerificationScreen(pendingLogin.email))
+                    }
+                }
+            }
+        }
+        DisposableEffect(lifecycleOwner) {
+
+            val observer = LifecycleEventObserver { _, event ->
+                when (event) {
+                    Lifecycle.Event.ON_RESUME -> {
+                        println("LIFECYCLE: RESUME pendıngscreen")
+                        screenModel.onLifecycleEvent(
+                            AuthLifecycleEvent.Resume,
+                            approvedRefreshRequestDTO
+                        )
+                    }
+
+                    Lifecycle.Event.ON_STOP -> {
+                        screenModel.onLifecycleEvent(
+                            AuthLifecycleEvent.Stop,
+                            approvedRefreshRequestDTO
+                        )
+                    }
+
+                    else -> Unit
+                }
+            }
+
+            lifecycleOwner.lifecycle.addObserver(observer)
+
+            onDispose {
+                lifecycleOwner.lifecycle.removeObserver(observer)
+                screenModel.onLifecycleEvent(
+                    AuthLifecycleEvent.Stop,
+                    approvedRefreshRequestDTO
+                )
+            }
         }
         val colors = LocalCustomColors.current
         val materialColors = MaterialTheme.colorScheme

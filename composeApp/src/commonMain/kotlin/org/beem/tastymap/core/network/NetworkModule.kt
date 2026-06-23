@@ -5,17 +5,25 @@ import io.ktor.client.plugins.DefaultRequest
 import io.ktor.client.plugins.HttpTimeout
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.logging.*
+import io.ktor.client.plugins.websocket.WebSockets
+import io.ktor.client.plugins.websocket.pingInterval
 import io.ktor.client.request.header
 import io.ktor.serialization.kotlinx.json.json
 import io.ktor.util.AttributeKey
 import kotlinx.serialization.json.Json
 import org.beem.tastymap.core.util.AppConfig
 import org.beem.tastymap.platformConfig
+import kotlin.time.Duration.Companion.seconds
 
 val JsFetchCredentials = AttributeKey<String>("js.fetch.credentials")
 fun HttpClientConfig<*>.commonConfig() {
     platformConfig()
     expectSuccess = true
+
+    install(WebSockets) {
+        pingInterval = 30.seconds
+    }
+
     install(HttpTimeout) {
         requestTimeoutMillis = 10000
         connectTimeoutMillis = 10000

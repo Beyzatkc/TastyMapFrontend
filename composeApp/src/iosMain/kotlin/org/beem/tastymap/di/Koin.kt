@@ -12,4 +12,6 @@ val iosModule = module {
     }
     single<UserManager> { MobileUserManager(get()) }
     single <AuthValidator>{ MobileAuthValidator(get(),get()) }
+    single { PermissionsController() }
+    single<PermissionManager> { IosPermissionManager(get()) }
 }

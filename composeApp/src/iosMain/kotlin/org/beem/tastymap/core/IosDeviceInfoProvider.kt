@@ -6,8 +6,6 @@ import platform.UIKit.UIDevice
 import dev.gitlive.firebase.Firebase
 import dev.gitlive.firebase.messaging.messaging
 
-
-
 class IosDeviceInfoProvider: DeviceInfoProvider {
     override fun getDeviceId(): String {
         return UIDevice.currentDevice.identifierForVendor?.UUIDString ?: "unknown_ios_id"

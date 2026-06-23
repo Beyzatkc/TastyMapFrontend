@@ -3,7 +3,7 @@ package org.beem.tastymap.ui.auth.common
 object CheckValidator {
     private val USERNAME_PATTERN = Regex("^[a-zA-Z0-9._]+$")
     private val NAME_PATTERN = Regex("^[a-zA-ZçÇğĞıİöÖşŞüÜ ]+$")
-    private val SURNAME_PATTERN = Regex("^[a-zA-ZçÇğĞıİöÖşŞüÜ]+$") // Soyad boşluk içeremez
+    private val SURNAME_PATTERN = Regex("^[a-zA-ZçÇğĞıİöÖşŞüÜ]+$")
     private val EMAIL_PATTERN = Regex("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}\$")
 
     fun validateEmail(email: String): ValidationResult {

@@ -4,5 +4,9 @@
 <dict>
 	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>
+
+	<key>NSUserNotificationUsageDescription</key>
+	<string>Güvenlik onayları ve hesap hareketlerinizi anlık takip etmek için bildirimlere izin veriyoruz.</string>
+
 </dict>
 </plist>

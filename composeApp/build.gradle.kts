@@ -28,7 +28,7 @@ buildkonfig {
     defaultConfigs {
         buildConfigField(com.codingfeline.buildkonfig.compiler.FieldSpec.Type.STRING, "VAPID_KEY", props.getProperty("web.vapid.key") ?: "")
         buildConfigField(com.codingfeline.buildkonfig.compiler.FieldSpec.Type.STRING, "API_HOST", props.getProperty("API_URL") ?: "10.0.2.2:8080")
-        buildConfigField(com.codingfeline.buildkonfig.compiler.FieldSpec.Type.STRING, "WS_PROTOCOL", "ws")
+        buildConfigField(com.codingfeline.buildkonfig.compiler.FieldSpec.Type.STRING, "WS_PROTOCOL", "wss")
     }
     defaultConfigs("release") {
         buildConfigField(com.codingfeline.buildkonfig.compiler.FieldSpec.Type.STRING, "API_HOST", props.getProperty("API_URL") ?: "10.0.2.2:8080")
@@ -116,12 +116,14 @@ kotlin {
             implementation(project.dependencies.platform(libs.firebase.bom))
             implementation(libs.firebase.messaging.android)
             implementation(libs.androidx.security.crypto)
+            implementation(libs.moko.permissions)
             implementation("androidx.core:core-splashscreen:1.0.1")
 
         }
         iosMain.dependencies {
             implementation(libs.ktor.client.darwin)
             implementation(libs.sqldelight.native)
+            implementation(libs.moko.permissions)
             implementation(libs.firebase.gitlive.messaging)
         }
 
@@ -173,6 +175,7 @@ kotlin {
             implementation(libs.kotlinx.coroutines.core)
             implementation(libs.ktor.client.core)
             implementation(libs.ktor.client.websockets)
+
 
         }
         commonTest.dependencies {

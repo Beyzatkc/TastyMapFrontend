@@ -10,12 +10,20 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import com.google.firebase.FirebaseApp
+import dev.icerock.moko.permissions.PermissionsController
 import org.beem.tastymap.core.navigation.DeepLinkManager
+import org.koin.android.ext.android.getKoin
+import kotlin.getValue
 
 class MainActivity : ComponentActivity() {
+
+    private val permissionsController by lazy {
+        PermissionsController(applicationContext)
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
-
-
+        permissionsController.bind(this)
+        getKoin().declare(permissionsController)
         Log.d("DEEPLINK", "ONCREATE INTENT: ${intent?.data}")
 
         enableEdgeToEdge()

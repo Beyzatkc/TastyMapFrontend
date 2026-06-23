@@ -24,7 +24,12 @@ class AndroidDeviceInfoProvider(private val context: Context): DeviceInfoProvide
     }
 
     override suspend fun getFcmToken(): String {
-        return Firebase.messaging.getToken() ?: ""
+        return try {
+            Firebase.messaging.getToken() ?: ""
+        } catch (e: Exception) {
+           println("HATTAA "+ e.toString())
+            return " "
+        }
     }
 
 }

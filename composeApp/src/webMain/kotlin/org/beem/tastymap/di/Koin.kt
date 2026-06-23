@@ -11,6 +11,8 @@ import org.beem.tastymap.core.local.UserManager
 import org.beem.tastymap.core.local.WebUserManager
 import org.beem.tastymap.core.navigation.PlatformMessenger
 import org.beem.tastymap.core.navigation.WebMessenger
+import org.beem.tastymap.core.permission.PermissionManager
+import org.beem.tastymap.core.permisson.WebPermissionManager
 import org.beem.tastymap.core.provider.AuthValidator
 import org.beem.tastymap.core.provider.DeviceInfoProvider
 import org.beem.tastymap.core.provider.HttpClientFactory
@@ -37,4 +39,5 @@ val webModule = module {
     single <AuthValidator>{ WebSessionValidator(authClient = get(named("auth")),get()) }
 
     single<PlatformMessenger> { WebMessenger() }
+    single<PermissionManager> { WebPermissionManager() }
 }

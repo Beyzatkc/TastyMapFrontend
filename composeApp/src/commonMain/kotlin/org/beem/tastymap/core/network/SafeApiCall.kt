@@ -15,9 +15,15 @@ suspend fun <T> safeApiCall(
     try {
         ResultWrapper.Success(call())
     } catch (e: Exception) {
+        e.printStackTrace()
         when (e) {
             is IOException, is io.ktor.client.network.sockets.ConnectTimeoutException -> {
-                ResultWrapper.Error("İnternet bağlantınızı kontrol edin.", ErrorType.NETWORK_ERROR)
+                val message = e.message ?: "Bilinmeyen ağ hatası"
+
+                ResultWrapper.Error(
+                    "İnternet bağlantınızı kontrol edin. ($message)",
+                    ErrorType.NETWORK_ERROR
+                )
             }
 
             is ResponseException -> {
@@ -26,6 +32,7 @@ suspend fun <T> safeApiCall(
                 } catch (_: Exception) {
                     "Sunucu ile iletişimde bir sorun oluştu."
                 }
+                println("Hata %: ${e.message}")
                 ResultWrapper.Error(errorMessage, ErrorType.SERVER_ERROR)
             }
 

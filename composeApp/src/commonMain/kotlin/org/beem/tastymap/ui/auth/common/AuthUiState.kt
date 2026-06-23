@@ -29,6 +29,11 @@ data class VerifiacationUiState(
     val isLogin: Boolean = false,
     val isLoading: Boolean = false,
 )
+sealed class AuthLifecycleEvent {
+    data object Resume : AuthLifecycleEvent()
+    data object Pause : AuthLifecycleEvent()
+    data object Stop : AuthLifecycleEvent()
+}
 
 
 

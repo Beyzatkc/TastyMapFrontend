@@ -8,10 +8,12 @@ import org.koin.dsl.module
 import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKeys
 import com.russhwolf.settings.SharedPreferencesSettings
+import org.beem.tastymap.core.AndroidPermissionManager
 import org.beem.tastymap.core.local.MobileUserManager
 import org.beem.tastymap.core.local.UserManager
 import org.beem.tastymap.core.network.MobileSessionValidator
 import org.beem.tastymap.core.network.MobileHttpClientFactory
+import org.beem.tastymap.core.permission.PermissionManager
 import org.beem.tastymap.core.provider.AuthValidator
 import org.beem.tastymap.core.provider.HttpClientFactory
 
@@ -34,4 +36,5 @@ val androidModule = module {
     }
     single<UserManager> { MobileUserManager(get()) }
     single <AuthValidator>{ MobileSessionValidator(get(),get()) }
+    single<PermissionManager> { AndroidPermissionManager(get()) }
 }

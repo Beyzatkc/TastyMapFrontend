@@ -22,21 +22,23 @@ val appModule = module {
 
     single<TokenManager> { TokenManagerImpl(get()) }
 
-    single(named("noAuth")) { createNoAuthClient() }
-    single(named("auth")) {
+    single<HttpClient>(named("noAuth")) {
+        createNoAuthClient()
+    }
+
+    single<HttpClient>(named("auth")) {
         val factory = get<HttpClientFactory>()
         val noAuth = get<HttpClient>(named("noAuth"))
         factory.createAuthClient(noAuth)
     }
-
     single { AuthDataSource(get(named("noAuth"))) }
     single { UserDataSource(get(named("auth"))) }
 
     single { AuthRepository(get(), get(),get(),get()) }
     single { PostRepository(get()) }
-    single { AuthWebSocketClient(get()) }
+    single { AuthWebSocketClient(get(named("auth"))) }
 
-    factory { AuthScreenModel(get(),get(),get()) }
+    factory { AuthScreenModel(get(),get(),get(),get(),get(),get()) }
     factory { PostScreenModel (get())}
     factory { SplashScreenModel(get()) }
 
