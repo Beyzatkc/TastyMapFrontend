@@ -20,6 +20,8 @@ import org.beem.tastymap.ui.tastyview.TastyView
 import org.beem.tastymap.ui.tastyview.icons.TastyMapIcon
 import org.beem.tastymap.ui.tastyview.paginglist.TastyPagingController
 import org.beem.tastymap.ui.tastyview.paginglist.TastyPagingList
+import org.beem.tastymap.ui.tastyview.state.TastyStatefulView
+import org.beem.tastymap.ui.tastyview.state.tastyStateOf
 import org.beem.tastymap.ui.tastyview.tastylayoutenums.TastyHorizontalArrangement
 import org.beem.tastymap.ui.tastyview.tastylayoutenums.TastyVerticalAlignment
 import org.beem.tastymap.ui.tastyview.tastylayoutenums.TastyVerticalArrangement
@@ -34,28 +36,10 @@ fun RestaurantDetailSheet(
 
     return TastyStickyContainer(
         modifier = TastyModifier().fillMaxWidth(),
-        stickyHeader = TastyRow(
-            modifier = TastyModifier()
-                .fillMaxWidth()
-                .background(palette.backgroundColor)
-                .padding(top = 12, bottom = 12, left = 16, right = 16),
-            horizontalArrangement = TastyHorizontalArrangement.SpaceBetween,
-            verticalAlignment = TastyVerticalAlignment.Center,
-            children = listOf(
-                TastyText(
-                    text = restaurant.name,
-                    style = TastyTextStyle.TITLE,
-                    color = palette.titleColor
-                ),
-                TastyIconButton(
-                    modifier = TastyModifier().size(32, 32)
-                        .background(palette.closeButtonBackground).borderRadius(50),
-                    iconHtml = "&times;",
-                    backgroundColor = palette.closeButtonBackground,
-                    iconColor = palette.closeButtonIconColor,
-                    onClick = { sheetState.close() }
-                )
-            )
+        stickyHeader = restaurantStickyHeader(
+            restaurant = restaurant,
+            sheetState = sheetState,
+            palette = palette
         ),
         scrollableContent = TastyPagingList<ReviewItem>(
             modifier = TastyModifier().fillMaxWidth(),
@@ -124,10 +108,9 @@ private fun ReviewRowItem(review: ReviewItem, palette: TastyMapSheetPalette): Ta
                             )
                         )
                     ),
-                    TastyText(
-                        text = "\"${review.content}\"",
-                        style = TastyTextStyle.BODY,
-                        color = palette.subtitleColor
+                    ReviewContentBox(
+                        review,
+                        palette
                     )
                 )
             )
@@ -231,4 +214,113 @@ private fun buildRestaurantStaticInfo(restaurant: Restaurant, palette: TastyMapS
             TastyText(text = "Öne Çıkan Yorumlar", style = TastyTextStyle.SUBTITLE, color = palette.titleColor)
         )
     )
+}
+
+private fun restaurantStickyHeader(
+    restaurant: Restaurant,
+    sheetState: TastyBottomSheetState,
+    palette: TastyMapSheetPalette
+): TastyView {
+    return TastyColumn(
+        modifier = TastyModifier()
+            .fillMaxWidth()
+            .background(palette.backgroundColor),
+        children = listOf(
+            // 📌 1. ANA SATIR: Başlık ve Kapatma Butonu
+            TastyRow(
+                modifier = TastyModifier()
+                    .fillMaxWidth()
+                    .padding(top = 16, bottom = 8, left = 16, right = 16),
+                horizontalArrangement = TastyHorizontalArrangement.SpaceBetween,
+                verticalAlignment = TastyVerticalAlignment.Center,
+                children = listOf(
+                    // Başlık Alanı (Gerektiğinde taşmayı önlemek için weight veya sarmal eklenebilir)
+                    TastyColumn(
+                        modifier = TastyModifier().weight(1f),
+                        verticalArrangement = TastyVerticalArrangement.SpacedBy(2),
+                        children = listOf(
+                            TastyText(
+                                text = restaurant.name,
+                                style = TastyTextStyle.TITLE,
+                                color = palette.titleColor
+                            ),
+                            // "Öne Çıkan Yorumlar" yazısını başlığın altına zarif bir alt başlık olarak aldık
+                            TastyText(
+                                text = "Öne Çıkan Yorumlar",
+                                style = TastyTextStyle.BODY, // Varsa CAPTION/SUBTITLE stili daha tatlı olur
+                                color = palette.subtitleColor
+                            )
+                        )
+                    ),
+
+                    // Modern Kapatma Butonu
+                    TastyIconButton(
+                        modifier = TastyModifier()
+                            .size(32, 32)
+                            .background(palette.closeButtonBackground)
+                            .borderRadius(50),
+                        iconHtml = "&times;",
+                        backgroundColor = palette.closeButtonBackground,
+                        iconColor = palette.closeButtonIconColor,
+                        onClick = { sheetState.close() }
+                    )
+                )
+            ),
+
+            // 📌 2. ZARİF ALT SINIR (Sticky hissini pekiştiren ince çizgi)
+            TastyDivider(
+                modifier = TastyModifier()
+                    .fillMaxWidth()
+                    .marginTop(8),
+                color = palette.dividerColor,
+                thickness = 1
+            )
+        )
+    )
+}
+
+
+private fun ReviewContentBox(review: ReviewItem, palette: TastyMapSheetPalette): TastyView {
+    data class RowItemState(
+        val isExpanded: Boolean = false,
+        val hasOverflow: Boolean = false
+    )
+
+    val rowState = tastyStateOf(RowItemState())
+
+    // 🚀 Adım 2: StatefulView sarmalayıcısını çakıyoruz
+    return TastyStatefulView(rowState) { state ->
+        TastyColumn(
+            verticalArrangement = TastyVerticalArrangement.SpacedBy(6),
+            children = listOf(
+                TastyText(
+                    text = "\"${review.content}\"",
+                    style = TastyTextStyle.BODY,
+                    color = palette.subtitleColor,
+                    maxLines = if (state.isExpanded) Int.MAX_VALUE else 3,
+                    onOverflow = {
+                        rowState.value = rowState.value.copy(hasOverflow = true)
+                    }
+                ),
+                if (state.hasOverflow || state.isExpanded) {
+                    TastyRow(
+                        modifier = TastyModifier()
+                            .padding(top = 4)
+                            .clickable {
+                                rowState.value = rowState.value.copy(isExpanded = !state.isExpanded) },
+                        children = listOf(
+                            TastyText(
+                                text = if (state.isExpanded) "Daha Az Kapat" else "Devamını Gör",
+                                style = TastyTextStyle.BADGE,
+                                color = "#2563EB"
+                            )
+                        )
+                    )
+                } else {
+                    // 🚀 Kısa yorumlarda burası boş dönecek, buton asla tasarıma sızamayacak!
+                    TastySpacer(modifier = TastyModifier().height(0))
+                }
+            )
+        )
+    }
 }

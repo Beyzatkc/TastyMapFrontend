@@ -2,6 +2,7 @@ package org.beem.tastymap.ui.tastyview
 
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -47,6 +48,10 @@ fun TastyModifier.toAndroidModifier(): Modifier {
                 currentTriggerPixelOffset.value = coordinates
             }
         }
+    }
+
+    if (this.onClick != null) {
+        m = m.clickable { this.onClick?.invoke() }
     }
 
 

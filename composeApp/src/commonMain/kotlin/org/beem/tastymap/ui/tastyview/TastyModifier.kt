@@ -26,6 +26,9 @@ class TastyModifier {
 
     var isStickyTrigger: Boolean = false ; private set
 
+    var onClick: (() -> Unit)? = null
+        private set
+
     fun setInternalId(id: String){
         this.internalId = id
     }
@@ -67,6 +70,10 @@ class TastyModifier {
     fun stickyTrigger() = apply{
         this.isStickyTrigger = true
 
+    }
+
+    fun clickable(action: () -> Unit) = apply {
+        this.onClick = action
     }
 
 
