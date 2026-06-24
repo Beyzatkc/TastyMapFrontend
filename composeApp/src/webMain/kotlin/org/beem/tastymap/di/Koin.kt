@@ -12,7 +12,7 @@ import org.beem.tastymap.core.local.WebUserManager
 import org.beem.tastymap.core.navigation.PlatformMessenger
 import org.beem.tastymap.core.navigation.WebMessenger
 import org.beem.tastymap.core.permission.PermissionManager
-import org.beem.tastymap.core.permisson.WebPermissionManager
+import org.beem.tastymap.core.permission.WebPermissionManager
 import org.beem.tastymap.core.provider.AuthValidator
 import org.beem.tastymap.core.provider.DeviceInfoProvider
 import org.beem.tastymap.core.provider.HttpClientFactory

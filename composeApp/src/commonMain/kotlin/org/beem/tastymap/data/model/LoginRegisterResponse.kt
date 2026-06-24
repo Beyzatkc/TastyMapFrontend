@@ -47,7 +47,7 @@ data class LoginResponse(
     val accessToken: String? = null,
     val refreshToken: String? = null,
     val userResponseDTO: UserResponse? = null,
-    val status: LoginStatus = LoginStatus.SUCCESS,
+    val status: LoginStatus? = null,
     val message: String? = null
 )
 

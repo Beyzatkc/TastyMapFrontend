@@ -29,8 +29,11 @@ class AuthRepository(
     suspend fun login(loginRequest: LoginRequest,userAgent:String): ResultWrapper<LoginResponse>{
         return safeApiCall {
             val response= dataSource.login(loginRequest,userAgent)
-
+            println("loginAythreposıtory "+ response.status+"  "+response.accessToken)
             if (response.status == LoginStatus.SUCCESS && response.accessToken != null) {
+
+                println("loginAythreposıtory2.kısım "+ response.status+"  "+response.accessToken)
+
                 tokenManager.saveTokens(response.accessToken, response.refreshToken)
                 tokenManager.saveDeviceId(loginRequest.deviceId)
                 val user = UserSession(response.status.toString(),response.message,
