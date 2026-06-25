@@ -32,6 +32,11 @@ class AndroidDeviceInfoProvider(private val context: Context): DeviceInfoProvide
         }
     }
 
+    override suspend fun getFingerprint(): String? {
+         return null
+    }
+
+
 }
 
 

@@ -16,6 +16,7 @@ class WebSessionValidator(
     private val authClient: HttpClient,
     private val userManager: UserManager
 ) : AuthValidator {
+
     override suspend fun isUserLoggedIn(): Boolean {
         val userId = userManager.getUserId()
         if(userId != null){

@@ -20,11 +20,30 @@ private fun setupGlobalFetchCredentialsInterceptor() {
     js("""
         if (typeof window !== 'undefined' && !window._fetchInterceptorInstalled) {
             const originalFetch = window.fetch;
+
             window.fetch = function(resource, init) {
+
+                const url = typeof resource === "string"
+                    ? resource
+                    : resource?.url;
+
                 const modifiedInit = init || {};
-                modifiedInit.credentials = 'include';
+
+                const isFirebaseRequest =
+                    url && (
+                        url.includes("firebase") ||
+                        url.includes("googleapis") ||
+                        url.includes("gstatic")
+                    );
+
+                // Firebase değilse credentials ekle
+                if (!isFirebaseRequest) {
+                    modifiedInit.credentials = 'include';
+                }
+
                 return originalFetch(resource, modifiedInit);
             };
+
             window._fetchInterceptorInstalled = true;
         }
     """)

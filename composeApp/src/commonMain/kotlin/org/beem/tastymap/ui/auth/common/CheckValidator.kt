@@ -3,7 +3,7 @@ package org.beem.tastymap.ui.auth.common
 object CheckValidator {
     private val USERNAME_PATTERN = Regex("^[a-zA-Z0-9._]+$")
     private val NAME_PATTERN = Regex("^[a-zA-ZçÇğĞıİöÖşŞüÜ ]+$")
-    private val SURNAME_PATTERN = Regex("^[a-zA-ZçÇğĞıİöÖşŞüÜ]+$")
+    private val SURNAME_PATTERN = Regex("^[a-zA-ZçÇğĞıİöÖşŞüÜ \\-']+$")
     private val EMAIL_PATTERN = Regex("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}\$")
 
     fun validateEmail(email: String): ValidationResult {
@@ -14,9 +14,17 @@ object CheckValidator {
         }
     }
     fun validatePassword(password: String): ValidationResult {
+        val hasUppercase = password.any { it.isUpperCase() }
+        val hasLowercase = password.any { it.isLowerCase() }
+        val hasDigit = password.any { it.isDigit() }
+        val hasSpecialChar = password.contains(Regex("[@#\$!%^&*()_+\\-=\\[\\]{};':\"\\\\|,.<>\\/?]"))
+
         return when {
-            password.isBlank() -> ValidationResult.Invalid("Parola boş olamaz")
-            password.length < 6 -> ValidationResult.Invalid("Parola en az 6 karakter olmalı")
+            password.length < 8 -> ValidationResult.Invalid("Parola en az 8 karakter olmalı")
+            !hasUppercase -> ValidationResult.Invalid("En az bir büyük harf içermeli")
+            !hasLowercase -> ValidationResult.Invalid("En az bir küçük harf içermeli")
+            !hasDigit -> ValidationResult.Invalid("En az bir rakam içermeli")
+            !hasSpecialChar -> ValidationResult.Invalid("En az bir özel karakter içermeli (@, #, !, vb.)")
             else -> ValidationResult.Valid
         }
     }

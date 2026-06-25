@@ -22,6 +22,7 @@ data class RegisterUiState(
     val regPassword: String = "",
     val regPasswordError: String? = null,
     val isLoading: Boolean = false,
+    val passwordStrength: PasswordStrength = PasswordStrength()
 )
 data class VerifiacationUiState(
     val verificationError: String? = null,
@@ -29,6 +30,13 @@ data class VerifiacationUiState(
     val isLogin: Boolean = false,
     val isLoading: Boolean = false,
 )
+data class PasswordStrength(
+    val hasMinLength: Boolean = false,
+    val hasUppercase: Boolean = false,
+    val hasDigit: Boolean = false,
+    val hasSpecialChar: Boolean = false
+)
+
 sealed class AuthLifecycleEvent {
     data object Resume : AuthLifecycleEvent()
     data object Pause : AuthLifecycleEvent()

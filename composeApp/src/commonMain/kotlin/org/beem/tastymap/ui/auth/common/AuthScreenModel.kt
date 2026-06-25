@@ -141,12 +141,15 @@ class AuthScreenModel(
                 println("LOGIN useragenr: "+ userAgent)
                 val fcmToken = deviceInfoProvider.getFcmToken()
                 println("LOGINfcm: "+ fcmToken)
+                val fingerPrintHash = deviceInfoProvider.getFingerprint()
+                println("LOGINfcm: "+ fcmToken)
 
                 val request = LoginRequest(
                     username = currentState.loginUsername,
                     password = currentState.loginPassword,
                     deviceId,
-                    fcmToken
+                    fcmToken,
+                    fingerPrintHash
                 )
                 println("LOGIN: Logınla")
                 when (val result = repository.login(request, userAgent)) {
@@ -162,6 +165,7 @@ class AuthScreenModel(
                                 deviceId = deviceId,
                                 userAgent = userAgent,
                                 fcmToken = fcmToken ,
+                                fingerprintHash = fingerPrintHash
                             )
                             _effect.send(AuthEffect.NavigateToPending(request))
                             println("LOGIN: NavigateToPending gönderildi")
@@ -301,9 +305,9 @@ class AuthScreenModel(
 
     fun validateRegisterStep1(): Boolean {
         val currentState=_registerState.value
-        val uResult = CheckValidator.validateUsername(currentState.regUsername)
-        val nResult = CheckValidator.validateName(currentState.regName)
-        val sResult = CheckValidator.validateSurname(currentState.regSurname)
+        val uResult = CheckValidator.validateUsername(currentState.regUsername.trim())
+        val nResult = CheckValidator.validateName(currentState.regName.trim().replace("\\s+".toRegex(), " "))
+        val sResult = CheckValidator.validateSurname(currentState.regSurname.replace("\\s+".toRegex(), " "))
 
         val usernameError = (uResult as? ValidationResult.Invalid)?.message
         val nameError = (nResult as? ValidationResult.Invalid)?.message
@@ -323,8 +327,8 @@ class AuthScreenModel(
     }
     fun validateRegisterStep2(): Boolean {
         val currentState=_registerState.value
-        val eResult = CheckValidator.validateEmail(currentState.regEmail)
-        val pResult = CheckValidator.validatePassword(currentState.regPassword)
+        val eResult = CheckValidator.validateEmail(currentState.regEmail.trim())
+        val pResult = CheckValidator.validatePassword(currentState.regPassword.trim())
 
 
         val regEmailError = (eResult as? ValidationResult.Invalid)?.message
@@ -342,8 +346,8 @@ class AuthScreenModel(
     }
     fun validateLogin(): Boolean {
         val state = _loginState.value
-        val uResult = CheckValidator.validateUsername(state.loginUsername)
-        val pResult = CheckValidator.validatePassword(state.loginPassword)
+        val uResult = CheckValidator.validateUsername(state.loginUsername.trim())
+        val pResult = CheckValidator.validatePassword(state.loginPassword.trim())
 
         val usernameError = (uResult as? ValidationResult.Invalid)?.message
         val passwordError = (pResult as? ValidationResult.Invalid)?.message
@@ -369,6 +373,7 @@ class AuthScreenModel(
             regEmailError = null,
             regPassword = "",
             regPasswordError = null,
+            passwordStrength = PasswordStrength()
             )
         }
     }
@@ -398,9 +403,22 @@ class AuthScreenModel(
                 is RegisterEvent.EmailChanged ->
                     currentState.copy(regEmail = event.value, regEmailError = null)
 
-                is RegisterEvent.PasswordChanged ->
-                    currentState.copy(regPassword = event.value, regPasswordError = null)
+                is RegisterEvent.PasswordChanged -> {
+                    val newPassword = event.value
 
+                    val strength = PasswordStrength(
+                        hasMinLength = newPassword.length >= 8,
+                        hasUppercase = newPassword.any { it.isUpperCase() },
+                        hasDigit = newPassword.any { it.isDigit() },
+                        hasSpecialChar = newPassword.contains(Regex("[@#\$!%^&*(),.?\":{}|<>]"))
+                    )
+
+                    currentState.copy(
+                        regPassword = newPassword,
+                        regPasswordError = null,
+                        passwordStrength = strength
+                    )
+                }
             }
         }
     }

@@ -26,5 +26,8 @@ class IosDeviceInfoProvider: DeviceInfoProvider {
     override suspend fun getFcmToken(): String {
         return Firebase.messaging.getToken() ?: ""
     }
+    override suspend fun getFingerprint(): String? {
+        return null
+    }
 
 }

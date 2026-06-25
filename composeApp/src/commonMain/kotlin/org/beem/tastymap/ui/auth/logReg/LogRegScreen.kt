@@ -1,6 +1,7 @@
 package org.beem.tastymap.ui.auth.logReg
 import TastyButton
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.SizeTransform
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.LinearEasing
@@ -9,6 +10,7 @@ import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandVertically
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -34,6 +36,7 @@ import cafe.adriel.voyager.core.screen.Screen
 import org.beem.tastymap.ui.components.TastyTextField
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
@@ -50,6 +53,9 @@ import kotlin.math.cos
 import kotlin.math.sin
 import org.koin.compose.koinInject
 import androidx.compose.foundation.layout.imePadding
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.RadioButtonUnchecked
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.CompositingStrategy
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
@@ -62,6 +68,7 @@ import org.beem.tastymap.ui.auth.common.AuthScreenModel
 import org.beem.tastymap.ui.auth.verification.EmailVerificationScreen
 import org.beem.tastymap.ui.auth.common.LoginEvent
 import org.beem.tastymap.ui.auth.common.LoginUiState
+import org.beem.tastymap.ui.auth.common.PasswordStrength
 import org.beem.tastymap.ui.auth.common.RegisterEvent
 import org.beem.tastymap.ui.auth.common.RegisterUiState
 import org.beem.tastymap.ui.auth.verification.PendingScreen
@@ -617,7 +624,16 @@ fun RegisterForm(color: Color, vm: AuthScreenModel, state: RegisterUiState) {
                     isPassword = true,
                     error=state.regPasswordError
                 )
-
+                AnimatedVisibility(
+                    visible = state.regPassword.isNotEmpty(),
+                    enter = expandVertically(),
+                    exit = shrinkVertically()
+                ) {
+                    Column {
+                        Spacer(modifier = Modifier.height(4.dp))
+                        PasswordStrengthIndicator(state.passwordStrength)
+                    }
+                }
                 Spacer(modifier = Modifier.height(5.dp))
 
                 TastyButton(
@@ -639,6 +655,88 @@ fun RegisterForm(color: Color, vm: AuthScreenModel, state: RegisterUiState) {
                     backcolor = Color.White,
                     textcolor = color,
                     strokecolor = Color.Transparent
+                )
+            }
+        }
+    }
+}@Composable
+fun PasswordStrengthIndicator(
+    passwordStrength: PasswordStrength
+) {
+    val checks = listOf(
+        "8+ karakter" to passwordStrength.hasMinLength,
+        "Büyük harf" to passwordStrength.hasUppercase,
+        "Rakam" to passwordStrength.hasDigit,
+        "Özel karakter" to passwordStrength.hasSpecialChar
+    )
+
+    val score = checks.count { it.second }
+
+    val (strengthText, color) = when (score) {
+        0, 1 -> "Zayıf" to Color(0xFFE53935)
+        2, 3 -> "Orta" to Color(0xFFFFB300)
+        else -> "Güçlü" to Color(0xFF43A047)
+    }
+
+    Column(
+        modifier = Modifier.fillMaxWidth()
+    ) {
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Text(
+                text = "Şifre",
+                style = MaterialTheme.typography.labelSmall
+            )
+
+            Text(
+                text = strengthText,
+                style = MaterialTheme.typography.labelSmall,
+                color = color,
+                fontWeight = FontWeight.SemiBold
+            )
+        }
+
+        Spacer(modifier = Modifier.height(3.dp))
+
+        LinearProgressIndicator(
+            progress = { score / 4f },
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(4.dp)
+                .clip(RoundedCornerShape(50)),
+            color = color
+        )
+
+        Spacer(modifier = Modifier.height(4.dp))
+
+        checks.forEach { (text, passed) ->
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.padding(vertical = 1.dp)
+            ) {
+
+                Icon(
+                    imageVector = if (passed)
+                        Icons.Default.CheckCircle
+                    else
+                        Icons.Default.RadioButtonUnchecked,
+                    contentDescription = null,
+                    tint = if (passed) Color(0xFF43A047) else Color.Gray,
+                    modifier = Modifier.size(14.dp)
+                )
+
+                Spacer(modifier = Modifier.width(6.dp))
+
+                Text(
+                    text = text,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = if (passed)
+                        MaterialTheme.colorScheme.onSurface
+                    else
+                        Color.Gray
                 )
             }
         }

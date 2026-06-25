@@ -32,7 +32,6 @@ class AuthWebSocketClient(private val client: HttpClient) {
 
         job = CoroutineScope(Dispatchers.Default).launch {
             try {
-                // client.webSocket bloğu bir "Suspend" fonksiyondur
                 client.webSocket(AppConfig.getWebSocketUrl(deviceId)) {
                     println("WS: Bağlantı başarıyla kuruldu! (Session: $this)")
                     session = this
@@ -50,7 +49,6 @@ class AuthWebSocketClient(private val client: HttpClient) {
                     println("WS: For döngüsü bitti (sunucu bağlantıyı kapattı).")
                 }
             } catch (e: Exception) {
-                // HATA BURADA ÇIKIYOR OLMALI
                 println("WS HATA DETAYI: ${e.stackTraceToString()}")
             } finally {
                 println("WS: Bağlantı finally bloğunda kapandı.")
