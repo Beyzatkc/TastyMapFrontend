@@ -36,16 +36,16 @@ import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import org.beem.tastymap.core.constants.AuthConstants.MSG_VERIFICATION_FINISHED
 import org.beem.tastymap.core.navigation.PlatformMessenger
-import org.beem.tastymap.ui.auth.common.AuthScreenModel
 import org.beem.tastymap.ui.auth.logReg.LogRegScreen
+import org.beem.tastymap.ui.theme.LocalCustomColors
 import org.koin.compose.koinInject
 
 class EmailVerificationScreen(val email: String) : Screen {
     @Composable
     override fun Content() {
-        val navyIcons = Color(0xFF001970)
+        val colors = LocalCustomColors.current
         val navigator = LocalNavigator.currentOrThrow
-        val koinInstance = koinInject<AuthScreenModel>()
+        val koinInstance = koinInject<EmailScreenModel>()
         val screenModel = rememberScreenModel { koinInstance }
         val messenger = koinInject<PlatformMessenger>()
         val receivedMessage by messenger.listen().collectAsState()
@@ -77,7 +77,7 @@ class EmailVerificationScreen(val email: String) : Screen {
                     imageVector = Icons.Default.Email,
                     contentDescription = null,
                     modifier = Modifier.size(80.dp),
-                    tint = navyIcons
+                    tint = colors.navy
                 )
 
                 Spacer(modifier = Modifier.height(24.dp))
@@ -86,7 +86,7 @@ class EmailVerificationScreen(val email: String) : Screen {
                     text = "E-postanı Doğrula",
                     style = MaterialTheme.typography.headlineMedium,
                     fontWeight = FontWeight.ExtraBold,
-                    color = navyIcons,
+                    color = colors.navy,
                     textAlign = TextAlign.Center
                 )
 
@@ -119,7 +119,7 @@ class EmailVerificationScreen(val email: String) : Screen {
                 Spacer(modifier = Modifier.height(32.dp))
 
                 ResendSection(
-                    navyIcons = navyIcons,
+                    navyIcons = colors.navy,
                     screenModel = screenModel,
                     onResendClick = { screenModel.resendMail(email) }
                 )
@@ -139,16 +139,16 @@ class EmailVerificationScreen(val email: String) : Screen {
                         }
                     },
                     isPrimary = true,
-                    backcolor = navyIcons,
+                    backcolor = colors.navy,
                     textcolor = Color.White,
-                    strokecolor = navyIcons
+                    strokecolor = colors.navy,
                 )
             }
         }
     }
 }
 @Composable
-fun ResendSection(onResendClick: () -> Unit, navyIcons: Color, screenModel: AuthScreenModel,) {
+fun ResendSection(onResendClick: () -> Unit, navyIcons: Color, screenModel: EmailScreenModel,) {
     val timeLeft by screenModel.timeLeft.collectAsState()
     val isButtonEnabled = timeLeft == 0
 

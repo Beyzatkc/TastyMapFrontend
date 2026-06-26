@@ -24,10 +24,14 @@ data class RegisterUiState(
     val isLoading: Boolean = false,
     val passwordStrength: PasswordStrength = PasswordStrength()
 )
-data class VerifiacationUiState(
+data class VerificationUiState(
     val verificationError: String? = null,
     val isEmailVerified: Boolean = false,
     val isLogin: Boolean = false,
+    val isLoading: Boolean = false,
+)
+data class sendPendingMail(
+    val error: String? = null,
     val isLoading: Boolean = false,
 )
 data class PasswordStrength(

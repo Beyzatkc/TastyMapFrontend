@@ -5,5 +5,5 @@ interface DeviceInfoProvider {
     fun getUserAgent(): String
     suspend fun getFcmToken(): String
 
-    suspend fun  getFingerprint(): String?
+    suspend fun getFingerprint(): String?
 }

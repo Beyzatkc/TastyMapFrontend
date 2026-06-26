@@ -1,21 +1,14 @@
-package org.beem.tastymap.ui.auth.common
-
+package org.beem.tastymap.ui.auth.logReg
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import org.beem.tastymap.core.local.TokenManager
 import org.beem.tastymap.core.local.UserManager
-import org.beem.tastymap.core.local.UserSession
 import org.beem.tastymap.core.network.ResultWrapper
 import org.beem.tastymap.core.permission.PermissionManager
 import org.beem.tastymap.core.provider.DeviceInfoProvider
@@ -24,58 +17,29 @@ import org.beem.tastymap.data.model.ApprovedRefreshRequestDTO
 import org.beem.tastymap.data.model.LoginRequest
 import org.beem.tastymap.data.model.LoginStatus
 import org.beem.tastymap.data.model.RegisterRequest
-import org.beem.tastymap.data.model.domain.SecurityEventType
 import org.beem.tastymap.data.remote.AuthWebSocketClient
 import org.beem.tastymap.data.repository.AuthRepository
+import org.beem.tastymap.ui.auth.common.AuthEffect
+import org.beem.tastymap.ui.auth.common.CheckValidator
+import org.beem.tastymap.ui.auth.common.LoginUiState
+import org.beem.tastymap.ui.auth.common.PasswordStrength
+import org.beem.tastymap.ui.auth.common.RegisterUiState
+import org.beem.tastymap.ui.auth.common.ValidationResult
 import kotlin.collections.copy
 
-class AuthScreenModel(
+class LogRegScreenModel(
     private val repository: AuthRepository,
     private val deviceInfoProvider: DeviceInfoProvider,
-    private val authWebSocketClient: AuthWebSocketClient,
-    private val tokenManager: TokenManager,
-    private val userManager: UserManager,
     private val permissionManager: PermissionManager
 ) : ScreenModel{
-
     private val _loginState = MutableStateFlow(LoginUiState())
     val loginState = _loginState.asStateFlow()
 
     private val _registerState = MutableStateFlow(RegisterUiState())
     val registerState = _registerState.asStateFlow()
 
-    private val _verificationState = MutableStateFlow(VerifiacationUiState())
-    val verificationState = _verificationState.asStateFlow()
-
     private val _effect = Channel<AuthEffect>()
     val effect = _effect.receiveAsFlow()
-
-    private val _pendingLogin = Channel<AuthEffect>()
-    val pendingLogin = _pendingLogin.receiveAsFlow()
-
-    private var isConnected = false
-
-    private val _timeLeft = MutableStateFlow(0)
-    val timeLeft: StateFlow<Int> = _timeLeft
-    private var timerJob: Job? = null
-
-
-    fun startTime() {
-        if (_timeLeft.value > 0) return
-
-        timerJob?.cancel()
-
-        timerJob = screenModelScope.launch {
-            _timeLeft.value = 60
-
-            while (_timeLeft.value > 0) {
-                delay(1000)
-                _timeLeft.value--
-            }
-        }
-    }
-
-
 
     fun nextRegisterStep() {
         if (validateRegisterStep1()) {
@@ -86,7 +50,6 @@ class AuthScreenModel(
     fun previousRegisterStep() {
         _registerState.update { it.copy(step = 1) }
     }
-
     fun onLoginSuccess() {
         screenModelScope.launch {
             val isGranted = permissionManager.requestNotificationPermission()
@@ -105,29 +68,29 @@ class AuthScreenModel(
                 _registerState.update { it.copy(isLoading = true) }
                 val state = _registerState.value
 
-                    val request = RegisterRequest(
-                        username = state.regUsername,
-                        name = state.regName,
-                        surname = state.regSurname,
-                        email = state.regEmail,
-                        password = state.regPassword,
-                        null, null, "USER", true
-                    )
+                val request = RegisterRequest(
+                    username = state.regUsername,
+                    name = state.regName,
+                    surname = state.regSurname,
+                    email = state.regEmail,
+                    password = state.regPassword,
+                    null, null, "USER", true
+                )
 
-                    when (val result = repository.register(request)) {
-                        is ResultWrapper.Success -> {
-                            ToastManager.show("Kayıt başarılı!")
-                            _effect.send(AuthEffect.NavigateToValidate(state.regEmail))
-                        }
-
-                        is ResultWrapper.Error -> {
-                            ToastManager.show(result.message ?: "Kayıt başarısız.")
-                        }
+                when (val result = repository.register(request)) {
+                    is ResultWrapper.Success -> {
+                        ToastManager.show("Kayıt başarılı!")
+                        _effect.send(AuthEffect.NavigateToValidate(state.regEmail))
                     }
-                  _registerState.update { it.copy(isLoading = false) }
+
+                    is ResultWrapper.Error -> {
+                        ToastManager.show(result.message ?: "Kayıt başarısız.")
+                    }
                 }
+                _registerState.update { it.copy(isLoading = false) }
             }
         }
+    }
 
     fun login(){
         if(validateLogin()) {
@@ -157,7 +120,6 @@ class AuthScreenModel(
                         onLoginSuccess()
                         if (result.data.status == LoginStatus.SUCCESS) {
                             ToastManager.show("Giriş başarılı!")
-                            _verificationState.update {it.copy(isLogin = true) }
                             _effect.send(AuthEffect.NavigateToHome)
                         } else {
                             println("LOGIN: STATUS PENDING")
@@ -179,130 +141,6 @@ class AuthScreenModel(
             }
         }
     }
-
-    fun onLifecycleEvent(event: AuthLifecycleEvent, dto: ApprovedRefreshRequestDTO) {
-        when (event) {
-            AuthLifecycleEvent.Resume -> {
-                println("LIFECYCLE: RESUME authscreenmodel")
-                startWebSocket(dto)
-            }
-            AuthLifecycleEvent.Stop -> screenModelScope.launch {
-                closeWebSocket()
-            }
-
-            AuthLifecycleEvent.Pause -> {}
-        }
-    }
-
-    fun startWebSocket(approvedRefreshRequestDTO: ApprovedRefreshRequestDTO) {
-        if (isConnected) return
-        screenModelScope.launch {
-            try {
-                println("LIFECYCLE: websocket1 authsscreenmodel")
-                isConnected = true;
-                authWebSocketClient.connect(approvedRefreshRequestDTO.deviceId)
-                authWebSocketClient.events.collect { event ->
-                    when (event.type) {
-                        SecurityEventType.LOGIN_APPROVED -> {
-                            println("LIFECYCLE: websocket2 authsscreenmodel")
-                            when (val result = repository.verifyLogin(approvedRefreshRequestDTO)) {
-                                is ResultWrapper.Success -> {
-                                    val data = result.data
-                                    tokenManager.saveTokens(data.accessToken, data.refreshToken)
-                                    tokenManager.saveDeviceId(approvedRefreshRequestDTO.deviceId)
-                                    val user = UserSession(
-                                        data.status.toString(),
-                                        data.message,
-                                        data.userResponseDTO?.id,
-                                        data.userResponseDTO?.username,
-                                        data.userResponseDTO?.name,
-                                        data.userResponseDTO?.surname,
-                                        data.userResponseDTO?.profile,
-                                        data.userResponseDTO?.role,
-                                        data.userResponseDTO?.date,
-                                        data.userResponseDTO?.biography
-                                    )
-
-                                    userManager.saveUser(user)
-
-                                    _pendingLogin.send(AuthEffect.NavigateToHome)
-                                    ToastManager.show("Giriş onaylandı.")
-                                }
-
-                                is ResultWrapper.Error -> {
-                                    ToastManager.show(result.message ?: "Giriş başarısız.")
-
-                                    _pendingLogin.send(AuthEffect.NavigateToLogin)
-                                }
-                            }
-                        }
-
-                        SecurityEventType.LOGIN_REJECTED -> {
-                            authWebSocketClient.disconnect()
-                            isConnected = false
-                            ToastManager.show("Giriş isteği reddedildi.")
-                            _pendingLogin.send(AuthEffect.NavigateToLogin)
-                        }
-
-                    }
-
-                }
-            }catch (e: Exception) {
-                println("LIFECYCLE: websocket1 authsscreenmodel"+e)
-                isConnected = false
-            }
-        }
-    }
-     suspend fun closeWebSocket(){
-        authWebSocketClient.disconnect()
-        isConnected = false;
-    }
-    fun resendMail(email: String){
-        if (_registerState.value.isLoading) return
-        screenModelScope.launch {
-            _registerState.update { it.copy(isLoading = true) }
-            when(val result = repository.resendEmail(email)){
-                is ResultWrapper.Success -> {
-                    ToastManager.show(result.data)
-                }
-                is ResultWrapper.Error -> {
-                    ToastManager.show(result.message ?: "Bir hata oluştu")
-                }
-            }
-            _registerState.update { it.copy(isLoading = false) }
-        }
-    }
-    fun verifyEmail(token: String){
-        if (_verificationState.value.isEmailVerified || _verificationState.value.isLoading) return
-
-        screenModelScope.launch {
-            _verificationState.update { it.copy(isLoading = true, verificationError = null) }
-            val result = repository.verifyEmail(token)
-            when(result){
-                is ResultWrapper.Success -> {
-                    _verificationState.update {
-                        it.copy(
-                            isLoading = false,
-                            isEmailVerified = true
-                        )
-                    }
-                    delay(2000)
-                    ToastManager.show(result.data["message"] ?: "Başarılı")
-                }
-                is ResultWrapper.Error -> {
-                    //ToastManager.show(result.message ?: "Bir hata oluştu")
-                    _verificationState.update {
-                        it.copy(
-                            isLoading = false,
-                            verificationError = result.message ?: "Doğrulama başarısız oldu.",
-                            isEmailVerified = false
-                        )
-                    }
-                }
-            }
-        }
-    }
-
     fun validateRegisterStep1(): Boolean {
         val currentState=_registerState.value
         val uResult = CheckValidator.validateUsername(currentState.regUsername.trim())
@@ -363,17 +201,17 @@ class AuthScreenModel(
     fun clearRegisterForm() {
         _registerState.update {
             it.copy(
-            regName = "",
-            regnameError = null,
-            regSurname = "",
-            regSurnameError = null,
-            regUsername = "",
-            regusernameError = null,
-            regEmail = "",
-            regEmailError = null,
-            regPassword = "",
-            regPasswordError = null,
-            passwordStrength = PasswordStrength()
+                regName = "",
+                regnameError = null,
+                regSurname = "",
+                regSurnameError = null,
+                regUsername = "",
+                regusernameError = null,
+                regEmail = "",
+                regEmailError = null,
+                regPassword = "",
+                regPasswordError = null,
+                passwordStrength = PasswordStrength()
             )
         }
     }

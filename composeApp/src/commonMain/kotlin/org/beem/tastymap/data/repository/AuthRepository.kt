@@ -29,7 +29,6 @@ class AuthRepository(
     suspend fun login(loginRequest: LoginRequest,userAgent:String): ResultWrapper<LoginResponse>{
         return safeApiCall {
             val response= dataSource.login(loginRequest,userAgent)
-            println("loginAythreposıtory "+ response.status+"  "+response.accessToken)
             if (response.status == LoginStatus.SUCCESS && response.accessToken != null) {
 
                 println("loginAythreposıtory2.kısım "+ response.status+"  "+response.accessToken)
@@ -55,6 +54,12 @@ class AuthRepository(
             response
         }
     }
+    suspend fun resendSecurityMail(deviceId: String): ResultWrapper<String>{
+        return safeApiCall {
+            val response = dataSource.resendSecurityMail(deviceId)
+            response
+        }
+    }
     suspend fun verifyEmail(token: String): ResultWrapper<Map<String, String>>{
         return safeApiCall {
             val response = dataSource.verifyEmail(token)
@@ -64,6 +69,19 @@ class AuthRepository(
     suspend fun verifyLogin(approvedRefreshRequestDTO: ApprovedRefreshRequestDTO): ResultWrapper<LoginResponse>{
         return safeApiCall {
             val response = dataSource.verifyLogin(approvedRefreshRequestDTO)
+            if (response.status == LoginStatus.SUCCESS) {
+                tokenManager.saveTokens(response.accessToken, response.refreshToken)
+                tokenManager.saveDeviceId(approvedRefreshRequestDTO.deviceId)
+                val user = UserSession(response.status.toString(),response.message,
+                    response.userResponseDTO?.id,
+                    response.userResponseDTO?.username,
+                    response.userResponseDTO?.name,
+                    response.userResponseDTO?.surname,
+                    response.userResponseDTO?.profile,
+                    response.userResponseDTO?.role, response.userResponseDTO?.date, response.userResponseDTO?.biography)
+
+                userManager.saveUser(user)
+            }
             response
         }
     }

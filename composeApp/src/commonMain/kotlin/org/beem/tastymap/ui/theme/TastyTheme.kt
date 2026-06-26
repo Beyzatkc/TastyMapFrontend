@@ -13,14 +13,22 @@ data class CustomColors(
     val navy: Color,
     val backgroundBlue: Color,
     val lineAlpha: Color,
-    val wave: Color
+    val wave: Color,
+    val gray : Color,
+    val green : Color,
+    val yellow : Color,
+    val red : Color
 )
 
 val LightCustomColors = CustomColors(
     navy = AppColors.NavyBlue,
     backgroundBlue = AppColors.BackBackgroundBlue,
     lineAlpha = AppColors.DarkGrayLines.copy(alpha = 0.22f),
-    wave = AppColors.WaveColor
+    wave = AppColors.WaveColor,
+    gray = AppColors.LightGray,
+    green = AppColors.passwordGreen,
+    yellow = AppColors.passwordYellow,
+    red = AppColors.passwordRed
 )
 
 val LocalCustomColors = staticCompositionLocalOf { LightCustomColors }

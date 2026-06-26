@@ -64,22 +64,21 @@ import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import org.beem.tastymap.ui.animations.TastyAnimations
 import org.beem.tastymap.ui.auth.common.AuthEffect
-import org.beem.tastymap.ui.auth.common.AuthScreenModel
 import org.beem.tastymap.ui.auth.verification.EmailVerificationScreen
-import org.beem.tastymap.ui.auth.common.LoginEvent
 import org.beem.tastymap.ui.auth.common.LoginUiState
 import org.beem.tastymap.ui.auth.common.PasswordStrength
-import org.beem.tastymap.ui.auth.common.RegisterEvent
 import org.beem.tastymap.ui.auth.common.RegisterUiState
 import org.beem.tastymap.ui.auth.verification.PendingScreen
 import org.beem.tastymap.ui.post.PostScreen
+import org.beem.tastymap.ui.theme.CustomColors
+import org.beem.tastymap.ui.theme.LightCustomColors
 import org.beem.tastymap.ui.theme.LocalCustomColors
 
 class LogRegScreen : Screen {
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
-        val koinInstance = koinInject<AuthScreenModel>()
+        val koinInstance = koinInject<LogRegScreenModel>()
         val screenModel = rememberScreenModel { koinInstance }
         val regState by screenModel.registerState.collectAsState()
         val logState by screenModel.loginState.collectAsState()
@@ -131,7 +130,7 @@ class LogRegScreen : Screen {
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
-                        AuthTabBar(isLoginTab, colors.navy,
+                        AuthTabBar(isLoginTab, colors.navy,colors.gray,
                             onLoginClick = {
                                 isLoginTab = true
                                 screenModel.clearRegisterForm()
@@ -158,7 +157,7 @@ class LogRegScreen : Screen {
                                 if (targetIsLogin) {
                                     LoginForm(colors.navy, screenModel,logState)
                                 } else {
-                                    RegisterForm(colors.navy, screenModel,regState)
+                                    RegisterForm(colors, screenModel,regState)
                                 }
                             }
                         }
@@ -213,6 +212,7 @@ fun FullScreenLoading(isLoading: Boolean){
 fun AuthTabBar(
     isLoginTab: Boolean,
     navyIcons: Color,
+    bck: Color,
     onLoginClick: () -> Unit,
     onRegisterClick: () -> Unit
 ) {
@@ -220,7 +220,7 @@ fun AuthTabBar(
         modifier = Modifier
             .fillMaxWidth()
             .height(48.dp)
-            .background(Color(0xFFF5F5F5), RoundedCornerShape(24.dp))
+            .background(bck, RoundedCornerShape(24.dp))
             .padding(4.dp)
     ) {
         Row(modifier = Modifier.fillMaxSize()) {
@@ -249,7 +249,7 @@ fun HeaderTitles(navyIcons: Color) {
 
 @Composable
 fun AuthEffectHandler(
-    screenModel: AuthScreenModel,
+    screenModel: LogRegScreenModel,
     navigator: Navigator
 ) {
     LaunchedEffect(Unit) {
@@ -463,7 +463,7 @@ fun FooterLinks(navyIcons: Color) {
         Text(text = "Destek", modifier = Modifier.padding(horizontal = 8.dp), style = linkStyle)
     }
 }
-@Composable fun LoginForm(color: Color, vm: AuthScreenModel, state: LoginUiState,) {
+@Composable fun LoginForm(color: Color, vm: LogRegScreenModel, state: LoginUiState,) {
     Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
         TastyTextField(
             value = state.loginUsername,
@@ -519,7 +519,7 @@ fun FooterLinks(navyIcons: Color) {
 }
 
 @Composable
-fun RegisterForm(color: Color, vm: AuthScreenModel, state: RegisterUiState) {
+fun RegisterForm(color: CustomColors, vm: LogRegScreenModel, state: RegisterUiState) {
 
     AnimatedContent(
         targetState = state.step,
@@ -546,7 +546,7 @@ fun RegisterForm(color: Color, vm: AuthScreenModel, state: RegisterUiState) {
                             .padding(horizontal = 4.dp)
                             .size(width = 32.dp, height = 4.dp)
                             .background(
-                                if (currentStep > index) color else Color.LightGray,
+                                if (currentStep > index) color.navy else Color.LightGray,
                                 RoundedCornerShape(2.dp)
                             )
                     )
@@ -602,9 +602,9 @@ fun RegisterForm(color: Color, vm: AuthScreenModel, state: RegisterUiState) {
                     onClick = {
                         vm.nextRegisterStep() },
                     isPrimary = true,
-                    backcolor = color,
+                    backcolor = color.navy,
                     textcolor = Color.White,
-                    strokecolor = color
+                    strokecolor = color.navy
                 )
             } else {
                 TastyTextField(
@@ -631,7 +631,7 @@ fun RegisterForm(color: Color, vm: AuthScreenModel, state: RegisterUiState) {
                 ) {
                     Column {
                         Spacer(modifier = Modifier.height(4.dp))
-                        PasswordStrengthIndicator(state.passwordStrength)
+                        PasswordStrengthIndicator(state.passwordStrength,color)
                     }
                 }
                 Spacer(modifier = Modifier.height(5.dp))
@@ -643,9 +643,9 @@ fun RegisterForm(color: Color, vm: AuthScreenModel, state: RegisterUiState) {
                         vm.register()
                     },
                     isPrimary = true,
-                    backcolor = color,
+                    backcolor = color.navy,
                     textcolor = Color.White,
-                    strokecolor = color
+                    strokecolor = color.navy
                 )
 
                 TastyButton(
@@ -653,7 +653,7 @@ fun RegisterForm(color: Color, vm: AuthScreenModel, state: RegisterUiState) {
                     onClick = { vm.previousRegisterStep() },
                     isPrimary = false,
                     backcolor = Color.White,
-                    textcolor = color,
+                    textcolor = color.navy,
                     strokecolor = Color.Transparent
                 )
             }
@@ -661,7 +661,8 @@ fun RegisterForm(color: Color, vm: AuthScreenModel, state: RegisterUiState) {
     }
 }@Composable
 fun PasswordStrengthIndicator(
-    passwordStrength: PasswordStrength
+    passwordStrength: PasswordStrength,
+    colors: CustomColors
 ) {
     val checks = listOf(
         "8+ karakter" to passwordStrength.hasMinLength,
@@ -673,9 +674,9 @@ fun PasswordStrengthIndicator(
     val score = checks.count { it.second }
 
     val (strengthText, color) = when (score) {
-        0, 1 -> "Zayıf" to Color(0xFFE53935)
-        2, 3 -> "Orta" to Color(0xFFFFB300)
-        else -> "Güçlü" to Color(0xFF43A047)
+        0, 1 -> "Zayıf" to colors.red
+        2, 3 -> "Orta" to colors.yellow
+        else -> "Güçlü" to colors.green
     }
 
     Column(
@@ -724,7 +725,7 @@ fun PasswordStrengthIndicator(
                     else
                         Icons.Default.RadioButtonUnchecked,
                     contentDescription = null,
-                    tint = if (passed) Color(0xFF43A047) else Color.Gray,
+                    tint = if (passed) colors.green else Color.Gray,
                     modifier = Modifier.size(14.dp)
                 )
 

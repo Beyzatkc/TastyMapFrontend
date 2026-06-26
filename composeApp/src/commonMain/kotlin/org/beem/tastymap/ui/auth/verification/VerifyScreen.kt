@@ -40,7 +40,6 @@ import org.beem.tastymap.core.constants.AuthConstants
 import org.beem.tastymap.core.navigation.DeepLinkManager
 import org.beem.tastymap.core.navigation.PlatformMessenger
 import org.beem.tastymap.ui.animations.TastyAnimations
-import org.beem.tastymap.ui.auth.common.AuthScreenModel
 import org.koin.compose.koinInject
 
 class VerifyScreen(val token: String) : Screen {
@@ -48,7 +47,7 @@ class VerifyScreen(val token: String) : Screen {
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
-        val koinInstance = koinInject<AuthScreenModel>()
+        val koinInstance = koinInject<EmailScreenModel>()
         val messenger = koinInject<PlatformMessenger>()
         val screenModel = rememberScreenModel { koinInstance }
         val state by screenModel.verificationState.collectAsState()

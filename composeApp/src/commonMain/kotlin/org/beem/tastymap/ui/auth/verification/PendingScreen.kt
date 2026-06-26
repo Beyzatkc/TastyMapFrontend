@@ -9,8 +9,11 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -27,7 +30,6 @@ import cafe.adriel.voyager.navigator.internal.BackHandler
 import org.beem.tastymap.data.model.ApprovedRefreshRequestDTO
 import org.beem.tastymap.ui.auth.common.AuthEffect
 import org.beem.tastymap.ui.auth.common.AuthLifecycleEvent
-import org.beem.tastymap.ui.auth.common.AuthScreenModel
 import org.beem.tastymap.ui.auth.logReg.LogRegScreen
 import org.beem.tastymap.ui.auth.splash.SplashScreen
 import org.beem.tastymap.ui.theme.LocalCustomColors
@@ -37,9 +39,11 @@ class PendingScreen(val approvedRefreshRequestDTO: ApprovedRefreshRequestDTO) : 
     @Preview
     @Composable
     override fun Content() {
-        val screenModel = getScreenModel<AuthScreenModel>()
+        val screenModel = getScreenModel<PendingScreenModel>()
         val lifecycleOwner = LocalLifecycleOwner.current
         val navigator = LocalNavigator.currentOrThrow
+        val colors = LocalCustomColors.current
+        val materialColors = MaterialTheme.colorScheme
 
         LaunchedEffect(Unit) {
             screenModel.pendingLogin.collect { pendingLogin ->
@@ -88,8 +92,6 @@ class PendingScreen(val approvedRefreshRequestDTO: ApprovedRefreshRequestDTO) : 
                 )
             }
         }
-        val colors = LocalCustomColors.current
-        val materialColors = MaterialTheme.colorScheme
 
         BackHandler(enabled = true) { }
 
@@ -138,7 +140,7 @@ class PendingScreen(val approvedRefreshRequestDTO: ApprovedRefreshRequestDTO) : 
                         textAlign = TextAlign.Center
                     )
 
-                    Spacer(Modifier.height(12.dp))
+                    Spacer(Modifier.height(10.dp))
 
                     Text(
                         text = "Hesabınızın güvenliğini sağlamak için bu giriş denemesi ek doğrulama gerektirmektedir.",
@@ -148,7 +150,7 @@ class PendingScreen(val approvedRefreshRequestDTO: ApprovedRefreshRequestDTO) : 
                     )
 
 
-                    Spacer(Modifier.height(32.dp))
+                    Spacer(Modifier.height(30.dp))
 
                     Card(
                         modifier = Modifier.fillMaxWidth(),
@@ -181,7 +183,7 @@ class PendingScreen(val approvedRefreshRequestDTO: ApprovedRefreshRequestDTO) : 
                                 )
                             }
 
-                            Spacer(Modifier.height(12.dp))
+                            Spacer(Modifier.height(10.dp))
 
                             Text(
                                 text = "Kayıtlı e-posta adresinize doğrulama bağlantısı gönderildi. Onay işlemi tamamlandığında bu ekran otomatik olarak güncellenecektir.",
@@ -191,16 +193,16 @@ class PendingScreen(val approvedRefreshRequestDTO: ApprovedRefreshRequestDTO) : 
                     }
 
 
-                    Spacer(Modifier.height(32.dp))
+                    Spacer(Modifier.height(30.dp))
 
                     CircularProgressIndicator(
-                        modifier = Modifier.size(36.dp),
+                        modifier = Modifier.size(33.dp),
                         strokeWidth = 3.dp,
                         color = colors.navy
                     )
 
 
-                    Spacer(Modifier.height(12.dp))
+                    Spacer(Modifier.height(10.dp))
 
 
                     Text(
@@ -210,7 +212,7 @@ class PendingScreen(val approvedRefreshRequestDTO: ApprovedRefreshRequestDTO) : 
                     )
 
 
-                    Spacer(Modifier.height(28.dp))
+                    Spacer(Modifier.height(25.dp))
 
                     Card(
                         modifier = Modifier.fillMaxWidth(),
@@ -229,22 +231,41 @@ class PendingScreen(val approvedRefreshRequestDTO: ApprovedRefreshRequestDTO) : 
                     }
 
 
-                    Spacer(Modifier.height(16.dp))
+                    Spacer(Modifier.height(12.dp))
 
-
-                    TextButton(
-                        onClick = {
-                            // Tekrar e-posta gönder
-                        }
-                    ) {
-                        Text(
-                            text = "E-posta gelmedi mi? Tekrar gönder",
-                            color = colors.navy,
-                            style = MaterialTheme.typography.labelLarge
-                        )
-                    }
+                    ResendSection(
+                        navyIcons = colors.navy,
+                        screenModel = screenModel,
+                        onResendClick = { screenModel.resendEmail(approvedRefreshRequestDTO.deviceId) }
+                    )
                 }
             }
         }
     }
+}
+@Composable
+fun ResendSection(onResendClick: () -> Unit,navyIcons: Color, screenModel: PendingScreenModel){
+    val timeLeft by screenModel.timeLeft.collectAsState()
+    val isButtonEnabled = timeLeft == 0
+
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        TextButton(
+            enabled = isButtonEnabled,
+            onClick = {
+                if(isButtonEnabled){
+                    screenModel.startTime()
+                    onResendClick()
+                }
+            }
+        ){
+            Text(
+                text = if (isButtonEnabled) "E-posta gelmedi mi? Tekrar gönder"
+                else "Tekrar göndermek için bekleyin: ${timeLeft}s",
+                color = if (isButtonEnabled) navyIcons else Color.Gray,
+                style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium)
+            )
+        }
+
+    }
+
 }
