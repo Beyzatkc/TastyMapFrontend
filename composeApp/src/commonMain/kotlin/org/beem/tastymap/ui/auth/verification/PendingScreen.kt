@@ -1,7 +1,10 @@
 package org.beem.tastymap.ui.auth.verification
 
+import TastyButton
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.CheckCircle
 import androidx.compose.material.icons.outlined.Security
@@ -27,6 +30,7 @@ import cafe.adriel.voyager.koin.getScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import cafe.adriel.voyager.navigator.internal.BackHandler
+import org.beem.tastymap.core.util.ToastManager
 import org.beem.tastymap.data.model.ApprovedRefreshRequestDTO
 import org.beem.tastymap.ui.auth.common.AuthEffect
 import org.beem.tastymap.ui.auth.common.AuthLifecycleEvent
@@ -44,12 +48,15 @@ class PendingScreen(val approvedRefreshRequestDTO: ApprovedRefreshRequestDTO) : 
         val navigator = LocalNavigator.currentOrThrow
         val colors = LocalCustomColors.current
         val materialColors = MaterialTheme.colorScheme
+        val state by screenModel.sendState.collectAsState()
+
+        val scrollState = rememberScrollState()
 
         LaunchedEffect(Unit) {
             screenModel.pendingLogin.collect { pendingLogin ->
                 when (pendingLogin) {
-                    is AuthEffect.NavigateToHome -> {navigator.replaceAll(SplashScreen())}
-                    is AuthEffect.NavigateToLogin -> { navigator.replaceAll(LogRegScreen())}
+                    is AuthEffect.NavigateToHome -> { navigator.replaceAll(SplashScreen()) }
+                    is AuthEffect.NavigateToLogin -> { navigator.replaceAll(LogRegScreen()) }
                     is AuthEffect.NavigateToPending -> {
                         navigator.replaceAll(PendingScreen(pendingLogin.approvedRefreshRequestDTO))
                     }
@@ -59,8 +66,16 @@ class PendingScreen(val approvedRefreshRequestDTO: ApprovedRefreshRequestDTO) : 
                 }
             }
         }
-        DisposableEffect(lifecycleOwner) {
 
+        LaunchedEffect(state.error) {
+            state.error?.let { errorMessage ->
+                if (errorMessage.isNotEmpty()) {
+                    ToastManager.show(errorMessage)
+                }
+            }
+        }
+
+        DisposableEffect(lifecycleOwner) {
             val observer = LifecycleEventObserver { _, event ->
                 when (event) {
                     Lifecycle.Event.ON_RESUME -> {
@@ -70,14 +85,12 @@ class PendingScreen(val approvedRefreshRequestDTO: ApprovedRefreshRequestDTO) : 
                             approvedRefreshRequestDTO
                         )
                     }
-
                     Lifecycle.Event.ON_STOP -> {
                         screenModel.onLifecycleEvent(
                             AuthLifecycleEvent.Stop,
                             approvedRefreshRequestDTO
                         )
                     }
-
                     else -> Unit
                 }
             }
@@ -86,10 +99,6 @@ class PendingScreen(val approvedRefreshRequestDTO: ApprovedRefreshRequestDTO) : 
 
             onDispose {
                 lifecycleOwner.lifecycle.removeObserver(observer)
-                screenModel.onLifecycleEvent(
-                    AuthLifecycleEvent.Stop,
-                    approvedRefreshRequestDTO
-                )
             }
         }
 
@@ -100,142 +109,124 @@ class PendingScreen(val approvedRefreshRequestDTO: ApprovedRefreshRequestDTO) : 
             color = materialColors.background
         ) {
             Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(24.dp),
+                modifier = Modifier.fillMaxSize(),
                 contentAlignment = Alignment.Center
             ) {
-
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .widthIn(max = 500.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
+                        .widthIn(max = 450.dp)
+                        .verticalScroll(scrollState)
+                        .padding(24.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
                 ) {
 
                     Surface(
-                        modifier = Modifier.size(100.dp),
+                        modifier = Modifier.size(80.dp),
                         shape = CircleShape,
                         color = colors.navy.copy(alpha = 0.1f)
                     ) {
-                        Box(
-                            contentAlignment = Alignment.Center
-                        ) {
+                        Box(contentAlignment = Alignment.Center) {
                             Icon(
                                 imageVector = Icons.Outlined.Security,
                                 contentDescription = null,
-                                modifier = Modifier.size(50.dp),
+                                modifier = Modifier.size(40.dp),
                                 tint = colors.navy
                             )
                         }
                     }
 
-                    Spacer(Modifier.height(24.dp))
-
+                    Spacer(Modifier.height(16.dp))
 
                     Text(
                         text = "Güvenlik Doğrulaması",
-                        style = MaterialTheme.typography.headlineMedium,
+                        style = MaterialTheme.typography.headlineSmall,
                         fontWeight = FontWeight.Bold,
                         textAlign = TextAlign.Center
                     )
 
-                    Spacer(Modifier.height(10.dp))
+                    Spacer(Modifier.height(8.dp))
 
                     Text(
                         text = "Hesabınızın güvenliğini sağlamak için bu giriş denemesi ek doğrulama gerektirmektedir.",
-                        style = MaterialTheme.typography.bodyLarge,
+                        style = MaterialTheme.typography.bodyMedium,
                         color = materialColors.onSurfaceVariant,
                         textAlign = TextAlign.Center
                     )
 
-
-                    Spacer(Modifier.height(30.dp))
+                    Spacer(Modifier.height(20.dp))
 
                     Card(
                         modifier = Modifier.fillMaxWidth(),
-                        shape = MaterialTheme.shapes.large,
+                        shape = MaterialTheme.shapes.medium,
                         colors = CardDefaults.cardColors(
                             containerColor = materialColors.surfaceVariant.copy(alpha = 0.35f)
                         )
                     ) {
-
-                        Column(
-                            modifier = Modifier.padding(20.dp)
-                        ) {
-
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-
+                        Column(modifier = Modifier.padding(16.dp)) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
                                 Icon(
                                     imageVector = Icons.Outlined.CheckCircle,
                                     contentDescription = null,
-                                    tint = colors.navy
+                                    tint = colors.navy,
+                                    modifier = Modifier.size(20.dp)
                                 )
-
                                 Spacer(Modifier.width(8.dp))
-
                                 Text(
                                     text = "Doğrulama e-postası gönderildi",
-                                    style = MaterialTheme.typography.titleMedium,
+                                    style = MaterialTheme.typography.titleSmall,
                                     fontWeight = FontWeight.SemiBold
                                 )
                             }
-
-                            Spacer(Modifier.height(10.dp))
-
+                            Spacer(Modifier.height(6.dp))
                             Text(
                                 text = "Kayıtlı e-posta adresinize doğrulama bağlantısı gönderildi. Onay işlemi tamamlandığında bu ekran otomatik olarak güncellenecektir.",
-                                style = MaterialTheme.typography.bodyMedium
+                                style = MaterialTheme.typography.bodySmall
                             )
                         }
                     }
 
-
-                    Spacer(Modifier.height(30.dp))
+                    Spacer(Modifier.height(20.dp))
 
                     CircularProgressIndicator(
-                        modifier = Modifier.size(33.dp),
-                        strokeWidth = 3.dp,
+                        modifier = Modifier.size(28.dp),
+                        strokeWidth = 2.5.dp,
                         color = colors.navy
                     )
 
-
-                    Spacer(Modifier.height(10.dp))
-
+                    Spacer(Modifier.height(8.dp))
 
                     Text(
                         text = "Doğrulama bekleniyor...",
-                        style = MaterialTheme.typography.labelLarge,
+                        style = MaterialTheme.typography.labelMedium,
                         fontWeight = FontWeight.Medium
                     )
 
-
-                    Spacer(Modifier.height(25.dp))
+                    Spacer(Modifier.height(16.dp))
 
                     Card(
                         modifier = Modifier.fillMaxWidth(),
+                        shape = MaterialTheme.shapes.medium,
                         colors = CardDefaults.cardColors(
                             containerColor = materialColors.errorContainer
                         )
                     ) {
-
                         Text(
                             text = "Lütfen bu ekranı kapatmayın. Onay işlemi tamamlandığında giriş işleminiz otomatik olarak devam edecektir.",
-                            modifier = Modifier.padding(16.dp),
+                            modifier = Modifier.padding(12.dp),
                             color = materialColors.onErrorContainer,
                             textAlign = TextAlign.Center,
-                            style = MaterialTheme.typography.bodyMedium
+                            style = MaterialTheme.typography.bodySmall
                         )
                     }
 
-
-                    Spacer(Modifier.height(12.dp))
+                    Spacer(Modifier.height(16.dp))
 
                     ResendSection(
                         navyIcons = colors.navy,
                         screenModel = screenModel,
+                        isLoading = state.isLoading,
                         onResendClick = { screenModel.resendEmail(approvedRefreshRequestDTO.deviceId) }
                     )
                 }
@@ -243,29 +234,34 @@ class PendingScreen(val approvedRefreshRequestDTO: ApprovedRefreshRequestDTO) : 
         }
     }
 }
+
 @Composable
-fun ResendSection(onResendClick: () -> Unit,navyIcons: Color, screenModel: PendingScreenModel){
+fun ResendSection(
+    onResendClick: () -> Unit,
+    navyIcons: Color,
+    screenModel: PendingScreenModel,
+    isLoading: Boolean
+) {
     val timeLeft by screenModel.timeLeft.collectAsState()
     val isButtonEnabled = timeLeft == 0
 
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        TextButton(
-            enabled = isButtonEnabled,
+        TastyButton(
+            text = if (isButtonEnabled) "E-posta gelmedi mi? Tekrar gönder"
+            else "Tekrar göndermek için bekleyin: ${timeLeft}s",
             onClick = {
-                if(isButtonEnabled){
+                if (isButtonEnabled) {
                     screenModel.startTime()
                     onResendClick()
                 }
-            }
-        ){
-            Text(
-                text = if (isButtonEnabled) "E-posta gelmedi mi? Tekrar gönder"
-                else "Tekrar göndermek için bekleyin: ${timeLeft}s",
-                color = if (isButtonEnabled) navyIcons else Color.Gray,
-                style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium)
-            )
-        }
-
+            },
+            modifier = Modifier.wrapContentWidth().padding(horizontal = 16.dp),
+            isPrimary = false,
+            isLoading = isLoading,
+            enabled = isButtonEnabled,
+            backcolor = Color.Transparent,
+            textcolor = if (isButtonEnabled) navyIcons else Color.Gray,
+            strokecolor = Color.Transparent
+        )
     }
-
 }

@@ -53,6 +53,14 @@ object CheckValidator {
         }
     }
 
+    fun validateRequiredField(value: String, errorMessage: String): ValidationResult {
+        return if (value.isBlank()) {
+            ValidationResult.Invalid(errorMessage)
+        } else {
+            ValidationResult.Valid
+        }
+    }
+
 }
 sealed class ValidationResult {
     object Valid : ValidationResult()

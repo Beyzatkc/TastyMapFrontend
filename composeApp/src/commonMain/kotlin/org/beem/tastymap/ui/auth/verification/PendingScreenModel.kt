@@ -37,6 +37,8 @@ class PendingScreenModel(
     val timeLeft: StateFlow<Int> = _timeLeft
     private var timerJob: Job? = null
 
+    private var webSocketJob: Job? = null
+
     fun startTime() {
         if (_timeLeft.value > 0) return
 
@@ -76,7 +78,7 @@ class PendingScreenModel(
             }
 
             AuthLifecycleEvent.Stop -> screenModelScope.launch {
-                closeWebSocket()
+                stopWebSocket()
             }
 
             AuthLifecycleEvent.Pause -> {}
@@ -85,10 +87,10 @@ class PendingScreenModel(
 
     fun startWebSocket(approvedRefreshRequestDTO: ApprovedRefreshRequestDTO) {
         if (isConnected) return
-        screenModelScope.launch {
-            try {
-                isConnected = true;
-                authWebSocketClient.connect(approvedRefreshRequestDTO.deviceId)
+        isConnected = true
+
+        webSocketJob = screenModelScope.launch {
+            launch {
                 authWebSocketClient.events.collect { event ->
                     when (event.type) {
                         SecurityEventType.LOGIN_APPROVED -> {
@@ -96,34 +98,40 @@ class PendingScreenModel(
                                 is ResultWrapper.Success -> {
                                     _pendingLogin.send(AuthEffect.NavigateToHome)
                                     ToastManager.show("Giriş onaylandı.")
+                                    stopWebSocket()
                                 }
                                 is ResultWrapper.Error -> {
                                     ToastManager.show(result.message ?: "Giriş başarısız.")
                                     _pendingLogin.send(AuthEffect.NavigateToLogin)
+                                    stopWebSocket()
                                 }
                             }
                         }
-
                         SecurityEventType.LOGIN_REJECTED -> {
-                            authWebSocketClient.disconnect()
-                            isConnected = false
+                            stopWebSocket()
                             ToastManager.show("Giriş isteği reddedildi.")
                             _pendingLogin.send(AuthEffect.NavigateToLogin)
                         }
-
                     }
-
                 }
+            }
+
+            try {
+                authWebSocketClient.connect(approvedRefreshRequestDTO.deviceId)
             } catch (e: Exception) {
-                println("LIFECYCLE: websocket1 authsscreenmodel" + e)
+                println("LIFECYCLE: websocket hatası: " + e)
+            } finally {
                 isConnected = false
             }
         }
     }
 
-    suspend fun closeWebSocket() {
-        authWebSocketClient.disconnect()
-        isConnected = false;
+    fun stopWebSocket() {
+        screenModelScope.launch {
+            authWebSocketClient.disconnect()
+            webSocketJob?.cancel()
+            isConnected = false
+        }
     }
 }
 

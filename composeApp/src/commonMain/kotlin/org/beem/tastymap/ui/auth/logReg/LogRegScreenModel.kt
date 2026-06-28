@@ -184,12 +184,17 @@ class LogRegScreenModel(
     }
     fun validateLogin(): Boolean {
         val state = _loginState.value
-        val uResult = CheckValidator.validateUsername(state.loginUsername.trim())
-        val pResult = CheckValidator.validatePassword(state.loginPassword.trim())
+        val uResult = CheckValidator.validateRequiredField(
+            value = state.loginUsername.trim(),
+            errorMessage = "Kullanıcı adı boş bırakılamaz"
+        )
+        val pResult = CheckValidator.validateRequiredField(
+            value = state.loginPassword.trim(),
+            errorMessage = "Şifre boş bırakılamaz"
+        )
 
         val usernameError = (uResult as? ValidationResult.Invalid)?.message
         val passwordError = (pResult as? ValidationResult.Invalid)?.message
-
         _loginState.update {
             it.copy(
                 loginUsernameError = usernameError,
