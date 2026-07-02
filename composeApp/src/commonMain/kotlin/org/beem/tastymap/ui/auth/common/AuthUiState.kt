@@ -41,6 +41,13 @@ data class PasswordStrength(
     val hasSpecialChar: Boolean = false
 )
 
+data class NotificationState(
+    val isLoading: Boolean = false,
+    val isApproved: Boolean = false,
+    val isUsed: Boolean = false,
+    val error: String? = null
+)
+
 sealed class AuthLifecycleEvent {
     data object Resume : AuthLifecycleEvent()
     data object Pause : AuthLifecycleEvent()

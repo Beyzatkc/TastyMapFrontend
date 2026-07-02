@@ -1,6 +1,5 @@
 package org.beem.tastymap.ui.auth.verification
 
-import TastyButton
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -38,7 +37,7 @@ import org.beem.tastymap.ui.auth.logReg.LogRegScreen
 import org.beem.tastymap.ui.auth.splash.SplashScreen
 import org.beem.tastymap.ui.theme.LocalCustomColors
 
-class PendingScreen(val approvedRefreshRequestDTO: ApprovedRefreshRequestDTO) : Screen {
+class PendingScreen(val deviceId: String) : Screen {
     @OptIn(InternalVoyagerApi::class)
     @Preview
     @Composable
@@ -58,7 +57,7 @@ class PendingScreen(val approvedRefreshRequestDTO: ApprovedRefreshRequestDTO) : 
                     is AuthEffect.NavigateToHome -> { navigator.replaceAll(SplashScreen()) }
                     is AuthEffect.NavigateToLogin -> { navigator.replaceAll(LogRegScreen()) }
                     is AuthEffect.NavigateToPending -> {
-                        navigator.replaceAll(PendingScreen(pendingLogin.approvedRefreshRequestDTO))
+                        navigator.replaceAll(PendingScreen(pendingLogin.deviceId))
                     }
                     is AuthEffect.NavigateToValidate -> {
                         navigator.push(EmailVerificationScreen(pendingLogin.email))
@@ -82,13 +81,13 @@ class PendingScreen(val approvedRefreshRequestDTO: ApprovedRefreshRequestDTO) : 
                         println("LIFECYCLE: RESUME pendıngscreen")
                         screenModel.onLifecycleEvent(
                             AuthLifecycleEvent.Resume,
-                            approvedRefreshRequestDTO
+                            deviceId
                         )
                     }
                     Lifecycle.Event.ON_STOP -> {
                         screenModel.onLifecycleEvent(
                             AuthLifecycleEvent.Stop,
-                            approvedRefreshRequestDTO
+                            deviceId
                         )
                     }
                     else -> Unit
@@ -114,8 +113,8 @@ class PendingScreen(val approvedRefreshRequestDTO: ApprovedRefreshRequestDTO) : 
             ) {
                 Column(
                     modifier = Modifier
+                        .widthIn(max = 500.dp)
                         .fillMaxWidth()
-                        .widthIn(max = 450.dp)
                         .verticalScroll(scrollState)
                         .padding(24.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,
@@ -226,8 +225,7 @@ class PendingScreen(val approvedRefreshRequestDTO: ApprovedRefreshRequestDTO) : 
                     ResendSection(
                         navyIcons = colors.navy,
                         screenModel = screenModel,
-                        isLoading = state.isLoading,
-                        onResendClick = { screenModel.resendEmail(approvedRefreshRequestDTO.deviceId) }
+                        onResendClick = { screenModel.resendEmail(deviceId) }
                     )
                 }
             }
@@ -239,29 +237,30 @@ class PendingScreen(val approvedRefreshRequestDTO: ApprovedRefreshRequestDTO) : 
 fun ResendSection(
     onResendClick: () -> Unit,
     navyIcons: Color,
-    screenModel: PendingScreenModel,
-    isLoading: Boolean
+    screenModel: PendingScreenModel
 ) {
     val timeLeft by screenModel.timeLeft.collectAsState()
     val isButtonEnabled = timeLeft == 0
 
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        TastyButton(
-            text = if (isButtonEnabled) "E-posta gelmedi mi? Tekrar gönder"
-            else "Tekrar göndermek için bekleyin: ${timeLeft}s",
+    Column (horizontalAlignment = Alignment.CenterHorizontally){
+        TextButton(
+            enabled = isButtonEnabled,
             onClick = {
                 if (isButtonEnabled) {
                     screenModel.startTime()
                     onResendClick()
                 }
-            },
-            modifier = Modifier.wrapContentWidth().padding(horizontal = 16.dp),
-            isPrimary = false,
-            isLoading = isLoading,
-            enabled = isButtonEnabled,
-            backcolor = Color.Transparent,
-            textcolor = if (isButtonEnabled) navyIcons else Color.Gray,
-            strokecolor = Color.Transparent
-        )
+            }
+        ){
+            Text(
+                text = if (isButtonEnabled) {
+                    "E-posta gelmedi mi? Tekrar gönder"
+                } else {
+                    "Tekrar gönder: ${timeLeft}s"
+                },
+                color = if (isButtonEnabled) navyIcons else Color.Gray,
+                style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium)
+            )
+        }
     }
 }

@@ -10,6 +10,7 @@ import io.ktor.client.request.setBody
 import org.beem.tastymap.data.model.ApprovedRefreshRequestDTO
 import org.beem.tastymap.data.model.LoginRequest
 import org.beem.tastymap.data.model.LoginResponse
+import org.beem.tastymap.data.model.NotificationResponse
 import org.beem.tastymap.data.model.RegisterRequest
 import org.beem.tastymap.data.model.UserResponse
 
@@ -49,6 +50,13 @@ class AuthDataSource(private val client: HttpClient) {
     }
     suspend fun resendSecurityMail(deviceId: String): String{
         return client.post("auth/resend-security-mail") {
+            parameter("deviceId",deviceId)
+        }.body()
+    }
+    suspend fun isUsedNotification(
+        deviceId: String
+    ): NotificationResponse{
+        return client.get("auth/is-used") {
             parameter("deviceId",deviceId)
         }.body()
     }

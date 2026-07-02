@@ -39,6 +39,7 @@ object DeepLinkManager {
     // web iicn
     fun handleLink(url: String) {
         if (url.contains("#verify")) {
+            println("buraya gırdı handle lınk")
             val queryString = url.substringAfter("?", "")
             val params = queryString.split("&").associate {
                 val pair = it.split("=")

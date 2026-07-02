@@ -10,6 +10,7 @@ import org.beem.tastymap.data.model.ApprovedRefreshRequestDTO
 import org.beem.tastymap.data.model.LoginRequest
 import org.beem.tastymap.data.model.LoginResponse
 import org.beem.tastymap.data.model.LoginStatus
+import org.beem.tastymap.data.model.NotificationResponse
 import org.beem.tastymap.data.model.RefreshTokenResponseDTO
 import org.beem.tastymap.data.model.RegisterRequest
 import org.beem.tastymap.data.model.UserResponse
@@ -68,8 +69,12 @@ class AuthRepository(
     }
     suspend fun verifyLogin(approvedRefreshRequestDTO: ApprovedRefreshRequestDTO): ResultWrapper<LoginResponse>{
         return safeApiCall {
+            println("API çağrılıyor")
             val response = dataSource.verifyLogin(approvedRefreshRequestDTO)
+            println("API döndü")
+
             if (response.status == LoginStatus.SUCCESS) {
+                println("Token kaydediliyor")
                 tokenManager.saveTokens(response.accessToken, response.refreshToken)
                 tokenManager.saveDeviceId(approvedRefreshRequestDTO.deviceId)
                 val user = UserSession(response.status.toString(),response.message,
@@ -89,5 +94,10 @@ class AuthRepository(
         return authValidator.isUserLoggedIn()
     }
 
+    suspend fun isUsedNotification(deviceId: String): ResultWrapper<NotificationResponse>{
+        return safeApiCall {
+            dataSource.isUsedNotification(deviceId);
+        }
+    }
 
 }

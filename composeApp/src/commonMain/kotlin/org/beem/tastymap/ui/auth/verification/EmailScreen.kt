@@ -163,8 +163,11 @@ fun ResendSection(onResendClick: () -> Unit, navyIcons: Color, screenModel: Emai
             }
         ){
             Text(
-                text = if (isButtonEnabled) "E-posta gelmedi mi? Tekrar gönder"
-                else "Tekrar göndermek için bekleyin: ${timeLeft}s",
+                text = if (isButtonEnabled) {
+                    "E-posta gelmedi mi? Tekrar gönder"
+                } else {
+                    "Tekrar gönder: ${timeLeft}s"
+                },
                 color = if (isButtonEnabled) navyIcons else Color.Gray,
                 style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium)
             )

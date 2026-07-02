@@ -41,7 +41,7 @@ val appModule = module {
     single { AuthWebSocketClient(get(named("auth"))) }
 
     factory { LogRegScreenModel(get(),get(),get()) }
-    factory { PendingScreenModel(get(),get()) }
+    factory { PendingScreenModel(get(),get(),get()) }
     factory { EmailScreenModel(get()) }
     factory { PostScreenModel (get())}
     factory { SplashScreenModel(get()) }

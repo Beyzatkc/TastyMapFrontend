@@ -40,8 +40,6 @@ class EmailScreenModel(
         }
     }
 
-
-
     fun resendMail(email: String) {
         if (_verificationState.value.isLoading) return
 

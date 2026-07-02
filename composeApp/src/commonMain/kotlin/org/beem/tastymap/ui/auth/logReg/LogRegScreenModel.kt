@@ -95,17 +95,12 @@ class LogRegScreenModel(
     fun login(){
         if(validateLogin()) {
             screenModelScope.launch {
-                println("LOGIN: Logın1")
                 _loginState.update { it.copy(isLoading = true) }
                 val currentState = _loginState.value
                 val deviceId = deviceInfoProvider.getDeviceId();
-                println("LOGINdeviceıd: "+ deviceId)
                 val userAgent = deviceInfoProvider.getUserAgent()
-                println("LOGIN useragenr: "+ userAgent)
                 val fcmToken = deviceInfoProvider.getFcmToken()
-                println("LOGINfcm: "+ fcmToken)
                 val fingerPrintHash = deviceInfoProvider.getFingerprint()
-                println("LOGINfcm: "+ fcmToken)
 
                 val request = LoginRequest(
                     username = currentState.loginUsername,
@@ -114,7 +109,6 @@ class LogRegScreenModel(
                     fcmToken,
                     fingerPrintHash
                 )
-                println("LOGIN: Logınla")
                 when (val result = repository.login(request, userAgent)) {
                     is ResultWrapper.Success -> {
                         onLoginSuccess()
@@ -123,13 +117,8 @@ class LogRegScreenModel(
                             _effect.send(AuthEffect.NavigateToHome)
                         } else {
                             println("LOGIN: STATUS PENDING")
-                            val request = ApprovedRefreshRequestDTO(
-                                deviceId = deviceId,
-                                userAgent = userAgent,
-                                fcmToken = fcmToken ,
-                                fingerprintHash = fingerPrintHash
-                            )
-                            _effect.send(AuthEffect.NavigateToPending(request))
+
+                            _effect.send(AuthEffect.NavigateToPending(deviceId))
                             println("LOGIN: NavigateToPending gönderildi")
                         }
                     }
