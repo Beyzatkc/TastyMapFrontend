@@ -165,13 +165,13 @@ class PendingScreenModel(
         }
     }
 
-    fun resendEmail(deviceId: String) {
+    fun resendEmail(deviceId: String,fingerPrintHash: String?) {
         if (_sendState.value.isLoading) return
 
         screenModelScope.launch {
             _sendState.update { it.copy(isLoading = true) }
 
-            when (val result = repository.resendSecurityMail(deviceId)) {
+            when (val result = repository.resendSecurityMail(deviceId,fingerPrintHash)) {
                 is ResultWrapper.Success -> {
                     ToastManager.show(result.data ?: "Bir hata oluştu")
                 }
@@ -187,8 +187,7 @@ class PendingScreenModel(
     private suspend fun isUsedNotification(
         dto: ApprovedRefreshRequestDTO
     ): Boolean {
-
-        return when (val result = repository.isUsedNotification(dto.deviceId)) {
+        return when (val result = repository.isUsedNotification(dto.deviceId,dto.fingerprintHash)) {
             is ResultWrapper.Success -> {
                 println("succese1 girdi")
                 println("status=${result.data.status} used=${result.data.isUsed}")

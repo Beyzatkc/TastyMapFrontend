@@ -41,7 +41,7 @@ data class LoginRequest(
     val password:String,
     val deviceId:String,
     val fcmToken:String,
-    val fingerprintHash: String?
+    val fingerPrintHash: String?
 )
 @Serializable
 data class LoginResponse(

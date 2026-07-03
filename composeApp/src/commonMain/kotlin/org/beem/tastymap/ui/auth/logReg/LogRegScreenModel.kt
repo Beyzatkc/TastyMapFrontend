@@ -7,17 +7,13 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import org.beem.tastymap.core.local.TokenManager
-import org.beem.tastymap.core.local.UserManager
 import org.beem.tastymap.core.network.ResultWrapper
 import org.beem.tastymap.core.permission.PermissionManager
 import org.beem.tastymap.core.provider.DeviceInfoProvider
 import org.beem.tastymap.core.util.ToastManager
-import org.beem.tastymap.data.model.ApprovedRefreshRequestDTO
 import org.beem.tastymap.data.model.LoginRequest
 import org.beem.tastymap.data.model.LoginStatus
 import org.beem.tastymap.data.model.RegisterRequest
-import org.beem.tastymap.data.remote.AuthWebSocketClient
 import org.beem.tastymap.data.repository.AuthRepository
 import org.beem.tastymap.ui.auth.common.AuthEffect
 import org.beem.tastymap.ui.auth.common.CheckValidator
@@ -25,7 +21,6 @@ import org.beem.tastymap.ui.auth.common.LoginUiState
 import org.beem.tastymap.ui.auth.common.PasswordStrength
 import org.beem.tastymap.ui.auth.common.RegisterUiState
 import org.beem.tastymap.ui.auth.common.ValidationResult
-import kotlin.collections.copy
 
 class LogRegScreenModel(
     private val repository: AuthRepository,
@@ -118,7 +113,7 @@ class LogRegScreenModel(
                         } else {
                             println("LOGIN: STATUS PENDING")
 
-                            _effect.send(AuthEffect.NavigateToPending(deviceId))
+                            _effect.send(AuthEffect.NavigateToPending(deviceId,fingerPrintHash))
                             println("LOGIN: NavigateToPending gönderildi")
                         }
                     }

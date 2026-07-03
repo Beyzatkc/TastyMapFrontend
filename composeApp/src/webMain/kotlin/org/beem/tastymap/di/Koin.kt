@@ -22,6 +22,7 @@ import org.koin.dsl.module
 val webModule = module {
     single<DeviceInfoProvider> { WebDeviceInfoProvider() }
     single<HttpClientFactory> { WebHttpClientFactory(get()) }
+
     single<Settings> {
         val storage = kotlinx.browser.window.localStorage
         StorageSettings(storage)

@@ -1,5 +1,4 @@
 package org.beem.tastymap.core
-
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.get
@@ -41,6 +40,7 @@ class WebSessionValidator(
                 date = response.date,
                 biography = response.biography
             )
+            println("Validate sessiona gırdı")
             userManager.saveUser(session)
 
             response

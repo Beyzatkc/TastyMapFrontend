@@ -19,7 +19,7 @@ class TokenManagerImpl(private val settings: Settings) : TokenManager {
     companion object {
         private const val KEY_ACCESS_TOKEN = "access_token"
         private const val KEY_REFRESH_TOKEN = "refresh_token"
-        private const val KEY_DEVICE_ID = "device_id"
+        private const val KEY_DEVICE_ID = "browser_device_id"
     }
 
     override fun saveTokens(accessToken: String?, refreshToken: String?) {

@@ -48,16 +48,20 @@ class AuthDataSource(private val client: HttpClient) {
             setBody(request)
         }.body()
     }
-    suspend fun resendSecurityMail(deviceId: String): String{
+    suspend fun resendSecurityMail(deviceId: String, fingerPrintHash:String?): String{
         return client.post("auth/resend-security-mail") {
             parameter("deviceId",deviceId)
+            parameter("fingerPrintHash",fingerPrintHash)
+
         }.body()
     }
     suspend fun isUsedNotification(
-        deviceId: String
+        deviceId: String,
+        fingerPrintHash: String?
     ): NotificationResponse{
         return client.get("auth/is-used") {
             parameter("deviceId",deviceId)
+            parameter("fingerPrintHash",fingerPrintHash)
         }.body()
     }
 }

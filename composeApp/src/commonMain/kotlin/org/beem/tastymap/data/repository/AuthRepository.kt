@@ -31,9 +31,6 @@ class AuthRepository(
         return safeApiCall {
             val response= dataSource.login(loginRequest,userAgent)
             if (response.status == LoginStatus.SUCCESS && response.accessToken != null) {
-
-                println("loginAythreposıtory2.kısım "+ response.status+"  "+response.accessToken)
-
                 tokenManager.saveTokens(response.accessToken, response.refreshToken)
                 tokenManager.saveDeviceId(loginRequest.deviceId)
                 val user = UserSession(response.status.toString(),response.message,
@@ -55,9 +52,9 @@ class AuthRepository(
             response
         }
     }
-    suspend fun resendSecurityMail(deviceId: String): ResultWrapper<String>{
+    suspend fun resendSecurityMail(deviceId: String, fingerPrintHash:String?): ResultWrapper<String>{
         return safeApiCall {
-            val response = dataSource.resendSecurityMail(deviceId)
+            val response = dataSource.resendSecurityMail(deviceId,fingerPrintHash)
             response
         }
     }
@@ -74,7 +71,7 @@ class AuthRepository(
             println("API döndü")
 
             if (response.status == LoginStatus.SUCCESS) {
-                println("Token kaydediliyor")
+                println("Token kaydediliyor buraya gıtrdı webde authrepo verıfylogın")
                 tokenManager.saveTokens(response.accessToken, response.refreshToken)
                 tokenManager.saveDeviceId(approvedRefreshRequestDTO.deviceId)
                 val user = UserSession(response.status.toString(),response.message,
@@ -94,9 +91,9 @@ class AuthRepository(
         return authValidator.isUserLoggedIn()
     }
 
-    suspend fun isUsedNotification(deviceId: String): ResultWrapper<NotificationResponse>{
+    suspend fun isUsedNotification(deviceId: String,fingerPrintHash: String?): ResultWrapper<NotificationResponse>{
         return safeApiCall {
-            dataSource.isUsedNotification(deviceId);
+            dataSource.isUsedNotification(deviceId,fingerPrintHash);
         }
     }
 

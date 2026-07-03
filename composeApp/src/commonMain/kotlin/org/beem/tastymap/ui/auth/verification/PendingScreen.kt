@@ -37,7 +37,7 @@ import org.beem.tastymap.ui.auth.logReg.LogRegScreen
 import org.beem.tastymap.ui.auth.splash.SplashScreen
 import org.beem.tastymap.ui.theme.LocalCustomColors
 
-class PendingScreen(val deviceId: String) : Screen {
+class PendingScreen(val deviceId: String, val fingerPrintHash: String?) : Screen {
     @OptIn(InternalVoyagerApi::class)
     @Preview
     @Composable
@@ -57,7 +57,7 @@ class PendingScreen(val deviceId: String) : Screen {
                     is AuthEffect.NavigateToHome -> { navigator.replaceAll(SplashScreen()) }
                     is AuthEffect.NavigateToLogin -> { navigator.replaceAll(LogRegScreen()) }
                     is AuthEffect.NavigateToPending -> {
-                        navigator.replaceAll(PendingScreen(pendingLogin.deviceId))
+                        navigator.replaceAll(PendingScreen(pendingLogin.deviceId,pendingLogin.fingerPrintHash))
                     }
                     is AuthEffect.NavigateToValidate -> {
                         navigator.push(EmailVerificationScreen(pendingLogin.email))
@@ -225,7 +225,7 @@ class PendingScreen(val deviceId: String) : Screen {
                     ResendSection(
                         navyIcons = colors.navy,
                         screenModel = screenModel,
-                        onResendClick = { screenModel.resendEmail(deviceId) }
+                        onResendClick = { screenModel.resendEmail(deviceId, fingerPrintHash) }
                     )
                 }
             }
