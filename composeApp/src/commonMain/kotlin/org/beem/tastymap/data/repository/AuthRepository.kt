@@ -7,6 +7,7 @@ import org.beem.tastymap.core.network.ResultWrapper
 import org.beem.tastymap.core.network.safeApiCall
 import org.beem.tastymap.core.provider.AuthValidator
 import org.beem.tastymap.data.model.ApprovedRefreshRequestDTO
+import org.beem.tastymap.data.model.CommonRequest
 import org.beem.tastymap.data.model.LoginRequest
 import org.beem.tastymap.data.model.LoginResponse
 import org.beem.tastymap.data.model.LoginStatus
@@ -46,15 +47,15 @@ class AuthRepository(
             response
         }
     }
-    suspend fun resendEmail(email: String): ResultWrapper<String>{
+    suspend fun resendEmail(commonRequest: CommonRequest): ResultWrapper<String>{
         return safeApiCall {
-            val response = dataSource.resendMail(email)
+            val response = dataSource.resendMail(commonRequest)
             response
         }
     }
-    suspend fun resendSecurityMail(deviceId: String, fingerPrintHash:String?): ResultWrapper<String>{
+    suspend fun resendSecurityMail(deviceId: String): ResultWrapper<String>{
         return safeApiCall {
-            val response = dataSource.resendSecurityMail(deviceId,fingerPrintHash)
+            val response = dataSource.resendSecurityMail(deviceId)
             response
         }
     }
@@ -91,9 +92,15 @@ class AuthRepository(
         return authValidator.isUserLoggedIn()
     }
 
-    suspend fun isUsedNotification(deviceId: String,fingerPrintHash: String?): ResultWrapper<NotificationResponse>{
+    suspend fun isUsedNotification(deviceId: String): ResultWrapper<NotificationResponse>{
         return safeApiCall {
-            dataSource.isUsedNotification(deviceId,fingerPrintHash);
+            dataSource.isUsedNotification(deviceId);
+        }
+    }
+
+    suspend fun forgotPassword(commonRequest: CommonRequest): ResultWrapper<String>{
+        return safeApiCall {
+            dataSource.forgotPassword(commonRequest)
         }
     }
 

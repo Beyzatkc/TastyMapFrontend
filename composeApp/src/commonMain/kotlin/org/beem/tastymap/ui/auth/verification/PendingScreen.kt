@@ -37,7 +37,7 @@ import org.beem.tastymap.ui.auth.logReg.LogRegScreen
 import org.beem.tastymap.ui.auth.splash.SplashScreen
 import org.beem.tastymap.ui.theme.LocalCustomColors
 
-class PendingScreen(val deviceId: String, val fingerPrintHash: String?) : Screen {
+class PendingScreen(val deviceId: String) : Screen {
     @OptIn(InternalVoyagerApi::class)
     @Preview
     @Composable
@@ -57,10 +57,10 @@ class PendingScreen(val deviceId: String, val fingerPrintHash: String?) : Screen
                     is AuthEffect.NavigateToHome -> { navigator.replaceAll(SplashScreen()) }
                     is AuthEffect.NavigateToLogin -> { navigator.replaceAll(LogRegScreen()) }
                     is AuthEffect.NavigateToPending -> {
-                        navigator.replaceAll(PendingScreen(pendingLogin.deviceId,pendingLogin.fingerPrintHash))
+                        navigator.replaceAll(PendingScreen(pendingLogin.deviceId))
                     }
                     is AuthEffect.NavigateToValidate -> {
-                        navigator.push(EmailVerificationScreen(pendingLogin.email))
+                        navigator.push(EmailVerificationScreen(pendingLogin.email,pendingLogin.deviceId))
                     }
                 }
             }
@@ -225,7 +225,7 @@ class PendingScreen(val deviceId: String, val fingerPrintHash: String?) : Screen
                     ResendSection(
                         navyIcons = colors.navy,
                         screenModel = screenModel,
-                        onResendClick = { screenModel.resendEmail(deviceId, fingerPrintHash) }
+                        onResendClick = { screenModel.resendEmail(deviceId) }
                     )
                 }
             }
@@ -247,7 +247,7 @@ fun ResendSection(
             enabled = isButtonEnabled,
             onClick = {
                 if (isButtonEnabled) {
-                    screenModel.startTime()
+                    screenModel.startTimer()
                     onResendClick()
                 }
             }

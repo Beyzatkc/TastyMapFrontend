@@ -8,6 +8,7 @@ import io.ktor.client.request.parameter
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import org.beem.tastymap.data.model.ApprovedRefreshRequestDTO
+import org.beem.tastymap.data.model.CommonRequest
 import org.beem.tastymap.data.model.LoginRequest
 import org.beem.tastymap.data.model.LoginResponse
 import org.beem.tastymap.data.model.NotificationResponse
@@ -30,9 +31,9 @@ class AuthDataSource(private val client: HttpClient) {
 
     }
 
-    suspend fun resendMail(email: String): String{
+    suspend fun resendMail(request: CommonRequest): String{
         return client.post("auth/resendMail") {
-            parameter("email",email)
+            setBody(request)
         }.body()
     }
 
@@ -48,20 +49,21 @@ class AuthDataSource(private val client: HttpClient) {
             setBody(request)
         }.body()
     }
-    suspend fun resendSecurityMail(deviceId: String, fingerPrintHash:String?): String{
+    suspend fun resendSecurityMail(deviceId: String): String{
         return client.post("auth/resend-security-mail") {
             parameter("deviceId",deviceId)
-            parameter("fingerPrintHash",fingerPrintHash)
 
         }.body()
     }
-    suspend fun isUsedNotification(
-        deviceId: String,
-        fingerPrintHash: String?
-    ): NotificationResponse{
+    suspend fun isUsedNotification(deviceId: String): NotificationResponse{
         return client.get("auth/is-used") {
             parameter("deviceId",deviceId)
-            parameter("fingerPrintHash",fingerPrintHash)
+        }.body()
+    }
+
+    suspend fun forgotPassword(commonRequest: CommonRequest): String{
+        return client.post("auth/forgotPassword") {
+            setBody(commonRequest)
         }.body()
     }
 }

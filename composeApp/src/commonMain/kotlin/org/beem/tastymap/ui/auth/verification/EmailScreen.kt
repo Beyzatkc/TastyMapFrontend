@@ -39,8 +39,7 @@ import org.beem.tastymap.core.navigation.PlatformMessenger
 import org.beem.tastymap.ui.auth.logReg.LogRegScreen
 import org.beem.tastymap.ui.theme.LocalCustomColors
 import org.koin.compose.koinInject
-
-class EmailVerificationScreen(val email: String) : Screen {
+class EmailVerificationScreen(val email: String, val deviceId: String) : Screen {
     @Composable
     override fun Content() {
         val colors = LocalCustomColors.current
@@ -121,7 +120,7 @@ class EmailVerificationScreen(val email: String) : Screen {
                 ResendSection(
                     navyIcons = colors.navy,
                     screenModel = screenModel,
-                    onResendClick = { screenModel.resendMail(email) }
+                    onResendClick = { screenModel.resendMail(deviceId,email) }
                 )
 
                 Spacer(modifier = Modifier.height(16.dp))
@@ -157,7 +156,7 @@ fun ResendSection(onResendClick: () -> Unit, navyIcons: Color, screenModel: Emai
             enabled = isButtonEnabled,
             onClick = {
                 if (isButtonEnabled) {
-                    screenModel.startTime()
+                    screenModel.startTimer()
                     onResendClick()
                 }
             }

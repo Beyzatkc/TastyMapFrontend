@@ -14,7 +14,6 @@ import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.Navigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import org.beem.tastymap.ui.auth.common.AuthEffect
-import org.beem.tastymap.ui.auth.verification.EmailVerificationScreen
 import org.beem.tastymap.ui.auth.logReg.LogRegScreen
 import org.koin.compose.koinInject
 
@@ -53,7 +52,7 @@ class PostScreen: Screen {
                     is AuthEffect.NavigateToPending -> { /* ... */ }
 
                     is AuthEffect.NavigateToValidate -> {
-                        navigator.push(EmailVerificationScreen(effect.email))
+                        //navigator.push(EmailVerificationScreen(effect.email))
                     }
                 }
             }

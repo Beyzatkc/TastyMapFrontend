@@ -62,20 +62,20 @@ class LogRegScreenModel(
             if (validateRegisterStep2()) {
                 _registerState.update { it.copy(isLoading = true) }
                 val state = _registerState.value
-
+                val deviceId = deviceInfoProvider.getDeviceId();
                 val request = RegisterRequest(
                     username = state.regUsername,
                     name = state.regName,
                     surname = state.regSurname,
                     email = state.regEmail,
                     password = state.regPassword,
-                    null, null, "USER", true
+                    null, null, "USER", true,deviceId
                 )
 
                 when (val result = repository.register(request)) {
                     is ResultWrapper.Success -> {
                         ToastManager.show("Kayıt başarılı!")
-                        _effect.send(AuthEffect.NavigateToValidate(state.regEmail))
+                        _effect.send(AuthEffect.NavigateToValidate(state.regEmail,deviceId))
                     }
 
                     is ResultWrapper.Error -> {
@@ -95,14 +95,12 @@ class LogRegScreenModel(
                 val deviceId = deviceInfoProvider.getDeviceId();
                 val userAgent = deviceInfoProvider.getUserAgent()
                 val fcmToken = deviceInfoProvider.getFcmToken()
-                val fingerPrintHash = deviceInfoProvider.getFingerprint()
 
                 val request = LoginRequest(
                     username = currentState.loginUsername,
                     password = currentState.loginPassword,
                     deviceId,
                     fcmToken,
-                    fingerPrintHash
                 )
                 when (val result = repository.login(request, userAgent)) {
                     is ResultWrapper.Success -> {
@@ -113,7 +111,7 @@ class LogRegScreenModel(
                         } else {
                             println("LOGIN: STATUS PENDING")
 
-                            _effect.send(AuthEffect.NavigateToPending(deviceId,fingerPrintHash))
+                            _effect.send(AuthEffect.NavigateToPending(deviceId))
                             println("LOGIN: NavigateToPending gönderildi")
                         }
                     }

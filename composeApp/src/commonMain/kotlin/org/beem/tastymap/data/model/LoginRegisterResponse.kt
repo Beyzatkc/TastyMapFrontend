@@ -12,7 +12,8 @@ data class RegisterRequest(
     val profile:String?,
     val biography:String?,
     val role:String,
-    val privateProfile: Boolean
+    val privateProfile: Boolean,
+    val deviceId: String
 )
 
 @Serializable
@@ -40,8 +41,7 @@ data class LoginRequest(
     val username:String,
     val password:String,
     val deviceId:String,
-    val fcmToken:String,
-    val fingerPrintHash: String?
+    val fcmToken:String
 )
 @Serializable
 data class LoginResponse(
@@ -51,5 +51,6 @@ data class LoginResponse(
     val status: LoginStatus? = null,
     val message: String? = null
 )
+
 
 

@@ -7,7 +7,7 @@ import dev.gitlive.firebase.Firebase
 import dev.gitlive.firebase.messaging.messaging
 
 class AndroidDeviceInfoProvider(private val context: Context): DeviceInfoProvider {
-    override fun getDeviceId(): String {
+    override suspend fun getDeviceId(): String {
         return android.provider.Settings.Secure.getString(
             context.contentResolver,
             android.provider.Settings.Secure.ANDROID_ID
@@ -32,9 +32,6 @@ class AndroidDeviceInfoProvider(private val context: Context): DeviceInfoProvide
         }
     }
 
-    override suspend fun getFingerprint(): String? {
-         return null
-    }
 
 
 }

@@ -1,9 +1,8 @@
 package org.beem.tastymap.core.provider
 
 interface DeviceInfoProvider {
-    fun getDeviceId(): String
+    suspend fun getDeviceId(): String
     fun getUserAgent(): String
     suspend fun getFcmToken(): String
 
-    suspend fun getFingerprint(): String?
 }

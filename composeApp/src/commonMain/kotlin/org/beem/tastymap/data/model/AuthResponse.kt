@@ -11,7 +11,6 @@ data class RefreshTokenResponseDTO(
 @Serializable
 data class ApprovedRefreshRequestDTO(
     val deviceId: String,
-    val fingerprintHash: String?,
     val userAgent: String,
     val fcmToken: String
 )
@@ -29,3 +28,10 @@ data class NotificationResponse(
     @SerialName("used")
     val isUsed: Boolean? = false
 )
+
+@Serializable
+data class CommonRequest(
+    val deviceId: String,
+    val email: String
+)
+

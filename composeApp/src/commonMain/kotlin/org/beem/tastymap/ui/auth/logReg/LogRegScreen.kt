@@ -258,10 +258,10 @@ fun AuthEffectHandler(
                 is AuthEffect.NavigateToHome -> {}
                 is AuthEffect.NavigateToLogin -> { /* ... */ }
                 is AuthEffect.NavigateToPending -> {
-                    navigator.replaceAll(PendingScreen(effect.deviceId, effect.fingerPrintHash))
+                    navigator.replaceAll(PendingScreen(effect.deviceId))
                 }
                 is AuthEffect.NavigateToValidate -> {
-                    navigator.push(EmailVerificationScreen(effect.email))
+                    navigator.push(EmailVerificationScreen(effect.email,effect.deviceId))
                 }
             }
         }

@@ -11,42 +11,36 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import org.beem.tastymap.core.network.ResultWrapper
 import org.beem.tastymap.core.util.ToastManager
+import org.beem.tastymap.data.model.CommonRequest
 import org.beem.tastymap.data.repository.AuthRepository
+import org.beem.tastymap.ui.auth.common.CountdownTimer
 import org.beem.tastymap.ui.auth.common.VerificationUiState
 
 class EmailScreenModel(
     private val repository: AuthRepository,
 ) : ScreenModel{
 
+    val timer = CountdownTimer(screenModelScope)
+
+    val timeLeft: StateFlow<Int> = timer.timeLeft
+
+    fun startTimer() {
+        timer.startTime()
+    }
     private val _verificationState = MutableStateFlow(VerificationUiState())
     val verificationState = _verificationState.asStateFlow()
-    private val _timeLeft = MutableStateFlow(0)
-    val timeLeft: StateFlow<Int> = _timeLeft
-    private var timerJob: Job? = null
-
-
-    fun startTime() {
-        if (_timeLeft.value > 0) return
-
-        timerJob?.cancel()
-
-        timerJob = screenModelScope.launch {
-            _timeLeft.value = 60
-
-            while (_timeLeft.value > 0) {
-                delay(1000)
-                _timeLeft.value--
-            }
-        }
-    }
-
-    fun resendMail(email: String) {
+    fun resendMail(deviceId: String,email: String) {
         if (_verificationState.value.isLoading) return
 
         screenModelScope.launch {
             _verificationState.update { it.copy(isLoading = true) }
 
-            when (val result = repository.resendEmail(email)) {
+
+            val request = CommonRequest(
+                deviceId = deviceId,
+                email = email,
+            )
+            when (val result = repository.resendEmail(request)) {
                 is ResultWrapper.Success -> {
                     ToastManager.show(result.data)
                 }

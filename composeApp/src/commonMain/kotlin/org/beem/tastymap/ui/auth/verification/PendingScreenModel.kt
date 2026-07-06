@@ -22,6 +22,7 @@ import org.beem.tastymap.data.remote.AuthWebSocketClient
 import org.beem.tastymap.data.repository.AuthRepository
 import org.beem.tastymap.ui.auth.common.AuthEffect
 import org.beem.tastymap.ui.auth.common.AuthLifecycleEvent
+import org.beem.tastymap.ui.auth.common.CountdownTimer
 import org.beem.tastymap.ui.auth.common.sendPendingMail
 import kotlin.Boolean
 import kotlin.concurrent.atomics.AtomicBoolean
@@ -34,9 +35,14 @@ class PendingScreenModel(
     private val deviceInfoProvider: DeviceInfoProvider
 ) : ScreenModel {
 
+    val timer = CountdownTimer(screenModelScope)
 
+    val timeLeft: StateFlow<Int> = timer.timeLeft
+
+    fun startTimer() {
+        timer.startTime()
+    }
     companion object {
-        private const val COUNTDOWN_SECONDS = 60
         private const val RECONNECT_DELAY = 5000L
     }
 
@@ -54,9 +60,7 @@ class PendingScreenModel(
 
     private var wasBackgrounded = false
 
-    private val _timeLeft = MutableStateFlow(0)
-    val timeLeft: StateFlow<Int> = _timeLeft
-    private var timerJob: Job? = null
+
 
     private var webSocketJob: Job? = null
     private var connectionState = ConnectionState.DISCONNECTED
@@ -65,20 +69,7 @@ class PendingScreenModel(
     val pendingLogin = _pendingLogin.receiveAsFlow()
 
 
-    fun startTime() {
-        if (_timeLeft.value > 0) return
 
-        timerJob?.cancel()
-
-        timerJob = screenModelScope.launch {
-            _timeLeft.value = COUNTDOWN_SECONDS
-
-            while (_timeLeft.value > 0) {
-                delay(1000)
-                _timeLeft.value--
-            }
-        }
-    }
 
     private suspend fun createRefreshRequest(
         deviceId: String
@@ -87,8 +78,7 @@ class PendingScreenModel(
         return ApprovedRefreshRequestDTO(
             deviceId = deviceId,
             userAgent = deviceInfoProvider.getUserAgent(),
-            fcmToken = deviceInfoProvider.getFcmToken(),
-            fingerprintHash = deviceInfoProvider.getFingerprint()
+            fcmToken = deviceInfoProvider.getFcmToken()
         )
     }
 
@@ -165,13 +155,13 @@ class PendingScreenModel(
         }
     }
 
-    fun resendEmail(deviceId: String,fingerPrintHash: String?) {
+    fun resendEmail(deviceId: String) {
         if (_sendState.value.isLoading) return
 
         screenModelScope.launch {
             _sendState.update { it.copy(isLoading = true) }
 
-            when (val result = repository.resendSecurityMail(deviceId,fingerPrintHash)) {
+            when (val result = repository.resendSecurityMail(deviceId)) {
                 is ResultWrapper.Success -> {
                     ToastManager.show(result.data ?: "Bir hata oluştu")
                 }
@@ -187,7 +177,7 @@ class PendingScreenModel(
     private suspend fun isUsedNotification(
         dto: ApprovedRefreshRequestDTO
     ): Boolean {
-        return when (val result = repository.isUsedNotification(dto.deviceId,dto.fingerprintHash)) {
+        return when (val result = repository.isUsedNotification(dto.deviceId)) {
             is ResultWrapper.Success -> {
                 println("succese1 girdi")
                 println("status=${result.data.status} used=${result.data.isUsed}")

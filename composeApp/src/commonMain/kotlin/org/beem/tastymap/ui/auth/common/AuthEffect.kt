@@ -5,8 +5,8 @@ sealed interface AuthEffect {
 
     object NavigateToLogin : AuthEffect
 
-    data class NavigateToPending(val deviceId: String, val fingerPrintHash: String?) : AuthEffect
-    data class NavigateToValidate(val email: String): AuthEffect
+    data class NavigateToPending(val deviceId: String) : AuthEffect
+    data class NavigateToValidate(val email: String, val deviceId: String): AuthEffect
 
 }
 

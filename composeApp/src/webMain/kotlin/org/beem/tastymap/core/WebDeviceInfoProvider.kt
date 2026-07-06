@@ -30,7 +30,8 @@ private fun getCrypto(): Crypto = js("window.crypto")
 external fun getFcmTokenJs(vapidKey: String): Promise<JsString>
 class WebDeviceInfoProvider: DeviceInfoProvider {
 
-    override suspend fun getFingerprint(): String?{
+
+    override suspend fun getDeviceId(): String {
         val raw = buildString {
             append(window.navigator.userAgent)
             append("|")
@@ -42,18 +43,6 @@ class WebDeviceInfoProvider: DeviceInfoProvider {
         }
 
         return sha256(raw)
-    }
-    override fun getDeviceId(): String {
-        val key = "browser_device_id"
-        val existingId = localStorage.getItem(key)
-
-        return if (existingId != null && existingId.isNotBlank()) {
-            existingId
-        } else {
-            val newId = "web-" + getCrypto().randomUUID()
-            localStorage.setItem(key, newId)
-            newId
-        }
     }
 
     override fun getUserAgent(): String {
