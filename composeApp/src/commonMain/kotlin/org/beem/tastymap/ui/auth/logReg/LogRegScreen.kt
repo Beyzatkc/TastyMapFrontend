@@ -62,12 +62,14 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.zIndex
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
+import org.beem.tastymap.core.util.ToastManager
 import org.beem.tastymap.ui.animations.TastyAnimations
 import org.beem.tastymap.ui.auth.common.AuthEffect
 import org.beem.tastymap.ui.auth.verification.EmailVerificationScreen
 import org.beem.tastymap.ui.auth.common.LoginUiState
 import org.beem.tastymap.ui.auth.common.PasswordStrength
 import org.beem.tastymap.ui.auth.common.RegisterUiState
+import org.beem.tastymap.ui.auth.forgotPassword.ForgotScreen
 import org.beem.tastymap.ui.auth.verification.PendingScreen
 import org.beem.tastymap.ui.post.PostScreen
 import org.beem.tastymap.ui.theme.CustomColors
@@ -155,7 +157,7 @@ class LogRegScreen : Screen {
                         ) { targetIsLogin ->
                             key(targetIsLogin) {
                                 if (targetIsLogin) {
-                                    LoginForm(colors.navy, screenModel,logState)
+                                    LoginForm(colors.navy, screenModel,logState,navigator)
                                 } else {
                                     RegisterForm(colors, screenModel,regState)
                                 }
@@ -258,12 +260,19 @@ fun AuthEffectHandler(
                 is AuthEffect.NavigateToHome -> {}
                 is AuthEffect.NavigateToLogin -> { /* ... */ }
                 is AuthEffect.NavigateToPending -> {
-                    navigator.replaceAll(PendingScreen(effect.deviceId))
+                    navigator.replaceAll(
+                        PendingScreen(effect.deviceId))
                 }
                 is AuthEffect.NavigateToValidate -> {
                     navigator.push(EmailVerificationScreen(effect.email,effect.deviceId))
                 }
             }
+        }
+    }
+
+    LaunchedEffect(screenModel.uiMessage) {
+        screenModel.uiMessage.collect { message ->
+            ToastManager.show(message)
         }
     }
 }
@@ -463,7 +472,7 @@ fun FooterLinks(navyIcons: Color) {
         Text(text = "Destek", modifier = Modifier.padding(horizontal = 8.dp), style = linkStyle)
     }
 }
-@Composable fun LoginForm(color: Color, vm: LogRegScreenModel, state: LoginUiState,) {
+@Composable fun LoginForm(color: Color, vm: LogRegScreenModel, state: LoginUiState, navigator: Navigator) {
     Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
         TastyTextField(
             value = state.loginUsername,
@@ -509,7 +518,7 @@ fun FooterLinks(navyIcons: Color) {
         )
         TastyButton(
             text = "Şifreni mi unuttun",
-            onClick = { /* Login Logic */ },
+            onClick = { navigator.push(ForgotScreen()) },
             isPrimary = false,
             backcolor = Color.White,
             textcolor = color,

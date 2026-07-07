@@ -24,13 +24,25 @@ data class RegisterUiState(
     val isLoading: Boolean = false,
     val passwordStrength: PasswordStrength = PasswordStrength()
 )
+data class PasswordUiState(
+    val regPassword: String = "",
+    val regPasswordError: String? = null,
+    val isLoading: Boolean = false,
+    val passwordStrength: PasswordStrength = PasswordStrength()
+)
+data class PasswordEmailState(
+    val pasEmail: String = "",
+    val pasEmailError: String? = null,
+    val isLoading: Boolean = false,
+)
+
 data class VerificationUiState(
     val verificationError: String? = null,
     val isEmailVerified: Boolean = false,
     val isLogin: Boolean = false,
     val isLoading: Boolean = false,
 )
-data class sendPendingMail(
+data class RequestState(
     val error: String? = null,
     val isLoading: Boolean = false,
 )
@@ -41,12 +53,6 @@ data class PasswordStrength(
     val hasSpecialChar: Boolean = false
 )
 
-data class NotificationState(
-    val isLoading: Boolean = false,
-    val isApproved: Boolean = false,
-    val isUsed: Boolean = false,
-    val error: String? = null
-)
 
 sealed class AuthLifecycleEvent {
     data object Resume : AuthLifecycleEvent()

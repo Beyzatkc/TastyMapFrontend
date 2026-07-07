@@ -13,6 +13,7 @@ import org.beem.tastymap.data.model.LoginRequest
 import org.beem.tastymap.data.model.LoginResponse
 import org.beem.tastymap.data.model.NotificationResponse
 import org.beem.tastymap.data.model.RegisterRequest
+import org.beem.tastymap.data.model.ResetPassword
 import org.beem.tastymap.data.model.UserResponse
 
 
@@ -66,4 +67,24 @@ class AuthDataSource(private val client: HttpClient) {
             setBody(commonRequest)
         }.body()
     }
+
+   suspend fun resetPassword(passwordRequest: ResetPassword): String{
+       return client.post("auth/resetPassword"){
+           setBody(passwordRequest)
+       }.body()
+   }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+

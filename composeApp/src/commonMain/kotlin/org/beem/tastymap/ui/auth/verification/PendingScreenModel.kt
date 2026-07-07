@@ -23,7 +23,7 @@ import org.beem.tastymap.data.repository.AuthRepository
 import org.beem.tastymap.ui.auth.common.AuthEffect
 import org.beem.tastymap.ui.auth.common.AuthLifecycleEvent
 import org.beem.tastymap.ui.auth.common.CountdownTimer
-import org.beem.tastymap.ui.auth.common.sendPendingMail
+import org.beem.tastymap.ui.auth.common.RequestState
 import kotlin.Boolean
 import kotlin.concurrent.atomics.AtomicBoolean
 import kotlin.concurrent.atomics.ExperimentalAtomicApi
@@ -55,7 +55,7 @@ class PendingScreenModel(
     @OptIn(ExperimentalAtomicApi::class)
     private val isConnecting = AtomicBoolean(false)
 
-    private val _sendState = MutableStateFlow(sendPendingMail())
+    private val _sendState = MutableStateFlow(RequestState())
     val sendState = _sendState.asStateFlow()
 
     private var wasBackgrounded = false
@@ -68,6 +68,9 @@ class PendingScreenModel(
     private val _pendingLogin = Channel<AuthEffect>()
     val pendingLogin = _pendingLogin.receiveAsFlow()
 
+
+    private val _uiMessage = Channel<String>()
+    val uiMessage = _uiMessage.receiveAsFlow()
 
 
 
@@ -163,16 +166,16 @@ class PendingScreenModel(
 
             when (val result = repository.resendSecurityMail(deviceId)) {
                 is ResultWrapper.Success -> {
-                    ToastManager.show(result.data ?: "Bir hata oluştu")
+                    _uiMessage.send(result.data ?: "E-posta gönderildi.")
                 }
-
                 is ResultWrapper.Error -> {
-                    ToastManager.show(result.message)
+                    _uiMessage.send(result.message)
                 }
             }
             _sendState.update { it.copy(isLoading = false) }
         }
     }
+
 
     private suspend fun isUsedNotification(
         dto: ApprovedRefreshRequestDTO
@@ -185,10 +188,11 @@ class PendingScreenModel(
                     println("verifyLogin çağrılıyor")
                     when (val verifyResult =repository.verifyLogin(dto)) {
                         is ResultWrapper.Success -> {
+                            _uiMessage.send("Giriş onaylandı.")
                             _pendingLogin.send(AuthEffect.NavigateToHome)
                         }
                         is ResultWrapper.Error -> {
-                            println("eroora girdi  ${verifyResult.message}",)
+                            _uiMessage.send(verifyResult.message)
                             _pendingLogin.send(AuthEffect.NavigateToLogin)
                         }
                     }
@@ -196,6 +200,7 @@ class PendingScreenModel(
                     true
                 }
                 else if (result.data.status == Status.REJECTED) {
+                    _uiMessage.send("Giriş isteği reddedildi.")
                     _pendingLogin.send(AuthEffect.NavigateToLogin)
                     stopWebSocket()
                     true
@@ -205,6 +210,7 @@ class PendingScreenModel(
                 }
             }
             is ResultWrapper.Error ->{
+                _uiMessage.send(result.message)
                 println("Bildirim durumu kontrol edilirken hata: ${result.message}")
                 false
             }
@@ -264,13 +270,13 @@ class PendingScreenModel(
     ) {
         when (val result = repository.verifyLogin(dto)) {
             is ResultWrapper.Success -> {
+                _uiMessage.send("Giriş onaylandı.")
                 _pendingLogin.send(AuthEffect.NavigateToHome)
-                ToastManager.show("Giriş onaylandı.")
                 stopWebSocket()
             }
 
             is ResultWrapper.Error -> {
-                ToastManager.show(result.message ?: "Giriş başarısız.")
+                _uiMessage.send(result.message ?: "Giriş başarısız.")
                 _pendingLogin.send(AuthEffect.NavigateToLogin)
                 stopWebSocket()
             }
@@ -280,7 +286,7 @@ class PendingScreenModel(
 
     private suspend fun handleRejected() {
         stopWebSocket()
-        ToastManager.show("Giriş isteği reddedildi.")
+        _uiMessage.send("Giriş isteği reddedildi.")
         _pendingLogin.send(AuthEffect.NavigateToLogin)
 
     }

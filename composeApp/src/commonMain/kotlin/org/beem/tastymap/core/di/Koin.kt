@@ -13,6 +13,7 @@ import org.beem.tastymap.data.remote.AuthWebSocketClient
 import org.beem.tastymap.data.remote.UserDataSource
 import org.beem.tastymap.data.repository.AuthRepository
 import org.beem.tastymap.data.repository.PostRepository
+import org.beem.tastymap.ui.auth.forgotPassword.ForgotScreenModel
 import org.beem.tastymap.ui.auth.logReg.LogRegScreenModel
 import org.beem.tastymap.ui.auth.splash.SplashScreenModel
 import org.beem.tastymap.ui.auth.verification.EmailScreenModel
@@ -45,6 +46,7 @@ val appModule = module {
     factory { EmailScreenModel(get()) }
     factory { PostScreenModel (get())}
     factory { SplashScreenModel(get()) }
+    factory { ForgotScreenModel(get(),get()) }
 
     single<PlatformMessenger> { EmptyMessenger() }
 }

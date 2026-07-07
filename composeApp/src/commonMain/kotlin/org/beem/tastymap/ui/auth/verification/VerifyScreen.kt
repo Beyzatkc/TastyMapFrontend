@@ -39,6 +39,7 @@ import kotlinx.coroutines.delay
 import org.beem.tastymap.core.constants.AuthConstants
 import org.beem.tastymap.core.navigation.DeepLinkManager
 import org.beem.tastymap.core.navigation.PlatformMessenger
+import org.beem.tastymap.core.util.ToastManager
 import org.beem.tastymap.ui.animations.TastyAnimations
 import org.koin.compose.koinInject
 
@@ -68,6 +69,12 @@ class VerifyScreen(val token: String) : Screen {
 
         LaunchedEffect(Unit) {
             screenModel.verifyEmail(token)
+        }
+
+        LaunchedEffect(screenModel.uiMessage) {
+            screenModel.uiMessage.collect { message ->
+                ToastManager.show(message)
+            }
         }
 
         Surface(

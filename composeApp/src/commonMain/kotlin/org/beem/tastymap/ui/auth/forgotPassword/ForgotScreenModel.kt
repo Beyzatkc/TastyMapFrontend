@@ -1,0 +1,161 @@
+package org.beem.tastymap.ui.auth.forgotPassword
+import cafe.adriel.voyager.core.model.ScreenModel
+import cafe.adriel.voyager.core.model.screenModelScope
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.receiveAsFlow
+import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
+import org.beem.tastymap.core.network.ResultWrapper
+import org.beem.tastymap.core.provider.DeviceInfoProvider
+import org.beem.tastymap.data.model.CommonRequest
+import org.beem.tastymap.data.model.ResetPassword
+import org.beem.tastymap.data.repository.AuthRepository
+import org.beem.tastymap.ui.auth.common.AuthEffect
+import org.beem.tastymap.ui.auth.common.CheckValidator
+import org.beem.tastymap.ui.auth.common.PasswordEmailState
+import org.beem.tastymap.ui.auth.common.PasswordStrength
+import org.beem.tastymap.ui.auth.common.PasswordUiState
+import org.beem.tastymap.ui.auth.common.ValidationResult
+import org.beem.tastymap.ui.auth.logReg.LoginEvent
+
+class ForgotScreenModel(
+    private val repository: AuthRepository,
+    private val deviceInfoProvider: DeviceInfoProvider
+): ScreenModel{
+
+    private val _sendState = MutableStateFlow(PasswordEmailState())
+    val sendState = _sendState.asStateFlow()
+
+    private val _uiMessage = Channel<String>()
+    val uiMessage = _uiMessage.receiveAsFlow()
+
+    private val _passwordState = MutableStateFlow(PasswordUiState())
+    val passwordState = _passwordState.asStateFlow()
+
+    private val _effect = Channel<AuthEffect>()
+    val effect = _effect.receiveAsFlow()
+
+
+     fun forgotPassword(email: String){
+        if (_sendState.value.isLoading) return
+        screenModelScope.launch {
+            if(validateEmail()) {
+                _sendState.update { it.copy(isLoading = true) }
+                val dto = CommonRequest(
+                    deviceId = deviceInfoProvider.getDeviceId(),
+                    email = email
+                )
+                when (val result = repository.forgotPassword(dto)) {
+                    is ResultWrapper.Success -> {
+                        _uiMessage.send(result.data ?: "E-posta gönderildi.")
+                    }
+
+                    is ResultWrapper.Error -> {
+                        _uiMessage.send(result.message)
+                    }
+                }
+                _sendState.update { it.copy(isLoading = false) }
+            }
+        }
+    }
+
+     fun onBackClick(){
+        _sendState.update {
+            it.copy(
+                pasEmail = " ",
+                pasEmailError = null
+            )
+        }
+    }
+    fun validateEmail(): Boolean {
+        val state = _sendState.value
+        val eResult = CheckValidator.validateEmail(
+           email = state.pasEmail
+        )
+        val eError = (eResult as? ValidationResult.Invalid)?.message
+        _sendState.update {
+            it.copy(
+                pasEmailError = eError
+            )
+        }
+        return eResult is ValidationResult.Valid
+    }
+    private fun resetPassword(token: String){
+        screenModelScope.launch {
+            if(validatePassword()) {
+                _passwordState.update { it.copy(isLoading = true) }
+                val state = _passwordState.value
+                val request = ResetPassword(
+                    token = token,
+                    newPassword = state.regPassword
+                )
+                when (val result = repository.resetPassword(request)) {
+                    is ResultWrapper.Success -> {
+                        _uiMessage.send(result.data)
+                        _effect.send(AuthEffect.NavigateToLogin)
+                    }
+
+                    is ResultWrapper.Error -> {
+                        _uiMessage.send(result.message ?: "Şifre değiştirme işlemi başarısız.")
+                    }
+                }
+                _passwordState.update { it.copy(isLoading = false) }
+            }
+        }
+    }
+    fun validatePassword(): Boolean {
+        val currentState=_passwordState.value
+        val pResult = CheckValidator.validatePassword(currentState.regPassword.trim())
+
+        val regPasswordError = (pResult as? ValidationResult.Invalid)?.message
+
+        _passwordState.update {
+            it.copy(
+                regPasswordError = regPasswordError,
+            )
+        }
+        return pResult is ValidationResult.Valid
+    }
+
+    fun onPasswordEvent(event: PasswordEvent) {
+        _passwordState.update { currentState ->
+           when(event){
+               is PasswordEvent.PasswordChanged -> {
+                   val newPassword = event.value
+
+                   val strength = PasswordStrength(
+                       hasMinLength = newPassword.length >= 8,
+                       hasUppercase = newPassword.any { it.isUpperCase() },
+                       hasDigit = newPassword.any { it.isDigit() },
+                       hasSpecialChar = newPassword.contains(Regex("[@#\$!%^&*(),.?\":{}|<>]"))
+                   )
+                   currentState.copy(
+                       regPassword = newPassword,
+                       regPasswordError = null,
+                       passwordStrength = strength
+                   )
+               }
+           }
+        }
+    }
+    fun onEmailEvent(event: EmailEvent) {
+        _sendState.update { currentState ->
+            when (event) {
+                is EmailEvent.EmailChanged -> {
+                    currentState.copy(
+                        pasEmail = event.value,
+                        pasEmailError = null
+                    )
+                }
+            }
+        }
+    }
+}
+sealed class PasswordEvent {
+    data class PasswordChanged(val value: String) : PasswordEvent()
+}
+sealed class EmailEvent {
+    data class EmailChanged(val value: String) : EmailEvent()
+}

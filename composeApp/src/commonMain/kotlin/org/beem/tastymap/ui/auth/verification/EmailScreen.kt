@@ -36,6 +36,7 @@ import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import org.beem.tastymap.core.constants.AuthConstants.MSG_VERIFICATION_FINISHED
 import org.beem.tastymap.core.navigation.PlatformMessenger
+import org.beem.tastymap.core.util.ToastManager
 import org.beem.tastymap.ui.auth.logReg.LogRegScreen
 import org.beem.tastymap.ui.theme.LocalCustomColors
 import org.koin.compose.koinInject
@@ -53,6 +54,11 @@ class EmailVerificationScreen(val email: String, val deviceId: String) : Screen 
             if (receivedMessage == MSG_VERIFICATION_FINISHED) {
                 navigator.replaceAll(LogRegScreen())
                 messenger.close()
+            }
+        }
+        LaunchedEffect(screenModel.uiMessage) {
+            screenModel.uiMessage.collect { message ->
+                ToastManager.show(message)
             }
         }
 

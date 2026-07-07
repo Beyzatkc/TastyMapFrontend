@@ -3,10 +3,12 @@ package org.beem.tastymap.ui.auth.verification
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import org.beem.tastymap.core.network.ResultWrapper
@@ -29,6 +31,9 @@ class EmailScreenModel(
     }
     private val _verificationState = MutableStateFlow(VerificationUiState())
     val verificationState = _verificationState.asStateFlow()
+
+    private val _uiMessage = Channel<String>()
+    val uiMessage = _uiMessage.receiveAsFlow()
     fun resendMail(deviceId: String,email: String) {
         if (_verificationState.value.isLoading) return
 
@@ -42,10 +47,12 @@ class EmailScreenModel(
             )
             when (val result = repository.resendEmail(request)) {
                 is ResultWrapper.Success -> {
-                    ToastManager.show(result.data)
+                    _uiMessage.send(result.data)
+                    //ToastManager.show(result.data)
                 }
                 is ResultWrapper.Error -> {
-                    ToastManager.show(result.message ?: "Bir hata oluştu")
+                    _uiMessage.send("result.message ?: \"Bir hata oluştu\"")
+                    //ToastManager.show(result.message ?: "Bir hata oluştu")
                 }
             }
             _verificationState.update { it.copy(isLoading = false) }
@@ -59,6 +66,7 @@ class EmailScreenModel(
             val result = repository.verifyEmail(token)
             when(result){
                 is ResultWrapper.Success -> {
+                    _uiMessage.send(result.data["message"] ?: "Başarılı")
                     _verificationState.update {
                         it.copy(
                             isLoading = false,
@@ -66,10 +74,8 @@ class EmailScreenModel(
                         )
                     }
                     delay(2000)
-                    ToastManager.show(result.data["message"] ?: "Başarılı")
                 }
                 is ResultWrapper.Error -> {
-                    //ToastManager.show(result.message ?: "Bir hata oluştu")
                     _verificationState.update {
                         it.copy(
                             isLoading = false,

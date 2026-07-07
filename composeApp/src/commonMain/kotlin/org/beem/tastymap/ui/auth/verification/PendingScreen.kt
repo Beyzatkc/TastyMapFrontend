@@ -47,9 +47,7 @@ class PendingScreen(val deviceId: String) : Screen {
         val navigator = LocalNavigator.currentOrThrow
         val colors = LocalCustomColors.current
         val materialColors = MaterialTheme.colorScheme
-        val state by screenModel.sendState.collectAsState()
 
-        val scrollState = rememberScrollState()
 
         LaunchedEffect(Unit) {
             screenModel.pendingLogin.collect { pendingLogin ->
@@ -62,15 +60,14 @@ class PendingScreen(val deviceId: String) : Screen {
                     is AuthEffect.NavigateToValidate -> {
                         navigator.push(EmailVerificationScreen(pendingLogin.email,pendingLogin.deviceId))
                     }
+
                 }
             }
         }
 
-        LaunchedEffect(state.error) {
-            state.error?.let { errorMessage ->
-                if (errorMessage.isNotEmpty()) {
-                    ToastManager.show(errorMessage)
-                }
+        LaunchedEffect(screenModel.uiMessage) {
+            screenModel.uiMessage.collect { message ->
+                ToastManager.show(message)
             }
         }
 
@@ -115,7 +112,6 @@ class PendingScreen(val deviceId: String) : Screen {
                     modifier = Modifier
                         .widthIn(max = 500.dp)
                         .fillMaxWidth()
-                        .verticalScroll(scrollState)
                         .padding(24.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Center
@@ -240,9 +236,11 @@ fun ResendSection(
     screenModel: PendingScreenModel
 ) {
     val timeLeft by screenModel.timeLeft.collectAsState()
-    val isButtonEnabled = timeLeft == 0
+    val state by screenModel.sendState.collectAsState()
 
-    Column (horizontalAlignment = Alignment.CenterHorizontally){
+    val isButtonEnabled = timeLeft == 0 && !state.isLoading
+
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
         TextButton(
             enabled = isButtonEnabled,
             onClick = {
@@ -251,16 +249,24 @@ fun ResendSection(
                     onResendClick()
                 }
             }
-        ){
-            Text(
-                text = if (isButtonEnabled) {
-                    "E-posta gelmedi mi? Tekrar gönder"
-                } else {
-                    "Tekrar gönder: ${timeLeft}s"
-                },
-                color = if (isButtonEnabled) navyIcons else Color.Gray,
-                style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium)
-            )
+        ) {
+            if (state.isLoading) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(16.dp),
+                    strokeWidth = 2.dp,
+                    color = navyIcons
+                )
+            } else {
+                Text(
+                    text = if (timeLeft == 0) {
+                        "E-posta gelmedi mi? Tekrar gönder"
+                    } else {
+                        "Tekrar gönder: ${timeLeft}s"
+                    },
+                    color = if (isButtonEnabled) navyIcons else Color.Gray,
+                    style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium)
+                )
+            }
         }
     }
 }

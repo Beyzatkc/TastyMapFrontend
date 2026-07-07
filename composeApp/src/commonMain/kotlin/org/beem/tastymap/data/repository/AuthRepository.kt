@@ -14,6 +14,7 @@ import org.beem.tastymap.data.model.LoginStatus
 import org.beem.tastymap.data.model.NotificationResponse
 import org.beem.tastymap.data.model.RefreshTokenResponseDTO
 import org.beem.tastymap.data.model.RegisterRequest
+import org.beem.tastymap.data.model.ResetPassword
 import org.beem.tastymap.data.model.UserResponse
 import org.beem.tastymap.data.remote.AuthDataSource
 
@@ -101,6 +102,11 @@ class AuthRepository(
     suspend fun forgotPassword(commonRequest: CommonRequest): ResultWrapper<String>{
         return safeApiCall {
             dataSource.forgotPassword(commonRequest)
+        }
+    }
+    suspend fun resetPassword(passwordRequest: ResetPassword): ResultWrapper<String>{
+        return safeApiCall {
+            dataSource.resetPassword(passwordRequest)
         }
     }
 

@@ -36,6 +36,9 @@ class LogRegScreenModel(
     private val _effect = Channel<AuthEffect>()
     val effect = _effect.receiveAsFlow()
 
+    private val _uiMessage = Channel<String>()
+    val uiMessage = _uiMessage.receiveAsFlow()
+
     fun nextRegisterStep() {
         if (validateRegisterStep1()) {
             _registerState.update { it.copy(step = 2) }
@@ -74,12 +77,12 @@ class LogRegScreenModel(
 
                 when (val result = repository.register(request)) {
                     is ResultWrapper.Success -> {
-                        ToastManager.show("Kayıt başarılı!")
+                        _uiMessage.send("Kayıt başarılı!")
                         _effect.send(AuthEffect.NavigateToValidate(state.regEmail,deviceId))
                     }
 
                     is ResultWrapper.Error -> {
-                        ToastManager.show(result.message ?: "Kayıt başarısız.")
+                        _uiMessage.send(result.message ?: "Kayıt başarısız.")
                     }
                 }
                 _registerState.update { it.copy(isLoading = false) }
@@ -106,17 +109,15 @@ class LogRegScreenModel(
                     is ResultWrapper.Success -> {
                         onLoginSuccess()
                         if (result.data.status == LoginStatus.SUCCESS) {
-                            ToastManager.show("Giriş başarılı!")
+                            _uiMessage.send("Giriş başarılı!")
+                            //ToastManager.show("Giriş başarılı!")
                             _effect.send(AuthEffect.NavigateToHome)
                         } else {
-                            println("LOGIN: STATUS PENDING")
-
                             _effect.send(AuthEffect.NavigateToPending(deviceId))
-                            println("LOGIN: NavigateToPending gönderildi")
                         }
                     }
                     is ResultWrapper.Error -> {
-                        ToastManager.show(result.message ?: "Giriş başarısız.")
+                        _uiMessage.send(result.message ?: "Giriş başarısız.")
                     }
                 }
                 _loginState.update { it.copy(isLoading = false) }
