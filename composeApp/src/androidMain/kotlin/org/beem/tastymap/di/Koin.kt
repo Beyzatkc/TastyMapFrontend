@@ -11,6 +11,7 @@ import com.russhwolf.settings.SharedPreferencesSettings
 import org.beem.tastymap.core.AndroidPermissionManager
 import org.beem.tastymap.core.local.MobileUserManager
 import org.beem.tastymap.core.local.UserManager
+import org.beem.tastymap.core.navigation.AuthNavigationHandler
 import org.beem.tastymap.core.network.MobileSessionValidator
 import org.beem.tastymap.core.network.MobileHttpClientFactory
 import org.beem.tastymap.core.permission.PermissionManager
@@ -37,4 +38,5 @@ val androidModule = module {
     single<UserManager> { MobileUserManager(get()) }
     single <AuthValidator>{ MobileSessionValidator(get(),get()) }
     single<PermissionManager> { AndroidPermissionManager(get()) }
+    single { AuthNavigationHandler() }
 }

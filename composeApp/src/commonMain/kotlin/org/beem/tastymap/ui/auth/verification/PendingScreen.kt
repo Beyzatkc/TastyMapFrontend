@@ -35,6 +35,7 @@ import org.beem.tastymap.ui.auth.common.AuthEffect
 import org.beem.tastymap.ui.auth.common.AuthLifecycleEvent
 import org.beem.tastymap.ui.auth.logReg.LogRegScreen
 import org.beem.tastymap.ui.auth.splash.SplashScreen
+import org.beem.tastymap.ui.components.AuthFooter
 import org.beem.tastymap.ui.theme.LocalCustomColors
 
 class PendingScreen(val deviceId: String) : Screen {
@@ -267,6 +268,8 @@ fun ResendSection(
                     style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium)
                 )
             }
+
         }
     }
+    AuthFooter()
 }

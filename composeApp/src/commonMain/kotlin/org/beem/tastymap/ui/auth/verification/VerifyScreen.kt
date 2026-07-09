@@ -9,14 +9,19 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.ErrorOutline
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -35,12 +40,12 @@ import cafe.adriel.voyager.core.model.rememberScreenModel
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
-import kotlinx.coroutines.delay
-import org.beem.tastymap.core.constants.AuthConstants
+import org.beem.tastymap.core.navigation.AuthNavigationHandler
 import org.beem.tastymap.core.navigation.DeepLinkManager
-import org.beem.tastymap.core.navigation.PlatformMessenger
 import org.beem.tastymap.core.util.ToastManager
 import org.beem.tastymap.ui.animations.TastyAnimations
+import org.beem.tastymap.ui.components.AuthFooter
+import org.beem.tastymap.ui.components.BackPage
 import org.koin.compose.koinInject
 
 class VerifyScreen(val token: String) : Screen {
@@ -49,16 +54,13 @@ class VerifyScreen(val token: String) : Screen {
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
         val koinInstance = koinInject<EmailScreenModel>()
-        val messenger = koinInject<PlatformMessenger>()
         val screenModel = rememberScreenModel { koinInstance }
         val state by screenModel.verificationState.collectAsState()
-
+        val authNavigationHandler = koinInject<AuthNavigationHandler>()
 
         LaunchedEffect(state.isEmailVerified) {
             if (state.isEmailVerified) {
-                messenger.post(AuthConstants.MSG_VERIFICATION_FINISHED)
-                delay(2000)
-                navigator.replaceAll(VerificationSuccessScreen())
+                authNavigationHandler.onVerificationSuccess(navigator)
             }
         }
         DisposableEffect(Unit) {
@@ -78,105 +80,119 @@ class VerifyScreen(val token: String) : Screen {
         }
 
         Surface(
-            modifier = Modifier.Companion.fillMaxSize(),
+            modifier = Modifier.fillMaxSize(),
             color = MaterialTheme.colorScheme.background
         ) {
-
+            // DEĞİŞİKLİK 1: Geniş ekranda Column'u yatayda ortalayabilmek için Box ekledik
             Box(
-                modifier = Modifier.Companion.fillMaxSize().padding(24.dp),
-                contentAlignment = Alignment.Companion.Center
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.TopCenter
             ) {
-                AnimatedContent(
-                    targetState = state.verificationError != null,
-                    transitionSpec = {
-                        TastyAnimations.scaleFade()
-                    },
-                    label = "VerifyStateAnim"
-                ) { isError ->
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .statusBarsPadding()
+                        .navigationBarsPadding()
+                        .imePadding()
+                        // DEĞİŞİKLİK 2: Web için maksimum 480dp genişlik sınırı koyduk
+                        // ve padding vererek kenarlardan taşmasını önledik
+                        .widthIn(max = 480.dp)
+                        .fillMaxWidth()
+                ) {
+
+                    BackPage(
+                        header = "Hesap Doğrulama",
+                        onBackClick = { navigator.pop() }
+                    )
 
                     Column(
-                        modifier = Modifier.Companion
-                            .widthIn(max = 440.dp)
+                        modifier = Modifier
+                            .weight(1f)
                             .fillMaxWidth(),
-                        horizontalAlignment = Alignment.Companion.CenterHorizontally,
-                        verticalArrangement = Arrangement.Center
+                        verticalArrangement = Arrangement.Center,
+                        horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        if (!isError) {
-                            CircularProgressIndicator(
-                                modifier = Modifier.Companion.size(54.dp),
-                                color = MaterialTheme.colorScheme.primary,
-                                strokeWidth = 4.dp
-                            )
 
-                            Spacer(modifier = Modifier.Companion.height(32.dp))
+                        AnimatedContent(
+                            targetState = state.verificationError != null,
+                            transitionSpec = { TastyAnimations.scaleFade() },
+                            label = "VerifyStateAnim"
+                        ) { isError ->
 
-                            Text(
-                                text = "Hesabınız Doğrulanıyor",
-                                style = MaterialTheme.typography.headlineSmall,
-                                textAlign = TextAlign.Companion.Center,
-                                fontWeight = FontWeight.Companion.Bold
-                            )
-
-                            Spacer(modifier = Modifier.Companion.height(12.dp))
-
-                            Text(
-                                text = "Lütfen bekleyiniz.",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                textAlign = TextAlign.Companion.Center,
-                                lineHeight = 22.sp
-                            )
-                        } else {
                             Column(
-                                modifier = Modifier.Companion
-                                    .widthIn(max = 440.dp)
-                                    .fillMaxWidth()
-                                    .padding(24.dp),
-                                horizontalAlignment = Alignment.Companion.CenterHorizontally
+                                modifier = Modifier.fillMaxWidth(), // İçeriği zaten dış Column kısıtlıyor
+                                horizontalAlignment = Alignment.CenterHorizontally
                             ) {
-                                Box(
-                                    modifier = Modifier.Companion
-                                        .size(100.dp)
-                                        .background(
-                                            color = MaterialTheme.colorScheme.errorContainer.copy(
-                                                alpha = 0.4f
+
+                                if (!isError) {
+                                    CircularProgressIndicator(
+                                        modifier = Modifier.size(54.dp),
+                                        color = MaterialTheme.colorScheme.primary,
+                                        strokeWidth = 4.dp
+                                    )
+
+                                    Spacer(Modifier.height(32.dp))
+
+                                    Text(
+                                        text = "Hesabınız Doğrulanıyor",
+                                        style = MaterialTheme.typography.headlineSmall,
+                                        fontWeight = FontWeight.Bold,
+                                        textAlign = TextAlign.Center
+                                    )
+
+                                    Spacer(Modifier.height(12.dp))
+
+                                    Text(
+                                        text = "Lütfen bekleyiniz.",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        textAlign = TextAlign.Center,
+                                        lineHeight = 22.sp
+                                    )
+
+                                } else {
+                                    Box(
+                                        modifier = Modifier
+                                            .size(100.dp)
+                                            .background(
+                                                MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.4f),
+                                                CircleShape
                                             ),
-                                            shape = CircleShape
-                                        ),
-                                    contentAlignment = Alignment.Companion.Center
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Default.ErrorOutline,
-                                        contentDescription = null,
-                                        tint = MaterialTheme.colorScheme.error,
-                                        modifier = Modifier.Companion.size(56.dp)
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Icon(
+                                            Icons.Default.ErrorOutline,
+                                            null,
+                                            tint = MaterialTheme.colorScheme.error,
+                                            modifier = Modifier.size(56.dp)
+                                        )
+                                    }
+
+                                    Spacer(Modifier.height(24.dp))
+
+                                    Text(
+                                        text = "Bir Sorun Oluştu",
+                                        style = MaterialTheme.typography.headlineMedium,
+                                        color = MaterialTheme.colorScheme.error,
+                                        fontWeight = FontWeight.ExtraBold,
+                                        textAlign = TextAlign.Center
+                                    )
+
+                                    Spacer(Modifier.height(12.dp))
+
+                                    Text(
+                                        text = state.verificationError
+                                            ?: "Beklenmedik bir hata oluştu. Lütfen tekrar deneyiniz.",
+                                        style = MaterialTheme.typography.bodyLarge,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        textAlign = TextAlign.Center,
+                                        lineHeight = 24.sp
                                     )
                                 }
-
-                                Spacer(modifier = Modifier.Companion.height(24.dp))
-
-                                Text(
-                                    text = "Bir Sorun Oluştu",
-                                    style = MaterialTheme.typography.headlineMedium,
-                                    color = MaterialTheme.colorScheme.error,
-                                    fontWeight = FontWeight.Companion.ExtraBold,
-                                    textAlign = TextAlign.Companion.Center
-                                )
-
-                                Spacer(modifier = Modifier.Companion.height(12.dp))
-
-                                Text(
-                                    text = state.verificationError
-                                        ?: "Beklenmedik bir hata ile karşılaşıldı. Lütfen internet bağlantınızı kontrol edip tekrar deneyiniz.",
-                                    style = MaterialTheme.typography.bodyLarge,
-                                    textAlign = TextAlign.Companion.Center,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    lineHeight = 24.sp
-                                )
-
                             }
                         }
                     }
+                    AuthFooter()
                 }
             }
         }

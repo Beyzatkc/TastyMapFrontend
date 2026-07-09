@@ -55,8 +55,9 @@ class ForgotScreenModel(
                     is ResultWrapper.Error -> {
                         _uiMessage.send(result.message)
                     }
+
                 }
-                _sendState.update { it.copy(isLoading = false) }
+                _sendState.update { it.copy(isLoading = false, pasEmail = "", pasEmailError = null) }
             }
         }
     }
@@ -82,7 +83,7 @@ class ForgotScreenModel(
         }
         return eResult is ValidationResult.Valid
     }
-    private fun resetPassword(token: String){
+     fun resetPassword(token: String){
         screenModelScope.launch {
             if(validatePassword()) {
                 _passwordState.update { it.copy(isLoading = true) }
@@ -106,17 +107,34 @@ class ForgotScreenModel(
         }
     }
     fun validatePassword(): Boolean {
-        val currentState=_passwordState.value
-        val pResult = CheckValidator.validatePassword(currentState.regPassword.trim())
+        val currentState = _passwordState.value
 
-        val regPasswordError = (pResult as? ValidationResult.Invalid)?.message
+        val passwordResult =
+            CheckValidator.validatePassword(currentState.regPassword.trim())
+
+        val regPasswordError =
+            (passwordResult as? ValidationResult.Invalid)?.message
+
+        val confirmPasswordError =
+            when {
+                currentState.confirmPassword.isBlank() ->
+                    "Lütfen şifrenizi tekrar giriniz."
+
+                currentState.regPassword != currentState.confirmPassword ->
+                    "Şifreler eşleşmiyor."
+
+                else -> null
+            }
 
         _passwordState.update {
             it.copy(
                 regPasswordError = regPasswordError,
+                confirmPasswordError = confirmPasswordError
             )
         }
-        return pResult is ValidationResult.Valid
+
+        return passwordResult is ValidationResult.Valid &&
+                confirmPasswordError == null
     }
 
     fun onPasswordEvent(event: PasswordEvent) {
@@ -137,6 +155,15 @@ class ForgotScreenModel(
                        passwordStrength = strength
                    )
                }
+               is PasswordEvent.ConfirmPasswordChanged -> {
+                   currentState.copy(
+                       confirmPassword = event.password,
+                       confirmPasswordError =
+                           if (event.password == currentState.regPassword) null
+                           else currentState.confirmPasswordError
+                   )
+               }
+
            }
         }
     }
@@ -149,12 +176,14 @@ class ForgotScreenModel(
                         pasEmailError = null
                     )
                 }
+
             }
         }
     }
 }
 sealed class PasswordEvent {
     data class PasswordChanged(val value: String) : PasswordEvent()
+    data class ConfirmPasswordChanged(val password: String) : PasswordEvent()
 }
 sealed class EmailEvent {
     data class EmailChanged(val value: String) : EmailEvent()

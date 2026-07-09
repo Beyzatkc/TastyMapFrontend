@@ -255,6 +255,10 @@ fun AuthEffectHandler(
     navigator: Navigator
 ) {
     LaunchedEffect(Unit) {
+        screenModel.clearRegisterForm()
+        screenModel.clearLoginForm()
+    }
+    LaunchedEffect(Unit) {
         screenModel.effect.collect { effect ->
             when (effect) {
                 is AuthEffect.NavigateToHome -> {}

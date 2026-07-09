@@ -51,7 +51,7 @@ class EmailScreenModel(
                     //ToastManager.show(result.data)
                 }
                 is ResultWrapper.Error -> {
-                    _uiMessage.send("result.message ?: \"Bir hata oluştu\"")
+                    _uiMessage.send(result.message ?: "Bir hata oluştu")
                     //ToastManager.show(result.message ?: "Bir hata oluştu")
                 }
             }
@@ -87,5 +87,4 @@ class EmailScreenModel(
             }
         }
     }
-
 }

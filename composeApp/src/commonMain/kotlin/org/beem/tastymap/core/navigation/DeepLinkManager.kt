@@ -4,6 +4,7 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.receiveAsFlow
+import org.beem.tastymap.ui.auth.splash.SplashScreen
 import org.beem.tastymap.ui.auth.verification.VerifyScreen
 
 object DeepLinkManager {
@@ -13,48 +14,81 @@ object DeepLinkManager {
     var pendingInitialScreen: Screen? = null
 
 
-
-    /*
-    //androdı icin
+/*
     fun handleLink(url: String) {
-        val uri = url.split("?").getOrNull(1)
-        val params = uri?.split("&")?.associate {
-            val (key, value) = it.split("=", limit = 2)
-            key to value
-        }
+        try {
+            val parts = url.split("?")
+            val basePath = parts.getOrNull(0) ?: ""
+            val queryString = parts.getOrNull(1)
 
-        val token = params?.get("token")
+            val token = queryString
+                ?.split("&")
+                ?.map { it.split("=") }
+                ?.firstOrNull { it.size == 2 && it[0] == "token" }
+                ?.getOrNull(1)
 
-        if (!token.isNullOrEmpty() && url.contains("/auth/verify")) {
-            val screen = VerifyScreen(token)
-            pendingInitialScreen = screen
-            _navigationEvents.tryEmit(screen)
+            if (token.isNullOrEmpty()) return
+
+            when {
+                basePath.endsWith("/auth/verify") -> {
+                    val screen = VerifyScreen(token)
+                    pendingInitialScreen = screen
+                    _navigationEvents.trySend(screen)
+                    println("DEEPLINK_MGR: Email doğrulama ekranına yönlendiriliyor. Token: $token")
+                }
+
+                basePath.endsWith("/auth/resetPassword/validate") -> {
+                    val screen = SplashScreen()
+                    pendingInitialScreen = screen
+                    _navigationEvents.trySend(screen)
+                    println("DEEPLINK_MGR: Şifre sıfırlama ekranına yönlendiriliyor. Token: $token")
+                }
+            }
+        } catch (e: Exception) {
+            println("DEEPLINK_MGR: Error parsing url: $url -> ${e.message}")
         }
     }
 
+ */
 
-     */
-
-
-    // web iicn
     fun handleLink(url: String) {
-        if (url.contains("#verify")) {
-            println("buraya gırdı handle lınk")
-            val queryString = url.substringAfter("?", "")
-            val params = queryString.split("&").associate {
-                val pair = it.split("=")
-                pair.getOrElse(0) { "" } to pair.getOrElse(1) { "" }
+        when {
+            url.contains("#verify") -> {
+                println("E-posta doğrulama linki yakalandı")
+                val token = extractToken(url)
+                if (!token.isNullOrEmpty()) {
+                    val screen = VerifyScreen(token)
+                    pendingInitialScreen = screen
+                    _navigationEvents.trySend(screen)
+                }
             }
-
-            val token = params["token"]
-            if (!token.isNullOrEmpty()) {
-                val screen = VerifyScreen(token)
-                pendingInitialScreen = screen
-                _navigationEvents.trySend(screen)
+            // YENİ: Şifre sıfırlama linkini yakalayan blok
+            url.contains("#reset") -> {
+                println("Şifre sıfırlama linki yakalandı")
+                val token = extractToken(url)
+                if (!token.isNullOrEmpty()) {
+                    // Burada oluşturduğun şifre yenileme ekranını çağırıyorsun
+                    //val screen = ResetPasswordScreen(token)
+                    val screen = SplashScreen()
+                    pendingInitialScreen = screen
+                    _navigationEvents.trySend(screen)
+                }
             }
         }
     }
-    fun clear() {
-        pendingInitialScreen = null
+
+    // Kod tekrarını önlemek için token ayıklama mantığını dışarı alabilirsin:
+    private fun extractToken(url: String): String? {
+        val queryString = url.substringAfter("?", "")
+        val params = queryString.split("&").associate {
+            val pair = it.split("=")
+            pair.getOrElse(0) { "" } to pair.getOrElse(1) { "" }
+        }
+        return params["token"]
     }
+
+
+        fun clear() {
+            pendingInitialScreen = null
+        }
 }

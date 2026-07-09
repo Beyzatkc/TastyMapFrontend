@@ -5,7 +5,7 @@ import createNoAuthClient
 import io.ktor.client.HttpClient
 import org.beem.tastymap.core.local.TokenManager
 import org.beem.tastymap.core.local.TokenManagerImpl
-import org.beem.tastymap.core.navigation.EmptyMessenger
+import org.beem.tastymap.core.navigation.MobileMessenger
 import org.beem.tastymap.core.navigation.PlatformMessenger
 import org.beem.tastymap.core.provider.HttpClientFactory
 import org.beem.tastymap.data.remote.AuthDataSource
@@ -48,5 +48,5 @@ val appModule = module {
     factory { SplashScreenModel(get()) }
     factory { ForgotScreenModel(get(),get()) }
 
-    single<PlatformMessenger> { EmptyMessenger() }
+    single<PlatformMessenger> { MobileMessenger() }
 }

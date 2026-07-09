@@ -2,7 +2,6 @@ package org.beem.tastymap.ui.auth.forgotPassword
 
 import TastyButton
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -10,7 +9,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Email
-import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.LockReset
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -24,12 +23,15 @@ import cafe.adriel.voyager.core.model.rememberScreenModel
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
+import io.ktor.client.plugins.auth.Auth
 import org.beem.tastymap.core.util.ToastManager
 import org.beem.tastymap.ui.auth.common.AuthEffect
 import org.beem.tastymap.ui.auth.logReg.LogRegScreen
 import org.beem.tastymap.ui.auth.splash.SplashScreen
 import org.beem.tastymap.ui.auth.verification.EmailVerificationScreen
 import org.beem.tastymap.ui.auth.verification.PendingScreen
+import org.beem.tastymap.ui.components.AuthFooter
+import org.beem.tastymap.ui.components.BackPage
 import org.beem.tastymap.ui.components.TastyTextField
 import org.beem.tastymap.ui.theme.LocalCustomColors
 import org.koin.compose.koinInject
@@ -42,22 +44,15 @@ class ForgotScreen : Screen {
         val screenModel = rememberScreenModel { koinInstance }
         val state by screenModel.sendState.collectAsState()
         val colors = LocalCustomColors.current
-        val materialColors = MaterialTheme.colorScheme
 
-        // Kaydırma durumunu hafızada tutan state
-        val scrollState = rememberScrollState()
-
+        // Effect Handling
         LaunchedEffect(Unit) {
             screenModel.effect.collect { effect ->
                 when (effect) {
-                    is AuthEffect.NavigateToHome -> { navigator.replaceAll(SplashScreen()) }
-                    is AuthEffect.NavigateToLogin -> { navigator.replaceAll(LogRegScreen()) }
-                    is AuthEffect.NavigateToPending -> {
-                        navigator.replaceAll(PendingScreen(effect.deviceId))
-                    }
-                    is AuthEffect.NavigateToValidate -> {
-                        navigator.push(EmailVerificationScreen(effect.email, effect.deviceId))
-                    }
+                    is AuthEffect.NavigateToHome -> navigator.replaceAll(SplashScreen())
+                    is AuthEffect.NavigateToLogin -> navigator.replaceAll(LogRegScreen())
+                    is AuthEffect.NavigateToPending -> navigator.replaceAll(PendingScreen(effect.deviceId))
+                    is AuthEffect.NavigateToValidate -> navigator.push(EmailVerificationScreen(effect.email, effect.deviceId))
                 }
             }
         }
@@ -68,123 +63,144 @@ class ForgotScreen : Screen {
             }
         }
 
-        Surface(
-            modifier = Modifier.fillMaxSize(),
-            color = MaterialTheme.colorScheme.background
-        ) {
-
+        Surface {
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .verticalScroll(rememberScrollState())
                     .statusBarsPadding()
                     .navigationBarsPadding()
-                    .imePadding()
-                    .padding(horizontal = 24.dp)
             ) {
-
-                IconButton(
-                    onClick = {
-                        screenModel.onBackClick()
-                        navigator.pop()
-                    }
-                ) {
-                    Icon(
-                        Icons.Default.ArrowBack,
-                        contentDescription = null,
-                        tint = colors.navy
-                    )
-                }
-
-                Spacer(Modifier.height(24.dp))
-
+                BackPage("Hesabını Bul", {
+                    screenModel.onBackClick()
+                    navigator.pop()
+                })
                 Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(
-                            colors.navy.copy(alpha = .08f),
-                            RoundedCornerShape(28.dp)
-                        )
-                        .size(96.dp)
-                        .align(Alignment.CenterHorizontally),
-                    contentAlignment = Alignment.Center
+                    modifier = Modifier.fillMaxWidth(),
+                    contentAlignment = Alignment.TopCenter
                 ) {
-                    Icon(
-                        Icons.Default.Lock,
-                        contentDescription = null,
-                        modifier = Modifier.size(40.dp),
-                        tint = colors.navy
-                    )
-                }
+                    Column(
+                        modifier = Modifier
+                            .widthIn(max = 480.dp)
+                            .fillMaxWidth()
+                            .verticalScroll(rememberScrollState())
+                            .padding(horizontal = 24.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Spacer(modifier = Modifier.height(24.dp))
 
-                Spacer(Modifier.height(32.dp))
+                        Box(
+                            modifier = Modifier
+                                .size(96.dp)
+                                .background(
+                                    color = colors.navy.copy(alpha = 0.08f),
+                                    shape = RoundedCornerShape(28.dp)
+                                ),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.LockReset,
+                                contentDescription = null,
+                                modifier = Modifier.size(40.dp),
+                                tint = colors.navy
+                            )
+                        }
 
-                Text(
-                    text = "Şifrenizi mi Unuttunuz?",
-                    modifier = Modifier.fillMaxWidth(),
-                    textAlign = TextAlign.Center,
-                    style = MaterialTheme.typography.headlineSmall,
-                    fontWeight = FontWeight.Bold,
-                    color = colors.navy
-                )
+                        Spacer(modifier = Modifier.height(24.dp))
 
-                Spacer(Modifier.height(12.dp))
-
-                Text(
-                    text = "Hesabınıza bağlı e-posta adresinizi girin. Size şifre sıfırlama bağlantısı göndereceğiz.",
-                    modifier = Modifier.fillMaxWidth(),
-                    textAlign = TextAlign.Center,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = Color.Gray
-                )
-
-                Spacer(Modifier.height(36.dp))
-
-                TastyTextField(
-                    value = state.pasEmail,
-                    onValueChange = {
-                        screenModel.onEmailEvent(
-                            EmailEvent.EmailChanged(it)
+                        Text(
+                            text = "Şifrenizi mi Unuttunuz?",
+                            style = MaterialTheme.typography.headlineSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = colors.navy,
+                            textAlign = TextAlign.Center
                         )
-                    },
-                    label = "Email",
-                    leadingIcon = {
-                        Icon(Icons.Default.Email, null)
-                    },
-                    error = state.pasEmailError
-                )
 
-                Spacer(Modifier.height(24.dp))
+                        Spacer(modifier = Modifier.height(12.dp))
 
-                TastyButton(
-                    text = "Şifreyi Sıfırla",
-                    onClick = {
-                        screenModel.forgotPassword(state.pasEmail)
-                    },
-                    isLoading = state.isLoading,
-                    enabled = state.pasEmail.isNotBlank(),
-                    backcolor = colors.navy,
-                    textcolor = Color.White,
-                    strokecolor = colors.navy
-                )
+                        Text(
+                            text = "Hesabınıza bağlı e-posta adresinizi girin. Size şifre sıfırlama bağlantısı göndereceğiz.",
+                            textAlign = TextAlign.Center,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = Color.Gray
+                        )
 
-                // İçeriği aşağı iter
-                Spacer(modifier = Modifier.height(120.dp))
+                        Spacer(modifier = Modifier.height(32.dp))
 
-                TextButton(
-                    modifier = Modifier.align(Alignment.CenterHorizontally),
-                    onClick = {
-                        screenModel.onBackClick()
-                        navigator.pop()
+                        TastyTextField(
+                            value = state.pasEmail,
+                            onValueChange = {
+                                screenModel.onEmailEvent(EmailEvent.EmailChanged(it))
+                            },
+                            label = "Email",
+                            leadingIcon = {
+                                Icon(Icons.Default.Email, null)
+                            },
+                            error = state.pasEmailError
+                        )
+
+                        Spacer(modifier = Modifier.height(24.dp))
+
+                        TastyButton(
+                            text = "Şifreyi Sıfırla",
+                            onClick = { screenModel.forgotPassword(state.pasEmail) },
+                            isLoading = state.isLoading,
+                            enabled = state.pasEmail.isNotBlank(),
+                            backcolor = colors.navy,
+                            textcolor = Color.White,
+                            strokecolor = colors.navy
+                        )
+
+                        Spacer(modifier = Modifier.height(16.dp))
+
+                        TextButton(
+                            onClick = {
+                                screenModel.onBackClick()
+                                navigator.pop()
+                            }
+                        ) {
+                            Text(
+                                text = "Giriş ekranına geri dön",
+                                color = colors.navy,
+                                style = MaterialTheme.typography.labelLarge
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.height(24.dp))
+
+                        Card(
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(16.dp),
+                            colors = CardDefaults.cardColors(
+                                containerColor = colors.navy.copy(alpha = 0.05f)
+                            )
+                        ) {
+                            Column(
+                                modifier = Modifier.padding(16.dp),
+                                verticalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                Text(
+                                    text = "Şifre sıfırlama bağlantısı yalnızca kayıtlı e-posta adreslerine gönderilir.",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = Color.Gray
+                                )
+
+                                Text(
+                                    text = "Gönderilen doğrulama bağlantısının geçerlilik süresi 10 dakikadır.",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = Color.Gray
+                                )
+
+                                Text(
+                                    text = "E-posta kutunuzda göremiyorsanız Spam klasörünü kontrol etmeyi unutmayın.",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = Color.Gray
+                                )
+                            }
+                        }
+
+                        AuthFooter()
                     }
-                ) {
-                    Text(
-                        text = "Giriş ekranına geri dön",
-                        color = colors.navy
-                    )
                 }
-
-                Spacer(modifier = Modifier.height(24.dp))
             }
         }
     }

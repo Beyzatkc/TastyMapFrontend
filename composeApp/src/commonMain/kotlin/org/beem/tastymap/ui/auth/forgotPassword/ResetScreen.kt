@@ -1,57 +1,64 @@
-package org.beem.tastymap.ui.auth.verification
+package org.beem.tastymap.ui.auth.forgotPassword
 
 import TastyButton
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Email
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.LockReset
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import cafe.adriel.voyager.core.model.rememberScreenModel
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
-import org.beem.tastymap.core.constants.AuthConstants
-import org.beem.tastymap.core.constants.AuthConstants.MSG_VERIFICATION_FINISHED
-import org.beem.tastymap.core.navigation.PlatformMessenger
 import org.beem.tastymap.core.util.ToastManager
-import org.beem.tastymap.ui.auth.logReg.LogRegScreen
 import org.beem.tastymap.ui.components.AuthFooter
 import org.beem.tastymap.ui.components.BackPage
+import org.beem.tastymap.ui.components.TastyTextField
 import org.beem.tastymap.ui.theme.LocalCustomColors
 import org.koin.compose.koinInject
 
-class EmailVerificationScreen(val email: String, val deviceId: String) : Screen {
+class ResetScreen(): Screen {
     @Composable
     override fun Content() {
-        val colors = LocalCustomColors.current
+
         val navigator = LocalNavigator.currentOrThrow
-        val koinInstance = koinInject<EmailScreenModel>()
+        val koinInstance = koinInject<ForgotScreenModel>()
         val screenModel = rememberScreenModel { koinInstance }
-        val messenger = koinInject<PlatformMessenger>()
+        val state by screenModel.passwordState.collectAsState()
+        val colors = LocalCustomColors.current
 
-
-        LaunchedEffect(Unit) {
-            messenger.listen().collect { message ->
-                if (message == AuthConstants.MSG_VERIFICATION_FINISHED) {
-                    println("Ana sekme mesajı aldı, yönlendiriliyor...")
-                    navigator.replaceAll(LogRegScreen())
-                    messenger.close()
-                }
-            }
-        }
 
         LaunchedEffect(screenModel.uiMessage) {
             screenModel.uiMessage.collect { message ->
@@ -66,8 +73,9 @@ class EmailVerificationScreen(val email: String, val deviceId: String) : Screen 
                     .statusBarsPadding()
                     .navigationBarsPadding()
             ) {
-                BackPage("Doğrulama", {
-                    navigator.pop()
+                BackPage("Şifre Sıfırlama", {
+                   // screenModel.onBackClick()
+                   navigator.pop()
                 })
                 Box(
                     modifier = Modifier.fillMaxWidth(),
@@ -93,7 +101,7 @@ class EmailVerificationScreen(val email: String, val deviceId: String) : Screen 
                             contentAlignment = Alignment.Center
                         ) {
                             Icon(
-                                imageVector = Icons.Default.Email,
+                                imageVector = Icons.Default.LockReset,
                                 contentDescription = null,
                                 modifier = Modifier.size(40.dp),
                                 tint = colors.navy
@@ -103,7 +111,7 @@ class EmailVerificationScreen(val email: String, val deviceId: String) : Screen 
                         Spacer(modifier = Modifier.height(24.dp))
 
                         Text(
-                            text = "E-postanı Doğrula",
+                            text = "Şifrenizi mi Unuttunuz?",
                             style = MaterialTheme.typography.headlineSmall,
                             fontWeight = FontWeight.Bold,
                             color = colors.navy,
@@ -112,38 +120,59 @@ class EmailVerificationScreen(val email: String, val deviceId: String) : Screen 
 
                         Spacer(modifier = Modifier.height(12.dp))
 
-                        Text(
-                            text = "$email adresine bir doğrulama bağlantısı gönderdik. Lütfen e-posta kutunu kontrol et.",
-                            textAlign = TextAlign.Center,
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = Color.Gray
+                        TastyTextField(
+                            value = state.regPassword,
+                            isPassword = true,
+                            onValueChange = {
+                                screenModel.onEmailEvent(EmailEvent.EmailChanged(it))
+                            },
+                            label = "Yeni Şifre",
+                            leadingIcon = {
+                                Icon(Icons.Default.Lock, null)
+                            },
+                            error = state.regPasswordError
+                        )
+                        TastyTextField(
+                            value = state.confirmPassword,
+                            isPassword = true,
+                            onValueChange = {
+                                screenModel.onEmailEvent(EmailEvent.EmailChanged(it))
+                            },
+                            label = "Yeni Şifre tekrar",
+                            leadingIcon = {
+                                Icon(Icons.Default.Lock, null)
+                            },
+                            error = state.confirmPasswordError
                         )
 
-                        Spacer(modifier = Modifier.height(32.dp))
-
-                        ResendSection(
-                            navyIcons = colors.navy,
-                            screenModel = screenModel,
-                            onResendClick = { screenModel.resendMail(deviceId, email) }
-                        )
-
-                        Spacer(modifier = Modifier.height(16.dp))
+                        Spacer(modifier = Modifier.height(24.dp))
 
                         TastyButton(
-                            text = "Giriş Ekranına Dön",
-                            onClick = {
-                                if (navigator.canPop) {
-                                    navigator.pop()
-                                } else {
-                                    navigator.replaceAll(LogRegScreen())
-                                }
-                            },
+                            text = "Şifreyi değiştir",
+                            onClick = { screenModel.resetPassword(tokenı vercez) },
+                            isLoading = state.isLoading,
+                            enabled = state.regPassword.isNotBlank() && state.confirmPassword.isNotBlank(),
                             backcolor = colors.navy,
                             textcolor = Color.White,
                             strokecolor = colors.navy
                         )
 
-                        Spacer(modifier = Modifier.height(32.dp))
+                        Spacer(modifier = Modifier.height(16.dp))
+
+                        TextButton(
+                            onClick = {
+                                //screenModel.onBackClick()
+                                navigator.pop()
+                            }
+                        ) {
+                            Text(
+                                text = "Giriş ekranına geri dön",
+                                color = colors.navy,
+                                style = MaterialTheme.typography.labelLarge
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.height(24.dp))
 
                         Card(
                             modifier = Modifier.fillMaxWidth(),
@@ -157,24 +186,11 @@ class EmailVerificationScreen(val email: String, val deviceId: String) : Screen 
                                 verticalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
                                 Text(
-                                    text = buildAnnotatedString {
-                                        withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
-                                            append("Güvenlik uyarısı:\n")
-                                        }
-                                        withStyle(style = SpanStyle(fontWeight = FontWeight.Normal)) {
-                                            append("Gönderilen doğrulama bağlantısının geçerlilik süresi 10 dakikadır.")
-                                        }
-                                    },
+                                    text = "Şifrenizi sıfırladıktan sonra hesabınıza giriş yapabilirsiniz.",
                                     style = MaterialTheme.typography.bodySmall,
-                                    fontWeight = FontWeight.Medium,
                                     color = Color.Gray
                                 )
 
-                                Text(
-                                    text = "E-posta kutunuzda göremiyorsanız Spam klasörünü kontrol etmeyi unutmayın.",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = Color.Gray
-                                )
                             }
                         }
 
@@ -184,35 +200,5 @@ class EmailVerificationScreen(val email: String, val deviceId: String) : Screen 
             }
         }
     }
-}
 
-@Composable
-fun ResendSection(onResendClick: () -> Unit, navyIcons: Color, screenModel: EmailScreenModel) {
-    val timeLeft by screenModel.timeLeft.collectAsState()
-    val isButtonEnabled = timeLeft == 0
-
-    Column(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        TextButton(
-            enabled = isButtonEnabled,
-            onClick = {
-                if (isButtonEnabled) {
-                    screenModel.startTimer()
-                    onResendClick()
-                }
-            }
-        ) {
-            Text(
-                text = if (isButtonEnabled) {
-                    "E-posta gelmedi mi? Tekrar gönder"
-                } else {
-                    "Tekrar gönder: ${timeLeft}s"
-                },
-                color = if (isButtonEnabled) navyIcons else Color.Gray,
-                style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.SemiBold)
-            )
-        }
-    }
 }

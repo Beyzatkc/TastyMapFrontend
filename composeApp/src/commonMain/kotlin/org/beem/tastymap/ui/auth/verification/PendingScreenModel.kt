@@ -85,49 +85,7 @@ class PendingScreenModel(
         )
     }
 
-    /*
-    fun onLifecycleEvent(event: AuthLifecycleEvent, deviceId: String) {
-        when (event) {
-            AuthLifecycleEvent.Resume -> {
-                isExplicitlyStopped = false
 
-                screenModelScope.launch {
-                    try {
-                        val dto = ApprovedRefreshRequestDTO(
-                            deviceId = deviceId,
-                            userAgent = deviceInfoProvider.getUserAgent(),
-                            fcmToken = deviceInfoProvider.getFcmToken(),
-                            fingerprintHash = deviceInfoProvider.getFingerprint()
-                        )
-                        startWebSocket(dto)
-
-                        if (wasBackgrounded) {
-                            println("LIFECYCLE: Uygulama arka plandan geri döndü, HTTP Check atılıyor...")
-                            isUsedNotification(dto)
-                            wasBackgrounded = false
-                        } else {
-                            println("LIFECYCLE: Ekran ilk kez açıldı, HTTP Check atlanıyor (Normal WS bekleniyor).")
-                        }
-
-                    } catch (e: Exception) {
-                        println("LIFECYCLE ERROR: DTO üretilemedi: $e")
-                    }
-                }
-            }
-
-            AuthLifecycleEvent.Stop -> {
-                isExplicitlyStopped = true
-                wasBackgrounded = true
-                screenModelScope.launch {
-                    stopWebSocket()
-                }
-            }
-
-            AuthLifecycleEvent.Pause -> {}
-        }
-    }
-
-     */
 
     fun onLifecycleEvent(
         event: AuthLifecycleEvent,
@@ -290,61 +248,6 @@ class PendingScreenModel(
         _pendingLogin.send(AuthEffect.NavigateToLogin)
 
     }
-
-
-
-        /*
-    fun startWebSocket(approvedRefreshRequestDTO: ApprovedRefreshRequestDTO) {
-        if (isConnected) return
-        isConnected = true
-        webSocketJob?.cancel()
-        webSocketJob = screenModelScope.launch {
-            launch {
-                try {
-                    authWebSocketClient.events.collect { event ->
-                        when (event.type) {
-                            SecurityEventType.LOGIN_APPROVED -> {
-                                when (val result =
-                                    repository.verifyLogin(approvedRefreshRequestDTO)) {
-                                    is ResultWrapper.Success -> {
-                                        _pendingLogin.send(AuthEffect.NavigateToHome)
-                                        ToastManager.show("Giriş onaylandı.")
-                                        stopWebSocket()
-                                    }
-
-                                    is ResultWrapper.Error -> {
-                                        ToastManager.show(result.message ?: "Giriş başarısız.")
-                                        _pendingLogin.send(AuthEffect.NavigateToLogin)
-                                        stopWebSocket()
-                                    }
-                                }
-                            }
-
-                            SecurityEventType.LOGIN_REJECTED -> {
-                                stopWebSocket()
-                                ToastManager.show("Giriş isteği reddedildi.")
-                                _pendingLogin.send(AuthEffect.NavigateToLogin)
-                            }
-                        }
-                    }
-                } catch (e: Exception) {
-                    println("LIFECYCLE: Flow collect hatası: $e")
-                }
-            }
-
-            try {
-                authWebSocketClient.connect(approvedRefreshRequestDTO.deviceId)
-            } catch (e: Exception) {
-                println("LIFECYCLE: websocket bağlantı hatası: $e")
-            } finally {
-                isConnected = false
-                if (!isExplicitlyStopped) {
-                     startWebSocket(approvedRefreshRequestDTO)
-                }
-            }
-        }
-    }
- */
 
     @OptIn(ExperimentalAtomicApi::class)
     fun stopWebSocket() {

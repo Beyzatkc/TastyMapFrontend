@@ -9,6 +9,7 @@ import org.beem.tastymap.core.WebDeviceInfoProvider
 import org.beem.tastymap.core.WebHttpClientFactory
 import org.beem.tastymap.core.local.UserManager
 import org.beem.tastymap.core.local.WebUserManager
+import org.beem.tastymap.core.navigation.AuthNavigationHandler
 import org.beem.tastymap.core.navigation.PlatformMessenger
 import org.beem.tastymap.core.navigation.WebMessenger
 import org.beem.tastymap.core.permission.PermissionManager
@@ -41,4 +42,5 @@ val webModule = module {
 
     single<PlatformMessenger> { WebMessenger() }
     single<PermissionManager> { WebPermissionManager() }
+    single { AuthNavigationHandler(isWeb = true, messenger = get()) }
 }
