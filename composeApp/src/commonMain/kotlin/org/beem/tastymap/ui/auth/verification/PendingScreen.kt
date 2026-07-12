@@ -58,9 +58,7 @@ class PendingScreen(val deviceId: String) : Screen {
                     is AuthEffect.NavigateToPending -> {
                         navigator.replaceAll(PendingScreen(pendingLogin.deviceId))
                     }
-                    is AuthEffect.NavigateToValidate -> {
-                        navigator.push(EmailVerificationScreen(pendingLogin.email,pendingLogin.deviceId))
-                    }
+                    else -> Unit
 
                 }
             }

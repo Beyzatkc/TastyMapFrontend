@@ -7,7 +7,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.LockReset
 import androidx.compose.material3.*
@@ -15,21 +14,28 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 import cafe.adriel.voyager.core.model.rememberScreenModel
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
-import io.ktor.client.plugins.auth.Auth
+import org.beem.tastymap.core.constants.AuthConstants.MSG_PASSWORD_CHANGE_FINISHED
+import org.beem.tastymap.core.constants.AuthConstants.MSG_VERIFICATION_FINISHED
+import org.beem.tastymap.core.navigation.PlatformMessenger
+import org.beem.tastymap.core.navigation.VerifyNavigator
 import org.beem.tastymap.core.util.ToastManager
 import org.beem.tastymap.ui.auth.common.AuthEffect
+import org.beem.tastymap.ui.auth.common.AuthLifecycleEvent
 import org.beem.tastymap.ui.auth.logReg.LogRegScreen
 import org.beem.tastymap.ui.auth.splash.SplashScreen
 import org.beem.tastymap.ui.auth.verification.EmailVerificationScreen
 import org.beem.tastymap.ui.auth.verification.PendingScreen
+import org.beem.tastymap.ui.common.UnifiedLifecycleObserver
 import org.beem.tastymap.ui.components.AuthFooter
 import org.beem.tastymap.ui.components.BackPage
 import org.beem.tastymap.ui.components.TastyTextField
@@ -44,16 +50,27 @@ class ForgotScreen : Screen {
         val screenModel = rememberScreenModel { koinInstance }
         val state by screenModel.sendState.collectAsState()
         val colors = LocalCustomColors.current
+        val navigationEffect by screenModel.navigationState.collectAsState(initial = null)
+        val verifyNavigator = koinInject<VerifyNavigator>()
 
-        // Effect Handling
-        LaunchedEffect(Unit) {
-            screenModel.effect.collect { effect ->
-                when (effect) {
-                    is AuthEffect.NavigateToHome -> navigator.replaceAll(SplashScreen())
-                    is AuthEffect.NavigateToLogin -> navigator.replaceAll(LogRegScreen())
-                    is AuthEffect.NavigateToPending -> navigator.replaceAll(PendingScreen(effect.deviceId))
-                    is AuthEffect.NavigateToValidate -> navigator.push(EmailVerificationScreen(effect.email, effect.deviceId))
+        UnifiedLifecycleObserver(
+            onActive = {
+                println("LIFECYCLE: Ekran aktif (Resume/Focus/Visible). Model tetikleniyor.")
+                screenModel.handleLifecycleEvent(AuthLifecycleEvent.Resume)
+            },
+            onInactive = {
+                println("LIFECYCLE: Ekran pasif (Stop/Blur/Hidden). Model temizleniyor.")
+                screenModel.handleLifecycleEvent(AuthLifecycleEvent.Stop)
+            }
+        )
+
+        LaunchedEffect(navigationEffect) {
+            when (navigationEffect) {
+                ForgotScreenModel.PasswordNavEffect.OnSuccess -> {
+                    verifyNavigator.changePasswordOnSuccess(navigator)
                 }
+
+                null -> Unit
             }
         }
 
@@ -71,7 +88,7 @@ class ForgotScreen : Screen {
                     .navigationBarsPadding()
             ) {
                 BackPage("Hesabını Bul", {
-                    screenModel.onBackClick()
+                    screenModel.onBackClickForgot()
                     navigator.pop()
                 })
                 Box(
@@ -154,7 +171,7 @@ class ForgotScreen : Screen {
 
                         TextButton(
                             onClick = {
-                                screenModel.onBackClick()
+                                screenModel.onBackClickForgot()
                                 navigator.pop()
                             }
                         ) {

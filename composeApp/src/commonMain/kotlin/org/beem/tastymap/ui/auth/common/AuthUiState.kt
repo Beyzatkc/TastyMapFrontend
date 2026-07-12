@@ -30,6 +30,7 @@ data class PasswordUiState(
     val confirmPassword: String = "",
     val confirmPasswordError: String? = null,
     val isLoading: Boolean = false,
+    val isChanged: Boolean = false,
     val passwordStrength: PasswordStrength = PasswordStrength()
 )
 data class PasswordEmailState(

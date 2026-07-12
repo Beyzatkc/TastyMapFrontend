@@ -86,6 +86,7 @@ class PendingScreenModel(
     }
 
 
+    private var lifecycleJob: Job? = null
 
     fun onLifecycleEvent(
         event: AuthLifecycleEvent,
@@ -94,7 +95,8 @@ class PendingScreenModel(
         when (event) {
             AuthLifecycleEvent.Resume -> {
                 connectionState = ConnectionState.CONNECTING
-                screenModelScope.launch {
+                lifecycleJob?.cancel()
+                lifecycleJob = screenModelScope.launch {
                     val dto = createRefreshRequest(deviceId)
                     if (wasBackgrounded) {
                         wasBackgrounded = false
@@ -110,6 +112,7 @@ class PendingScreenModel(
             }
             AuthLifecycleEvent.Stop -> {
                 wasBackgrounded = true
+                lifecycleJob?.cancel()
                 stopWebSocket()
             }
             AuthLifecycleEvent.Pause -> Unit
@@ -220,6 +223,8 @@ class PendingScreenModel(
                 SecurityEventType.LOGIN_REJECTED -> {
                     handleRejected()
                 }
+
+                else -> Unit
             }
         }
     }

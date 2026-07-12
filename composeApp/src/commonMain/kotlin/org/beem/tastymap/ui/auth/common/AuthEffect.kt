@@ -6,7 +6,13 @@ sealed interface AuthEffect {
     object NavigateToLogin : AuthEffect
 
     data class NavigateToPending(val deviceId: String) : AuthEffect
-    data class NavigateToValidate(val email: String, val deviceId: String): AuthEffect
+    data class NavigateToValidate(val email: String, val deviceId: String, val userId: Long): AuthEffect
+
+    data class NavigateToPasswordSuccess(
+        val userId: Long,
+        val deviceId: String
+    ): AuthEffect
+
 
 }
 

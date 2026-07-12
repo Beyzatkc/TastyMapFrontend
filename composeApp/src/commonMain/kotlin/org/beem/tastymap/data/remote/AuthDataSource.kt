@@ -14,6 +14,7 @@ import org.beem.tastymap.data.model.LoginResponse
 import org.beem.tastymap.data.model.NotificationResponse
 import org.beem.tastymap.data.model.RegisterRequest
 import org.beem.tastymap.data.model.ResetPassword
+import org.beem.tastymap.data.model.ResetPasswordResponse
 import org.beem.tastymap.data.model.UserResponse
 
 
@@ -62,7 +63,7 @@ class AuthDataSource(private val client: HttpClient) {
         }.body()
     }
 
-    suspend fun forgotPassword(commonRequest: CommonRequest): String{
+    suspend fun forgotPassword(commonRequest: CommonRequest): ResetPasswordResponse{
         return client.post("auth/forgotPassword") {
             setBody(commonRequest)
         }.body()
@@ -73,6 +74,16 @@ class AuthDataSource(private val client: HttpClient) {
            setBody(passwordRequest)
        }.body()
    }
+    suspend fun isEmailUsedByDevice(userId: Long): Boolean {
+        return client.get("auth/check-used") {
+            parameter("userId", userId)
+        }.body()
+    }
+    suspend fun isPasswordUsedByDevice(userId: Long): Boolean {
+        return client.get("auth/check-password") {
+            parameter("userId", userId)
+        }.body()
+    }
 }
 
 

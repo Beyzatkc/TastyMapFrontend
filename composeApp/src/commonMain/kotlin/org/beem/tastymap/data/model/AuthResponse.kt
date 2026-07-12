@@ -39,4 +39,10 @@ data class ResetPassword(
     val token: String,
     val newPassword: String
 )
+@Serializable
+data class ResetPasswordResponse(
+    val userId: Long,
+    val deviceId: String,
+    val message: String
+)
 

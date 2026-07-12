@@ -16,12 +16,9 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.ErrorOutline
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -40,8 +37,9 @@ import cafe.adriel.voyager.core.model.rememberScreenModel
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
-import org.beem.tastymap.core.navigation.AuthNavigationHandler
+import kotlinx.coroutines.delay
 import org.beem.tastymap.core.navigation.DeepLinkManager
+import org.beem.tastymap.core.navigation.VerifyNavigator
 import org.beem.tastymap.core.util.ToastManager
 import org.beem.tastymap.ui.animations.TastyAnimations
 import org.beem.tastymap.ui.components.AuthFooter
@@ -56,11 +54,12 @@ class VerifyScreen(val token: String) : Screen {
         val koinInstance = koinInject<EmailScreenModel>()
         val screenModel = rememberScreenModel { koinInstance }
         val state by screenModel.verificationState.collectAsState()
-        val authNavigationHandler = koinInject<AuthNavigationHandler>()
+        val verifyNavigator = koinInject<VerifyNavigator>()
 
         LaunchedEffect(state.isEmailVerified) {
             if (state.isEmailVerified) {
-                authNavigationHandler.onVerificationSuccess(navigator)
+                delay(2000)
+                verifyNavigator.verifyEmailOnSuccess(navigator)
             }
         }
         DisposableEffect(Unit) {
@@ -83,7 +82,6 @@ class VerifyScreen(val token: String) : Screen {
             modifier = Modifier.fillMaxSize(),
             color = MaterialTheme.colorScheme.background
         ) {
-            // DEĞİŞİKLİK 1: Geniş ekranda Column'u yatayda ortalayabilmek için Box ekledik
             Box(
                 modifier = Modifier.fillMaxSize(),
                 contentAlignment = Alignment.TopCenter

@@ -6,7 +6,9 @@ import io.ktor.client.HttpClient
 import org.beem.tastymap.core.local.TokenManager
 import org.beem.tastymap.core.local.TokenManagerImpl
 import org.beem.tastymap.core.navigation.MobileMessenger
+import org.beem.tastymap.core.navigation.MobileVerifyNavigator
 import org.beem.tastymap.core.navigation.PlatformMessenger
+import org.beem.tastymap.core.navigation.VerifyNavigator
 import org.beem.tastymap.core.provider.HttpClientFactory
 import org.beem.tastymap.data.remote.AuthDataSource
 import org.beem.tastymap.data.remote.AuthWebSocketClient
@@ -14,6 +16,8 @@ import org.beem.tastymap.data.remote.UserDataSource
 import org.beem.tastymap.data.repository.AuthRepository
 import org.beem.tastymap.data.repository.PostRepository
 import org.beem.tastymap.ui.auth.forgotPassword.ForgotScreenModel
+import org.beem.tastymap.ui.auth.forgotPassword.PasswordResetSessionManager
+import org.beem.tastymap.ui.auth.forgotPassword.ResetScreenModel
 import org.beem.tastymap.ui.auth.logReg.LogRegScreenModel
 import org.beem.tastymap.ui.auth.splash.SplashScreenModel
 import org.beem.tastymap.ui.auth.verification.EmailScreenModel
@@ -40,13 +44,16 @@ val appModule = module {
     single { AuthRepository(get(), get(),get(),get()) }
     single { PostRepository(get()) }
     single { AuthWebSocketClient(get(named("auth"))) }
+    single { PasswordResetSessionManager() }
 
     factory { LogRegScreenModel(get(),get(),get()) }
     factory { PendingScreenModel(get(),get(),get()) }
-    factory { EmailScreenModel(get()) }
+    factory { EmailScreenModel(get(),get()) }
     factory { PostScreenModel (get())}
     factory { SplashScreenModel(get()) }
-    factory { ForgotScreenModel(get(),get()) }
+    factory { ForgotScreenModel(get(),get(),get(),get()) }
+    factory { ResetScreenModel(get()) }
 
     single<PlatformMessenger> { MobileMessenger() }
+    single<VerifyNavigator> { MobileVerifyNavigator() }
 }

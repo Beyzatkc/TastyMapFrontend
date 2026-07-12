@@ -18,7 +18,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.LockReset
 import androidx.compose.material3.Card
@@ -29,36 +28,48 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 import cafe.adriel.voyager.core.model.rememberScreenModel
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
+import org.beem.tastymap.core.navigation.VerifyNavigator
 import org.beem.tastymap.core.util.ToastManager
+import org.beem.tastymap.ui.auth.common.AuthLifecycleEvent
+import org.beem.tastymap.ui.auth.verification.EmailScreenModel
 import org.beem.tastymap.ui.components.AuthFooter
 import org.beem.tastymap.ui.components.BackPage
 import org.beem.tastymap.ui.components.TastyTextField
 import org.beem.tastymap.ui.theme.LocalCustomColors
 import org.koin.compose.koinInject
 
-class ResetScreen(): Screen {
+class ResetScreen(val token: String): Screen {
     @Composable
     override fun Content() {
-
         val navigator = LocalNavigator.currentOrThrow
-        val koinInstance = koinInject<ForgotScreenModel>()
+        val koinInstance = koinInject<ResetScreenModel>()
         val screenModel = rememberScreenModel { koinInstance }
         val state by screenModel.passwordState.collectAsState()
         val colors = LocalCustomColors.current
+        val verifyNavigator = koinInject<VerifyNavigator>()
 
+        LaunchedEffect(state.isChanged) {
+            if (state.isChanged) {
+                verifyNavigator.changePasswordOnSuccessTwo(navigator)
+            }
+        }
 
         LaunchedEffect(screenModel.uiMessage) {
             screenModel.uiMessage.collect { message ->
@@ -74,7 +85,7 @@ class ResetScreen(): Screen {
                     .navigationBarsPadding()
             ) {
                 BackPage("Şifre Sıfırlama", {
-                   // screenModel.onBackClick()
+                   screenModel.backClickReset()
                    navigator.pop()
                 })
                 Box(
@@ -124,7 +135,7 @@ class ResetScreen(): Screen {
                             value = state.regPassword,
                             isPassword = true,
                             onValueChange = {
-                                screenModel.onEmailEvent(EmailEvent.EmailChanged(it))
+                                screenModel.onPasswordEvent(PasswordEvent.PasswordChanged(it))
                             },
                             label = "Yeni Şifre",
                             leadingIcon = {
@@ -136,7 +147,7 @@ class ResetScreen(): Screen {
                             value = state.confirmPassword,
                             isPassword = true,
                             onValueChange = {
-                                screenModel.onEmailEvent(EmailEvent.EmailChanged(it))
+                                screenModel.onPasswordEvent(PasswordEvent.ConfirmPasswordChanged(it))
                             },
                             label = "Yeni Şifre tekrar",
                             leadingIcon = {
@@ -149,7 +160,7 @@ class ResetScreen(): Screen {
 
                         TastyButton(
                             text = "Şifreyi değiştir",
-                            onClick = { screenModel.resetPassword(tokenı vercez) },
+                            onClick = { screenModel.resetPassword(token) },
                             isLoading = state.isLoading,
                             enabled = state.regPassword.isNotBlank() && state.confirmPassword.isNotBlank(),
                             backcolor = colors.navy,
@@ -161,7 +172,7 @@ class ResetScreen(): Screen {
 
                         TextButton(
                             onClick = {
-                                //screenModel.onBackClick()
+                                screenModel.backClickReset()
                                 navigator.pop()
                             }
                         ) {

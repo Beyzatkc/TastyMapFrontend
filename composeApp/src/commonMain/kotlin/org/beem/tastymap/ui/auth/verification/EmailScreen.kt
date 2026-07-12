@@ -13,51 +13,71 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 import cafe.adriel.voyager.core.model.rememberScreenModel
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
-import org.beem.tastymap.core.constants.AuthConstants
-import org.beem.tastymap.core.constants.AuthConstants.MSG_VERIFICATION_FINISHED
-import org.beem.tastymap.core.navigation.PlatformMessenger
+import org.beem.tastymap.core.navigation.VerifyNavigator
 import org.beem.tastymap.core.util.ToastManager
+import org.beem.tastymap.ui.auth.common.AuthLifecycleEvent
 import org.beem.tastymap.ui.auth.logReg.LogRegScreen
+import org.beem.tastymap.ui.common.UnifiedLifecycleObserver
 import org.beem.tastymap.ui.components.AuthFooter
 import org.beem.tastymap.ui.components.BackPage
 import org.beem.tastymap.ui.theme.LocalCustomColors
 import org.koin.compose.koinInject
 
-class EmailVerificationScreen(val email: String, val deviceId: String) : Screen {
+class EmailVerificationScreen(val email: String, val deviceId: String,val userId: Long) : Screen {
     @Composable
     override fun Content() {
         val colors = LocalCustomColors.current
         val navigator = LocalNavigator.currentOrThrow
         val koinInstance = koinInject<EmailScreenModel>()
         val screenModel = rememberScreenModel { koinInstance }
-        val messenger = koinInject<PlatformMessenger>()
+        val navigationEffect by screenModel.navigationState.collectAsState(initial = null)
+        val verifyNavigator = koinInject<VerifyNavigator>()
 
-
-        LaunchedEffect(Unit) {
-            messenger.listen().collect { message ->
-                if (message == AuthConstants.MSG_VERIFICATION_FINISHED) {
-                    println("Ana sekme mesajı aldı, yönlendiriliyor...")
-                    navigator.replaceAll(LogRegScreen())
-                    messenger.close()
+        LaunchedEffect(navigationEffect) {
+            when (navigationEffect) {
+                EmailScreenModel.EmailNavEffect.OnSuccess -> {
+                    verifyNavigator.verifyEmailNavigationTwo(navigator)
                 }
+
+                null -> Unit
             }
         }
 
-        LaunchedEffect(screenModel.uiMessage) {
+        LaunchedEffect(Unit) {
             screenModel.uiMessage.collect { message ->
                 ToastManager.show(message)
             }
         }
+
+        LaunchedEffect(userId, deviceId) {
+            screenModel.setVerificationContext(
+                userId,
+                deviceId
+            )
+        }
+        UnifiedLifecycleObserver(
+            onActive = {
+                println("LIFECYCLE: Ekran aktif (Resume/Focus/Visible). Model tetikleniyor.")
+                screenModel.handleLifecycleEvent(AuthLifecycleEvent.Resume)
+            },
+            onInactive = {
+                println("LIFECYCLE: Ekran pasif (Stop/Blur/Hidden). Model temizleniyor.")
+                screenModel.handleLifecycleEvent(AuthLifecycleEvent.Stop)
+            }
+        )
 
         Surface {
             Column(

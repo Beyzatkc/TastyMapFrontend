@@ -49,11 +49,7 @@ class PostScreen: Screen {
                 when (effect) {
                     is AuthEffect.NavigateToHome -> {}
                     is AuthEffect.NavigateToLogin -> { navigator.push(LogRegScreen()) }
-                    is AuthEffect.NavigateToPending -> { /* ... */ }
-
-                    is AuthEffect.NavigateToValidate -> {
-                        //navigator.push(EmailVerificationScreen(effect.email))
-                    }
+                    else -> Unit
                 }
             }
         }

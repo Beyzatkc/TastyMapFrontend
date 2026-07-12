@@ -78,7 +78,7 @@ class LogRegScreenModel(
                 when (val result = repository.register(request)) {
                     is ResultWrapper.Success -> {
                         _uiMessage.send("Kayıt başarılı!")
-                        _effect.send(AuthEffect.NavigateToValidate(state.regEmail,deviceId))
+                        _effect.send(AuthEffect.NavigateToValidate(state.regEmail,deviceId,result.data.id))
                     }
 
                     is ResultWrapper.Error -> {

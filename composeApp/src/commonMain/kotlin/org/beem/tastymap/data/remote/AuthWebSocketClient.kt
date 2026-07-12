@@ -15,54 +15,81 @@ import org.beem.tastymap.core.util.AppConfig
 import org.beem.tastymap.data.model.domain.SecurityEvent
 import org.beem.tastymap.data.model.domain.toDomain
 import org.beem.tastymap.data.model.remote.SecurityEventDTO
-
-class AuthWebSocketClient(private val client: HttpClient) {
-    private val _events = MutableSharedFlow<SecurityEvent>()
+class AuthWebSocketClient(
+    private val client: HttpClient
+) { private val _events = MutableSharedFlow<SecurityEvent>(
+        replay = 0
+    )
     val events = _events.asSharedFlow()
-
     private var session: WebSocketSession? = null
-
     suspend fun connect(deviceId: String) {
-        println("WS: startWebSocket çağrıldı. Hedef: ${AppConfig.getWebSocketUrl(deviceId)}")
-
+        println(
+            "WS CONNECT: ${AppConfig.getWebSocketUrl(deviceId)}"
+        )
         try {
-            client.webSocket(AppConfig.getWebSocketUrl(deviceId)) {
-                println("WS: Bağlantı başarıyla kuruldu! (Session: $this)")
+            client.webSocket(
+                AppConfig.getWebSocketUrl(deviceId)
+            ) {
                 session = this
-
-                launch {
+                println("WS CONNECTED")
+                val pingJob = launch {
                     while (isActive) {
                         delay(30000)
                         try {
-                            send(Frame.Text("ping"))
-                        } catch (e: Exception) {
+                            send(
+                                Frame.Text("ping")
+                            )
+                        }
+                        catch (e: Exception){
+                            println(
+                                "Ping failed ${e.message}"
+                            )
                             break
                         }
                     }
                 }
-
-                for (frame in incoming) {
-                    if (frame is Frame.Text) {
-                        val json = frame.readText()
-                        if (json == "pong") {
-                            continue
+                try {
+                    for(frame in incoming){
+                        if(frame is Frame.Text){
+                            val json = frame.readText()
+                            println(
+                                "WS EVENT: $json"
+                            )
+                            if(json=="pong")
+                                continue
+                            val dto = Json.decodeFromString<SecurityEventDTO>(json)
+                            _events.emit(
+                                dto.toDomain()
+                            )
                         }
-                        println("WS: Gelen veri -> $json")
-                        val event = Json.decodeFromString<SecurityEventDTO>(json)
-                        _events.emit(event.toDomain())
                     }
                 }
-                println("WS: For döngüsü bitti (sunucu bağlantıyı kapattı).")
+                finally {
+
+                    pingJob.cancel()
+                    println("WS CLOSED")
+                }
             }
-        } catch (e: Exception) {
-            println("WS HATA DETAYI: ${e.stackTraceToString()}")
-        } finally {
-            println("WS: Bağlantı finally bloğunda kapandı.")
-            session = null
+
+
+        }
+        catch(e:Exception){
+
+            println(
+                "WS ERROR: ${e.message}"
+            )
+        }
+        finally {
+            session=null
         }
     }
-    suspend fun disconnect() {
-        session?.close()
-        session = null
+    suspend fun disconnect(){
+
+        try{
+            session?.close()
+        }
+        catch(_:Exception){}
+
+        session=null
     }
 }

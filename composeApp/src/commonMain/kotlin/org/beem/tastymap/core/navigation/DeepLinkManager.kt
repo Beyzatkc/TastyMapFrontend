@@ -4,6 +4,7 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.receiveAsFlow
+import org.beem.tastymap.ui.auth.forgotPassword.ResetScreen
 import org.beem.tastymap.ui.auth.splash.SplashScreen
 import org.beem.tastymap.ui.auth.verification.VerifyScreen
 
@@ -14,7 +15,7 @@ object DeepLinkManager {
     var pendingInitialScreen: Screen? = null
 
 
-/*
+
     fun handleLink(url: String) {
         try {
             val parts = url.split("?")
@@ -38,7 +39,7 @@ object DeepLinkManager {
                 }
 
                 basePath.endsWith("/auth/resetPassword/validate") -> {
-                    val screen = SplashScreen()
+                    val screen = ResetScreen(token)
                     pendingInitialScreen = screen
                     _navigationEvents.trySend(screen)
                     println("DEEPLINK_MGR: Şifre sıfırlama ekranına yönlendiriliyor. Token: $token")
@@ -49,8 +50,10 @@ object DeepLinkManager {
         }
     }
 
- */
 
+
+
+    /*
     fun handleLink(url: String) {
         when {
             url.contains("#verify") -> {
@@ -62,14 +65,11 @@ object DeepLinkManager {
                     _navigationEvents.trySend(screen)
                 }
             }
-            // YENİ: Şifre sıfırlama linkini yakalayan blok
             url.contains("#reset") -> {
                 println("Şifre sıfırlama linki yakalandı")
                 val token = extractToken(url)
                 if (!token.isNullOrEmpty()) {
-                    // Burada oluşturduğun şifre yenileme ekranını çağırıyorsun
-                    //val screen = ResetPasswordScreen(token)
-                    val screen = SplashScreen()
+                    val screen = ResetScreen(token)
                     pendingInitialScreen = screen
                     _navigationEvents.trySend(screen)
                 }
@@ -77,7 +77,8 @@ object DeepLinkManager {
         }
     }
 
-    // Kod tekrarını önlemek için token ayıklama mantığını dışarı alabilirsin:
+     */
+
     private fun extractToken(url: String): String? {
         val queryString = url.substringAfter("?", "")
         val params = queryString.split("&").associate {
@@ -88,7 +89,8 @@ object DeepLinkManager {
     }
 
 
-        fun clear() {
-            pendingInitialScreen = null
-        }
+    fun clear() {
+        pendingInitialScreen = null
+    }
+
 }

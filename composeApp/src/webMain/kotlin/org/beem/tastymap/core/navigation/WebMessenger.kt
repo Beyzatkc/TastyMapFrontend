@@ -16,14 +16,11 @@ class WebMessenger : PlatformMessenger {
 
     init {
         channel.onmessage = { event ->
-            println("Web: Klon sekmeden mesaj geldi: ${event.data}")
-            // Gelen mesajı kuyruğa güvenle ekliyoruz
             _messageChannel.trySend(event.data)
         }
     }
 
     override fun post(message: String) {
-        println("Web: Kanala mesaj gönderiliyor: $message")
         channel.postMessage(message)
     }
 

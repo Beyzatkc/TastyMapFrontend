@@ -1,4 +1,4 @@
-package org.beem.tastymap.ui.auth.verification
+package org.beem.tastymap.ui.auth.forgotPassword
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -25,9 +25,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import cafe.adriel.voyager.core.screen.Screen
-import org.beem.tastymap.ui.components.AuthFooter
 
-class VerificationSuccessScreen(): Screen {
+class ChangeSuccessScreen(): Screen {
     @Composable
     override fun Content() {
         Column(
@@ -54,7 +53,7 @@ class VerificationSuccessScreen(): Screen {
             Spacer(modifier = Modifier.Companion.height(32.dp))
 
             Text(
-                text = "E-posta Doğrulandı!",
+                text = "Şifre Değiştirildi.!",
                 style = MaterialTheme.typography.headlineMedium,
                 fontWeight = FontWeight.Companion.ExtraBold,
                 color = Color(0xFF001970),
@@ -64,7 +63,7 @@ class VerificationSuccessScreen(): Screen {
             Spacer(modifier = Modifier.Companion.height(16.dp))
 
             Text(
-                text = "Hesabınız başarıyla doğrulandı. Bu sekmeyi kapatıp uygulamadaki giriş ekranına dönerek oturum açabilirsiniz.",
+                text = "Şifreniz başarıyla değiştirildi. Bu sekmeyi kapatıp uygulamadaki giriş ekranına dönerek oturum açabilirsiniz.",
                 textAlign = TextAlign.Companion.Center,
                 style = MaterialTheme.typography.bodyLarge,
                 color = Color.Companion.Gray,
