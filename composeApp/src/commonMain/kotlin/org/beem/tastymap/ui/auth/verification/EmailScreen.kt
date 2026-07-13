@@ -20,8 +20,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleEventObserver
+
 import cafe.adriel.voyager.core.model.rememberScreenModel
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
@@ -90,9 +89,12 @@ class EmailVerificationScreen(val email: String, val deviceId: String,val userId
                     navigator.pop()
                 })
                 Box(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxWidth(),
                     contentAlignment = Alignment.TopCenter
                 ) {
+
                     Column(
                         modifier = Modifier
                             .widthIn(max = 480.dp)
@@ -198,9 +200,11 @@ class EmailVerificationScreen(val email: String, val deviceId: String,val userId
                             }
                         }
 
-                        AuthFooter()
                     }
                 }
+                AuthFooter(
+                    modifier = Modifier.fillMaxWidth()
+                )
             }
         }
     }

@@ -103,126 +103,142 @@ class PendingScreen(val deviceId: String) : Screen {
             modifier = Modifier.fillMaxSize(),
             color = materialColors.background
         ) {
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .statusBarsPadding()
+                    .navigationBarsPadding()
             ) {
-                Column(
+
+                Box(
                     modifier = Modifier
-                        .widthIn(max = 500.dp)
-                        .fillMaxWidth()
-                        .padding(24.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center
+                        .weight(1f)
+                        .fillMaxWidth(),
+                    contentAlignment = Alignment.Center
                 ) {
 
-                    Surface(
-                        modifier = Modifier.size(80.dp),
-                        shape = CircleShape,
-                        color = colors.navy.copy(alpha = 0.1f)
+                    Column(
+                        modifier = Modifier
+                            .widthIn(max = 500.dp)
+                            .fillMaxWidth()
+                            .verticalScroll(rememberScrollState())
+                            .padding(24.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
                     ) {
-                        Box(contentAlignment = Alignment.Center) {
-                            Icon(
-                                imageVector = Icons.Outlined.Security,
-                                contentDescription = null,
-                                modifier = Modifier.size(40.dp),
-                                tint = colors.navy
-                            )
-                        }
-                    }
 
-                    Spacer(Modifier.height(16.dp))
-
-                    Text(
-                        text = "Güvenlik Doğrulaması",
-                        style = MaterialTheme.typography.headlineSmall,
-                        fontWeight = FontWeight.Bold,
-                        textAlign = TextAlign.Center
-                    )
-
-                    Spacer(Modifier.height(8.dp))
-
-                    Text(
-                        text = "Hesabınızın güvenliğini sağlamak için bu giriş denemesi ek doğrulama gerektirmektedir.",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = materialColors.onSurfaceVariant,
-                        textAlign = TextAlign.Center
-                    )
-
-                    Spacer(Modifier.height(20.dp))
-
-                    Card(
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = MaterialTheme.shapes.medium,
-                        colors = CardDefaults.cardColors(
-                            containerColor = materialColors.surfaceVariant.copy(alpha = 0.35f)
-                        )
-                    ) {
-                        Column(modifier = Modifier.padding(16.dp)) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
+                        Surface(
+                            modifier = Modifier.size(80.dp),
+                            shape = CircleShape,
+                            color = colors.navy.copy(alpha = 0.1f)
+                        ) {
+                            Box(contentAlignment = Alignment.Center) {
                                 Icon(
-                                    imageVector = Icons.Outlined.CheckCircle,
+                                    imageVector = Icons.Outlined.Security,
                                     contentDescription = null,
-                                    tint = colors.navy,
-                                    modifier = Modifier.size(20.dp)
-                                )
-                                Spacer(Modifier.width(8.dp))
-                                Text(
-                                    text = "Doğrulama e-postası gönderildi",
-                                    style = MaterialTheme.typography.titleSmall,
-                                    fontWeight = FontWeight.SemiBold
+                                    modifier = Modifier.size(40.dp),
+                                    tint = colors.navy
                                 )
                             }
-                            Spacer(Modifier.height(6.dp))
+                        }
+
+                        Spacer(Modifier.height(16.dp))
+
+                        Text(
+                            text = "Güvenlik Doğrulaması",
+                            style = MaterialTheme.typography.headlineSmall,
+                            color = colors.navy,
+                            fontWeight = FontWeight.Bold,
+                            textAlign = TextAlign.Center
+                        )
+
+                        Spacer(Modifier.height(8.dp))
+
+                        Text(
+                            text = "Hesabınızın güvenliğini sağlamak için bu giriş denemesi ek doğrulama gerektirmektedir.",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = materialColors.onSurfaceVariant,
+                            textAlign = TextAlign.Center
+                        )
+
+                        Spacer(Modifier.height(20.dp))
+
+                        Card(
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = MaterialTheme.shapes.medium,
+                            colors = CardDefaults.cardColors(
+                                containerColor = materialColors.surfaceVariant.copy(alpha = 0.35f)
+                            )
+                        ) {
+                            Column(modifier = Modifier.padding(16.dp)) {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Icon(
+                                        imageVector = Icons.Outlined.CheckCircle,
+                                        contentDescription = null,
+                                        tint = colors.navy,
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                    Spacer(Modifier.width(8.dp))
+                                    Text(
+                                        text = "Doğrulama e-postası gönderildi",
+                                        style = MaterialTheme.typography.titleSmall,
+                                        fontWeight = FontWeight.SemiBold
+                                    )
+                                }
+                                Spacer(Modifier.height(6.dp))
+                                Text(
+                                    text = "Kayıtlı e-posta adresinize doğrulama bağlantısı gönderildi. Onay işlemi tamamlandığında bu ekran otomatik olarak güncellenecektir.",
+                                    style = MaterialTheme.typography.bodySmall
+                                )
+                            }
+                        }
+
+                        Spacer(Modifier.height(20.dp))
+
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(28.dp),
+                            strokeWidth = 2.5.dp,
+                            color = colors.navy
+                        )
+
+                        Spacer(Modifier.height(8.dp))
+
+                        Text(
+                            text = "Doğrulama bekleniyor...",
+                            style = MaterialTheme.typography.labelMedium,
+                            fontWeight = FontWeight.Medium
+                        )
+
+                        Spacer(Modifier.height(16.dp))
+
+                        Card(
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = MaterialTheme.shapes.medium,
+                            colors = CardDefaults.cardColors(
+                                containerColor = materialColors.errorContainer
+                            )
+                        ) {
                             Text(
-                                text = "Kayıtlı e-posta adresinize doğrulama bağlantısı gönderildi. Onay işlemi tamamlandığında bu ekran otomatik olarak güncellenecektir.",
+                                text = "Lütfen bu ekranı kapatmayın. Onay işlemi tamamlandığında giriş işleminiz otomatik olarak devam edecektir.",
+                                modifier = Modifier.padding(12.dp),
+                                color = materialColors.onErrorContainer,
+                                textAlign = TextAlign.Center,
                                 style = MaterialTheme.typography.bodySmall
                             )
                         }
-                    }
 
-                    Spacer(Modifier.height(20.dp))
+                        Spacer(Modifier.height(16.dp))
 
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(28.dp),
-                        strokeWidth = 2.5.dp,
-                        color = colors.navy
-                    )
-
-                    Spacer(Modifier.height(8.dp))
-
-                    Text(
-                        text = "Doğrulama bekleniyor...",
-                        style = MaterialTheme.typography.labelMedium,
-                        fontWeight = FontWeight.Medium
-                    )
-
-                    Spacer(Modifier.height(16.dp))
-
-                    Card(
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = MaterialTheme.shapes.medium,
-                        colors = CardDefaults.cardColors(
-                            containerColor = materialColors.errorContainer
-                        )
-                    ) {
-                        Text(
-                            text = "Lütfen bu ekranı kapatmayın. Onay işlemi tamamlandığında giriş işleminiz otomatik olarak devam edecektir.",
-                            modifier = Modifier.padding(12.dp),
-                            color = materialColors.onErrorContainer,
-                            textAlign = TextAlign.Center,
-                            style = MaterialTheme.typography.bodySmall
+                        ResendSection(
+                            navyIcons = colors.navy,
+                            screenModel = screenModel,
+                            onResendClick = { screenModel.resendEmail(deviceId) }
                         )
                     }
-
-                    Spacer(Modifier.height(16.dp))
-
-                    ResendSection(
-                        navyIcons = colors.navy,
-                        screenModel = screenModel,
-                        onResendClick = { screenModel.resendEmail(deviceId) }
-                    )
                 }
+                AuthFooter(
+                    modifier = Modifier.fillMaxWidth()
+                )
             }
         }
     }
@@ -269,5 +285,5 @@ fun ResendSection(
 
         }
     }
-    AuthFooter()
+
 }

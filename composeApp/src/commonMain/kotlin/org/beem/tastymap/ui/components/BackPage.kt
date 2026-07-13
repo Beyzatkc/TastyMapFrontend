@@ -41,10 +41,9 @@ fun BackPage(
         Text(
             text = header,
             style = MaterialTheme.typography.labelMedium.copy(
-                fontSize = 18.sp,
+                fontSize = 20.sp,
                 fontWeight = FontWeight.SemiBold
             ),
-            letterSpacing = 1.sp,
             color = Color.DarkGray,
             modifier = Modifier.padding(start = 8.dp)
         )

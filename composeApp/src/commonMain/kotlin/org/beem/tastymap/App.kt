@@ -29,23 +29,6 @@ fun App() {
                 animationSpec = tween(400)
             )
         }
-/*
-        Navigator(SplashScreen()) { navigator ->
-            LaunchedEffect(Unit) {
-                kotlinx.coroutines.delay(2000)
-                DeepLinkManager.navigationEvents.collect { screen ->
-                    if (navigator.lastItem::class != screen::class) {
-                        navigator.replaceAll(screen)
-                    }
-                }
-            }
-                SlideTransition(
-                    navigator = navigator,
-                    animationSpec = tween(400)
-                )
-         }
-
- */
         AppToast()
     }
 

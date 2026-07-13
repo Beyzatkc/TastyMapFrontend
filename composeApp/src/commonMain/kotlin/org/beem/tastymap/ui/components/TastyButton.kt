@@ -20,12 +20,12 @@ fun TastyButton(
     textcolor:Color,
     strokecolor:Color
 ) {
-    val buttonShape = RoundedCornerShape(50.dp)
+    val buttonShape = RoundedCornerShape(20.dp)
 
     if (isPrimary) {
         Button(
             onClick = onClick,
-            modifier = modifier.fillMaxWidth().height(56.dp),
+            modifier = modifier.fillMaxWidth().height(50.dp),
             enabled = enabled && !isLoading,
             shape = buttonShape,
             colors = ButtonDefaults.buttonColors(
@@ -38,7 +38,7 @@ fun TastyButton(
     } else {
         OutlinedButton(
             onClick = onClick,
-            modifier = modifier.fillMaxWidth().height(56.dp),
+            modifier = modifier.fillMaxWidth().height(50.dp),
             enabled = enabled && !isLoading,
             shape = buttonShape,
             border = BorderStroke(1.dp, strokecolor), // Teal çizgi

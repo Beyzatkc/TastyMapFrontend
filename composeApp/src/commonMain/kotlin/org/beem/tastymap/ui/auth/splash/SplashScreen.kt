@@ -18,7 +18,13 @@ import cafe.adriel.voyager.koin.getScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import kotlinx.coroutines.delay
+import org.beem.tastymap.ui.auth.forgotPassword.ForgotScreen
+import org.beem.tastymap.ui.auth.forgotPassword.ResetScreen
 import org.beem.tastymap.ui.auth.logReg.LogRegScreen
+import org.beem.tastymap.ui.auth.verification.EmailVerificationScreen
+import org.beem.tastymap.ui.auth.verification.PendingScreen
+import org.beem.tastymap.ui.auth.verification.VerificationSuccessScreen
+import org.beem.tastymap.ui.auth.verification.VerifyScreen
 import org.jetbrains.compose.resources.painterResource
 import tastymap.composeapp.generated.resources.Res
 import tastymap.composeapp.generated.resources.app_logo

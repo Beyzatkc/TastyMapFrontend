@@ -189,6 +189,7 @@ class LogRegScreenModel(
     fun clearRegisterForm() {
         _registerState.update {
             it.copy(
+                step = 1,
                 regName = "",
                 regnameError = null,
                 regSurname = "",

@@ -26,7 +26,6 @@ import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import org.beem.tastymap.core.constants.AuthConstants.MSG_PASSWORD_CHANGE_FINISHED
 import org.beem.tastymap.core.constants.AuthConstants.MSG_VERIFICATION_FINISHED
-import org.beem.tastymap.core.navigation.PlatformMessenger
 import org.beem.tastymap.core.navigation.VerifyNavigator
 import org.beem.tastymap.core.util.ToastManager
 import org.beem.tastymap.ui.auth.common.AuthEffect
@@ -85,6 +84,7 @@ class ForgotScreen : Screen {
                 modifier = Modifier
                     .fillMaxSize()
                     .statusBarsPadding()
+                    .verticalScroll(rememberScrollState())
                     .navigationBarsPadding()
             ) {
                 BackPage("Hesabını Bul", {
@@ -92,14 +92,15 @@ class ForgotScreen : Screen {
                     navigator.pop()
                 })
                 Box(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxWidth(),
                     contentAlignment = Alignment.TopCenter
                 ) {
                     Column(
                         modifier = Modifier
                             .widthIn(max = 480.dp)
                             .fillMaxWidth()
-                            .verticalScroll(rememberScrollState())
                             .padding(horizontal = 24.dp),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
@@ -215,9 +216,11 @@ class ForgotScreen : Screen {
                             }
                         }
 
-                        AuthFooter()
                     }
                 }
+                AuthFooter(
+                    modifier = Modifier.fillMaxWidth()
+                )
             }
         }
     }

@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -31,47 +32,64 @@ class VerificationSuccessScreen(): Screen {
     @Composable
     override fun Content() {
         Column(
-            modifier = Modifier.Companion
+            modifier = Modifier
                 .fillMaxSize()
-                .background(Color.Companion.White)
-                .padding(24.dp),
-            horizontalAlignment = Alignment.Companion.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
+                .background(Color.White)
         ) {
+
             Box(
-                modifier = Modifier.Companion
-                    .size(120.dp)
-                    .background(Color(0xFFE8F5E9), CircleShape),
-                contentAlignment = Alignment.Companion.Center
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth(),
+                contentAlignment = Alignment.Center
             ) {
-                Icon(
-                    imageVector = Icons.Default.CheckCircle,
-                    contentDescription = "Success",
-                    modifier = Modifier.Companion.size(64.dp),
-                    tint = Color(0xFF4CAF50)
-                )
+
+                Column(
+                    modifier = Modifier
+                        .padding(24.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+
+                    Box(
+                        modifier = Modifier
+                            .size(120.dp)
+                            .background(Color(0xFFE8F5E9), CircleShape),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.CheckCircle,
+                            contentDescription = "Success",
+                            modifier = Modifier.size(64.dp),
+                            tint = Color(0xFF4CAF50)
+                        )
+                    }
+
+                    Spacer(Modifier.height(32.dp))
+
+                    Text(
+                        text = "E-posta Doğrulandı!",
+                        style = MaterialTheme.typography.headlineMedium,
+                        fontWeight = FontWeight.ExtraBold,
+                        color = Color(0xFF001970),
+                        textAlign = TextAlign.Center
+                    )
+
+                    Spacer(Modifier.height(16.dp))
+
+                    Text(
+                        text = "Hesabınız başarıyla doğrulandı. Bu sekmeyi kapatıp uygulamadaki giriş ekranına dönerek oturum açabilirsiniz.",
+                        textAlign = TextAlign.Center,
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = Color.Gray,
+                        lineHeight = 24.sp,
+                        modifier = Modifier.widthIn(max = 350.dp)
+                    )
+                }
             }
-            Spacer(modifier = Modifier.Companion.height(32.dp))
 
-            Text(
-                text = "E-posta Doğrulandı!",
-                style = MaterialTheme.typography.headlineMedium,
-                fontWeight = FontWeight.Companion.ExtraBold,
-                color = Color(0xFF001970),
-                textAlign = TextAlign.Companion.Center
+            AuthFooter(
+                modifier = Modifier.fillMaxWidth()
             )
-
-            Spacer(modifier = Modifier.Companion.height(16.dp))
-
-            Text(
-                text = "Hesabınız başarıyla doğrulandı. Bu sekmeyi kapatıp uygulamadaki giriş ekranına dönerek oturum açabilirsiniz.",
-                textAlign = TextAlign.Companion.Center,
-                style = MaterialTheme.typography.bodyLarge,
-                color = Color.Companion.Gray,
-                lineHeight = 24.sp,
-                modifier = Modifier.Companion.widthIn(max = 350.dp)
-            )
-            Spacer(modifier = Modifier.Companion.height(40.dp))
         }
     }
 }

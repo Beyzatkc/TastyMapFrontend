@@ -71,6 +71,8 @@ import org.beem.tastymap.ui.auth.common.PasswordStrength
 import org.beem.tastymap.ui.auth.common.RegisterUiState
 import org.beem.tastymap.ui.auth.forgotPassword.ForgotScreen
 import org.beem.tastymap.ui.auth.verification.PendingScreen
+import org.beem.tastymap.ui.components.AuthFooter
+import org.beem.tastymap.ui.components.PasswordStrengthIndicator
 import org.beem.tastymap.ui.post.PostScreen
 import org.beem.tastymap.ui.theme.CustomColors
 import org.beem.tastymap.ui.theme.LightCustomColors
@@ -167,26 +169,7 @@ class LogRegScreen : Screen {
                 }
                 Spacer(modifier = Modifier.weight(1f))
 
-                FooterLinks(colors.navy)
-
-                Spacer(modifier = Modifier.height(50.dp))
-
-
-                Spacer(modifier = Modifier.height(20.dp))
-
-                Button(
-                    onClick = {
-                        navigator.push(PostScreen())
-                    },
-                    modifier = Modifier
-                        .widthIn(max = 300.dp)
-                        .fillMaxWidth()
-                        .height(50.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = colors.navy)
-                ) {
-                    Text("Keşfetmeye Başla", fontSize = 16.sp, fontWeight = FontWeight.Bold)
-                }
-
+                AuthFooter(modifier = Modifier.fillMaxWidth())
 
             }
             val currentLoading = if (isLoginTab) logState.isLoading else regState.isLoading
@@ -396,19 +379,6 @@ fun MapHeaderSection(
                         secondaryRoad, 0.2f
                     )
 
-                    val junctions = listOf(
-                        Offset(w * 0.28f, h * 0.38f),
-                        Offset(w * 0.55f, h * 0.52f),
-                        Offset(w * 0.78f, h * 0.38f)
-                    )
-
-                    junctions.forEach {
-                        drawCircle(
-                            color = lineColor.copy(alpha = 0.5f),
-                            radius = 5.dp.toPx(),
-                            center = it
-                        )
-                    }
                 }
             }
 
@@ -668,89 +638,6 @@ fun RegisterForm(color: CustomColors, vm: LogRegScreenModel, state: RegisterUiSt
                     backcolor = Color.White,
                     textcolor = color.navy,
                     strokecolor = Color.Transparent
-                )
-            }
-        }
-    }
-}@Composable
-fun PasswordStrengthIndicator(
-    passwordStrength: PasswordStrength,
-    colors: CustomColors
-) {
-    val checks = listOf(
-        "8+ karakter" to passwordStrength.hasMinLength,
-        "Büyük harf" to passwordStrength.hasUppercase,
-        "Rakam" to passwordStrength.hasDigit,
-        "Özel karakter" to passwordStrength.hasSpecialChar
-    )
-
-    val score = checks.count { it.second }
-
-    val (strengthText, color) = when (score) {
-        0, 1 -> "Zayıf" to colors.red
-        2, 3 -> "Orta" to colors.yellow
-        else -> "Güçlü" to colors.green
-    }
-
-    Column(
-        modifier = Modifier.fillMaxWidth()
-    ) {
-
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Text(
-                text = "Şifre",
-                style = MaterialTheme.typography.labelSmall
-            )
-
-            Text(
-                text = strengthText,
-                style = MaterialTheme.typography.labelSmall,
-                color = color,
-                fontWeight = FontWeight.SemiBold
-            )
-        }
-
-        Spacer(modifier = Modifier.height(3.dp))
-
-        LinearProgressIndicator(
-            progress = { score / 4f },
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(4.dp)
-                .clip(RoundedCornerShape(50)),
-            color = color
-        )
-
-        Spacer(modifier = Modifier.height(4.dp))
-
-        checks.forEach { (text, passed) ->
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.padding(vertical = 1.dp)
-            ) {
-
-                Icon(
-                    imageVector = if (passed)
-                        Icons.Default.CheckCircle
-                    else
-                        Icons.Default.RadioButtonUnchecked,
-                    contentDescription = null,
-                    tint = if (passed) colors.green else Color.Gray,
-                    modifier = Modifier.size(14.dp)
-                )
-
-                Spacer(modifier = Modifier.width(6.dp))
-
-                Text(
-                    text = text,
-                    style = MaterialTheme.typography.labelSmall,
-                    color = if (passed)
-                        MaterialTheme.colorScheme.onSurface
-                    else
-                        Color.Gray
                 )
             }
         }

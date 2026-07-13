@@ -1,6 +1,9 @@
 package org.beem.tastymap.ui.auth.forgotPassword
 
 import TastyButton
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -51,6 +54,7 @@ import org.beem.tastymap.ui.auth.common.AuthLifecycleEvent
 import org.beem.tastymap.ui.auth.verification.EmailScreenModel
 import org.beem.tastymap.ui.components.AuthFooter
 import org.beem.tastymap.ui.components.BackPage
+import org.beem.tastymap.ui.components.PasswordStrengthIndicator
 import org.beem.tastymap.ui.components.TastyTextField
 import org.beem.tastymap.ui.theme.LocalCustomColors
 import org.koin.compose.koinInject
@@ -89,7 +93,9 @@ class ResetScreen(val token: String): Screen {
                    navigator.pop()
                 })
                 Box(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxWidth(),
                     contentAlignment = Alignment.TopCenter
                 ) {
                     Column(
@@ -143,6 +149,17 @@ class ResetScreen(val token: String): Screen {
                             },
                             error = state.regPasswordError
                         )
+                        AnimatedVisibility(
+                            visible = state.regPassword.isNotEmpty(),
+                            enter = expandVertically(),
+                            exit = shrinkVertically()
+                        ) {
+                            Column {
+                                Spacer(modifier = Modifier.height(4.dp))
+                                PasswordStrengthIndicator(state.passwordStrength,colors)
+                            }
+                        }
+                        Spacer(modifier = Modifier.height(5.dp))
                         TastyTextField(
                             value = state.confirmPassword,
                             isPassword = true,
@@ -205,9 +222,11 @@ class ResetScreen(val token: String): Screen {
                             }
                         }
 
-                        AuthFooter()
                     }
                 }
+                AuthFooter(
+                    modifier = Modifier.fillMaxWidth()
+                )
             }
         }
     }

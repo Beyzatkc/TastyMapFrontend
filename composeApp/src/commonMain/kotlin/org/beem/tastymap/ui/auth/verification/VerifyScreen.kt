@@ -82,33 +82,32 @@ class VerifyScreen(val token: String) : Screen {
             modifier = Modifier.fillMaxSize(),
             color = MaterialTheme.colorScheme.background
         ) {
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.TopCenter
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .statusBarsPadding()
+                    .navigationBarsPadding()
+                    .imePadding()
             ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .statusBarsPadding()
-                        .navigationBarsPadding()
-                        .imePadding()
-                        // DEĞİŞİKLİK 2: Web için maksimum 480dp genişlik sınırı koyduk
-                        // ve padding vererek kenarlardan taşmasını önledik
-                        .widthIn(max = 480.dp)
-                        .fillMaxWidth()
-                ) {
 
-                    BackPage(
-                        header = "Hesap Doğrulama",
-                        onBackClick = { navigator.pop() }
-                    )
+                BackPage(
+                    header = "Hesap Doğrulama",
+                    onBackClick = { navigator.pop() }
+                )
+
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxWidth(),
+                    contentAlignment = Alignment.Center
+                ) {
 
                     Column(
                         modifier = Modifier
-                            .weight(1f)
+                            .widthIn(max = 480.dp)
                             .fillMaxWidth(),
-                        verticalArrangement = Arrangement.Center,
-                        horizontalAlignment = Alignment.CenterHorizontally
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
                     ) {
 
                         AnimatedContent(
@@ -118,7 +117,7 @@ class VerifyScreen(val token: String) : Screen {
                         ) { isError ->
 
                             Column(
-                                modifier = Modifier.fillMaxWidth(), // İçeriği zaten dış Column kısıtlıyor
+                                modifier = Modifier.fillMaxWidth(),
                                 horizontalAlignment = Alignment.CenterHorizontally
                             ) {
 
@@ -190,8 +189,10 @@ class VerifyScreen(val token: String) : Screen {
                             }
                         }
                     }
-                    AuthFooter()
                 }
+                AuthFooter(
+                    modifier = Modifier.fillMaxWidth()
+                )
             }
         }
     }
