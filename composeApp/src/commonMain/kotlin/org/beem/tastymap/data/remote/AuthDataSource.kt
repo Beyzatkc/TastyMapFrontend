@@ -7,19 +7,18 @@ import io.ktor.client.request.header
 import io.ktor.client.request.parameter
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
-import org.beem.tastymap.data.model.ApprovedRefreshRequestDTO
-import org.beem.tastymap.data.model.CommonRequest
-import org.beem.tastymap.data.model.LoginRequest
-import org.beem.tastymap.data.model.LoginResponse
-import org.beem.tastymap.data.model.NotificationResponse
-import org.beem.tastymap.data.model.RegisterRequest
-import org.beem.tastymap.data.model.ResetPassword
-import org.beem.tastymap.data.model.ResetPasswordResponse
-import org.beem.tastymap.data.model.UserResponse
+import org.beem.tastymap.data.model.auth.ApprovedRefreshRequestDTO
+import org.beem.tastymap.data.model.auth.CommonRequest
+import org.beem.tastymap.data.model.auth.LoginRequest
+import org.beem.tastymap.data.model.auth.LoginResponse
+import org.beem.tastymap.data.model.auth.NotificationResponse
+import org.beem.tastymap.data.model.auth.RegisterRequest
+import org.beem.tastymap.data.model.auth.ResetPassword
+import org.beem.tastymap.data.model.auth.ResetPasswordResponse
+import org.beem.tastymap.data.model.auth.UserResponse
 
 
 class AuthDataSource(private val client: HttpClient) {
-
     suspend fun register(request: RegisterRequest): UserResponse {
         return client.post("api/users/register"){
             setBody(request)
@@ -32,18 +31,6 @@ class AuthDataSource(private val client: HttpClient) {
         }.body()
 
     }
-
-    suspend fun resendMail(request: CommonRequest): String{
-        return client.post("auth/resendMail") {
-            setBody(request)
-        }.body()
-    }
-
-    suspend fun verifyEmail(token: String): Map<String, String> {
-        return client.get("auth/verify") {
-            parameter("token", token)
-        }.body()
-    }
     suspend fun verifyLogin(
         request: ApprovedRefreshRequestDTO
     ): LoginResponse {
@@ -51,39 +38,7 @@ class AuthDataSource(private val client: HttpClient) {
             setBody(request)
         }.body()
     }
-    suspend fun resendSecurityMail(deviceId: String): String{
-        return client.post("auth/resend-security-mail") {
-            parameter("deviceId",deviceId)
 
-        }.body()
-    }
-    suspend fun isUsedNotification(deviceId: String): NotificationResponse{
-        return client.get("auth/is-used") {
-            parameter("deviceId",deviceId)
-        }.body()
-    }
-
-    suspend fun forgotPassword(commonRequest: CommonRequest): ResetPasswordResponse{
-        return client.post("auth/forgotPassword") {
-            setBody(commonRequest)
-        }.body()
-    }
-
-   suspend fun resetPassword(passwordRequest: ResetPassword): String{
-       return client.post("auth/resetPassword"){
-           setBody(passwordRequest)
-       }.body()
-   }
-    suspend fun isEmailUsedByDevice(userId: Long): Boolean {
-        return client.get("auth/check-used") {
-            parameter("userId", userId)
-        }.body()
-    }
-    suspend fun isPasswordUsedByDevice(userId: Long): Boolean {
-        return client.get("auth/check-password") {
-            parameter("userId", userId)
-        }.body()
-    }
 }
 
 

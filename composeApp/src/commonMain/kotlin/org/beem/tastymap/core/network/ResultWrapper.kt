@@ -7,7 +7,8 @@ sealed class ResultWrapper<out T> {
 
     data class Error(
         val message: String,
-        val type: ErrorType
+        val type: ErrorType,
+        val email: String? = null
     ) : ResultWrapper<Nothing>()
 }
 

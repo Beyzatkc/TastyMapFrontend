@@ -12,20 +12,19 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import org.beem.tastymap.core.network.ResultWrapper
 import org.beem.tastymap.core.provider.DeviceInfoProvider
-import org.beem.tastymap.data.model.CommonRequest
+import org.beem.tastymap.data.model.auth.CommonRequest
 import org.beem.tastymap.data.model.domain.SecurityEventType
 import org.beem.tastymap.data.remote.AuthWebSocketClient
-import org.beem.tastymap.data.repository.AuthRepository
+import org.beem.tastymap.data.repository.UserSecurityRepository
 import org.beem.tastymap.ui.auth.common.AuthLifecycleEvent
 import org.beem.tastymap.ui.auth.common.CheckValidator
-import org.beem.tastymap.ui.auth.common.PasswordEmailState
 import org.beem.tastymap.ui.auth.common.ValidationResult
 import kotlin.concurrent.atomics.AtomicBoolean
 import kotlin.concurrent.atomics.ExperimentalAtomicApi
 
 @OptIn(ExperimentalAtomicApi::class)
 class ForgotScreenModel(
-    private val repository: AuthRepository,
+    private val repoSecurity: UserSecurityRepository,
     private val deviceInfoProvider: DeviceInfoProvider,
     private val authWebSocketClient: AuthWebSocketClient,
     private val resetSession: PasswordResetSessionManager
@@ -88,7 +87,7 @@ class ForgotScreenModel(
         }
     }
     private suspend fun isPasswordChanged(userId: Long): Boolean {
-        return when (val result = repository.isPasswordUsed(userId)) {
+        return when (val result = repoSecurity.isPasswordUsed(userId)) {
             is ResultWrapper.Success -> {
                 if (result.data) {
                     clearResetContext()
@@ -176,7 +175,7 @@ class ForgotScreenModel(
                     deviceId = deviceInfoProvider.getDeviceId(),
                     email = email
                 )
-                when (val result = repository.forgotPassword(dto)) {
+                when (val result = repoSecurity.forgotPassword(dto)) {
                     is ResultWrapper.Success -> {
                         resetSession.clear()
                         resetSession.save(result.data.userId,result.data.deviceId)

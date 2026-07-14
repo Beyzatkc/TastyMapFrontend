@@ -18,6 +18,7 @@ class CountdownTimer(private val scope: CoroutineScope) {
     private var timerJob: Job? = null
 
     fun startTime() {
+
         if (_timeLeft.value > 0) return
 
         timerJob?.cancel()
@@ -31,7 +32,6 @@ class CountdownTimer(private val scope: CoroutineScope) {
             }
         }
     }
-
 
     fun stopTime() {
         timerJob?.cancel()

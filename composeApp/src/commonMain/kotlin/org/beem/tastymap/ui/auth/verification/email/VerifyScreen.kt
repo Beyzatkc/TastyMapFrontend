@@ -1,4 +1,4 @@
-package org.beem.tastymap.ui.auth.verification
+package org.beem.tastymap.ui.auth.verification.email
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.background
@@ -33,8 +33,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import cafe.adriel.voyager.core.model.rememberScreenModel
 import cafe.adriel.voyager.core.screen.Screen
+import cafe.adriel.voyager.koin.koinScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import kotlinx.coroutines.delay
@@ -51,8 +51,7 @@ class VerifyScreen(val token: String) : Screen {
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
-        val koinInstance = koinInject<EmailScreenModel>()
-        val screenModel = rememberScreenModel { koinInstance }
+        val screenModel = koinScreenModel<EmailScreenModel>()
         val state by screenModel.verificationState.collectAsState()
         val verifyNavigator = koinInject<VerifyNavigator>()
 

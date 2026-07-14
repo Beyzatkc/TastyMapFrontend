@@ -1,4 +1,4 @@
-package org.beem.tastymap.ui.auth.verification
+package org.beem.tastymap.ui.auth.verification.loginPending
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -25,12 +25,11 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import cafe.adriel.voyager.core.annotation.InternalVoyagerApi
 import cafe.adriel.voyager.core.screen.Screen
-import cafe.adriel.voyager.koin.getScreenModel
+import cafe.adriel.voyager.koin.koinScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import cafe.adriel.voyager.navigator.internal.BackHandler
 import org.beem.tastymap.core.util.ToastManager
-import org.beem.tastymap.data.model.ApprovedRefreshRequestDTO
 import org.beem.tastymap.ui.auth.common.AuthEffect
 import org.beem.tastymap.ui.auth.common.AuthLifecycleEvent
 import org.beem.tastymap.ui.auth.logReg.LogRegScreen
@@ -43,7 +42,7 @@ class PendingScreen(val deviceId: String) : Screen {
     @Preview
     @Composable
     override fun Content() {
-        val screenModel = getScreenModel<PendingScreenModel>()
+        val screenModel = koinScreenModel<PendingScreenModel>()
         val lifecycleOwner = LocalLifecycleOwner.current
         val navigator = LocalNavigator.currentOrThrow
         val colors = LocalCustomColors.current

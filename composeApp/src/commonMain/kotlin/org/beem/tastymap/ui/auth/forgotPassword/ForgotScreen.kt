@@ -14,26 +14,16 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleEventObserver
-import cafe.adriel.voyager.core.model.rememberScreenModel
 import cafe.adriel.voyager.core.screen.Screen
+import cafe.adriel.voyager.koin.koinScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
-import org.beem.tastymap.core.constants.AuthConstants.MSG_PASSWORD_CHANGE_FINISHED
-import org.beem.tastymap.core.constants.AuthConstants.MSG_VERIFICATION_FINISHED
 import org.beem.tastymap.core.navigation.VerifyNavigator
 import org.beem.tastymap.core.util.ToastManager
-import org.beem.tastymap.ui.auth.common.AuthEffect
 import org.beem.tastymap.ui.auth.common.AuthLifecycleEvent
-import org.beem.tastymap.ui.auth.logReg.LogRegScreen
-import org.beem.tastymap.ui.auth.splash.SplashScreen
-import org.beem.tastymap.ui.auth.verification.EmailVerificationScreen
-import org.beem.tastymap.ui.auth.verification.PendingScreen
 import org.beem.tastymap.ui.common.UnifiedLifecycleObserver
 import org.beem.tastymap.ui.components.AuthFooter
 import org.beem.tastymap.ui.components.BackPage
@@ -45,8 +35,7 @@ class ForgotScreen : Screen {
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
-        val koinInstance = koinInject<ForgotScreenModel>()
-        val screenModel = rememberScreenModel { koinInstance }
+        val screenModel = koinScreenModel<ForgotScreenModel>()
         val state by screenModel.sendState.collectAsState()
         val colors = LocalCustomColors.current
         val navigationEffect by screenModel.navigationState.collectAsState(initial = null)

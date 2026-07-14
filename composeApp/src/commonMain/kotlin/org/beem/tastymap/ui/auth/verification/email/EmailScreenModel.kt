@@ -1,4 +1,4 @@
-package org.beem.tastymap.ui.auth.verification
+package org.beem.tastymap.ui.auth.verification.email
 
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
@@ -13,22 +13,18 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import org.beem.tastymap.core.network.ResultWrapper
-import org.beem.tastymap.core.util.ToastManager
-import org.beem.tastymap.data.model.ApprovedRefreshRequestDTO
-import org.beem.tastymap.data.model.CommonRequest
-import org.beem.tastymap.data.model.Status
+import org.beem.tastymap.data.model.auth.CommonRequest
 import org.beem.tastymap.data.model.domain.SecurityEventType
 import org.beem.tastymap.data.remote.AuthWebSocketClient
-import org.beem.tastymap.data.repository.AuthRepository
-import org.beem.tastymap.ui.auth.common.AuthEffect
+import org.beem.tastymap.data.repository.UserSecurityRepository
 import org.beem.tastymap.ui.auth.common.AuthLifecycleEvent
 import org.beem.tastymap.ui.auth.common.CountdownTimer
-import org.beem.tastymap.ui.auth.common.VerificationUiState
+import org.beem.tastymap.ui.auth.verification.VerificationUiState
 import kotlin.concurrent.atomics.AtomicBoolean
 import kotlin.concurrent.atomics.ExperimentalAtomicApi
 @OptIn(ExperimentalAtomicApi::class)
 class EmailScreenModel(
-    private val repository: AuthRepository,
+    private val repository: UserSecurityRepository,
     private val authWebSocketClient: AuthWebSocketClient
 ) : ScreenModel{
     val timer = CountdownTimer(screenModelScope)
@@ -76,7 +72,7 @@ class EmailScreenModel(
             val request =CommonRequest(deviceId = deviceId, email = email)
             when(val result = repository.resendEmail(request)){
                 is ResultWrapper.Success -> {
-                    _uiMessage.send(result.data)
+                    _uiMessage.send("Emailinize doğrulama bağlantısı gönderilmiştir.")
                 }
                 is ResultWrapper.Error -> {
                     _uiMessage.send(result.message ?: "Bir hata oluştu")

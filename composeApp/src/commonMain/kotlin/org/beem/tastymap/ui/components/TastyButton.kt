@@ -7,6 +7,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.unit.dp
 @Composable
 fun TastyButton(
@@ -21,10 +22,16 @@ fun TastyButton(
     strokecolor:Color
 ) {
     val buttonShape = RoundedCornerShape(20.dp)
+    val focusManager = LocalFocusManager.current
+
+    val handleOnClick = {
+        focusManager.clearFocus()
+        onClick()
+    }
 
     if (isPrimary) {
         Button(
-            onClick = onClick,
+            onClick = handleOnClick,
             modifier = modifier.fillMaxWidth().height(50.dp),
             enabled = enabled && !isLoading,
             shape = buttonShape,
@@ -37,7 +44,7 @@ fun TastyButton(
         }
     } else {
         OutlinedButton(
-            onClick = onClick,
+            onClick = handleOnClick,
             modifier = modifier.fillMaxWidth().height(50.dp),
             enabled = enabled && !isLoading,
             shape = buttonShape,

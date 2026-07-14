@@ -18,13 +18,8 @@ import cafe.adriel.voyager.koin.getScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import kotlinx.coroutines.delay
-import org.beem.tastymap.ui.auth.forgotPassword.ForgotScreen
-import org.beem.tastymap.ui.auth.forgotPassword.ResetScreen
 import org.beem.tastymap.ui.auth.logReg.LogRegScreen
-import org.beem.tastymap.ui.auth.verification.EmailVerificationScreen
-import org.beem.tastymap.ui.auth.verification.PendingScreen
-import org.beem.tastymap.ui.auth.verification.VerificationSuccessScreen
-import org.beem.tastymap.ui.auth.verification.VerifyScreen
+import org.beem.tastymap.ui.profile.health.HealthWizardScreen
 import org.jetbrains.compose.resources.painterResource
 import tastymap.composeapp.generated.resources.Res
 import tastymap.composeapp.generated.resources.app_logo
@@ -42,7 +37,7 @@ class SplashScreen: Screen {
                 delay(2000)
                 when (it) {
                     is SplashEffect.NavigateToDeepLink -> navigator.replaceAll(it.screen)
-                    is SplashEffect.NavigateToLogin -> navigator.replaceAll(LogRegScreen())
+                    is SplashEffect.NavigateToLogin -> navigator.replaceAll(HealthWizardScreen())
                     is SplashEffect.NavigateToHome -> { /* navigator.replaceAll(HomeScreen()) */ }
                 }
             }

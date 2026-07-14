@@ -1,4 +1,4 @@
-package org.beem.tastymap.data.model
+package org.beem.tastymap.data.model.auth
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable

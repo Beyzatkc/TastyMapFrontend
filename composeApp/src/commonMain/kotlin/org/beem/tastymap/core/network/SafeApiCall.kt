@@ -2,12 +2,11 @@ package org.beem.tastymap.core.network
 
 import io.ktor.client.call.body
 import io.ktor.client.plugins.ResponseException
-import io.ktor.client.statement.bodyAsText
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.io.IOException
 import kotlinx.serialization.SerializationException
-import org.beem.tastymap.data.model.ErrorResponse
+import org.beem.tastymap.data.model.auth.ErrorResponse
 
 suspend fun <T> safeApiCall(
     call: suspend () -> T
@@ -27,13 +26,24 @@ suspend fun <T> safeApiCall(
             }
 
             is ResponseException -> {
-                val errorMessage = try {
-                    e.response.body<ErrorResponse>().message ?: "Sunucu hatası: ${e.response.status.value}"
+                val errorResponse = try {
+                    e.response.body<ErrorResponse>()
                 } catch (_: Exception) {
-                    "Sunucu ile iletişimde bir sorun oluştu."
+                    null
                 }
+
                 println("Hata %: ${e.message}")
-                ResultWrapper.Error(errorMessage, ErrorType.SERVER_ERROR)
+                val errorMessage = errorResponse?.message ?: "Sunucu hatası: ${e.response.status.value}"
+
+                if (errorResponse?.error == "EMAIL_NOT_VERIFIED") {
+                    ResultWrapper.Error(
+                        message = errorMessage,
+                        type = ErrorType.EMAIL_NOT_VERIFIED,
+                        email = errorResponse.email
+                    )
+                } else {
+                    ResultWrapper.Error(errorMessage, ErrorType.SERVER_ERROR)
+                }
             }
 
             is SerializationException -> {

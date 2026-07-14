@@ -10,17 +10,19 @@ import org.beem.tastymap.core.navigation.VerifyNavigator
 import org.beem.tastymap.core.provider.HttpClientFactory
 import org.beem.tastymap.data.remote.AuthDataSource
 import org.beem.tastymap.data.remote.AuthWebSocketClient
-import org.beem.tastymap.data.remote.UserDataSource
+import org.beem.tastymap.data.remote.HealthDataSource
+import org.beem.tastymap.data.remote.UserSecurityDataSource
 import org.beem.tastymap.data.repository.AuthRepository
-import org.beem.tastymap.data.repository.PostRepository
+import org.beem.tastymap.data.repository.HealthRepository
+import org.beem.tastymap.data.repository.UserSecurityRepository
 import org.beem.tastymap.ui.auth.forgotPassword.ForgotScreenModel
 import org.beem.tastymap.ui.auth.forgotPassword.PasswordResetSessionManager
 import org.beem.tastymap.ui.auth.forgotPassword.ResetScreenModel
 import org.beem.tastymap.ui.auth.logReg.LogRegScreenModel
 import org.beem.tastymap.ui.auth.splash.SplashScreenModel
-import org.beem.tastymap.ui.auth.verification.EmailScreenModel
-import org.beem.tastymap.ui.auth.verification.PendingScreenModel
-import org.beem.tastymap.ui.post.PostScreenModel
+import org.beem.tastymap.ui.auth.verification.email.EmailScreenModel
+import org.beem.tastymap.ui.auth.verification.loginPending.PendingScreenModel
+import org.beem.tastymap.ui.profile.health.HealthScreenModel
 import org.koin.core.qualifier.named
 
 val appModule = module {
@@ -36,21 +38,25 @@ val appModule = module {
         val noAuth = get<HttpClient>(named("noAuth"))
         factory.createAuthClient(noAuth)
     }
+
     single { AuthDataSource(get(named("noAuth"))) }
-    single { UserDataSource(get(named("auth"))) }
+    single { UserSecurityDataSource(get(named("noAuth"))) }
+    single { HealthDataSource(get(named("auth"))) }
 
     single { AuthRepository(get(), get(),get(),get()) }
-    single { PostRepository(get()) }
+    single { UserSecurityRepository(get()) }
+    single { UserSecurityRepository(get()) }
+    single { HealthRepository(get()) }
     single { AuthWebSocketClient(get(named("auth"))) }
     single { PasswordResetSessionManager() }
 
-    factory { LogRegScreenModel(get(),get(),get()) }
-    factory { PendingScreenModel(get(),get(),get()) }
+    factory { LogRegScreenModel(get(),get(),get(),get()) }
+    factory { PendingScreenModel(get(),get(),get(),get()) }
     factory { EmailScreenModel(get(),get()) }
-    factory { PostScreenModel (get())}
     factory { SplashScreenModel(get()) }
     factory { ForgotScreenModel(get(),get(),get(),get()) }
     factory { ResetScreenModel(get()) }
+    factory { HealthScreenModel(get()) }
 
     single<VerifyNavigator> { MobileVerifyNavigator() }
 }

@@ -1,12 +1,9 @@
 package org.beem.tastymap.core.navigation
 import cafe.adriel.voyager.core.screen.Screen
 import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.receiveAsFlow
 import org.beem.tastymap.ui.auth.forgotPassword.ResetScreen
-import org.beem.tastymap.ui.auth.splash.SplashScreen
-import org.beem.tastymap.ui.auth.verification.VerifyScreen
+import org.beem.tastymap.ui.auth.verification.email.VerifyScreen
 
 object DeepLinkManager {
     private val _navigationEvents = Channel<Screen>(Channel.BUFFERED)
@@ -15,7 +12,7 @@ object DeepLinkManager {
     var pendingInitialScreen: Screen? = null
 
 
-/*
+
     fun handleLink(url: String) {
         try {
             val parts = url.split("?")
@@ -50,8 +47,9 @@ object DeepLinkManager {
         }
     }
 
- */
 
+
+    /*
     fun handleLink(url: String) {
         when {
             url.contains("#verify") -> {
@@ -74,6 +72,8 @@ object DeepLinkManager {
             }
         }
     }
+
+     */
 
     private fun extractToken(url: String): String? {
         val queryString = url.substringAfter("?", "")

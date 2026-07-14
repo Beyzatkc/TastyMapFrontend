@@ -46,44 +46,34 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Password
 import androidx.compose.material.icons.filled.Person
-import cafe.adriel.voyager.core.model.rememberScreenModel
 import cafe.adriel.voyager.navigator.Navigator
 import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.sin
-import org.koin.compose.koinInject
 import androidx.compose.foundation.layout.imePadding
-import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.RadioButtonUnchecked
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.CompositingStrategy
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.zIndex
+import cafe.adriel.voyager.koin.koinScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import org.beem.tastymap.core.util.ToastManager
 import org.beem.tastymap.ui.animations.TastyAnimations
 import org.beem.tastymap.ui.auth.common.AuthEffect
-import org.beem.tastymap.ui.auth.verification.EmailVerificationScreen
-import org.beem.tastymap.ui.auth.common.LoginUiState
-import org.beem.tastymap.ui.auth.common.PasswordStrength
-import org.beem.tastymap.ui.auth.common.RegisterUiState
+import org.beem.tastymap.ui.auth.verification.email.EmailVerificationScreen
 import org.beem.tastymap.ui.auth.forgotPassword.ForgotScreen
-import org.beem.tastymap.ui.auth.verification.PendingScreen
+import org.beem.tastymap.ui.auth.verification.loginPending.PendingScreen
 import org.beem.tastymap.ui.components.AuthFooter
 import org.beem.tastymap.ui.components.PasswordStrengthIndicator
-import org.beem.tastymap.ui.post.PostScreen
 import org.beem.tastymap.ui.theme.CustomColors
-import org.beem.tastymap.ui.theme.LightCustomColors
 import org.beem.tastymap.ui.theme.LocalCustomColors
 
 class LogRegScreen : Screen {
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
-        val koinInstance = koinInject<LogRegScreenModel>()
-        val screenModel = rememberScreenModel { koinInstance }
+        val screenModel = koinScreenModel<LogRegScreenModel>()
         val regState by screenModel.registerState.collectAsState()
         val logState by screenModel.loginState.collectAsState()
         val colors = LocalCustomColors.current
@@ -490,6 +480,12 @@ fun FooterLinks(navyIcons: Color) {
             textcolor = Color.White,
             strokecolor = color
         )
+        ResendSection(
+            onResendClick = { vm.resendVerificationEmail() },
+            navyIcons = color,
+            screenModel = vm,
+            state = state
+        )
         TastyButton(
             text = "Şifreni mi unuttun",
             onClick = { navigator.push(ForgotScreen()) },
@@ -498,6 +494,53 @@ fun FooterLinks(navyIcons: Color) {
             textcolor = color,
             strokecolor = Color.White
         )
+    }
+}
+
+@Composable
+fun ResendSection(onResendClick: () -> Unit,navyIcons: Color, screenModel: LogRegScreenModel,state: LoginUiState) {
+    val timeLeft by screenModel.timeLeft.collectAsState()
+
+    val isButtonEnabled = timeLeft == 0
+
+    if (state.isEmailNotVerified) {
+        Spacer(modifier = Modifier.height(8.dp))
+
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(Color.Red.copy(alpha = 0.1f), shape = RoundedCornerShape(8.dp))
+                .padding(12.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(
+                text = "E-postanız (${state.unverifiedEmail}) henüz doğrulanmamış.",
+                color = Color.Red,
+                style = MaterialTheme.typography.bodyMedium
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+                TextButton(
+                    enabled = isButtonEnabled,
+                    onClick = {
+                        if (isButtonEnabled) {
+                            println("START TIMER")
+                            screenModel.startTimer()
+                            onResendClick()
+                        }
+                    }
+                ) {
+                    Text(
+                        text = if (isButtonEnabled) {
+                            "E-posta gelmedi mi? Tekrar gönder"
+                        } else {
+                            "Tekrar gönder: ${timeLeft}s"
+                        },
+                        color = if (isButtonEnabled) navyIcons else Color.Gray,
+                        style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.SemiBold)
+                    )
+                }
+        }
     }
 }
 

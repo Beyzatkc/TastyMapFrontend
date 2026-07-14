@@ -11,7 +11,7 @@ import io.ktor.http.*
 import org.beem.tastymap.core.local.TokenManager
 import org.beem.tastymap.core.local.UserManager
 import org.beem.tastymap.core.provider.HttpClientFactory
-import org.beem.tastymap.data.model.RefreshTokenResponseDTO
+import org.beem.tastymap.data.model.auth.RefreshTokenResponseDTO
 
 class MobileHttpClientFactory(
     private val tokenManager: TokenManager,

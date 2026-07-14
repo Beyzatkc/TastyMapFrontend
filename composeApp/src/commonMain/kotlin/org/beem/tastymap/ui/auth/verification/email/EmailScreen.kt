@@ -1,4 +1,4 @@
-package org.beem.tastymap.ui.auth.verification
+package org.beem.tastymap.ui.auth.verification.email
 
 import TastyButton
 import androidx.compose.foundation.background
@@ -13,7 +13,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
@@ -21,14 +20,15 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 
-import cafe.adriel.voyager.core.model.rememberScreenModel
 import cafe.adriel.voyager.core.screen.Screen
+import cafe.adriel.voyager.koin.koinScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import org.beem.tastymap.core.navigation.VerifyNavigator
 import org.beem.tastymap.core.util.ToastManager
 import org.beem.tastymap.ui.auth.common.AuthLifecycleEvent
 import org.beem.tastymap.ui.auth.logReg.LogRegScreen
+
 import org.beem.tastymap.ui.common.UnifiedLifecycleObserver
 import org.beem.tastymap.ui.components.AuthFooter
 import org.beem.tastymap.ui.components.BackPage
@@ -40,8 +40,7 @@ class EmailVerificationScreen(val email: String, val deviceId: String,val userId
     override fun Content() {
         val colors = LocalCustomColors.current
         val navigator = LocalNavigator.currentOrThrow
-        val koinInstance = koinInject<EmailScreenModel>()
-        val screenModel = rememberScreenModel { koinInstance }
+        val screenModel = koinScreenModel<EmailScreenModel>()
         val navigationEffect by screenModel.navigationState.collectAsState(initial = null)
         val verifyNavigator = koinInject<VerifyNavigator>()
 

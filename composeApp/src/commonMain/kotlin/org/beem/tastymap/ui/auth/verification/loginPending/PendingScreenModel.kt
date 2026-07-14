@@ -1,4 +1,4 @@
-package org.beem.tastymap.ui.auth.verification
+package org.beem.tastymap.ui.auth.verification.loginPending
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
 import kotlinx.coroutines.Job
@@ -14,23 +14,24 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import org.beem.tastymap.core.network.ResultWrapper
 import org.beem.tastymap.core.provider.DeviceInfoProvider
-import org.beem.tastymap.core.util.ToastManager
-import org.beem.tastymap.data.model.ApprovedRefreshRequestDTO
-import org.beem.tastymap.data.model.Status
+import org.beem.tastymap.data.model.auth.ApprovedRefreshRequestDTO
+import org.beem.tastymap.data.model.auth.Status
 import org.beem.tastymap.data.model.domain.SecurityEventType
 import org.beem.tastymap.data.remote.AuthWebSocketClient
 import org.beem.tastymap.data.repository.AuthRepository
+import org.beem.tastymap.data.repository.UserSecurityRepository
 import org.beem.tastymap.ui.auth.common.AuthEffect
 import org.beem.tastymap.ui.auth.common.AuthLifecycleEvent
 import org.beem.tastymap.ui.auth.common.CountdownTimer
-import org.beem.tastymap.ui.auth.common.RequestState
+import org.beem.tastymap.ui.auth.verification.RequestState
 import kotlin.Boolean
 import kotlin.concurrent.atomics.AtomicBoolean
 import kotlin.concurrent.atomics.ExperimentalAtomicApi
 
 
 class PendingScreenModel(
-    private val repository: AuthRepository,
+    private val authRepo: AuthRepository,
+    private val securityRepo: UserSecurityRepository,
     private val authWebSocketClient: AuthWebSocketClient,
     private val deviceInfoProvider: DeviceInfoProvider
 ) : ScreenModel {
@@ -125,7 +126,7 @@ class PendingScreenModel(
         screenModelScope.launch {
             _sendState.update { it.copy(isLoading = true) }
 
-            when (val result = repository.resendSecurityMail(deviceId)) {
+            when (val result = securityRepo.resendSecurityMail(deviceId)) {
                 is ResultWrapper.Success -> {
                     _uiMessage.send(result.data ?: "E-posta gönderildi.")
                 }
@@ -141,13 +142,13 @@ class PendingScreenModel(
     private suspend fun isUsedNotification(
         dto: ApprovedRefreshRequestDTO
     ): Boolean {
-        return when (val result = repository.isUsedNotification(dto.deviceId)) {
+        return when (val result = securityRepo.isUsedNotification(dto.deviceId)) {
             is ResultWrapper.Success -> {
                 println("succese1 girdi")
                 println("status=${result.data.status} used=${result.data.isUsed}")
                 if (result.data.status == Status.APPROVED && result.data.isUsed == true) {
                     println("verifyLogin çağrılıyor")
-                    when (val verifyResult =repository.verifyLogin(dto)) {
+                    when (val verifyResult =authRepo.verifyLogin(dto)) {
                         is ResultWrapper.Success -> {
                             _uiMessage.send("Giriş onaylandı.")
                             _pendingLogin.send(AuthEffect.NavigateToHome)
@@ -231,7 +232,7 @@ class PendingScreenModel(
     private suspend fun handleApproved(
         dto: ApprovedRefreshRequestDTO
     ) {
-        when (val result = repository.verifyLogin(dto)) {
+        when (val result = authRepo.verifyLogin(dto)) {
             is ResultWrapper.Success -> {
                 _uiMessage.send("Giriş onaylandı.")
                 _pendingLogin.send(AuthEffect.NavigateToHome)

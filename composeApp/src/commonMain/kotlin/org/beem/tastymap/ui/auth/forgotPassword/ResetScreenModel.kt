@@ -10,15 +10,15 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import org.beem.tastymap.core.network.ResultWrapper
-import org.beem.tastymap.data.model.ResetPassword
+import org.beem.tastymap.data.model.auth.ResetPassword
 import org.beem.tastymap.data.repository.AuthRepository
+import org.beem.tastymap.data.repository.UserSecurityRepository
 import org.beem.tastymap.ui.auth.common.CheckValidator
 import org.beem.tastymap.ui.auth.common.PasswordStrength
-import org.beem.tastymap.ui.auth.common.PasswordUiState
 import org.beem.tastymap.ui.auth.common.ValidationResult
 
 class ResetScreenModel(
-    private val repository: AuthRepository
+    private val repository: UserSecurityRepository
 ) : ScreenModel {
 
     private val _uiMessage = Channel<String>()
