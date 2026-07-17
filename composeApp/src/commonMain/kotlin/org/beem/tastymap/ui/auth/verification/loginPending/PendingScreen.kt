@@ -33,7 +33,7 @@ import org.beem.tastymap.core.util.ToastManager
 import org.beem.tastymap.ui.auth.common.AuthEffect
 import org.beem.tastymap.ui.auth.common.AuthLifecycleEvent
 import org.beem.tastymap.ui.auth.logReg.LogRegScreen
-import org.beem.tastymap.ui.auth.splash.SplashScreen
+import org.beem.tastymap.ui.splash.SplashScreen
 import org.beem.tastymap.ui.components.AuthFooter
 import org.beem.tastymap.ui.theme.LocalCustomColors
 

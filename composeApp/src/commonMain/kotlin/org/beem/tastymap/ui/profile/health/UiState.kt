@@ -8,7 +8,7 @@ data class HealthUiState(
     val isLoading: Boolean = false,
 
     val hasDiabetes: Boolean = false,
-    val selectedEatType: HealthEnum? = null,
+    val selectedEatType: HealthEnum = HealthEnum.NORMAL,
     val selectedAllergyIds: List<Long> = emptyList(),
 
     val availableAllergies: List<AllergyInfo> = emptyList(),

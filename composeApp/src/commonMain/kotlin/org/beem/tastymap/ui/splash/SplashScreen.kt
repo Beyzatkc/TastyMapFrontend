@@ -1,4 +1,4 @@
-package org.beem.tastymap.ui.auth.splash
+package org.beem.tastymap.ui.splash
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
@@ -18,7 +18,6 @@ import cafe.adriel.voyager.koin.getScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import kotlinx.coroutines.delay
-import org.beem.tastymap.ui.auth.logReg.LogRegScreen
 import org.beem.tastymap.ui.profile.health.HealthWizardScreen
 import org.jetbrains.compose.resources.painterResource
 import tastymap.composeapp.generated.resources.Res

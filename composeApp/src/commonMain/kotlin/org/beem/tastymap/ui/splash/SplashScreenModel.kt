@@ -1,4 +1,4 @@
-package org.beem.tastymap.ui.auth.splash
+package org.beem.tastymap.ui.splash
 
 import cafe.adriel.voyager.core.model.ScreenModel
 import org.beem.tastymap.data.repository.AuthRepository

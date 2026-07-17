@@ -19,7 +19,7 @@ import org.beem.tastymap.ui.auth.forgotPassword.ForgotScreenModel
 import org.beem.tastymap.ui.auth.forgotPassword.PasswordResetSessionManager
 import org.beem.tastymap.ui.auth.forgotPassword.ResetScreenModel
 import org.beem.tastymap.ui.auth.logReg.LogRegScreenModel
-import org.beem.tastymap.ui.auth.splash.SplashScreenModel
+import org.beem.tastymap.ui.splash.SplashScreenModel
 import org.beem.tastymap.ui.auth.verification.email.EmailScreenModel
 import org.beem.tastymap.ui.auth.verification.loginPending.PendingScreenModel
 import org.beem.tastymap.ui.profile.health.HealthScreenModel
