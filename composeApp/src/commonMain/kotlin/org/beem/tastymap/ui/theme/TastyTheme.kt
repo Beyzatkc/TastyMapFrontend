@@ -15,6 +15,9 @@ data class CustomColors(
     val lineAlpha: Color,
     val wave: Color,
     val gray : Color,
+    val accentEmerald : Color,
+    val accentAmber : Color,
+    val gold : Color,
     val green : Color,
     val yellow : Color,
     val red : Color
@@ -26,6 +29,9 @@ val LightCustomColors = CustomColors(
     lineAlpha = AppColors.DarkGrayLines.copy(alpha = 0.22f),
     wave = AppColors.WaveColor,
     gray = AppColors.LightGray,
+    accentEmerald = AppColors.EmeraldAccent,
+    accentAmber = AppColors.WarmAmber,
+    gold = AppColors.Gold,
     green = AppColors.passwordGreen,
     yellow = AppColors.passwordYellow,
     red = AppColors.passwordRed

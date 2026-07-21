@@ -6,9 +6,11 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import org.beem.tastymap.core.network.ResultWrapper
+import org.beem.tastymap.data.model.health.AllergyInfo
 import org.beem.tastymap.data.model.health.HealthEnum
 import org.beem.tastymap.data.model.health.HealthRequest
 import org.beem.tastymap.data.repository.HealthRepository
+import kotlin.collections.listOf
 
 
 class HealthScreenModel(
@@ -16,6 +18,19 @@ class HealthScreenModel(
 ): ScreenModel{
     private val _healthState = MutableStateFlow(HealthUiState())
     val healthState = _healthState.asStateFlow()
+
+    init {
+        val defaultAllergies = listOf(
+            AllergyInfo(id = 1L, name = "Süt ve Süt Ürünleri"),
+            AllergyInfo(id = 2L, name = "Gluten"),
+            AllergyInfo(id = 3L, name = "Yer Fıstığı"),
+            AllergyInfo(id = 4L, name = "Yumurta"),
+            AllergyInfo(id = 5L, name = "Balık"),
+            AllergyInfo(id = 6L, name = "Alerjim yok"),
+
+        )
+        _healthState.update { it.copy(availableAllergies = defaultAllergies) }
+    }
 
     fun nextStep() {
         _healthState.update {
@@ -46,7 +61,20 @@ class HealthScreenModel(
     fun toggleAllergy(allergyId: Long) {
         _healthState.update { state ->
             val current = state.selectedAllergyIds.toMutableList()
-            if (current.contains(allergyId)) current.remove(allergyId) else current.add(allergyId)
+            val NONE_ALLERGY_ID = 6L
+            if(allergyId == NONE_ALLERGY_ID){
+                if (current.contains(NONE_ALLERGY_ID)) {
+                    current.clear()
+                } else {
+                    current.clear()
+                    current.add(NONE_ALLERGY_ID)
+                }
+            }else{
+                current.remove(NONE_ALLERGY_ID)
+                if (current.contains(allergyId)) {
+                    current.remove(allergyId)
+                }else current.add(allergyId)
+            }
             state.copy(selectedAllergyIds = current)
         }
     }

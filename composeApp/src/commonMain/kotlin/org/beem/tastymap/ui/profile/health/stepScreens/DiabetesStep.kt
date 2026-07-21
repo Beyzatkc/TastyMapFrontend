@@ -10,14 +10,19 @@ import tastymap.composeapp.generated.resources.ic_diabetes_svg
 @Composable
 fun DiabetesStep(
     state: HealthUiState,
-    onDiabetesChanged: (Boolean) -> Unit
+    onDiabetesChanged: (Boolean) -> Unit,
+    onNextClick: () -> Unit,
+    onBackClick: () -> Unit
 ) {
     val customColors = LocalCustomColors.current
 
     BaseStepContainer(
         iconResource = Res.drawable.ic_diabetes_svg,
         title = "Diyabet Durumunuz Nedir?",
-        description = "Size en uygun tarifleri önerebilmemiz için bu küçük bilgiye ihtiyacımız var."
+        description = "Size en uygun tarifleri önerebilmemiz için bu küçük bilgiye ihtiyacımız var.",
+        onNextClick = onNextClick,
+        onBackClick = onBackClick,
+        isNextEnabled = true
     ) {
         RadioButton(
             text = "Evet, diyabetim var",

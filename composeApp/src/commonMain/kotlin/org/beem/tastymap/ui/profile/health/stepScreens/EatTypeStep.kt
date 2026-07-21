@@ -12,14 +12,19 @@ import tastymap.composeapp.generated.resources.ic_diet_svg
 @Composable
 fun EatTypeStep (
     state: HealthUiState,
-    onEatTypeChanged: (HealthEnum) -> Unit
+    onEatTypeChanged: (HealthEnum) -> Unit,
+    onNextClick: () -> Unit,
+    onBackClick: () -> Unit
     ) {
         val customColors = LocalCustomColors.current
 
         BaseStepContainer(
             iconResource = Res.drawable.ic_diet_svg,
             title = "Beslenme tercihiniz nedir?",
-            description = "Yemek alışkanlıklarınıza en uygun tarifleri filtreleyebilmemiz için ana beslenme tarzınızı seçin."
+            description = "Yemek alışkanlıklarınıza en uygun tarifleri filtreleyebilmemiz için ana beslenme tarzınızı seçin.",
+            onNextClick = onNextClick,
+            onBackClick = onBackClick,
+            isNextEnabled = true
         ) {
             RadioButton(
                 text = "Vejetaryen",

@@ -13,22 +13,23 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import cafe.adriel.voyager.navigator.LocalNavigator
+import cafe.adriel.voyager.navigator.Navigator
+import cafe.adriel.voyager.navigator.currentOrThrow
+import org.beem.tastymap.ui.profile.health.HealthWizardScreen
 import org.beem.tastymap.ui.theme.CustomColors
 import org.beem.tastymap.ui.theme.LocalCustomColors
 
 @Composable
-fun WelcomeScreen(
-    onStart: () -> Unit = {},
-    onSkip: () -> Unit = {}
-) {
+fun WelcomeScreen() {
     var showContent by remember { mutableStateOf(false) }
+    val navigator = LocalNavigator.currentOrThrow
 
     LaunchedEffect(Unit) {
         showContent = true
@@ -38,9 +39,8 @@ fun WelcomeScreen(
     val scrollState = rememberScrollState()
 
     Box(
-        modifier = Modifier
-            .fillMaxSize(),
-        contentAlignment = Alignment.Center // Webde tüm arayüzü ekranın tam ortasına toplar
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
     ) {
         AnimatedVisibility(
             visible = showContent,
@@ -56,7 +56,6 @@ fun WelcomeScreen(
                     .statusBarsPadding()
                     .navigationBarsPadding()
                     .padding(horizontal = 24.dp)
-                    // WEBİ TOPARLAYAN DOKUNUŞ: Arayüzün webde bir şerit gibi yayılmasını engeller, kompakt bir mobil penceresi gibi tutar
                     .widthIn(max = 440.dp)
                     .verticalScroll(scrollState),
                 horizontalAlignment = Alignment.CenterHorizontally,
@@ -64,7 +63,7 @@ fun WelcomeScreen(
             ) {
                 Spacer(modifier = Modifier.height(32.dp))
 
-                // Üst Başlık ve Logo Alanı
+
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     modifier = Modifier.fillMaxWidth()
@@ -87,8 +86,7 @@ fun WelcomeScreen(
 
                 WelcomeCardContent(
                     customColors = customColors,
-                    onStart = onStart,
-                    onSkip = onSkip
+                    navigator = navigator
                 )
 
                 Spacer(modifier = Modifier.height(32.dp))
@@ -179,8 +177,7 @@ fun WelcomeLogo(customColors: CustomColors) {
 @Composable
 fun WelcomeCardContent(
     customColors: CustomColors,
-    onStart: () -> Unit,
-    onSkip: () -> Unit
+    navigator: Navigator
 ) {
     Card(
         modifier = Modifier
@@ -202,7 +199,6 @@ fun WelcomeCardContent(
                 .padding(horizontal = 24.dp, vertical = 32.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Sütunlar artık kart daraldığı için webde de birbirine yakın ve derli toplu duracak
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
@@ -232,60 +228,26 @@ fun WelcomeCardContent(
 
             Spacer(modifier = Modifier.height(36.dp))
 
-            // Buton genişliği kart genişliğiyle (max 440dp) uyumlu olarak sınırlandırıldı, yayılma bitti
-            Button(
-                onClick = onStart,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(54.dp)
-                    .shadow(
-                        elevation = 4.dp,
-                        shape = RoundedCornerShape(18.dp),
-                        clip = false,
-                        spotColor = customColors.navy.copy(alpha = 0.35f)
-                    ),
-                shape = RoundedCornerShape(18.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = customColors.navy
-                ),
-                contentPadding = PaddingValues(horizontal = 24.dp)
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.Center,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text(
-                        text = "Başlayalım",
-                        color = Color.White,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 16.sp,
-                        letterSpacing = 0.5.sp
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Icon(
-                        imageVector = Icons.Rounded.ArrowForward,
-                        contentDescription = null,
-                        modifier = Modifier.size(18.dp)
-                    )
-                }
-            }
+            TastyButton(
+                text = "Başlayalım",
+                onClick = { navigator.push(HealthWizardScreen()) },
+                isPrimary = true,
+                backcolor = customColors.navy,
+                textcolor = Color.White,
+                strokecolor = Color.Transparent
+            )
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            TextButton(
-                onClick = onSkip,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(48.dp)
-            ) {
-                Text(
-                    text = "Şimdilik Atla",
-                    color = customColors.navy.copy(alpha = 0.85f),
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 15.sp
-                )
-            }
+
+            TastyButton(
+                text = "Şimdilik Atla",
+                onClick ={}, //Ana sayfaya
+                isPrimary = false,
+                backcolor = Color.Transparent,
+                textcolor = customColors.navy.copy(alpha = 0.85f),
+                strokecolor = customColors.navy.copy(alpha = 0.15f)
+            )
         }
     }
 }

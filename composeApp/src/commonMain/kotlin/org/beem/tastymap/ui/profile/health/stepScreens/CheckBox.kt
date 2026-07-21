@@ -12,8 +12,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.RadioButton
-import androidx.compose.material3.RadioButtonDefaults
+import androidx.compose.material3.Checkbox
+import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
@@ -28,26 +28,27 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import org.beem.tastymap.ui.theme.CustomColors
 
-
 @Composable
- fun RadioButton(
+fun CheckboxOption(
     text: String,
-    selected: Boolean,
+    checked: Boolean,
     customColors: CustomColors,
-    onClick: () -> Unit
+    onCheckedChange: () -> Unit
 ) {
     val borderColor by animateColorAsState(
-        targetValue = if (selected) customColors.gold else customColors.lineAlpha.copy(alpha = 0.6f),
+        targetValue = if (checked) customColors.gold else customColors.lineAlpha.copy(0.6f),
         animationSpec = tween(200),
         label = "BorderColorAnimation"
     )
+
     val backgroundColor by animateColorAsState(
-        targetValue = if (selected) customColors.gold.copy(alpha = 0.08f) else Color.Transparent,
+        targetValue = if (checked) customColors.gold.copy(alpha = 0.08f) else Color.Transparent,
         animationSpec = tween(200),
         label = "BackgroundColorAnimation"
     )
+
     val textColor by animateColorAsState(
-        targetValue = if (selected) customColors.navy else customColors.lineAlpha.copy(alpha = 1f),
+        targetValue = if (checked) customColors.navy else customColors.lineAlpha.copy(alpha = 1f),
         animationSpec = tween(200),
         label = "TextColorAnimation"
     )
@@ -58,31 +59,34 @@ import org.beem.tastymap.ui.theme.CustomColors
             .clip(RoundedCornerShape(14.dp))
             .background(backgroundColor)
             .border(
-                width = if (selected) 2.dp else 1.dp,
+                width = if (checked) 2.dp else 1.dp,
                 color = borderColor,
                 shape = RoundedCornerShape(14.dp)
             )
             .clickable(
                 interactionSource = remember { MutableInteractionSource() },
                 indication = ripple(),
-                onClick = onClick
+                onClick = onCheckedChange
             )
-            .padding(horizontal = 16.dp, vertical = 16.dp),
+            .padding(horizontal = 16.dp, vertical = 14.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        RadioButton(
-            selected = selected,
-            onClick = null,
-            colors = RadioButtonDefaults.colors(
-                selectedColor = customColors.gold,
-                unselectedColor = customColors.lineAlpha.copy(alpha = 0.6f),
+        Checkbox(
+            checked = checked,
+            onCheckedChange = null,
+            colors = CheckboxDefaults.colors(
+                checkedColor = customColors.gold,
+                uncheckedColor = customColors.lineAlpha.copy(alpha = 0.6f),
+                checkmarkColor = Color.White
             )
         )
+
         Spacer(modifier = Modifier.width(12.dp))
+
         Text(
             text = text,
             fontSize = 15.sp,
-            fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
+            fontWeight = if (checked) FontWeight.SemiBold else FontWeight.Medium,
             color = textColor
         )
     }

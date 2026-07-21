@@ -1,5 +1,6 @@
 package org.beem.tastymap.ui.profile.health.components
 
+import TastyButton
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -14,6 +15,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -27,7 +29,12 @@ fun BaseStepContainer(
     iconResource: DrawableResource,
     title: String,
     description: String,
+    onNextClick: () -> Unit,
+    onBackClick: () -> Unit,
     modifier: Modifier = Modifier,
+    isNextEnabled: Boolean = true,
+    nextButtonText: String = "Sonraki",
+    backButtonText: String = "Geri",
     content: @Composable ColumnScope.() -> Unit
 ) {
     val customColors = LocalCustomColors.current
@@ -58,7 +65,6 @@ fun BaseStepContainer(
                     .padding(horizontal = 24.dp, vertical = 32.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                // Modüler İkon Alanı
                 Box(
                     modifier = Modifier
                         .size(96.dp)
@@ -75,7 +81,6 @@ fun BaseStepContainer(
 
                 Spacer(modifier = Modifier.height(24.dp))
 
-                // Modüler Başlık
                 Text(
                     text = title,
                     fontSize = 24.sp,
@@ -87,7 +92,6 @@ fun BaseStepContainer(
 
                 Spacer(modifier = Modifier.height(12.dp))
 
-                // Modüler Açıklama
                 Text(
                     text = description,
                     fontSize = 14.sp,
@@ -99,12 +103,41 @@ fun BaseStepContainer(
 
                 Spacer(modifier = Modifier.height(28.dp))
 
-                // Dışarıdan gelecek olan dinamik seçenekler (Radio, Checkbox vb.)
                 Column(
                     modifier = Modifier.fillMaxWidth(),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     content()
+                }
+
+                Spacer(modifier = Modifier.height(32.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    TastyButton(
+                        text = backButtonText,
+                        onClick = onBackClick,
+                        enabled = true,
+                        isPrimary = false,
+                        backcolor = Color.Transparent,
+                        textcolor = customColors.navy,
+                        strokecolor = customColors.navy.copy(alpha = 0.5f),
+                        modifier = Modifier.weight(1f)
+                    )
+
+                    TastyButton(
+                        text = nextButtonText,
+                        onClick = onNextClick,
+                        enabled = isNextEnabled,
+                        isPrimary = true,
+                        backcolor = customColors.navy,
+                        textcolor = Color.White,
+                        strokecolor = customColors.navy,
+                        modifier = Modifier.weight(1f)
+                    )
                 }
             }
         }
