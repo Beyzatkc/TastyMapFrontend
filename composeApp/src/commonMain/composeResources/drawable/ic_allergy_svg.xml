@@ -12,13 +12,13 @@
 
     <!-- Köşe Çizgileri -->
     <path
-        android:strokeColor="#B8860B"
+        android:strokeColor="#001970"
         android:strokeWidth="0.75"
         android:strokeLineCap="round"
         android:pathData="M7.008,17.002 L3.516,20.484" />
 
     <path
-        android:strokeColor="#B8860B"
+        android:strokeColor="#001970"
         android:strokeWidth="0.75"
         android:strokeLineCap="round"
         android:pathData="M20.484,3.516 L17.133,6.867" />

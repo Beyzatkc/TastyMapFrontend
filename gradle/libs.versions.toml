@@ -30,6 +30,7 @@ kotlinx-browser = "0.3"
 multiplatformSettingsSecure = "1.1.1"
 androidx-security = "1.1.0-alpha06"
 mokoPermissionsVersion = "0.18.0"
+compottie = "2.0.0-beta02"
 
 
 
@@ -81,6 +82,9 @@ voyager-transitions = { module = "cafe.adriel.voyager:voyager-transitions", vers
 
 androidx-paging-common = { module = "androidx.paging:paging-common", version.ref = "paging" }
 androidx-paging-compose = { module = "androidx.paging:paging-compose", version.ref = "paging" }
+
+compottie = { module = "io.github.alexzhirkevich:compottie", version.ref = "compottie" }
+compottie-resources = { module = "io.github.alexzhirkevich:compottie-resources", version.ref = "compottie" }
 
 moko-permissions = { module = "dev.icerock.moko:permissions", version.ref = "mokoPermissionsVersion" }
 

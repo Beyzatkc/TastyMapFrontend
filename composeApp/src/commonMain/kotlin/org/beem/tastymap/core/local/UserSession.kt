@@ -10,5 +10,6 @@ data class UserSession (
     val profile: String?,
     val role: String?,
     val date: String?,
-    val biography: String?
+    val biography: String?,
+    val onBoardComplete: Boolean?
 )

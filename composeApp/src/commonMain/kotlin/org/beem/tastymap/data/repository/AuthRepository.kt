@@ -7,6 +7,7 @@ import org.beem.tastymap.core.network.ResultWrapper
 import org.beem.tastymap.core.network.safeApiCall
 import org.beem.tastymap.core.provider.AuthValidator
 import org.beem.tastymap.data.model.auth.ApprovedRefreshRequestDTO
+import org.beem.tastymap.data.model.auth.AuthStatus
 import org.beem.tastymap.data.model.auth.CommonRequest
 import org.beem.tastymap.data.model.auth.LoginRequest
 import org.beem.tastymap.data.model.auth.LoginResponse
@@ -41,7 +42,7 @@ class AuthRepository(
                     response.userResponseDTO?.name,
                     response.userResponseDTO?.surname,
                     response.userResponseDTO?.profile,
-                    response.userResponseDTO?.role, response.userResponseDTO?.date, response.userResponseDTO?.biography)
+                    response.userResponseDTO?.role, response.userResponseDTO?.date, response.userResponseDTO?.biography,response.userResponseDTO?.onboardingCompleted)
 
                 userManager.saveUser(user)
             }
@@ -65,15 +66,15 @@ class AuthRepository(
                     response.userResponseDTO?.name,
                     response.userResponseDTO?.surname,
                     response.userResponseDTO?.profile,
-                    response.userResponseDTO?.role, response.userResponseDTO?.date, response.userResponseDTO?.biography)
+                    response.userResponseDTO?.role, response.userResponseDTO?.date, response.userResponseDTO?.biography,response.userResponseDTO?.onboardingCompleted)
 
                 userManager.saveUser(user)
             }
             response
         }
     }
-    suspend fun isUserLoggedIn(): Boolean {
-        return authValidator.isUserLoggedIn()
+    suspend fun getAuthStatus(): AuthStatus {
+        return authValidator.getAuthStatus()
     }
 
 

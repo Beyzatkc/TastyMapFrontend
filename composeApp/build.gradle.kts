@@ -12,7 +12,7 @@ plugins {
     alias(libs.plugins.composeMultiplatform)
     alias(libs.plugins.composeCompiler)
     alias(libs.plugins.sqldelight)
-    kotlin("plugin.serialization") version "2.0.21"
+    kotlin("plugin.serialization") version "2.3.20"
     id("com.google.gms.google-services")
     id("com.codingfeline.buildkonfig") version "0.15.1"
 }
@@ -175,6 +175,9 @@ kotlin {
             implementation(libs.kotlinx.coroutines.core)
             implementation(libs.ktor.client.core)
             implementation(libs.ktor.client.websockets)
+
+            implementation(libs.compottie)
+            implementation(libs.compottie.resources)
 
 
         }

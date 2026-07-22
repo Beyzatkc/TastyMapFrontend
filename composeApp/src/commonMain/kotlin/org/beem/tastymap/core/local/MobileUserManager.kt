@@ -13,6 +13,7 @@ class MobileUserManager(private val settings: Settings): UserManager{
         private const val KEY_ROLE = "role"
         private const val KEY_DATE = "date"
         private const val KEY_BIOGRAPHY = "biography"
+        private const val KEY_ON_BOARD_COMPLETE = "boardComplete"
         private const val KEY_STATUS = "status"
         private const val KEY_MESSAGE = "message"
     }
@@ -27,6 +28,7 @@ class MobileUserManager(private val settings: Settings): UserManager{
         settings[KEY_ROLE] = userSession.role
         settings[KEY_DATE] = userSession.date
         settings[KEY_BIOGRAPHY] = userSession.biography
+        settings[KEY_ON_BOARD_COMPLETE] = userSession.onBoardComplete
         settings[KEY_STATUS] = userSession.status
         settings[KEY_MESSAGE] = userSession.message
     }
@@ -41,6 +43,7 @@ class MobileUserManager(private val settings: Settings): UserManager{
     override fun getRole(): String? = settings[KEY_ROLE]
     override fun getDate(): String? = settings[KEY_DATE]
     override fun getBiography(): String? = settings[KEY_BIOGRAPHY]
+    override fun getOnBoardComplete(): Boolean? = settings[KEY_ON_BOARD_COMPLETE]
 
     override fun clear() {
        settings.clear()

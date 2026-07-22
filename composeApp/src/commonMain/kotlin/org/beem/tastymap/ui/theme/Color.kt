@@ -8,7 +8,9 @@ object AppColors {
     val LightGray = Color(0xFFF5F5F5) // acik gri
     val EmeraldAccent = Color(0xFF00A86B)
     val WarmAmber = Color(0xFFD97706)
-    val Gold = Color(0xFFB8860B)
+    //val Gold = Color(0xFFB8860B)
+    val Gold = Color(0xFFF5A623)
+
     val passwordGreen =  Color(0xFF43A047)
     val passwordYellow = Color(0xFFFFB300)
     val passwordRed = Color(0xFFE53935)

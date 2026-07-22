@@ -45,4 +45,9 @@ data class ResetPasswordResponse(
     val deviceId: String,
     val message: String
 )
+enum class AuthStatus {
+    AUTHENTICATED,
+    NEEDS_ONBOARDING,
+    UNAUTHENTICATED
+}
 

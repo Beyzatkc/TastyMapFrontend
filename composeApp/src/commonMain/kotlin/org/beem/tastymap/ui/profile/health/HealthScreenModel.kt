@@ -1,8 +1,10 @@
 package org.beem.tastymap.ui.profile.health
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import org.beem.tastymap.core.network.ResultWrapper
@@ -19,6 +21,9 @@ class HealthScreenModel(
     private val _healthState = MutableStateFlow(HealthUiState())
     val healthState = _healthState.asStateFlow()
 
+    private val _uiMessage = Channel<String>()
+    val uiMessage = _uiMessage.receiveAsFlow()
+
     init {
         val defaultAllergies = listOf(
             AllergyInfo(id = 1L, name = "Süt ve Süt Ürünleri"),
@@ -26,10 +31,12 @@ class HealthScreenModel(
             AllergyInfo(id = 3L, name = "Yer Fıstığı"),
             AllergyInfo(id = 4L, name = "Yumurta"),
             AllergyInfo(id = 5L, name = "Balık"),
+            AllergyInfo(id = 7L , name = "Diğer"),
             AllergyInfo(id = 6L, name = "Alerjim yok"),
 
         )
-        _healthState.update { it.copy(availableAllergies = defaultAllergies) }
+        val NO_ALLERGY_ID = 6L
+        _healthState.update { it.copy(availableAllergies = defaultAllergies, selectedAllergyIds = listOf(NO_ALLERGY_ID)) }
     }
 
     fun nextStep() {
@@ -41,14 +48,13 @@ class HealthScreenModel(
             }
         }
     }
-    fun previousStep() {
-        _healthState.update {
-            if (it.currentStep > 0) {
-                it.copy(currentStep = it.currentStep - 1)
-            } else {
-                it
-            }
+
+    fun previousStep(): Boolean {
+        if (_healthState.value.currentStep > 0) {
+            _healthState.update { it.copy(currentStep = it.currentStep - 1) }
+            return true
         }
+        return false
     }
     fun toggleDiabetes(hasDiabetes: Boolean) {
         _healthState.update { it.copy(hasDiabetes = hasDiabetes) }
@@ -74,6 +80,10 @@ class HealthScreenModel(
                 if (current.contains(allergyId)) {
                     current.remove(allergyId)
                 }else current.add(allergyId)
+
+                if (current.isEmpty()) {
+                    current.add(NONE_ALLERGY_ID)
+                }
             }
             state.copy(selectedAllergyIds = current)
         }
@@ -94,6 +104,7 @@ class HealthScreenModel(
                 }
                 is ResultWrapper.Error -> {
                     _healthState.update { it.copy(isLoading = false, error = result.message) }
+                    _uiMessage.send(result.message)
                 }
             }
         }

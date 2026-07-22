@@ -7,6 +7,7 @@ import org.beem.tastymap.core.local.UserSession
 import org.beem.tastymap.core.network.ResultWrapper
 import org.beem.tastymap.core.network.safeApiCall
 import org.beem.tastymap.core.provider.AuthValidator
+import org.beem.tastymap.data.model.auth.AuthStatus
 import org.beem.tastymap.data.model.auth.LoginStatus
 import org.beem.tastymap.data.model.auth.UserResponse
 
@@ -16,14 +17,29 @@ class WebSessionValidator(
     private val userManager: UserManager
 ) : AuthValidator {
 
-    override suspend fun isUserLoggedIn(): Boolean {
+    override suspend fun getAuthStatus(): AuthStatus {
         val userId = userManager.getUserId()
-        if(userId != null){
-            return true
+        val isOnboardingCompleted = userManager.getOnBoardComplete()
+
+        if (userId != null && isOnboardingCompleted == true) {
+            return AuthStatus.AUTHENTICATED
+        }else if(userId != null && isOnboardingCompleted == false){
+            return AuthStatus.NEEDS_ONBOARDING
         }
-        val result = validateSession()
-        return result is ResultWrapper.Success
+
+        return when (val result = validateSession()) {
+            is ResultWrapper.Success -> {
+                val isCompleted = result.data.onboardingCompleted
+                if (isCompleted) {
+                    AuthStatus.AUTHENTICATED
+                } else {
+                    AuthStatus.NEEDS_ONBOARDING
+                }
+            }
+            is ResultWrapper.Error -> AuthStatus.UNAUTHENTICATED
+        }
     }
+
     suspend fun validateSession(): ResultWrapper<UserResponse> {
         return safeApiCall {
             val response = authClient.get("api/myProfile/me").body<UserResponse>()
@@ -38,9 +54,10 @@ class WebSessionValidator(
                 profile = response.profile,
                 role = response.role,
                 date = response.date,
-                biography = response.biography
+                biography = response.biography,
+                onBoardComplete = response.onboardingCompleted
             )
-            println("Validate sessiona gırdı")
+            println("Validate sessiona girdi")
             userManager.saveUser(session)
 
             response

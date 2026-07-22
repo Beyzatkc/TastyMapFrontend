@@ -8,6 +8,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import org.beem.tastymap.core.navigation.DeepLinkManager
+import org.beem.tastymap.data.model.auth.AuthStatus
 
 class SplashScreenModel(
     private val authRepository: AuthRepository
@@ -28,10 +29,16 @@ class SplashScreenModel(
                 return@launch
             }
             delay(600)
-            if (authRepository.isUserLoggedIn()) {
-                _effect.value = SplashEffect.NavigateToHome
-            } else {
-                _effect.value = SplashEffect.NavigateToLogin
+            when (authRepository.getAuthStatus()) {
+                AuthStatus.AUTHENTICATED -> {
+                    _effect.value = SplashEffect.NavigateToHome
+                }
+                AuthStatus.NEEDS_ONBOARDING -> {
+                    _effect.value = SplashEffect.NavigateToOnBoard
+                }
+                AuthStatus.UNAUTHENTICATED -> {
+                    _effect.value = SplashEffect.NavigateToLogin
+                }
             }
         }
     }

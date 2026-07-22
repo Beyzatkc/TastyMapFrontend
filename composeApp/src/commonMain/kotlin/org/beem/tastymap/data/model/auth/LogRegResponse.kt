@@ -28,6 +28,7 @@ data class UserResponse(
     val biography:String?,
     val date:String,
     val emailVerified: Boolean,
+    val onboardingCompleted: Boolean,
     val privateProfile: Boolean
 )
 @Serializable

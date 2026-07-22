@@ -1,4 +1,5 @@
 package org.beem.tastymap.ui.auth.logReg
+import OnBoardingScreen
 import TastyButton
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
@@ -241,8 +242,10 @@ fun AuthEffectHandler(
                 is AuthEffect.NavigateToValidate -> {
                     navigator.push(EmailVerificationScreen(effect.email,effect.deviceId,effect.userId))
                 }
+                is AuthEffect.NavigateToWelcome -> {
+                    navigator.replaceAll(OnBoardingScreen())
+                }
                 else -> Unit
-
             }
         }
     }

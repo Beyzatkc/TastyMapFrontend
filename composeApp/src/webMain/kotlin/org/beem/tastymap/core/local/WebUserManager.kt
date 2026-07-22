@@ -17,6 +17,7 @@ class WebUserManager(): UserManager {
     override fun getRole(): String? = currentUserSession?.role
     override fun getDate(): String? = currentUserSession?.date
     override fun getBiography(): String? = currentUserSession?.biography
+    override fun getOnBoardComplete(): Boolean? = currentUserSession?.onBoardComplete
 
     override fun clear() {
         this.currentUserSession = null

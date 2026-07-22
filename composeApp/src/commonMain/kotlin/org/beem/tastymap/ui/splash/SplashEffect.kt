@@ -4,6 +4,7 @@ import cafe.adriel.voyager.core.screen.Screen
 
 sealed interface SplashEffect {
     object NavigateToHome : SplashEffect
+    object NavigateToOnBoard : SplashEffect
 
     object NavigateToLogin : SplashEffect
     data class NavigateToDeepLink(val screen : Screen) : SplashEffect

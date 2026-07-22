@@ -1,5 +1,6 @@
 package org.beem.tastymap.ui.splash
 
+import OnBoardingScreen
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -18,7 +19,7 @@ import cafe.adriel.voyager.koin.getScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import kotlinx.coroutines.delay
-import org.beem.tastymap.ui.profile.health.HealthWizardScreen
+import org.beem.tastymap.ui.auth.logReg.LogRegScreen
 import org.jetbrains.compose.resources.painterResource
 import tastymap.composeapp.generated.resources.Res
 import tastymap.composeapp.generated.resources.app_logo
@@ -36,8 +37,9 @@ class SplashScreen: Screen {
                 delay(2000)
                 when (it) {
                     is SplashEffect.NavigateToDeepLink -> navigator.replaceAll(it.screen)
-                    is SplashEffect.NavigateToLogin -> navigator.replaceAll(HealthWizardScreen())
+                    is SplashEffect.NavigateToLogin -> navigator.replaceAll(LogRegScreen())
                     is SplashEffect.NavigateToHome -> { /* navigator.replaceAll(HomeScreen()) */ }
+                    is SplashEffect.NavigateToOnBoard -> navigator.replaceAll(OnBoardingScreen())
                 }
             }
         }

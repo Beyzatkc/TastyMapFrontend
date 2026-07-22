@@ -123,8 +123,12 @@ class LogRegScreenModel(
                         onLoginSuccess()
                         if (result.data.status == LoginStatus.SUCCESS) {
                             _uiMessage.send("Giriş başarılı!")
-                            //ToastManager.show("Giriş başarılı!")
-                            _effect.send(AuthEffect.NavigateToHome)
+                            val isOnboardingCompleted = result.data.userResponseDTO?.onboardingCompleted ?: false
+                            if (!isOnboardingCompleted) {
+                                _effect.send(AuthEffect.NavigateToWelcome)
+                            } else {
+                                _effect.send(AuthEffect.NavigateToHome)
+                            }
                         } else {
                             _effect.send(AuthEffect.NavigateToPending(deviceId))
                         }

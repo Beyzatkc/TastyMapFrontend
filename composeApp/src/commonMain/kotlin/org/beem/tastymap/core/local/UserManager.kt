@@ -14,5 +14,6 @@ interface UserManager {
     fun getRole(): String?
     fun getDate(): String?
     fun getBiography(): String?
+    fun getOnBoardComplete(): Boolean?
     fun clear()
 }

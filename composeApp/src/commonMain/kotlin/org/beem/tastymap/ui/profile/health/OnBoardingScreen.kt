@@ -19,6 +19,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.Navigator
 import cafe.adriel.voyager.navigator.currentOrThrow
@@ -26,14 +27,16 @@ import org.beem.tastymap.ui.profile.health.HealthWizardScreen
 import org.beem.tastymap.ui.theme.CustomColors
 import org.beem.tastymap.ui.theme.LocalCustomColors
 
-@Composable
-fun WelcomeScreen() {
-    var showContent by remember { mutableStateOf(false) }
-    val navigator = LocalNavigator.currentOrThrow
+class OnBoardingScreen : Screen {
 
-    LaunchedEffect(Unit) {
-        showContent = true
-    }
+    @Composable
+    override fun Content() {
+        var showContent by remember { mutableStateOf(false) }
+        val navigator = LocalNavigator.currentOrThrow
+
+        LaunchedEffect(Unit) {
+            showContent = true
+        }
 
     val customColors = LocalCustomColors.current
     val scrollState = rememberScrollState()
@@ -92,6 +95,7 @@ fun WelcomeScreen() {
                 Spacer(modifier = Modifier.height(32.dp))
             }
         }
+       }
     }
 }
 
@@ -242,7 +246,7 @@ fun WelcomeCardContent(
 
             TastyButton(
                 text = "Şimdilik Atla",
-                onClick ={}, //Ana sayfaya
+                onClick = {}, //Ana sayfaya
                 isPrimary = false,
                 backcolor = Color.Transparent,
                 textcolor = customColors.navy.copy(alpha = 0.85f),

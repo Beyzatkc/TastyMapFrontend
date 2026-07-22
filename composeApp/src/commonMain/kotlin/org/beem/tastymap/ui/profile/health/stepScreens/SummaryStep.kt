@@ -1,5 +1,7 @@
 package org.beem.tastymap.ui.profile.health.stepScreens
+import TastyButton
 import androidx.compose.animation.core.*
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
@@ -8,15 +10,13 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Check
-import androidx.compose.material.icons.rounded.Favorite
+import androidx.compose.material.icons.rounded.Bloodtype
+import androidx.compose.material.icons.rounded.HealthAndSafety
 import androidx.compose.material.icons.rounded.Restaurant
-import androidx.compose.material.icons.rounded.Warning
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
@@ -25,11 +25,16 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import io.github.alexzhirkevich.compottie.LottieCompositionSpec
+import io.github.alexzhirkevich.compottie.animateLottieCompositionAsState
+import io.github.alexzhirkevich.compottie.rememberLottieComposition
+import io.github.alexzhirkevich.compottie.rememberLottiePainter
 import kotlinx.coroutines.delay
 import org.beem.tastymap.data.model.health.HealthEnum
 import org.beem.tastymap.ui.profile.health.HealthUiState
 import org.beem.tastymap.ui.theme.CustomColors
 import org.beem.tastymap.ui.theme.LocalCustomColors
+import tastymap.composeapp.generated.resources.Res
 
 @Composable
 fun SummaryStep(
@@ -41,6 +46,16 @@ fun SummaryStep(
 
     var showHeader by remember { mutableStateOf(false) }
     var visibleCards by remember { mutableStateOf(0) }
+    val composition by rememberLottieComposition{
+        LottieCompositionSpec.JsonString(
+            Res.readBytes("files/check.json").decodeToString()
+        )
+    }
+    val progress by animateLottieCompositionAsState(
+        composition = composition,
+        iterations = 1
+    )
+
 
     LaunchedEffect(Unit) {
         showHeader = true
@@ -64,7 +79,6 @@ fun SummaryStep(
         .joinToString(", ") { it.name }
         .ifEmpty { "Alerjim Yok" }
 
-    // Header için animasyon değerleri (Alpha ve Scale)
     val headerAlpha by animateFloatAsState(
         targetValue = if (showHeader) 1f else 0f,
         animationSpec = tween(600),
@@ -84,9 +98,9 @@ fun SummaryStep(
     ) {
         Column(
             modifier = Modifier
-                .widthIn(max = 700.dp) // Web & Tablet uyumu
+                .widthIn(max = 700.dp)
                 .fillMaxSize()
-                .verticalScroll(rememberScrollState()) // Kaydırılabilir yapı
+                .verticalScroll(rememberScrollState())
                 .padding(horizontal = 24.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
@@ -103,22 +117,17 @@ fun SummaryStep(
                         scaleY = headerScale
                     }
             ) {
-                Box(
-                    modifier = Modifier
-                        .size(90.dp)
-                        .clip(CircleShape)
-                        .background(customColors.gold.copy(alpha = 0.15f)),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = Icons.Rounded.Check,
-                        contentDescription = null,
-                        tint = customColors.gold,
-                        modifier = Modifier.size(45.dp)
-                    )
-                }
 
-                Spacer(modifier = Modifier.height(22.dp))
+                    Image(
+                        painter = rememberLottiePainter(
+                            composition = composition,
+                            progress = { progress }
+                        ),
+                        contentDescription = "Başarı Rozeti",
+                        modifier = Modifier.size(150.dp)
+                    )
+
+                Spacer(modifier = Modifier.height(15.dp))
 
                 Text(
                     text = "Sağlık Profiliniz Hazır",
@@ -143,7 +152,7 @@ fun SummaryStep(
 
             AnimatedSummaryCard(
                 visible = visibleCards >= 1,
-                icon = Icons.Rounded.Favorite,
+                icon = Icons.Rounded.Bloodtype,
                 title = "Diyabet Durumu",
                 value = if (state.hasDiabetes) "Diyabetim Var" else "Diyabetim Yok",
                 customColors = customColors
@@ -163,7 +172,7 @@ fun SummaryStep(
 
             AnimatedSummaryCard(
                 visible = visibleCards >= 3,
-                icon = Icons.Rounded.Warning,
+                icon = Icons.Rounded.HealthAndSafety,
                 title = "Alerjiler",
                 value = allergies,
                 customColors = customColors
@@ -175,39 +184,32 @@ fun SummaryStep(
                 text = "Bu bilgileri profilinizden istediğiniz zaman değiştirebilirsiniz.",
                 fontSize = 12.sp,
                 textAlign = TextAlign.Center,
-                color = customColors.navy.copy(alpha = 0.55f)
+                color = customColors.navy.copy(alpha = 0.60f)
             )
 
             Spacer(modifier = Modifier.height(18.dp))
 
-            Button(
+            TastyButton(
+                text = "Başlayalım",
                 onClick = onNextClick,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(52.dp),
-                shape = RoundedCornerShape(16.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = customColors.navy
-                )
-            ) {
-                Text(
-                    text = "Başlayalım",
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Bold
-                )
-            }
+                isPrimary = true,
+                isLoading = state.isLoading,
+                backcolor = customColors.navy,
+                textcolor = Color.White,
+                strokecolor = Color.Transparent
+            )
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            TextButton(
-                onClick = onBackClick
-            ) {
-                Text(
-                    text = "Bilgileri Düzenle",
-                    color = customColors.navy,
-                    fontWeight = FontWeight.SemiBold
-                )
-            }
+            TastyButton(
+                text = "Bilgileri Düzenle",
+                onClick = onBackClick,
+                isPrimary = false,
+                enabled = !state.isLoading,
+                backcolor = Color.Transparent,
+                textcolor = customColors.navy,
+                strokecolor = customColors.navy.copy(alpha = 0.3f)
+            )
 
             Spacer(modifier = Modifier.height(24.dp))
         }

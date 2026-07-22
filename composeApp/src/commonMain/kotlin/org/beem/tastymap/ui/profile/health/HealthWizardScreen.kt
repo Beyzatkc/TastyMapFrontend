@@ -5,15 +5,21 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.koin.koinScreenModel
+import cafe.adriel.voyager.navigator.LocalNavigator
+import cafe.adriel.voyager.navigator.currentOrThrow
+import org.beem.tastymap.core.util.ToastManager
+import org.beem.tastymap.ui.animations.TastyAnimations
 import org.beem.tastymap.ui.components.AuthFooter
 import org.beem.tastymap.ui.profile.health.stepScreens.AllergiesStep
 import org.beem.tastymap.ui.profile.health.stepScreens.DiabetesStep
@@ -30,6 +36,21 @@ class HealthWizardScreen : Screen {
         val screenModel = koinScreenModel<HealthScreenModel>()
         val state by screenModel.healthState.collectAsState()
         val customColors = LocalCustomColors.current
+        val navigator = LocalNavigator.currentOrThrow
+
+        val handleBack = {
+            if (state.currentStep > 0) {
+                screenModel.previousStep()
+            } else {
+                navigator.pop()
+            }
+        }
+
+        LaunchedEffect(screenModel.uiMessage) {
+            screenModel.uiMessage.collect { message ->
+                ToastManager.show(message)
+            }
+        }
 
         Scaffold(
             topBar = {
@@ -43,7 +64,7 @@ class HealthWizardScreen : Screen {
                 ) {
 
                         IconButton(
-                            onClick = { screenModel.previousStep() },
+                            onClick = { handleBack() },
                             modifier = Modifier.size(32.dp)
                         ) {
                             Icon(
@@ -57,7 +78,8 @@ class HealthWizardScreen : Screen {
                         progress = { (state.currentStep + 1).toFloat() / state.totalSteps },
                         modifier = Modifier
                             .weight(1f)
-                            .height(8.dp),
+                            .height(4.dp)
+                            .clip(RoundedCornerShape(2.dp)),
                         color = customColors.gold,
                         trackColor = customColors.wave
                     )
@@ -65,7 +87,7 @@ class HealthWizardScreen : Screen {
                     Text(
                         text = "Adım ${state.currentStep + 1} / ${state.totalSteps}",
                         style = MaterialTheme.typography.labelMedium,
-                        color = customColors.navy,
+                        color = customColors.navy.copy(alpha = 0.7f),
                         maxLines = 1
                     )
                 }
@@ -88,7 +110,13 @@ class HealthWizardScreen : Screen {
             ) {
                 AnimatedContent(
                     targetState = state.currentStep,
-                    transitionSpec = { fadeIn() togetherWith fadeOut() },
+                    transitionSpec = {
+                        if (targetState > initialState) {
+                            TastyAnimations.slideInForward()
+                        } else {
+                            TastyAnimations.slideInBackward()
+                        }
+                    },
                     label = "WizardStepTransition",
                     modifier = Modifier.fillMaxWidth()
                 ) { step ->
@@ -97,24 +125,24 @@ class HealthWizardScreen : Screen {
                             state = state,
                             onDiabetesChanged = screenModel::toggleDiabetes,
                             onNextClick = { screenModel.nextStep() },
-                            onBackClick = { screenModel.previousStep() }
+                            onBackClick = { handleBack() }
                         )
                         1 -> EatTypeStep(
                             state = state,
                             onEatTypeChanged = screenModel::selectEatType,
                             onNextClick = { screenModel.nextStep() },
-                            onBackClick = { screenModel.previousStep() }
+                            onBackClick = { handleBack() }
                         )
                          2 -> AllergiesStep(
                              state = state,
                              onAllergyToggle = screenModel::toggleAllergy,
                              onNextClick = {screenModel.nextStep()},
-                             onBackClick = {screenModel.previousStep()}
+                             onBackClick = {handleBack()}
                          )
                          3 -> SummaryStep(
                              state = state,
-                             onNextClick = {screenModel.nextStep()},
-                             onBackClick = {screenModel.previousStep()}
+                             onNextClick = {screenModel.saveHealthProfile()},
+                             onBackClick = {handleBack()}
                          )
                     }
                 }

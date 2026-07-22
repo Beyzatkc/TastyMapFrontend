@@ -42,7 +42,7 @@ fun CheckboxOption(
     )
 
     val backgroundColor by animateColorAsState(
-        targetValue = if (checked) customColors.gold.copy(alpha = 0.08f) else Color.Transparent,
+        targetValue = if (checked) customColors.gold.copy(alpha = 0.12f) else Color.Transparent,
         animationSpec = tween(200),
         label = "BackgroundColorAnimation"
     )

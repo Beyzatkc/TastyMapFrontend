@@ -42,7 +42,7 @@ import org.beem.tastymap.ui.theme.CustomColors
         label = "BorderColorAnimation"
     )
     val backgroundColor by animateColorAsState(
-        targetValue = if (selected) customColors.gold.copy(alpha = 0.08f) else Color.Transparent,
+        targetValue = if (selected) customColors.gold.copy(alpha = 0.12f) else Color.Transparent,
         animationSpec = tween(200),
         label = "BackgroundColorAnimation"
     )
