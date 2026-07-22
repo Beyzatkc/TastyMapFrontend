@@ -21,7 +21,7 @@ fun EatTypeStep (
         BaseStepContainer(
             iconResource = Res.drawable.ic_diet_svg,
             title = "Beslenme tercihiniz nedir?",
-            description = "Yemek alışkanlıklarınıza en uygun tarifleri filtreleyebilmemiz için ana beslenme tarzınızı seçin.",
+            description = "Size tamamen özel bir lezzet haritası sunabilmemiz için beslenme alışkanlığınızı belirtin.",
             onNextClick = onNextClick,
             onBackClick = onBackClick,
             isNextEnabled = true

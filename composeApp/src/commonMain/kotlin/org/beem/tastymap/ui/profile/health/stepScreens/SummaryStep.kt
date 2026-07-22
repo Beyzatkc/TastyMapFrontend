@@ -105,8 +105,6 @@ fun SummaryStep(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
 
-            Spacer(modifier = Modifier.height(35.dp))
-
 
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,

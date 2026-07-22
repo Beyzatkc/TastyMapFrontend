@@ -20,7 +20,7 @@ fun DiabetesStep(
     BaseStepContainer(
         iconResource = Res.drawable.ic_diabetes_svg,
         title = "Diyabet Durumunuz Nedir?",
-        description = "Size en uygun tarifleri önerebilmemiz için bu küçük bilgiye ihtiyacımız var.",
+        description = "Sağlığınıza ve beslenme düzeninize en uygun lezzetleri filtrelememize yardımcı olun.",
         onNextClick = onNextClick,
         onBackClick = onBackClick,
         isNextEnabled = true
