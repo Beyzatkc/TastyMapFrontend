@@ -4,9 +4,9 @@ import androidx.compose.runtime.Composable
 import org.beem.tastymap.data.model.health.HealthEnum
 import org.beem.tastymap.ui.profile.health.HealthUiState
 import org.beem.tastymap.ui.profile.health.components.BaseStepContainer
+import org.beem.tastymap.ui.profile.health.stepScreens.common.RadioButton
 import org.beem.tastymap.ui.theme.LocalCustomColors
 import tastymap.composeapp.generated.resources.Res
-import tastymap.composeapp.generated.resources.ic_diabetes_svg
 import tastymap.composeapp.generated.resources.ic_diet_svg
 
 @Composable

@@ -20,9 +20,11 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import cafe.adriel.voyager.core.screen.Screen
+import cafe.adriel.voyager.koin.koinScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.Navigator
 import cafe.adriel.voyager.navigator.currentOrThrow
+import org.beem.tastymap.ui.profile.health.HealthScreenModel
 import org.beem.tastymap.ui.profile.health.HealthWizardScreen
 import org.beem.tastymap.ui.theme.CustomColors
 import org.beem.tastymap.ui.theme.LocalCustomColors
@@ -32,6 +34,7 @@ class OnBoardingScreen : Screen {
     @Composable
     override fun Content() {
         var showContent by remember { mutableStateOf(false) }
+        val screenModel = koinScreenModel<HealthScreenModel>()
         val navigator = LocalNavigator.currentOrThrow
 
         LaunchedEffect(Unit) {
@@ -89,7 +92,8 @@ class OnBoardingScreen : Screen {
 
                 WelcomeCardContent(
                     customColors = customColors,
-                    navigator = navigator
+                    navigator = navigator,
+                    screenModel = screenModel
                 )
 
                 Spacer(modifier = Modifier.height(32.dp))
@@ -181,7 +185,8 @@ fun WelcomeLogo(customColors: CustomColors) {
 @Composable
 fun WelcomeCardContent(
     customColors: CustomColors,
-    navigator: Navigator
+    navigator: Navigator,
+    screenModel: HealthScreenModel
 ) {
     Card(
         modifier = Modifier
@@ -246,7 +251,7 @@ fun WelcomeCardContent(
 
             TastyButton(
                 text = "Şimdilik Atla",
-                onClick = {}, //Ana sayfaya
+                onClick = screenModel::skipHealthWizard,// Ana sayfa yonlendırmesı olcak
                 isPrimary = false,
                 backcolor = Color.Transparent,
                 textcolor = customColors.navy.copy(alpha = 0.85f),

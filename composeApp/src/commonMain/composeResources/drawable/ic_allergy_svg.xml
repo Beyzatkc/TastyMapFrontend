@@ -25,82 +25,82 @@
 
     <!-- Küp / Besin Yapısı (Sağ Taraf) -->
     <path
-        android:strokeColor="#B8860B"
+        android:strokeColor="#F5A623"
         android:strokeWidth="0.75"
         android:strokeLineJoin="round"
         android:pathData="M12,15.703 L14.625,14.203 L14.625,15.703 L12,17.203" />
 
     <path
-        android:strokeColor="#B8860B"
+        android:strokeColor="#F5A623"
         android:strokeWidth="0.75"
         android:strokeLineJoin="round"
         android:pathData="M12,14.203 L14.625,12.703 L14.625,14.203 L12,15.703" />
 
     <path
-        android:strokeColor="#B8860B"
+        android:strokeColor="#F5A623"
         android:strokeWidth="0.75"
         android:strokeLineJoin="round"
         android:pathData="M12,12.703 L14.625,11.203 L14.625,12.703 L12,14.203" />
 
     <path
-        android:strokeColor="#B8860B"
+        android:strokeColor="#F5A623"
         android:strokeWidth="0.75"
         android:strokeLineJoin="round"
         android:pathData="M12,11.203 L14.625,9.703 L14.625,11.203 L12,12.703" />
 
     <path
-        android:strokeColor="#B8860B"
+        android:strokeColor="#F5A623"
         android:strokeWidth="0.75"
         android:strokeLineJoin="round"
         android:pathData="M12,9.703 L14.625,8.203 L14.625,9.703 L12,11.203" />
 
     <!-- Küp / Besin Yapısı (Sol Taraf) -->
     <path
-        android:strokeColor="#B8860B"
+        android:strokeColor="#F5A623"
         android:strokeWidth="0.75"
         android:strokeLineJoin="round"
         android:pathData="M12,15.703 L9.375,14.203 L9.375,15.703 L12,17.203" />
 
     <path
-        android:strokeColor="#B8860B"
+        android:strokeColor="#F5A623"
         android:strokeWidth="0.75"
         android:strokeLineJoin="round"
         android:pathData="M12,14.203 L9.375,12.703 L9.375,14.203 L12,15.703" />
 
     <path
-        android:strokeColor="#B8860B"
+        android:strokeColor="#F5A623"
         android:strokeWidth="0.75"
         android:strokeLineJoin="round"
         android:pathData="M12,12.703 L9.375,11.203 L9.375,12.703 L12,14.203" />
 
     <path
-        android:strokeColor="#B8860B"
+        android:strokeColor="#F5A623"
         android:strokeWidth="0.75"
         android:strokeLineJoin="round"
         android:pathData="M12,11.203 L9.375,9.703 L9.375,11.203 L12,12.703" />
 
     <path
-        android:strokeColor="#B8860B"
+        android:strokeColor="#F5A623"
         android:strokeWidth="0.75"
         android:strokeLineJoin="round"
         android:pathData="M12,9.703 L9.375,8.203 L9.375,9.703 L12,11.203" />
 
     <!-- Orta Dikey Çizgi -->
     <path
-        android:strokeColor="#B8860B"
+        android:strokeColor="#F5A623"
         android:strokeWidth="0.75"
         android:strokeLineCap="round"
         android:pathData="M12,4.828 L12,20.203" />
 
     <!-- Üst Bağlantılar -->
     <path
-        android:strokeColor="#B8860B"
+        android:strokeColor="#F5A623"
         android:strokeWidth="0.75"
         android:strokeLineCap="round"
         android:pathData="M9.375,6.516 L9.375,8.203" />
 
     <path
-        android:strokeColor="#B8860B"
+        android:strokeColor="#F5A623"
         android:strokeWidth="0.75"
         android:strokeLineCap="round"
         android:pathData="M14.625,6.516 L14.625,8.203" />

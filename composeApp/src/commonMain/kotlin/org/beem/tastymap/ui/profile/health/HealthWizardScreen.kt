@@ -141,7 +141,7 @@ class HealthWizardScreen : Screen {
                          )
                          3 -> SummaryStep(
                              state = state,
-                             onNextClick = {screenModel.saveHealthProfile()},
+                             onNextClick = {screenModel.saveHealthProfile()},//ANA sayfa yonlendırmesı olcak
                              onBackClick = {handleBack()}
                          )
                     }

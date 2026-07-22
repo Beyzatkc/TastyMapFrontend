@@ -1,4 +1,4 @@
-package org.beem.tastymap.ui.profile.health.stepScreens
+package org.beem.tastymap.ui.profile.health.stepScreens.common
 
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.tween

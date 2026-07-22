@@ -109,4 +109,25 @@ class HealthScreenModel(
             }
         }
     }
+    fun skipHealthWizard() {
+        screenModelScope.launch {
+            _healthState.update { it.copy(isLoading = true) }
+
+            val defaultRequest = HealthRequest(
+                hasDiabetes = false,
+                eatType = HealthEnum.NORMAL,
+                allergyIds = listOf(6L)
+            )
+
+            when (val result = repo.addHealth(defaultRequest)) {
+                is ResultWrapper.Success -> {
+                    _healthState.update { it.copy(isLoading = false, isSuccess = true) }
+                }
+                is ResultWrapper.Error -> {
+                    _healthState.update { it.copy(isLoading = false) }
+                    _uiMessage.send("Bir hata oluştu, lütfen tekrar deneyin."+result.message)
+                }
+            }
+        }
+    }
 }
