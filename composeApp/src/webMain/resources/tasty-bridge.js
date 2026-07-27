@@ -249,6 +249,36 @@
                 }
             }
             self.animator.requestID = requestAnimationFrame(animate);
+        },
+
+
+        setCanvasCursor: function (cursorType) {
+            if (this.map) {
+                this.map.getCanvas().style.cursor = cursorType;
+            }
+        },
+
+        addLayerClickListener: function (layerId, callback) {
+            if (this.map) {
+                this.map.on('click', layerId, (e) => {
+                    if (e.features && e.features.length > 0) {
+                        const props = e.features[0].properties;
+                        callback(JSON.stringify(props));
+                    }
+                });
+            }
+        },
+
+        addLayerHoverListener: function (layerId) {
+            if (this.map) {
+                const map = this.map;
+                map.on('mouseenter', layerId, () => {
+                    map.getCanvas().style.cursor = 'pointer';
+                });
+                map.on('mouseleave', layerId, () => {
+                    map.getCanvas().style.cursor = '';
+                });
+            }
         }
     };
 })();

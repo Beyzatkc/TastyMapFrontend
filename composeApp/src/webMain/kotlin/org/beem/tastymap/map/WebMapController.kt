@@ -54,39 +54,19 @@ class WebMapController : MapController {
         onRestaurantSelected: (restaurant: Restaurant) -> Unit
     ) {
         val layerId = "restaurant-layer"
-        val mapObj = getMapInstance() ?: return
 
-        mapObj.on("click", layerId) { event: MapMouseEvent ->
-            val features = event.features
+        addLayerHoverListener(layerId)
 
-            if (features != null && getJsArrayLength(features) > 0) {
-                val clickedFeature = getJsArrayElement(features, 0)
-                val properties = clickedFeature?.properties
+        addLayerClickListener(layerId) { jsonString ->
+            println("Atlas: Wasm tarafında restoran tıklaması yakalandı -> $jsonString")
 
-                if (properties != null) {
-                    val jsonString = stringifyJsObject(properties)
-                    println("Atlas: Wasm tarafında restoran tıklaması yakalandı -> $jsonString")
-                    onRestaurantSelected(
-                        parseAndSelectRestaurant(jsonString)
-                            ?: Restaurant(
-                                id = "",
-                                name = "",
-                                address = "",
-                                latitude = 0.0,
-                                longitude = 0.0,
-                                rating = 0.0,
-                                status = "",
-                                totalRatings = 0,
-                                types = emptyList(),
-                                category = ""
-                            )
-                    )
-                }
-            }
+            val restaurant = parseAndSelectRestaurant(jsonString) ?: Restaurant(
+                id = "", name = "", address = "", latitude = 0.0, longitude = 0.0,
+                rating = 0.0, status = "", totalRatings = 0, types = emptyList(), category = ""
+            )
+
+            onRestaurantSelected(restaurant)
         }
-
-        mapObj.on("mouseenter", layerId) { setCanvasCursor("pointer") }
-        mapObj.on("mouseleave", layerId) { setCanvasCursor("") }
     }
 
 

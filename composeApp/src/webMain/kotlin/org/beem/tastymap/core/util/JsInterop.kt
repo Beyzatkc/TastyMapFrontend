@@ -30,21 +30,28 @@ internal suspend fun <T : JsAny?> Promise<T>.await(): T = suspendCancellableCoro
 
 
 @OptIn(ExperimentalWasmJsInterop::class)
-fun HTMLElement.setStyleTransform(transformValue: String) {
-    val element = this
-    js("element.style.transform = transformValue;")
-}
+@JsFun("(element, transformValue) => { element.style.transform = transformValue; }")
+external fun setElementTransform(element: JsAny, transformValue: String)
 
 @OptIn(ExperimentalWasmJsInterop::class)
+fun JsAny.setStyleTransform(transformValue: String) {
+    setElementTransform(this, transformValue)
+}
+
+
+@OptIn(ExperimentalWasmJsInterop::class)
+@JsFun("(element, cursorType) => { element.style.cursor = cursorType; }")
+external fun setElementCursor(element: HTMLElement, cursorType: String)
+
+
 fun HTMLElement.setStyleCursor(cursorType: String) {
-    val element = this
-    js("element.style.cursor = cursorType;")
+    setElementCursor(this, cursorType)
 }
 
+
 @OptIn(ExperimentalWasmJsInterop::class)
-fun executeDelayed(delayMs: Int, action: () -> Unit) {
-    js("setTimeout(function() { action(); }, delayMs);")
-}
+fun executeDelayed(delayMillis: Int, callback: () -> Unit): Unit =
+    js("setTimeout(callback, delayMillis)")
 
 @OptIn(ExperimentalWasmJsInterop::class)
 fun stringifyJsObject(obj: JsAny): String = js("JSON.stringify(obj)")

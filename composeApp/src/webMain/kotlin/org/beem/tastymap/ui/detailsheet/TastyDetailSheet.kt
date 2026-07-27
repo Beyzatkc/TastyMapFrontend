@@ -11,7 +11,9 @@ import org.beem.tastymap.place.state.ReviewPagingState
 import org.beem.tastymap.ui.detailsheet.components.createReviewCardElement
 
 import org.w3c.dom.HTMLElement
+import kotlin.js.ExperimentalWasmJsInterop
 
+@OptIn(ExperimentalWasmJsInterop::class)
 @Composable
 actual fun TastyDetailSheet(
     restaurant: Restaurant,
