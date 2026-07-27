@@ -15,16 +15,18 @@ class WebLocationTracker: LocationTracker {
 
     private var watchId: Int? = null
 
+    private val fakeLocationData = LocationData(
+        latitude = 37.946978,
+        longitude = 32.519940,
+        accuracy = 0f,
+        isAvailable = true
+    )
+
     override fun startTracking() {
+        _locationState.value = fakeLocationData
+
         val navigator = window.navigator as NavigatorWithGeolocation
         val geolocation = navigator.geolocation
-
-        val fakeLocationData = LocationData(
-            latitude = 37.946978,
-            longitude = 32.519940,
-            accuracy = 0f,
-            isAvailable = true
-        )
 
         val success: (GeolocationPosition) -> Unit = { position ->
             val locationData = LocationData(

@@ -4,7 +4,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.viewinterop.WebElementView
 import org.w3c.dom.HTMLButtonElement
 
 @OptIn(ExperimentalComposeUiApi::class)

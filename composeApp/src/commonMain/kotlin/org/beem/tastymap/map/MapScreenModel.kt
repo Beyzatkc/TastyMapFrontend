@@ -145,25 +145,25 @@ class MapScreenModel(
     }
 
     fun onMarkerClicked(restaurant: Restaurant) {
-        repository.getPlaceById(restaurant.id)?.let { place ->
-            restaurant.rating = place.rating
-            restaurant.address = place.vicinity ?: ""
-            restaurant.types = place.types
-            restaurant.status = place.business_status ?: ""
-            restaurant.latitude = place.geometry?.location?.lat ?: 0.0
-            restaurant.longitude = place.geometry?.location?.lng ?: 0.0
-            restaurant.totalRatings = place.user_ratings_total
-        }
-        _selectedRestaurant.value = restaurant
-        println(_selectedRestaurant.value)
-        _showDetails.value = true
-
+        val updatedRestaurant = repository.getPlaceById(restaurant.id)?.let { place ->
+            restaurant.copy(
+                rating = place.rating,
+                address = place.vicinity ?: "",
+                types = place.types,
+                status = place.business_status ?: "",
+                latitude = place.geometry?.location?.lat ?: 0.0,
+                longitude = place.geometry?.location?.lng ?: 0.0,
+                totalRatings = place.user_ratings_total
+            )
+        } ?: restaurant
         screenModelScope.launch{
             _event.emit(MapEvent.CenterOn(
-                lat = restaurant.latitude,
-                lng = restaurant.longitude,
+                lat = updatedRestaurant.latitude,
+                lng = updatedRestaurant.longitude,
                 zoom = 17f
             ))
+
+            _event.emit(MapEvent.OpenRestaurantDetails(updatedRestaurant))
         }
     }
 

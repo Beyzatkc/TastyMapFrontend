@@ -4,6 +4,8 @@ actual class TastyText actual constructor(
     private val text: String,
     private val style: TastyTextStyle,
     private val color: String?,
+    private val maxLines: Int,
+    private val onOverflow: (() -> Unit)?,
     override val modifier: TastyModifier
 ) : TastyView {
 

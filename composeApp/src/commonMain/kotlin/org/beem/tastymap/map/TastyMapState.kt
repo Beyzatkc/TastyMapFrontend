@@ -7,13 +7,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import org.beem.tastymap.data.model.Restaurant
 
-@Composable
-fun rememberTastyMapState(): TastyMapState{
-    return remember { TastyMapState() }
-}
-
 class TastyMapState {
     var controller: MapController? by mutableStateOf(null)
+
+    var selectedRestaurant by mutableStateOf<Restaurant?>(null)
+        private set
 
     fun centerOn(lat: Double, lng: Double, zoom: Float = 15f){
         controller?.animateTo(lat, lng, zoom)
@@ -24,7 +22,19 @@ class TastyMapState {
     fun updateMapData(geoJson: String){
         controller?.updateMapData(geoJson)
     }
-    fun onClickMarker(onMarkerClicked: (Restaurant) -> Unit){
-        controller?.onClickMarker(onMarkerClicked)
+
+    fun setupMarkerClickListener() {
+        controller?.setupRestaurantMarkerClickListener { restaurant ->
+            selectedRestaurant = restaurant
+        }
     }
+
+    fun selectRestaurant(restaurant: Restaurant?) {
+        selectedRestaurant = restaurant
+    }
+}
+
+@Composable
+fun rememberTastyMapState(): TastyMapState{
+    return remember { TastyMapState() }
 }

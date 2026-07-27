@@ -7,6 +7,5 @@ interface MapController {
     fun addMarker(lat: Double, lng: Double, title: String)
     fun userMarker(lat: Double, lng: Double, title: String, bearing: Float)
     fun updateMapData(geoJson: String)
-    fun onClickMarker(onMarkerClicked: (Restaurant) -> Unit)
-
+    fun setupRestaurantMarkerClickListener(onRestaurantSelected: (restaurant: Restaurant) -> Unit)
 }

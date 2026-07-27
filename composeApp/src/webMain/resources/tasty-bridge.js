@@ -1,9 +1,8 @@
-(function() {
+(function () {
     window.TastyMapBridge = {
         map: null,
-
         userLocationSourceId: "user-location-source",
-
+        isMapLibreLoaded: false,
 
         animator: {
             lastLat: 0,
@@ -12,77 +11,153 @@
             requestID: null
         },
 
-        setupRestaurantLayers: async function() {
-                const self = this;
+        // 1. SDK Tembel Yükleme (Lazy Load)
+        loadMapLibreSdk: function () {
+            return new Promise((resolve, reject) => {
+                // Eğer zaten yüklendiyse bekleme, hemen geç
+                if (window.maplibregl || this.isMapLibreLoaded) {
+                    this.isMapLibreLoaded = true;
+                    resolve(null);
+                    return;
+                }
 
-                // 1. İkon listesini tanımla
-                const icons = {
-                    'tm_restaurant': 'ic_restaurant.svg',
-                    'tm_bakery': 'ic_bakery.svg',
-                    'tm_cafe': 'ic_cafe.svg',
-                    'tm_default': 'ic_default.svg'
-                };
+                console.log("Atlas: Harita ekranı tetiklendi. SDK dinamik olarak yükleniyor...");
 
-                const loadIcon = (id, path) => {
-                    return new Promise((resolve) => {
-                        const img = new Image();
-                        img.src = path;
-                        img.onload = () => {
-                            if (!this.map.hasImage(id)) {
-                                this.map.addImage(id, img);
-                            }
-                            resolve();
-                        };
-                        img.onerror = (e) => {
-                            console.error(`Görsel decode edilemedi veya bulunamadı: ${path}`, e);
-                            resolve();
-                        };
-                    });
-                };
+                // 1. Önce CSS Enjekte Ediliyor
+                const link = document.createElement('link');
+                link.rel = 'stylesheet';
+                link.href = 'https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.css';
+                document.head.appendChild(link);
 
-                await Promise.all(Object.entries(icons).map(([id, path]) => loadIcon(id, path)));
-                console.log("Tüm restoran ikonları hazır.");
-
+                // 2. Sonra JS Enjekte Ediliyor
+                const script = document.createElement('script');
+                script.src = 'https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.js';
+                script.type = 'text/javascript';
                 
-                if (!this.map.getSource('restaurant-source')) {
-                    this.map.addSource('restaurant-source', {
-                        type: 'geojson',
-                        data: { "type": "FeatureCollection", "features": [] }
-                    });
-                }
+                // Tarayıcının script'i tamamen okuyup execute ettiğinden emin oluyoruz
+                script.onload = () => {
+                    console.log("Atlas: MapLibre script dosyası tarayıcıya başarıyla parse edildi.");
+                    this.isMapLibreLoaded = true;
+                    resolve(null); // Kotlin Wasm/JS tarafına "hazırız" sinyali gönderiliyor
+                };
 
-                if (!this.map.getLayer('restaurant-layer')) {
-                    this.map.addLayer({
-                        id: 'restaurant-layer',
-                        type: 'symbol',
-                        source: 'restaurant-source',
-                        layout: {
-                            'icon-image': ['get', 'icon_to_use'],
-                            'icon-size': ['get', 'icon_scale'],
-                            
-                            'icon-allow-overlap': true,
-                            'text-field': ['get', 'name'],
-                            'text-offset': [0, 1.5],
-                            'text-size': 11
-                        },
-                        paint: {
-                            'text-color': '#000000',
-                            'text-halo-color': '#FFFFFF',
-                            'text-halo-width': 1,
-                            'icon-opacity': ['step', ['zoom'], 0, 13, 1],
-                            'text-opacity': ['step', ['zoom'], 0, 13, 1]
-                        }
-                    });
-                }
+                script.onerror = (err) => {
+                    console.error("Atlas Hatası: Tarayıcı script yüklemesini reddetti:", err);
+                    reject(new Error("MapLibre GL JS yüklenemedi. Ağ veya CSP engeli olabilir."));
+                };
+
+                document.head.appendChild(script);
+            });
         },
 
-        initializeMap: function(containerId, mapUrl) {
-            const self = this;
+        // Görsel Yükleme Yardımcısı
+        loadImagePromise: function (id, path) {
+            return new Promise((resolve) => {
+                if (!this.map) return resolve();
+                if (this.map.hasImage(id)) return resolve();
+
+                const img = new Image();
+                img.src = path;
+                img.onload = () => {
+                    if (this.map && !this.map.hasImage(id)) {
+                        this.map.addImage(id, img);
+                    }
+                    resolve();
+                };
+                img.onerror = (e) => {
+                    console.error(`Görsel decode edilemedi veya bulunamadı: ${path}`, e);
+                    resolve();
+                };
+            });
+        },
+
+        setupRestaurantLayers: async function () {
+            const icons = {
+                'tm_restaurant': 'ic_restaurant.svg',
+                'tm_bakery': 'ic_bakery.svg',
+                'tm_cafe': 'ic_cafe.svg',
+                'tm_default': 'ic_default.svg'
+            };
+
+            await Promise.all(Object.entries(icons).map(([id, path]) => this.loadImagePromise(id, path)));
+
+            if (!this.map.getSource('restaurant-source')) {
+                this.map.addSource('restaurant-source', {
+                    type: 'geojson',
+                    data: { "type": "FeatureCollection", "features": [] }
+                });
+            }
+
+            if (!this.map.getLayer('restaurant-layer')) {
+                this.map.addLayer({
+                    id: 'restaurant-layer',
+                    type: 'symbol',
+                    source: 'restaurant-source',
+                    layout: {
+                        'icon-image': ['get', 'icon_to_use'],
+                        'icon-size': ['get', 'icon_scale'],
+                        'icon-allow-overlap': true,
+                        'text-field': ['get', 'name'],
+                        'text-offset': [0, 1.5],
+                        'text-size': 11
+                    },
+                    paint: {
+                        'text-color': '#000000',
+                        'text-halo-color': '#FFFFFF',
+                        'text-halo-width': 1,
+                        'icon-opacity': ['step', ['zoom'], 0, 13, 1],
+                        'text-opacity': ['step', ['zoom'], 0, 13, 1]
+                    }
+                });
+            }
+        },
+
+        setupUserLocationLayer: async function () {
+            await this.loadImagePromise('user-arrow-icon', 'navigation.png');
+
+            if (!this.map.getSource(this.userLocationSourceId)) {
+                this.map.addSource(this.userLocationSourceId, {
+                    type: 'geojson',
+                    data: {
+                        "type": "Feature",
+                        "geometry": { "type": "Point", "coordinates": [0, 0] },
+                        "properties": { "bearing": 0 }
+                    }
+                });
+            }
+
+            if (!this.map.getLayer('user-location-layer')) {
+                this.map.addLayer({
+                    id: 'user-location-layer',
+                    type: 'symbol',
+                    source: this.userLocationSourceId,
+                    layout: {
+                        'icon-image': 'user-arrow-icon',
+                        'icon-size': 0.1,
+                        'icon-rotate': ['get', 'bearing'],
+                        'icon-rotation-alignment': 'map',
+                        'icon-allow-overlap': true,
+                        'icon-ignore-placement': true
+                    }
+                });
+            }
+        },
+
+        // 2. Güvenli ve Asenkron Map Başlatıcı
+        initializeMap: async function (containerId, mapUrl) {
             if (this.map) return;
 
             const el = document.getElementById(containerId);
             if (!el) {
                 console.error("DOM bulunamadı:", containerId);
+                return;
+            }
+
+            // Önce SDK'nın yüklendiğinden emin ol
+            try {
+                await this.loadMapLibreSdk();
+            } catch (err) {
+                console.error("Harita SDK yükleme hatası:", err);
                 return;
             }
 
@@ -93,58 +168,16 @@
                 zoom: 12
             });
 
-            const userImage = new Image();
-                userImage.src = 'navigation.png';
-
-                userImage.onload = () => {
-                    console.log("Navigasyon ikonu yüklendi, haritaya eklenmeye hazır.");
-
-                    // Harita stili her yüklendiğinde (veya değiştiğinde) ikonları ve katmanları tazele
-                    this.map.on('style.load', () => {
-                        self.setupRestaurantLayers();
-                        console.log("Stil yüklendi, katmanlar kuruluyor...");
-
-                        // Resmi harita hafızasına ekle
-                        if (!this.map.hasImage('user-arrow-icon')) {
-                            this.map.addImage('user-arrow-icon', userImage);
-                        }
-
-                        // Kaynağı ekle
-                        if (!this.map.getSource(this.userLocationSourceId)) {
-                            this.map.addSource(this.userLocationSourceId, {
-                                type: 'geojson',
-                                data: { "type": "Feature", "geometry": { "type": "Point", "coordinates": [0, 0] }, "properties": { "bearing": 0 } }
-                            });
-                        }
-
-                        // Katmanı ekle (İşte o if bloğu)
-                        if (!this.map.getLayer('user-location-layer')) {
-                            this.map.addLayer({
-                                id: 'user-location-layer',
-                                type: 'symbol',
-                                source: this.userLocationSourceId,
-                                layout: {
-                                    'icon-image': 'user-arrow-icon',
-                                    'icon-size': 0.1,
-                                    'icon-rotate': ['get', 'bearing'],
-                                    'icon-rotation-alignment': 'map',
-                                    'icon-allow-overlap': true,
-                                    'icon-ignore-placement': true
-                                }
-                            });
-                            console.log("Kullanıcı ikon katmanı BAŞARIYLA eklendi!");
-                        }
-                    });
-                };
-
-                userImage.onerror = () => {
-                    console.error("navigation.png yüklenirken hata oluştu! Dosya yolu doğru mu? (index.html ile yan yana olmalı)");
-                };
+            // Stil yüklendiğinde katmanları oluştur
+            this.map.on('style.load', async () => {
+                await this.setupRestaurantLayers();
+                await this.setupUserLocationLayer();
+                console.log("TastyMap katmanları ve kaynakları başarıyla yüklendi.");
+            });
         },
 
-        flyTo: function(lat, lng, zoom) {
+        flyTo: function (lat, lng, zoom) {
             if (this.map) {
-                console.log(`zoom değeri: ${zoom}`)
                 this.map.flyTo({
                     center: [lng, lat],
                     zoom: zoom,
@@ -153,25 +186,33 @@
             }
         },
 
-        updateGeoJson: function(sourceId, data) {
+        updateGeoJson: function (sourceId, data) {
             if (!this.map) return;
             const source = this.map.getSource(sourceId);
             if (source) {
-                source.setData(JSON.parse(data));
+                try {
+                    const parsedData = typeof data === 'string' ? JSON.parse(data) : data;
+                    source.setData(parsedData);
+                } catch (e) {
+                    console.error(`GeoJSON parse hatası (${sourceId}):`, e);
+                }
             }
         },
 
-        onMarkerClick: function(layerId, callback) {
+        onMarkerClick: function (layerId, callback) {
+            if (!this.map) return;
             this.map.on('click', layerId, (e) => {
-                const props = e.features[0].properties;
-                callback(JSON.stringify(props));
+                if (e.features && e.features.length > 0) {
+                    const props = e.features[0].properties;
+                    callback(JSON.stringify(props));
+                }
             });
 
             this.map.on('mouseenter', layerId, () => { this.map.getCanvas().style.cursor = 'pointer'; });
             this.map.on('mouseleave', layerId, () => { this.map.getCanvas().style.cursor = ''; });
         },
 
-        updateUserMarker: function(lat, lng, bearing) {
+        updateUserMarker: function (lat, lng, bearing) {
             const self = this;
             const startLat = self.animator.lastLat === 0 ? lat : self.animator.lastLat;
             const startLng = self.animator.lastLng === 0 ? lng : self.animator.lastLng;
@@ -186,7 +227,6 @@
                 const elapsed = currentTime - startTime;
                 const fraction = Math.min(elapsed / duration, 1);
 
-
                 const currentLat = startLat + (lat - startLat) * fraction;
                 const currentLng = startLng + (lng - startLng) * fraction;
                 const currentBearing = startBearing + (bearing - startBearing) * fraction;
@@ -197,7 +237,7 @@
                     "properties": { "bearing": currentBearing }
                 };
 
-                const source = self.map.getSource(self.userLocationSourceId);
+                const source = self.map ? self.map.getSource(self.userLocationSourceId) : null;
                 if (source) source.setData(feature);
 
                 self.animator.lastLat = currentLat;
@@ -208,7 +248,7 @@
                     self.animator.requestID = requestAnimationFrame(animate);
                 }
             }
-                self.animator.requestID = requestAnimationFrame(animate);
-        },
+            self.animator.requestID = requestAnimationFrame(animate);
+        }
     };
 })();

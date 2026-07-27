@@ -88,15 +88,17 @@ kotlin {
     
     sourceSets {
 
-        val webMain by creating {
-            dependsOn(commonMain.get())
-            dependencies {
-                implementation("org.jetbrains.kotlinx:kotlinx-browser:0.3")
-            }
+
+        webMain.dependencies {
+            implementation("org.jetbrains.kotlinx:kotlinx-browser:0.5.0")
+            implementation(libs.ktor.client.js)
         }
 
-        wasmJsMain.get().apply {
-            dependsOn(webMain)
+        jsMain.dependencies {
+        }
+
+        wasmJsMain.dependencies {
+            implementation(libs.sqldelight.web)
         }
 
 
@@ -120,19 +122,12 @@ kotlin {
             implementation("io.insert-koin:koin-androidx-compose:3.5.0")
 
         }
-        webMain.dependencies {
-            implementation("org.jetbrains.kotlinx:kotlinx-browser:0.3")
-        }
         iosMain.dependencies {
             implementation(libs.ktor.client.darwin)
             implementation(libs.sqldelight.native)
             implementation(libs.firebase.gitlive.messaging)
         }
 
-        wasmJsMain.dependencies {
-            implementation(libs.ktor.client.js)
-            implementation(libs.sqldelight.web)
-        }
         commonMain.dependencies {
             implementation(libs.compose.runtime)
             implementation(libs.compose.foundation)

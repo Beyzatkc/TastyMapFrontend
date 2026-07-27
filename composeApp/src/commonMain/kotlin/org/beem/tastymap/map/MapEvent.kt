@@ -1,5 +1,7 @@
 package org.beem.tastymap.map
 
+import org.beem.tastymap.data.model.Restaurant
+
 sealed class MapEvent{
     data class CenterOn(
         val lat: Double,
@@ -15,7 +17,5 @@ sealed class MapEvent{
     data class UpdateMapGeoSource(
         val source: String
     ): MapEvent()
-    data class PlaceData(
-        val varIste: String
-    ): MapEvent()
+    data class OpenRestaurantDetails(val restaurant: Restaurant) : MapEvent()
 }

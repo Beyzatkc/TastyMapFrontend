@@ -10,5 +10,6 @@ expect fun TastyMapComponent(
     modifier: Modifier = Modifier,
     mapUrl: String,
     userLocation: LocationData,
-    state: TastyMapState
+    state: TastyMapState,
+    onFabClicked: () -> Unit
 )
