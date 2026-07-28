@@ -2,22 +2,26 @@ package org.beem.tastymap.ui.detailsheet
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import kotlinx.browser.document
+import org.beem.tastymap.core.paging.TastyPagingState
 import org.beem.tastymap.core.util.executeDelayed
 import org.beem.tastymap.core.util.setStyleTransform
 import org.beem.tastymap.data.model.Restaurant
-import org.beem.tastymap.place.state.ReviewPagingState
+import org.beem.tastymap.place.model.review.ReviewItem
 import org.beem.tastymap.ui.detailsheet.components.createReviewCardElement
 
 import org.w3c.dom.HTMLElement
 import kotlin.js.ExperimentalWasmJsInterop
+import kotlin.time.Duration.Companion.milliseconds
 
 @OptIn(ExperimentalWasmJsInterop::class)
 @Composable
 actual fun TastyDetailSheet(
     restaurant: Restaurant,
-    pagingState: ReviewPagingState,
+    pagingState: TastyPagingState<ReviewItem>,
+    onRender: (newState: TastyPagingState<ReviewItem>) -> Unit,
     onLoadMoreReviews: () -> Unit,
     onDismiss: () -> Unit
 ) {
@@ -101,18 +105,42 @@ actual fun TastyDetailSheet(
         }
     }
 
-    SideEffect {
-        val listTarget = document.getElementById("reviews-list-target") as? HTMLElement
-        val statusTarget = document.getElementById("paging-status-target") as? HTMLElement
+    LaunchedEffect(
+        pagingState
+    ) {
+        println("Atlas WebSheet: LaunchedEffect Tetiklendi! -> Gelen Yorum Sayısı: ${pagingState.items.size}, Yükleniyor mu: ${pagingState.isLoading}, Bitti mi: ${pagingState.isEndReached}")
+
+        var listTarget = document.getElementById("reviews-list-target") as? HTMLElement
+        var statusTarget = document.getElementById("paging-status-target") as? HTMLElement
+
+        if (listTarget == null) {
+            println("Atlas WebSheet: 'reviews-list-target' NULL geldi! 16ms bekleniyor...")
+            kotlinx.coroutines.delay(16)
+            listTarget = document.getElementById("reviews-list-target") as? HTMLElement
+            statusTarget = document.getElementById("paging-status-target") as? HTMLElement
+            println("Atlas WebSheet: Bekleme sonrası target durumu -> listTarget null mı: ${listTarget == null}")
+        }
 
         if (listTarget != null) {
-            listTarget.innerHTML = ""
-            if (pagingState.items.isEmpty() && !pagingState.isLoading) {
-                listTarget.innerHTML = "<p style='color: #757575; font-size: 13px; margin: 0;'>Henüz yorum yapılmamış.</p>"
+            if (pagingState.items.isEmpty()) {
+                println("Atlas WebSheet: Liste BOŞ!")
+                if (!pagingState.isLoading) {
+                    listTarget.innerHTML = "<p id='no-reviews-msg' style='color: #757575; font-size: 13px; margin: 0;'>Henüz yorum yapılmamış.</p>"
+                }
             } else {
+                println("Atlas WebSheet: DOM'a yorumlar basılıyor -> Adet: ${pagingState.items.size}")
+                document.getElementById("no-reviews-msg")?.let { it.parentNode?.removeChild(it) }
+
                 pagingState.items.forEach { review ->
-                    val cardElement = createReviewCardElement(review)
-                    listTarget.appendChild(cardElement)
+                    val elementId = "review-card-${review.id}"
+                    if (document.getElementById(elementId) == null) {
+                        println("Atlas WebSheet: Yeni kart DOM'a ekleniyor -> ID: ${review.id}")
+                        val cardElement = createReviewCardElement(review)
+                        cardElement.id = elementId
+                        listTarget.appendChild(cardElement)
+                    } else {
+                        println("Atlas WebSheet: Kart zaten DOM'da var, pas geçildi -> ID: ${review.id}")
+                    }
                 }
             }
         }
@@ -125,7 +153,10 @@ actual fun TastyDetailSheet(
                 val loadMoreBtn = document.createElement("button") as HTMLElement
                 loadMoreBtn.setAttribute("style", "background: none; border: none; color: #00008B; font-size: 13px; font-weight: 600; cursor: pointer; padding: 6px 12px;")
                 loadMoreBtn.textContent = "Daha Fazla Yorum Yükle"
-                loadMoreBtn.addEventListener("click", { onLoadMoreReviews() })
+                loadMoreBtn.addEventListener("click", {
+                    println("Atlas WebSheet: 'Daha Fazla Yorum Yükle' Butonuna Tıklandı!")
+                    onLoadMoreReviews()
+                })
                 statusTarget.appendChild(loadMoreBtn)
             }
         }

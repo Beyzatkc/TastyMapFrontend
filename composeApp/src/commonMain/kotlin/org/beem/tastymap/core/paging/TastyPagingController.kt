@@ -11,7 +11,8 @@ import kotlinx.coroutines.launch
 class TastyPagingController<T>(
     private val pageSize: Int = 5,
     private val scope: CoroutineScope,
-    private val fetchPage: suspend (page: Int, pageSize: Int) -> List<T>
+    private val fetchPage: suspend (page: Int, pageSize: Int) -> List<T>,
+    private val onPageLoaded: ((newItems: List<T>, allItems: List<T>) -> Unit)? = null
 ) {
     private val _state = MutableStateFlow(TastyPagingState<T>())
     val state: StateFlow<TastyPagingState<T>> = _state.asStateFlow()
@@ -24,18 +25,23 @@ class TastyPagingController<T>(
 
         _state.update { it.copy(isLoading = true, error = null) }
 
+        println("loadNextPAge")
+
         activeJob = scope.launch {
             try {
                 val newItems = fetchPage(currentState.currentPage, pageSize)
 
+                val updatedItems = currentState.items + newItems
                 _state.update { prev ->
                     prev.copy(
-                        items = prev.items + newItems,
+                        items = updatedItems,
                         currentPage = prev.currentPage + 1,
                         isLoading = false,
                         isEndReached = newItems.isEmpty() || newItems.size < pageSize
                     )
                 }
+                println("items: ${_state.value.items}")
+                onPageLoaded?.invoke(newItems, updatedItems)
             } catch (e: Exception) {
                 _state.update { prev ->
                     prev.copy(
@@ -48,6 +54,7 @@ class TastyPagingController<T>(
     }
 
     fun reset() {
+        println("reset")
         activeJob?.cancel()
         activeJob = null
         _state.value = TastyPagingState()

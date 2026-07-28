@@ -20,15 +20,11 @@ import kotlin.collections.emptyList
 class RestaurantDetailScreenModel(
     private val repository: PlaceRepository
 ) : ScreenModel {
-
-    private val _uiState = MutableStateFlow(ReviewPagingState())
-    val uiState = _uiState.asStateFlow()
-
-    private var pagingController: TastyPagingController<ReviewItem>? = null
+    private val _reviewsPagingState = MutableStateFlow(TastyPagingState<ReviewItem>())
+    val reviewsPagingState: StateFlow<TastyPagingState<ReviewItem>> = _reviewsPagingState.asStateFlow()
 
     private var currentPlaceId: String? = null
-    val reviewsState: StateFlow<TastyPagingState<ReviewItem>>?
-        get() = pagingController?.state
+    private var pagingController: TastyPagingController<ReviewItem>? = null
 
     suspend fun loadReviews(placeId: String, page: Int, size: Int):List<ReviewItem>{
         val response = repository.loadReviews(placeId, page, size)
@@ -45,49 +41,15 @@ class RestaurantDetailScreenModel(
         }
     }
 
-    fun loadReviews(placeId: String, isRefresh: Boolean = false) {
-        val currentState = _uiState.value
-
-        if (currentState.isLoading) return
-        if (!isRefresh && currentState.isEndReached && currentState.currentPlaceId == placeId) return
-
-        val targetPage = if (isRefresh || currentState.currentPlaceId != placeId) 0 else currentState.page
-
-        if (currentState.currentPlaceId != placeId || isRefresh) {
-            _uiState.value = ReviewPagingState(isLoading = true, currentPlaceId = placeId)
-        } else {
-            _uiState.update { it.copy(isLoading = true) }
-        }
-
-        screenModelScope.launch {
-            val response = repository.loadReviews(placeId, targetPage, size = 5)
-            when (response) {
-                is ResultWrapper.Success -> {
-                    val newItems = response.data.data?.reviewList.orEmpty()
-                    _uiState.update { state ->
-                        val updatedList = if (targetPage == 0) newItems else state.items + newItems
-                        state.copy(
-                            items = updatedList,
-                            page = targetPage + 1,
-                            isLoading = false,
-                            isEndReached = newItems.isEmpty() || newItems.size < 5,
-                            currentPlaceId = placeId
-                        )
-                    }
-                }
-                is ResultWrapper.Error -> {
-                    println("Hata Oluştu: ${response.message}")
-                    _uiState.update { it.copy(isLoading = false) }
-                }
-            }
-        }
-    }
-
     fun loadReviewsForPlace(placeId: String) {
         if (currentPlaceId == placeId && pagingController != null) return
 
         currentPlaceId = placeId
         pagingController?.reset()
+
+        _reviewsPagingState.value = TastyPagingState()
+
+        println("placeId: $placeId")
 
         pagingController = TastyPagingController(
             pageSize = 5,
@@ -103,18 +65,26 @@ class RestaurantDetailScreenModel(
                     }
                 }
             }
-        ).also {
-            it.loadNextPage()
+
+        )
+
+        screenModelScope.launch {
+            pagingController?.state?.collect { newState ->
+                _reviewsPagingState.value = newState
+            }
         }
+        pagingController?.loadNextPage()
     }
 
     fun loadMoreReviews() {
+        println("Atlas: loadMoreReviews çağrıldı. Controller null mı? -> ${pagingController == null}")
+        println("Atlas: Mevcut State -> isLoading: ${pagingController?.state?.value?.isLoading}, isEndReached: ${pagingController?.state?.value?.isEndReached}")
         pagingController?.loadNextPage()
     }
 
     fun resetState() {
         currentPlaceId = null
         pagingController?.reset()
-        pagingController = null
+        _reviewsPagingState.value = TastyPagingState()
     }
 }

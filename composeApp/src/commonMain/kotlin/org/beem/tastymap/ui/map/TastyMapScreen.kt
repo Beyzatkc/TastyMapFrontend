@@ -9,6 +9,8 @@ import org.beem.tastymap.map.TastyMapComponent
 import org.beem.tastymap.permission.LocationPermissionWrapper
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.koin.koinScreenModel
+import kotlinx.coroutines.flow.MutableStateFlow
+import org.beem.tastymap.core.paging.TastyPagingState
 import org.beem.tastymap.data.model.Restaurant
 import org.beem.tastymap.map.MapEvent
 import org.beem.tastymap.map.MapScreenModel
@@ -29,12 +31,12 @@ class TastyMapScreen : Screen {
 
         val userLocation by mapScreenModel.userLocation.collectAsState()
 
-        val reviewsPagingState by detailScreenModel.uiState.collectAsState()
-
         val selectedRestaurant = mapState.selectedRestaurant
 
         var showBottomSheet by remember { mutableStateOf(false) }
         var activeRestaurant by remember { mutableStateOf<Restaurant?>(null) }
+
+        val reviewsPagingState by detailScreenModel.reviewsPagingState.collectAsState()
 
 
         LaunchedEffect(Unit){
@@ -60,11 +62,16 @@ class TastyMapScreen : Screen {
             mapScreenModel.startObservingLocation()
         }
 
+        LaunchedEffect(activeRestaurant?.id) {
+            activeRestaurant?.let {
+                println("active restaurant load reviews - ${it.id}")
+                detailScreenModel.loadReviewsForPlace(it.id)
+            }
+        }
 
         LaunchedEffect(selectedRestaurant) {
             selectedRestaurant?.let {
                 mapScreenModel.onMarkerClicked(it)
-                mapState.selectRestaurant(null)
             }
         }
 
@@ -75,6 +82,9 @@ class TastyMapScreen : Screen {
         ) {
             Box(modifier = Modifier.fillMaxSize()
             ) {
+                SideEffect {
+                    println("Atlas UI State Kontrolü -> Eleman Sayısı: ${reviewsPagingState.items.size}, Yükleniyor: ${reviewsPagingState.isLoading}")
+                }
                 TastyMapComponent(
                     modifier = Modifier.fillMaxSize(),
                     mapUrl = myMaps,
@@ -95,15 +105,16 @@ class TastyMapScreen : Screen {
                         restaurant = activeRestaurant!!,
                         pagingState = reviewsPagingState,
                         onLoadMoreReviews = {
-                            detailScreenModel.loadReviews(
-                                placeId = activeRestaurant!!.id,
-                                isRefresh = false
-                            )
+                            println("loadMore run")
+                            detailScreenModel.loadMoreReviews()
                         },
                         onDismiss = {
                             showBottomSheet = false
                             activeRestaurant = null
                             detailScreenModel.resetState()
+                        },
+                        onRender = {
+
                         }
                     )
                 }
