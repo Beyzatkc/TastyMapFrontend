@@ -2,6 +2,7 @@ package org.beem.tastymap.place
 
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -24,7 +25,9 @@ class RestaurantDetailScreenModel(
     val reviewsPagingState: StateFlow<TastyPagingState<ReviewItem>> = _reviewsPagingState.asStateFlow()
 
     private var currentPlaceId: String? = null
-    private var pagingController: TastyPagingController<ReviewItem>? = null
+    private var pagingController: TastyPagingController<ReviewItem, Long>? = null
+
+    private var collectJob: Job? = null
 
     suspend fun loadReviews(placeId: String, page: Int, size: Int):List<ReviewItem>{
         val response = repository.loadReviews(placeId, page, size)
@@ -45,6 +48,8 @@ class RestaurantDetailScreenModel(
         if (currentPlaceId == placeId && pagingController != null) return
 
         currentPlaceId = placeId
+
+        collectJob?.cancel()
         pagingController?.reset()
 
         _reviewsPagingState.value = TastyPagingState()
@@ -54,6 +59,7 @@ class RestaurantDetailScreenModel(
         pagingController = TastyPagingController(
             pageSize = 5,
             scope = screenModelScope,
+            itemKeySelector = { it.id },
             fetchPage = { page, pageSize ->
                 when (val response = repository.loadReviews(placeId, page, pageSize)) {
                     is ResultWrapper.Success -> {
@@ -68,7 +74,7 @@ class RestaurantDetailScreenModel(
 
         )
 
-        screenModelScope.launch {
+        collectJob = screenModelScope.launch {
             pagingController?.state?.collect { newState ->
                 _reviewsPagingState.value = newState
             }
@@ -84,6 +90,7 @@ class RestaurantDetailScreenModel(
 
     fun resetState() {
         currentPlaceId = null
+        collectJob?.cancel()
         pagingController?.reset()
         _reviewsPagingState.value = TastyPagingState()
     }
