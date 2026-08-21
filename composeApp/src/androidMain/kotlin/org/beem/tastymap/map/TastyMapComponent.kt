@@ -1,56 +1,95 @@
 package org.beem.tastymap.map
 
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.MyLocation
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import org.beem.tastymap.R.drawable.navigation
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
-import org.maplibre.android.maps.MapView
-import org.maplibre.android.maps.Style
-import android.animation.ValueAnimator
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import org.beem.tastymap.R
 import org.beem.tastymap.data.model.LocationData
 import org.beem.tastymap.map.mapstylelayers.setupRestaurantLayer
 import org.beem.tastymap.map.mapstylelayers.setupUserLocationLayer
-
-private var lastLat = 0.0
-private var lastLng = 0.0
-private var lastBearing = 0f
-private var animator: ValueAnimator? = null
+import org.maplibre.android.maps.MapView
+import org.maplibre.android.maps.Style
 
 @Composable
 actual fun TastyMapComponent(
     modifier: Modifier,
     mapUrl: String,
     userLocation: LocationData,
-    state: TastyMapState
+    state: TastyMapState,
+    onFabClicked: () -> Unit
 ) {
     val context = LocalContext.current
-
-    val SOURCE_ID = "user-location-source"
-    val LAYER_ID = "user-location-layer"
-    val ICON_ID = "user-navigation-icon"
-
-
+    val lifecycleOwner = LocalLifecycleOwner.current
     val mapView = remember { MapView(context) }
 
-    LaunchedEffect(mapView) {
-        mapView.getMapAsync { map ->
-            map.setStyle(
-                Style.Builder().fromUri(
-                    mapUrl
-                )
-            ) { style ->
-                style.setupUserLocationLayer(context, "user-icon", navigation)
-                style.setupRestaurantLayer(context)
-
-                state.controller = MapControllerImp(mapView, style)
+    DisposableEffect(lifecycleOwner, mapView) {
+        val observer = LifecycleEventObserver { _, event ->
+            when (event) {
+                Lifecycle.Event.ON_CREATE -> mapView.onCreate(null)
+                Lifecycle.Event.ON_START -> mapView.onStart()
+                Lifecycle.Event.ON_RESUME -> mapView.onResume()
+                Lifecycle.Event.ON_PAUSE -> mapView.onPause()
+                Lifecycle.Event.ON_STOP -> mapView.onStop()
+                Lifecycle.Event.ON_DESTROY -> mapView.onDestroy()
+                else -> Unit
             }
         }
+
+        lifecycleOwner.lifecycle.addObserver(observer)
+
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+            mapView.onDestroy()
+        }
     }
-    AndroidView(
-        factory = { mapView },
-        modifier = modifier
-    )
+
+    Box(modifier = modifier) {
+        AndroidView(
+            factory = {
+                mapView.apply {
+                    getMapAsync { mapLibreMap ->
+                        mapLibreMap.setStyle(Style.Builder().fromUri(mapUrl)) { style ->
+                            style.setupUserLocationLayer(
+                                context = context,
+                                iconId = "user-navigation-icon",
+                                iconRes = android.R.drawable.ic_menu_mylocation
+                            )
+
+                            style.setupRestaurantLayer(context)
+
+                            val controller = MapControllerImp(mapView, style)
+                            state.controller = controller
+                        }
+                    }
+                }
+            },
+            modifier = Modifier.fillMaxSize()
+        )
+        FloatingActionButton(
+            onClick = onFabClicked,
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .padding(16.dp)
+        ) {
+            Icon(
+                imageVector = Icons.Default.MyLocation,
+                contentDescription = "Merkeze Odaklan"
+            )
+        }
+    }
 }

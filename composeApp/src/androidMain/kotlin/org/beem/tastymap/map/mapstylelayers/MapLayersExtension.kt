@@ -1,8 +1,11 @@
 package org.beem.tastymap.map.mapstylelayers
 
 import android.content.Context
+import androidx.compose.ui.graphics.toColorLong
 import org.beem.tastymap.R
 import org.beem.tastymap.map.createMarkerBitmap
+import org.beem.tastymap.ui.theme.AppColors
+import org.beem.tastymap.ui.utils.toAndroidColor
 import org.maplibre.android.maps.Style
 import org.maplibre.android.style.expressions.Expression
 import org.maplibre.android.style.layers.Property
@@ -27,10 +30,12 @@ fun Style.setupUserLocationLayer(context: Context, iconId: String, iconRes: Int)
 }
 
 fun Style.setupRestaurantLayer(context: Context) {
-    createMarkerBitmap(context, R.drawable.ic_restaurant, 24)?.let { addImage("tm_restaurant", it) }
-    createMarkerBitmap(context, R.drawable.ic_bakery, 24)?.let { addImage("tm_bakery", it) }
-    createMarkerBitmap(context, R.drawable.ic_cafe, 24)?.let { addImage("tm_cafe", it) }
-    createMarkerBitmap(context, R.drawable.ic_default, 24)?.let { addImage("tm_default", it) }
+    val iconSizeDp = 42
+
+    createMarkerBitmap(context, R.drawable.ic_restaurant_v2, iconSizeDp)?.let { addImage("tm_restaurant", it) }
+    createMarkerBitmap(context, R.drawable.ic_marker_bakery, iconSizeDp)?.let { addImage("tm_bakery", it) }
+    createMarkerBitmap(context, R.drawable.ic_marker_cafe, iconSizeDp)?.let { addImage("tm_cafe", it) }
+    createMarkerBitmap(context, R.drawable.ic_marker_default_v2, iconSizeDp)?.let { addImage("tm_default", it) }
 
     val source = GeoJsonSource("restaurant-source")
     addSource(source)
@@ -46,15 +51,30 @@ fun Style.setupRestaurantLayer(context: Context) {
             )
         ),
 
+        PropertyFactory.iconAnchor(Property.ICON_ANCHOR_BOTTOM),
+        PropertyFactory.iconSize(0.92f),
+
         PropertyFactory.iconAllowOverlap(true),
         PropertyFactory.iconIgnorePlacement(true),
 
         PropertyFactory.textField(Expression.get("name")),
-        PropertyFactory.textOffset(arrayOf(0f, 1.5f)),
+
+        PropertyFactory.textAnchor(Property.TEXT_ANCHOR_TOP),
+
+        PropertyFactory.textOffset(arrayOf(0f, 0.65f)),
         PropertyFactory.textSize(12f),
-        PropertyFactory.textColor(android.graphics.Color.BLACK),
-        PropertyFactory.textHaloColor(android.graphics.Color.WHITE),
-        PropertyFactory.textHaloWidth(1f),
+        PropertyFactory.textColor(
+            AppColors.NavyBlue.toAndroidColor()
+        ),
+        PropertyFactory.textHaloColor(AppColors.BackBackgroundBlue.toAndroidColor()),
+
+        PropertyFactory.textHaloWidth(1.75f),
+
+        PropertyFactory.textHaloBlur(0.5f),
+
+        PropertyFactory.textAllowOverlap(false),
+
+        PropertyFactory.textOptional(true),
 
         PropertyFactory.iconOpacity(
             Expression.step(

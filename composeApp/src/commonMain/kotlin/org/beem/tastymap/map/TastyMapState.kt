@@ -8,10 +8,18 @@ import androidx.compose.runtime.setValue
 import org.beem.tastymap.data.model.Restaurant
 
 class TastyMapState {
-    var controller: MapController? by mutableStateOf(null)
+    private val _controller = mutableStateOf<MapController?>(null)
+
+    var controller: MapController?
+        get() = _controller.value
+        set(value) {
+            _controller.value = value
+            setupMarkerClickListener()
+        }
 
     var selectedRestaurant by mutableStateOf<Restaurant?>(null)
         private set
+
 
     fun centerOn(lat: Double, lng: Double, zoom: Float = 15f){
         controller?.animateTo(lat, lng, zoom)
@@ -27,6 +35,10 @@ class TastyMapState {
         controller?.setupRestaurantMarkerClickListener { restaurant ->
             selectedRestaurant = restaurant
         }
+    }
+
+    fun clearSelectedRestaurant() {
+        selectedRestaurant = null
     }
 
     fun selectRestaurant(restaurant: Restaurant?) {

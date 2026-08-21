@@ -164,7 +164,7 @@ kotlin {
 
             implementation(libs.kotlinx.coroutines.core)
 
-
+            implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.6.0")
 
         }
         commonTest.dependencies {

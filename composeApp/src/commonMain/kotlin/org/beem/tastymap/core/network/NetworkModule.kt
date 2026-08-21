@@ -1,4 +1,4 @@
-
+package org.beem.tastymap.core.network
 
 import io.ktor.client.HttpClient
 import io.ktor.client.HttpClientConfig
@@ -14,7 +14,6 @@ import io.ktor.client.request.header
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.http.HttpStatusCode
-import io.ktor.http.encodedPath
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.json.Json
 import org.beem.tastymap.core.local.TokenManager

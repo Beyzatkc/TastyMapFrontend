@@ -28,22 +28,37 @@ class MapControllerImp(
     private var lastBearing = 0f
 
     override fun updateMapData(geoJson: String) {
-        style.getSourceAs<GeoJsonSource>("restaurant-source")?.setGeoJson(
-            FeatureCollection.fromJson(geoJson)
-        )
+        println("TastyMap -> updateMapData çağrıldı. Gelen GeoJSON boyutu: ${geoJson.length}")
+        println("TastyMap -> Gelen GeoJSON içeriği: $geoJson")
+
+        map.post {
+            try {
+                val source = style.getSourceAs<GeoJsonSource>("restaurant-source")
+                if (source != null) {
+                    val featureCollection = FeatureCollection.fromJson(geoJson)
+                    println("TastyMap -> Parse edilen Feature sayısı: ${featureCollection.features()?.size ?: 0}")
+                    source.setGeoJson(featureCollection)
+                    println("TastyMap -> Source başarıyla güncellendi!")
+                } else {
+                    println("TastyMap HATA -> 'restaurant-source' henüz stilde bulunamadı!")
+                }
+            } catch (e: Exception) {
+                println("TastyMap HATA -> GeoJSON basılırken hata oluştu: ${e.message}")
+                e.printStackTrace()
+            }
+        }
     }
 
-    override fun onClickMarker(onMarkerClicked: (Restaurant) -> Unit) {
+    override fun setupRestaurantMarkerClickListener(onRestaurantSelected: (restaurant: Restaurant) -> Unit) {
         map.getMapAsync { mapLibreMap ->
             mapLibreMap.addOnMapClickListener { point ->
                 val screenPoint = mapLibreMap.projection.toScreenLocation(point)
-
                 val features = mapLibreMap.queryRenderedFeatures(screenPoint, "restaurant-layer")
 
                 if (features.isNotEmpty()) {
                     val feature = features[0]
-                    val id = feature.getStringProperty("id")
-                    val name = feature.getStringProperty("name")
+                    val id = feature.getStringProperty("id") ?: ""
+                    val name = feature.getStringProperty("name") ?: ""
                     val geometry = feature.geometry() as Point
 
                     val restaurant = Restaurant(
@@ -57,7 +72,7 @@ class MapControllerImp(
                         status = "",
                         category = ""
                     )
-                    onMarkerClicked(restaurant)
+                    onRestaurantSelected(restaurant)
                     true
                 } else {
                     false
