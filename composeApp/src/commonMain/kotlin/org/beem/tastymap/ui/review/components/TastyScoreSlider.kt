@@ -19,6 +19,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import org.beem.tastymap.ui.theme.AppColors
+import org.beem.tastymap.ui.theme.getAppFontFamily
 import kotlin.math.roundToInt
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -29,6 +30,8 @@ fun TastyScoreSlider(
     onScoreChange: (Double) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val fontFamily = getAppFontFamily()
+
     val isEvaluated = score > 0.0
     val interactionSource = remember { MutableInteractionSource() }
 
@@ -44,17 +47,18 @@ fun TastyScoreSlider(
         ) {
             Text(
                 text = title,
+                fontFamily = fontFamily,
                 fontSize = 14.sp,
                 fontWeight = if (isEvaluated) FontWeight.Bold else FontWeight.Medium,
-                color = if (isEvaluated) AppColors.NavyBlue else AppColors.DarkGrayLines
+                color = if (isEvaluated) AppColors.TextPrimary else AppColors.TextSecondary
             )
 
             // Layout shift yaratmayan sabit genişlikli rozet slotu
             Surface(
-                color = if (isEvaluated) AppColors.NavyBlue else AppColors.LightGray,
+                color = if (isEvaluated) AppColors.WarmAmber else AppColors.SurfaceVariant,
                 shape = RoundedCornerShape(6.dp),
                 modifier = Modifier.widthIn(min = 44.dp)
-            ) {
+            ){
                 Row(
                     modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
                     verticalAlignment = Alignment.CenterVertically,
@@ -64,12 +68,13 @@ fun TastyScoreSlider(
                         Icon(
                             imageVector = Icons.Default.Star,
                             contentDescription = null,
-                            tint = AppColors.Gold,
+                            tint = Color.White,
                             modifier = Modifier.size(12.dp)
                         )
                         Spacer(modifier = Modifier.width(3.dp))
                         Text(
                             text = score.toString(),
+                            fontFamily = fontFamily,
                             color = Color.White,
                             fontWeight = FontWeight.Bold,
                             fontSize = 12.sp
@@ -77,7 +82,8 @@ fun TastyScoreSlider(
                     } else {
                         Text(
                             text = "-",
-                            color = AppColors.DarkGrayLines,
+                            fontFamily = fontFamily,
+                            color = AppColors.TextTertiary,
                             fontSize = 12.sp,
                             fontWeight = FontWeight.Bold
                         )
@@ -105,7 +111,7 @@ fun TastyScoreSlider(
                         .background(Color.White, shape = CircleShape)
                         .border(
                             width = 2.5.dp,
-                            color = if (isEvaluated) AppColors.NavyBlue else AppColors.DarkGrayLines.copy(alpha = 0.4f),
+                            color = if (isEvaluated) AppColors.WarmAmber else AppColors.BorderStrong,
                             shape = CircleShape
                         )
                 )
@@ -115,8 +121,8 @@ fun TastyScoreSlider(
                     sliderState = sliderState,
                     modifier = Modifier.height(4.dp),
                     colors = SliderDefaults.colors(
-                        activeTrackColor = AppColors.NavyBlue,
-                        inactiveTrackColor = AppColors.WaveColor,
+                        activeTrackColor = AppColors.WarmAmber,
+                        inactiveTrackColor = AppColors.SurfaceVariant,
                         activeTickColor = Color.Transparent,
                         inactiveTickColor = Color.Transparent
                     )

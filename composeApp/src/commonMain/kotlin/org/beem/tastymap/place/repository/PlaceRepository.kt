@@ -19,20 +19,25 @@ class PlaceRepository(
     private val memoryCache: InMemoryPlaceCache
 ) {
 
-    suspend fun fetchPlaceDetails(placeId: String, forceRefresh: Boolean = false): PlaceDetailsResult? {
+    suspend fun fetchPlaceDetails(
+        placeId: String,
+        forceRefresh: Boolean = false
+    ): ResultWrapper<PlaceDetailsResult> {
         if (!forceRefresh) {
             memoryCache.getPlaceDetails(placeId)?.let { cached ->
                 println("TastyMap Repo -> [$placeId] Detaylar RAM üzerinden verildi.")
-                return cached
+                return ResultWrapper.Success(cached)
             }
         }
 
-        return runCatching {
+        println("TastyMap Repo -> [$placeId] Detaylar Ağdan isteniyor...")
+        return safeApiCall {
             val response = placeDataSource.getPlaceDetails(placeId)
-            response.result?.also { details ->
-                memoryCache.putPlaceDetails(placeId, details)
-            }
-        }.getOrNull()
+            val details = response.result ?: throw Exception("Mekan detay verisi boş döndü.")
+
+            memoryCache.putPlaceDetails(placeId, details)
+            details
+        }
     }
 
     suspend fun loadReviews(placeId: String, page: Int, size: Int): ResultWrapper<BaseResponse<ReviewResponse>> {

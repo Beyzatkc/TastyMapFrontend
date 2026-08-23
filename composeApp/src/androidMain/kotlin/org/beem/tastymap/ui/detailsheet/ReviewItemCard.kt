@@ -1,15 +1,8 @@
 package org.beem.tastymap.ui.detailsheet
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -25,20 +18,26 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import org.beem.tastymap.core.util.toFormatTimestamp
+import org.beem.tastymap.place.model.MapReviewSource
 import org.beem.tastymap.place.model.review.ReviewItem
+import org.beem.tastymap.review.model.ScoreType
 import org.beem.tastymap.ui.theme.AppColors
+import org.beem.tastymap.ui.theme.getAppFontFamily
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun ReviewItemCard(review: ReviewItem) {
+    val fontFamily = getAppFontFamily()
+
     Card(
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
+        colors = CardDefaults.cardColors(containerColor = AppColors.Surface),
+        border = BorderStroke(1.dp, AppColors.BorderLight),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
         modifier = Modifier.fillMaxWidth()
     ) {
         Column(
@@ -50,6 +49,7 @@ fun ReviewItemCard(review: ReviewItem) {
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
+                // Kullanıcı Bilgisi (Avatar, İsim, Rozet, Tarih)
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(10.dp)
@@ -58,88 +58,184 @@ fun ReviewItemCard(review: ReviewItem) {
                         modifier = Modifier
                             .size(36.dp)
                             .clip(CircleShape)
-                            .background(AppColors.WaveColor),
+                            .background(AppColors.SurfaceVariant),
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
                             imageVector = Icons.Default.Person,
                             contentDescription = "Kullanıcı",
-                            tint = AppColors.NavyBlue,
-                            modifier = Modifier.size(20.dp)
+                            tint = AppColors.TextSecondary,
+                            modifier = Modifier.size(18.dp)
                         )
                     }
 
-                    Column {
-                        Text(
-                            text = review.name.ifBlank { "Anonim Gurme" },
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 14.sp,
-                            color = AppColors.NavyBlue
-                        )
+                    Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            Text(
+                                text = review.name.ifBlank { "Anonim Gurme" },
+                                fontFamily = fontFamily,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 14.sp,
+                                color = AppColors.TextPrimary
+                            )
+
+                            // Kaynak Rozeti
+                            if (review.source == MapReviewSource.INTERNAL) {
+                                Surface(
+                                    color = AppColors.GourmetOrange.copy(alpha = 0.15f),
+                                    shape = RoundedCornerShape(6.dp)
+                                ) {
+                                    Text(
+                                        text = "TastyMap",
+                                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                                        fontFamily = fontFamily,
+                                        fontSize = 10.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = AppColors.GourmetOrange
+                                    )
+                                }
+                            } else {
+                                Surface(
+                                    color = AppColors.SurfaceVariant,
+                                    shape = RoundedCornerShape(6.dp)
+                                ) {
+                                    Text(
+                                        text = "Google",
+                                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                                        fontFamily = fontFamily,
+                                        fontSize = 10.sp,
+                                        fontWeight = FontWeight.Medium,
+                                        color = AppColors.TextSecondary
+                                    )
+                                }
+                            }
+                        }
+
                         Text(
                             text = review.createdAt.toFormatTimestamp(),
+                            fontFamily = fontFamily,
                             fontSize = 11.sp,
-                            color = AppColors.DarkGrayLines
+                            color = AppColors.TextTertiary
                         )
                     }
                 }
 
-                // Puan & Beğeni Sayısı
+                // Beğeni ve Puan Rozeti
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     if (review.likeCount > 0) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(3.dp)
+                        ) {
                             Icon(
                                 imageVector = Icons.Default.Favorite,
                                 contentDescription = "Beğeni",
-                                tint = AppColors.passwordRed,
+                                tint = AppColors.ErrorRed,
                                 modifier = Modifier.size(13.dp)
                             )
-                            Spacer(modifier = Modifier.width(2.dp))
                             Text(
                                 text = review.likeCount.toString(),
+                                fontFamily = fontFamily,
                                 fontSize = 12.sp,
-                                color = AppColors.DarkGrayLines
+                                fontWeight = FontWeight.Medium,
+                                color = AppColors.TextSecondary
                             )
                         }
                     }
 
+                    // Puan Kutusu
                     Surface(
-                        color = AppColors.WaveColor.copy(alpha = 0.5f),
+                        color = AppColors.WarmAmber.copy(alpha = 0.15f),
                         shape = RoundedCornerShape(8.dp)
                     ) {
                         Row(
-                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
-                            verticalAlignment = Alignment.CenterVertically
+                            modifier = Modifier.padding(horizontal = 7.dp, vertical = 3.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(3.dp)
                         ) {
                             Icon(
                                 imageVector = Icons.Default.Star,
                                 contentDescription = null,
-                                tint = AppColors.Gold,
+                                tint = AppColors.WarmAmber,
                                 modifier = Modifier.size(13.dp)
                             )
-                            Spacer(modifier = Modifier.width(2.dp))
                             Text(
                                 text = review.rating.toString(),
+                                fontFamily = fontFamily,
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 12.sp,
-                                color = AppColors.NavyBlue
+                                color = AppColors.WarmAmber
                             )
                         }
                     }
                 }
             }
 
-            if (review.content.isNotBlank()) {
+            // Yorum Metni
+            if (!review.content.isNullOrBlank()) {
                 Text(
                     text = review.content,
+                    fontFamily = fontFamily,
                     fontSize = 13.sp,
-                    color = Color.DarkGray,
-                    lineHeight = 18.sp
+                    color = AppColors.TextSecondary,
+                    lineHeight = 19.sp
                 )
+            }
+
+            // Alt Skorlar (Lezzet, Servis vs.)
+            if (review.scores.isNotEmpty()) {
+                FlowRow(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    verticalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    review.scores.filter { it.type != ScoreType.OVERALL }.forEach { scoreItem ->
+                        Surface(
+                            shape = RoundedCornerShape(6.dp),
+                            color = AppColors.SurfaceVariant.copy(alpha = 0.6f),
+                            border = BorderStroke(0.5.dp, AppColors.BorderLight)
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 3.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(4.dp)
+                            ) {
+                                Text(
+                                    text = scoreItem.type.toDisplayName(),
+                                    fontFamily = fontFamily,
+                                    fontSize = 11.sp,
+                                    color = AppColors.TextSecondary
+                                )
+                                Text(
+                                    text = scoreItem.score.toString(),
+                                    fontFamily = fontFamily,
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 11.sp,
+                                    color = AppColors.NavyBlue
+                                )
+                            }
+                        }
+                    }
+                }
             }
         }
     }
+}
+
+fun ScoreType.toDisplayName(): String = when (this) {
+    ScoreType.OVERALL -> "Genel"
+    ScoreType.TASTE -> "Lezzet"
+    ScoreType.WAITING_TIME -> "Hız"
+    ScoreType.SERVICE -> "Servis"
+    ScoreType.HOSPITALITY -> "İlgi"
+    ScoreType.PRICE_PERFORMANCE -> "F/P"
+    ScoreType.CLEANLINESS -> "Hijyen"
+    ScoreType.LOCATION -> "Konum"
+    ScoreType.INTERIOR_DESIGN -> "Mekan"
 }

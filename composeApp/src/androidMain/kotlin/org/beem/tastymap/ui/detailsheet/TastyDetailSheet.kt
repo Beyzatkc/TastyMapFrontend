@@ -3,6 +3,7 @@ package org.beem.tastymap.ui.detailsheet
 import androidx.compose.runtime.*
 import org.beem.tastymap.data.model.Restaurant
 import org.beem.tastymap.place.RestaurantDetailScreenModel
+import org.beem.tastymap.place.state.RestaurantDetailIntent
 import org.beem.tastymap.ui.review.AddReviewBottomSheet
 import org.koin.compose.koinInject
 
@@ -13,41 +14,38 @@ actual fun TastyDetailSheet(
 ) {
     val detailScreenModel: RestaurantDetailScreenModel = koinInject()
     val pagingState by detailScreenModel.reviewsPagingState.collectAsState()
-    val placeDetails by detailScreenModel.placeDetails.collectAsState()
-
-    var showAddReviewSheet by remember { mutableStateOf(false) }
-    var selectedInitialScore by remember { mutableStateOf(0.0) }
+    val detailsUiState by detailScreenModel.detailsUiState.collectAsState()
 
     // Mekan değiştikçe yorumları yükle
     LaunchedEffect(restaurant.id) {
         detailScreenModel.loadPlaceData(restaurant.id)
     }
 
-    // 1. Mekan Detay Sheet İçeriği
     TastyDetailSheetContent(
         restaurant = restaurant,
-        placeDetails = placeDetails,
+        detailsUiState = detailsUiState,
         pagingState = pagingState,
-        onLoadMoreReviews = { detailScreenModel.loadMoreReviews() },
-        onAddReviewClick = { initialScore ->
-            selectedInitialScore = initialScore
-            showAddReviewSheet = true // Mekan sheet'i kapanmadan üstüne biner
-        },
-        onDismiss = onDismiss
+        onIntent = { intent ->
+            if (intent is RestaurantDetailIntent.DismissMainSheet) {
+                detailScreenModel.handleIntent(intent)
+                onDismiss()
+            } else {
+                detailScreenModel.handleIntent(intent)
+            }
+        }
     )
 
     // 2. Detaylı Yorum ve Puanlama Sheet'i
-    if (showAddReviewSheet) {
+    if (detailsUiState.isAddReviewOpen) {
         AddReviewBottomSheet(
             placeId = restaurant.id,
             restaurantName = restaurant.name,
-            initialMainScore = selectedInitialScore,
+            initialMainScore = detailsUiState.quickScore,
             onDismiss = {
-                showAddReviewSheet = false
+                detailScreenModel.handleIntent(RestaurantDetailIntent.DismissAddReview)
             },
             onReviewSubmittedSuccessfully = {
-                showAddReviewSheet = false
-                detailScreenModel.loadPlaceData(restaurant.id)
+                detailScreenModel.handleIntent(RestaurantDetailIntent.ReviewSubmittedSuccess)
             }
         )
     }

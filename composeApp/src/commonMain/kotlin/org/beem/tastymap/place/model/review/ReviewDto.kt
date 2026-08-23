@@ -1,20 +1,22 @@
 package org.beem.tastymap.place.model.review
 
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import org.beem.tastymap.place.model.MapReviewSource
 import org.beem.tastymap.review.model.ScoreDto
 
 @Serializable
-data class ReviewItem(
-    val id: Long,
-    val name: String,
-    val userProfile: String? = null,
-    val rating: Double,
-    val content: String? = null,
+data class ReviewDto(
+    @SerialName("review_id")
+    val reviewId: Long? = null,
+
     val source: MapReviewSource = MapReviewSource.GOOGLE,
-    val likeCount: Int = 0,
-    val createdAt: Long,
-    val updateAt: Long? = null,
-    val parentId: Long? = null,
+
+    @SerialName("author_name")
+    val authorName: String,
+
+    val rating: Double,
+    val text: String? = null,
+    val time: Long? = null,
     val scores: List<ScoreDto> = emptyList()
 )

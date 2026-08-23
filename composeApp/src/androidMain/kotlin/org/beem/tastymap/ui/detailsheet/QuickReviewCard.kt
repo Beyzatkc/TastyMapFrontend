@@ -1,5 +1,6 @@
-package org.beem.tastymap.ui.detailsheet.components
+package org.beem.tastymap.ui.detailsheet
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
@@ -21,6 +22,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import org.beem.tastymap.ui.review.components.TastyPinItem
 import org.beem.tastymap.ui.theme.AppColors
+import org.beem.tastymap.ui.theme.getAppFontFamily
 import kotlin.math.roundToInt
 
 @Composable
@@ -32,6 +34,7 @@ fun QuickReviewCard(
     onScoreSelected: (Double) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val fontFamily = getAppFontFamily()
     var rowWidthPx by remember { mutableStateOf(1f) }
     var tempScore by remember(score) { mutableStateOf(score) }
 
@@ -43,15 +46,16 @@ fun QuickReviewCard(
 
     Card(
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
+        colors = CardDefaults.cardColors(containerColor = AppColors.Surface),
+        border = BorderStroke(1.dp, AppColors.BorderLight),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
         modifier = modifier.fillMaxWidth()
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp, vertical = 14.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp)
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             // 1. Kullanıcı Profili ve Puan Rozeti
             Row(
@@ -65,42 +69,45 @@ fun QuickReviewCard(
                 ) {
                     Box(
                         modifier = Modifier
-                            .size(36.dp)
+                            .size(38.dp)
                             .clip(CircleShape)
-                            .background(AppColors.WaveColor),
+                            .background(AppColors.SurfaceVariant),
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
                             imageVector = Icons.Default.Person,
                             contentDescription = null,
-                            tint = AppColors.NavyBlue,
+                            tint = AppColors.TextSecondary,
                             modifier = Modifier.size(20.dp)
                         )
                     }
 
-                    Column {
+                    Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
                         Text(
                             text = userName,
+                            fontFamily = fontFamily,
                             fontSize = 14.sp,
                             fontWeight = FontWeight.Bold,
-                            color = AppColors.NavyBlue
+                            color = AppColors.TextPrimary
                         )
                         Text(
                             text = "Deneyimini puanlamak için kaydır",
+                            fontFamily = fontFamily,
                             fontSize = 12.sp,
-                            color = AppColors.DarkGrayLines
+                            color = AppColors.TextTertiary
                         )
                     }
                 }
 
-                // Seçilen puan rozeti (Puan verildiğinde görünür)
+                // Seçilen Puan Rozeti
                 if (tempScore > 0.0) {
                     Surface(
-                        color = AppColors.NavyBlue,
-                        shape = RoundedCornerShape(6.dp)
+                        color = AppColors.WarmAmber,
+                        shape = RoundedCornerShape(8.dp)
                     ) {
                         Text(
                             text = "$tempScore",
+                            fontFamily = fontFamily,
                             color = Color.White,
                             fontSize = 12.sp,
                             fontWeight = FontWeight.Bold,

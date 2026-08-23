@@ -22,6 +22,7 @@ import org.beem.tastymap.review.model.ScoreType
 import org.beem.tastymap.ui.review.components.TastyRatingBar
 import org.beem.tastymap.ui.review.components.TastyScoreSlider
 import org.beem.tastymap.ui.theme.AppColors
+import org.beem.tastymap.ui.theme.getAppFontFamily
 import org.koin.compose.koinInject
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -35,6 +36,7 @@ fun AddReviewBottomSheet(
     screenModel: AddReviewScreenModel = koinInject()
 ) {
     val state by screenModel.state.collectAsState()
+    val fontFamily = getAppFontFamily()
 
     LaunchedEffect(Unit) {
         screenModel.initInitialScore(initialMainScore)
@@ -55,10 +57,10 @@ fun AddReviewBottomSheet(
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
-        containerColor = AppColors.BackBackgroundBlue,
+        containerColor = AppColors.Surface,
         shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
         dragHandle = {
-            BottomSheetDefaults.DragHandle(color = AppColors.DarkGrayLines.copy(alpha = 0.3f))
+            BottomSheetDefaults.DragHandle(color = AppColors.BorderStrong.copy(alpha = 0.5f))
         }
     ) {
         Column(
@@ -78,14 +80,16 @@ fun AddReviewBottomSheet(
                     Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
                         Text(
                             text = restaurantName,
+                            fontFamily = fontFamily,
                             fontSize = 20.sp,
-                            fontWeight = FontWeight.ExtraBold,
-                            color = AppColors.NavyBlue
+                            fontWeight = FontWeight.Bold,
+                            color = AppColors.TextPrimary
                         )
                         Text(
                             text = "Deneyimini puanla ve değerlendir",
+                            fontFamily = fontFamily,
                             fontSize = 13.sp,
-                            color = AppColors.DarkGrayLines
+                            color = AppColors.TextTertiary
                         )
                     }
                 }
@@ -102,9 +106,10 @@ fun AddReviewBottomSheet(
                 item {
                     Text(
                         text = "Detaylı Kriterler (İsteğe Bağlı)",
+                        fontFamily = fontFamily,
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Bold,
-                        color = AppColors.NavyBlue,
+                        color = AppColors.TextPrimary,
                         modifier = Modifier.padding(top = 4.dp)
                     )
                 }
@@ -129,14 +134,15 @@ fun AddReviewBottomSheet(
                     ) {
                         Text(
                             text = if (state.isAdvancedExpanded) "Daha az kriter göster" else "Diğer kriterleri ekle (Temizlik, Hız vb.)",
+                            fontFamily = fontFamily,
                             fontSize = 13.sp,
                             fontWeight = FontWeight.SemiBold,
-                            color = AppColors.NavyBlue
+                            color = AppColors.NavySoft
                         )
                         Icon(
                             imageVector = if (state.isAdvancedExpanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
                             contentDescription = null,
-                            tint = AppColors.NavyBlue,
+                            tint = AppColors.NavySoft,
                             modifier = Modifier.size(20.dp)
                         )
                     }
@@ -160,8 +166,9 @@ fun AddReviewBottomSheet(
                         placeholder = {
                             Text(
                                 "Mekan hakkındaki diğer notlarını yaz...",
+                                fontFamily = fontFamily,
                                 fontSize = 13.sp,
-                                color = AppColors.DarkGrayLines.copy(alpha = 0.6f)
+                                color = AppColors.TextTertiary
                             )
                         },
                         modifier = Modifier
@@ -169,10 +176,11 @@ fun AddReviewBottomSheet(
                             .height(72.dp),
                         shape = RoundedCornerShape(12.dp),
                         colors = OutlinedTextFieldDefaults.colors(
-                            focusedContainerColor = Color.White,
-                            unfocusedContainerColor = Color.White,
-                            focusedBorderColor = AppColors.NavyBlue,
-                            unfocusedBorderColor = AppColors.DarkGrayLines.copy(alpha = 0.25f)
+                            focusedContainerColor = AppColors.SurfaceVariant,
+                            unfocusedContainerColor = AppColors.SurfaceVariant,
+                            focusedBorderColor = AppColors.GourmetOrange,
+                            unfocusedBorderColor = AppColors.BorderLight,
+                            cursorColor = AppColors.GourmetOrange
                         )
                     )
                 }
@@ -181,7 +189,7 @@ fun AddReviewBottomSheet(
             // 5. Sticky Gönder Butonu
             Surface(
                 modifier = Modifier.fillMaxWidth(),
-                color = Color.White,
+                color = AppColors.Surface,
                 shadowElevation = 8.dp
             ) {
                 Box(
@@ -197,7 +205,10 @@ fun AddReviewBottomSheet(
                             .fillMaxWidth()
                             .height(48.dp),
                         shape = RoundedCornerShape(12.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = AppColors.NavyBlue)
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = AppColors.GourmetOrange,
+                            disabledContainerColor = AppColors.GourmetOrange.copy(alpha = 0.5f)
+                        )
                     ) {
                         if (state.isSubmitting) {
                             CircularProgressIndicator(
@@ -208,6 +219,7 @@ fun AddReviewBottomSheet(
                         } else {
                             Text(
                                 text = "Değerlendirmeyi Tamamla",
+                                fontFamily = fontFamily,
                                 fontSize = 15.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = Color.White

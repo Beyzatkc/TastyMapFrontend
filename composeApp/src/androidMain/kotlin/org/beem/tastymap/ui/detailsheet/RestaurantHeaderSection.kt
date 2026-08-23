@@ -23,10 +23,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import org.beem.tastymap.data.model.Restaurant
 import org.beem.tastymap.ui.theme.AppColors
-
+import org.beem.tastymap.ui.theme.getAppFontFamily
 
 @Composable
 fun RestaurantHeaderSection(restaurant: Restaurant) {
+    val fontFamily = getAppFontFamily()
+
     Column(
         modifier = Modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(8.dp)
@@ -38,17 +40,19 @@ fun RestaurantHeaderSection(restaurant: Restaurant) {
         ) {
             Text(
                 text = restaurant.name,
+                fontFamily = fontFamily,
                 fontSize = 22.sp,
-                fontWeight = FontWeight.ExtraBold,
-                color = AppColors.NavyBlue,
-                modifier = Modifier.weight(1f),
+                fontWeight = FontWeight.Bold,
+                color = AppColors.TextPrimary,
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(end = 8.dp),
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis
             )
 
-            // Puan Rozeti
             Surface(
-                color = AppColors.NavyBlue,
+                color = AppColors.WarmAmber,
                 shape = RoundedCornerShape(12.dp)
             ) {
                 Row(
@@ -59,71 +63,79 @@ fun RestaurantHeaderSection(restaurant: Restaurant) {
                     Icon(
                         imageVector = Icons.Default.Star,
                         contentDescription = "Puan",
-                        tint = AppColors.Gold,
-                        modifier = Modifier.size(16.dp)
+                        tint = Color.White,
+                        modifier = Modifier.size(15.dp)
                     )
                     Text(
                         text = if (restaurant.rating != null && restaurant.rating!! > 0.0) restaurant.rating.toString() else "-",
+                        fontFamily = fontFamily,
                         color = Color.White,
                         fontWeight = FontWeight.Bold,
-                        fontSize = 14.sp
+                        fontSize = 13.sp
                     )
                 }
             }
         }
 
-        // Kategori & Durum Etiketleri
+        // Kategori & Çalışma Durumu Etiketleri
         Row(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             if (restaurant.category.isNotBlank()) {
                 Surface(
-                    color = AppColors.WarmAmber.copy(alpha = 0.15f),
+                    color = AppColors.SurfaceVariant,
                     shape = RoundedCornerShape(8.dp)
                 ) {
                     Text(
                         text = restaurant.category.replaceFirstChar { it.uppercase() },
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                        fontFamily = fontFamily,
                         fontSize = 12.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = AppColors.WarmAmber
+                        fontWeight = FontWeight.SemiBold,
+                        color = AppColors.NavySoft
                     )
                 }
             }
 
             if (restaurant.status.isNotBlank()) {
+                val isOpen = restaurant.status == "OPERATIONAL"
+                val statusColor = if (isOpen) AppColors.SuccessGreen else AppColors.ErrorRed
+
                 Surface(
-                    color = if (restaurant.status == "OPERATIONAL") AppColors.EmeraldAccent.copy(alpha = 0.15f) else AppColors.passwordRed.copy(alpha = 0.15f),
+                    color = statusColor.copy(alpha = 0.12f),
                     shape = RoundedCornerShape(8.dp)
                 ) {
                     Text(
-                        text = if (restaurant.status == "OPERATIONAL") "Açık" else "Kapalı",
+                        text = if (isOpen) "Açık" else "Kapalı",
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                        fontFamily = fontFamily,
                         fontSize = 12.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        color = if (restaurant.status == "OPERATIONAL") AppColors.EmeraldAccent else AppColors.passwordRed
+                        fontWeight = FontWeight.Bold,
+                        color = statusColor
                     )
                 }
             }
         }
 
+        // Adres Satırı
         if (restaurant.address.isNotBlank()) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(4.dp),
-                modifier = Modifier.padding(top = 4.dp)
+                modifier = Modifier.padding(top = 2.dp)
             ) {
                 Icon(
                     imageVector = Icons.Default.LocationOn,
                     contentDescription = "Adres",
-                    tint = AppColors.DarkGrayLines,
+                    tint = AppColors.TextTertiary,
                     modifier = Modifier.size(16.dp)
                 )
                 Text(
                     text = restaurant.address,
+                    fontFamily = fontFamily,
                     fontSize = 13.sp,
-                    color = AppColors.DarkGrayLines,
+                    color = AppColors.TextSecondary,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )

@@ -13,6 +13,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import org.beem.tastymap.ui.theme.AppColors
+import org.beem.tastymap.ui.theme.getAppFontFamily
 import kotlin.math.roundToInt
 
 @Composable
@@ -22,14 +23,16 @@ fun TastyRatingBar(
     onRatingSelected: ((Double) -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
-    val description = when {
-        rating >= 5.0 -> "Unutulmaz bir lezzet!"
-        rating >= 4.0 -> "Çok lezzetli"
-        rating >= 3.0 -> "Gayet iyi"
-        rating >= 2.0 -> "Daha iyi olabilirdi"
-        rating >= 1.0 -> "Beklentimi karşılamadı"
-        rating >= 0.5 -> "Çok kötü"
-        else -> "Lezzetini değerlendir (Kaydır veya Dokun)"
+    val fontFamily = getAppFontFamily()
+
+    val (description, textColor) = when {
+        rating >= 4.5 -> "Unutulmaz bir lezzet!" to AppColors.GourmetOrange
+        rating >= 4.0 -> "Çok lezzetli" to AppColors.WarmAmber
+        rating >= 3.0 -> "Gayet iyi" to AppColors.TextPrimary
+        rating >= 2.0 -> "Daha iyi olabilirdi" to AppColors.TextSecondary
+        rating >= 1.0 -> "Beklentimi karşılamadı" to AppColors.ErrorRed
+        rating >= 0.5 -> "Çok kötü" to AppColors.ErrorRed
+        else -> "Lezzetini değerlendir (Kaydır veya Dokun)" to AppColors.TextTertiary
     }
 
     var rowWidthPx by remember { mutableStateOf(1f) }
@@ -96,9 +99,10 @@ fun TastyRatingBar(
 
         Text(
             text = description,
+            fontFamily = fontFamily,
             fontSize = 13.sp,
-            fontWeight = FontWeight.Bold,
-            color = if (rating > 0.0) AppColors.NavyBlue else AppColors.DarkGrayLines
+            fontWeight = if (rating > 0.0) FontWeight.Bold else FontWeight.Medium,
+            color = textColor
         )
     }
 }

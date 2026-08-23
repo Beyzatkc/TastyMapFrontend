@@ -6,6 +6,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import org.beem.tastymap.core.network.ResultWrapper
 import org.beem.tastymap.core.paging.TastyPagingController
@@ -15,6 +16,8 @@ import org.beem.tastymap.place.model.details.PlaceDetailsResult
 import org.beem.tastymap.place.model.review.ReviewItem
 import org.beem.tastymap.place.model.review.ReviewResponse
 import org.beem.tastymap.place.repository.PlaceRepository
+import org.beem.tastymap.place.state.PlaceDetailsUiState
+import org.beem.tastymap.place.state.RestaurantDetailIntent
 
 class RestaurantDetailScreenModel(
     private val repository: PlaceRepository
@@ -25,36 +28,75 @@ class RestaurantDetailScreenModel(
     val reviewsPagingState: StateFlow<TastyPagingState<ReviewItem>> = _reviewsPagingState.asStateFlow()
 
     // --- Mekan Detayı & Kullanıcının Kendi Yorumu State ---
-    private val _placeDetails = MutableStateFlow<PlaceDetailsResult?>(null)
-    val placeDetails: StateFlow<PlaceDetailsResult?> = _placeDetails.asStateFlow()
-
-    private val _isDetailsLoading = MutableStateFlow(false)
-    val isDetailsLoading: StateFlow<Boolean> = _isDetailsLoading.asStateFlow()
+    private val _detailsUiState = MutableStateFlow(PlaceDetailsUiState())
+    val detailsUiState: StateFlow<PlaceDetailsUiState> = _detailsUiState.asStateFlow()
 
     private var currentPlaceId: String? = null
     private var pagingController: TastyPagingController<ReviewItem, Long>? = null
     private var collectJob: Job? = null
 
-    // Mekan detayını ve kullanıcının yorumunu çeker
-    fun loadPlaceDetails(placeId: String) {
-        screenModelScope.launch {
-            _isDetailsLoading.value = true
-            val details = repository.fetchPlaceDetails(placeId)
-            _placeDetails.value = details
-            _isDetailsLoading.value = false
+
+    fun handleIntent(intent: RestaurantDetailIntent) {
+        when (intent) {
+            is RestaurantDetailIntent.QuickScoreChanged -> {
+                _detailsUiState.update { it.copy(quickScore = intent.score) }
+            }
+            is RestaurantDetailIntent.OpenAddReview -> {
+                _detailsUiState.update {
+                    it.copy(quickScore = intent.initialScore, isAddReviewOpen = true)
+                }
+            }
+            is RestaurantDetailIntent.DismissAddReview -> {
+                _detailsUiState.update {
+                    it.copy(quickScore = 0.0, isAddReviewOpen = false)
+                }
+            }
+            is RestaurantDetailIntent.ReviewSubmittedSuccess -> {
+                _detailsUiState.update {
+                    it.copy(quickScore = 0.0, isAddReviewOpen = false)
+                }
+                currentPlaceId?.let { loadPlaceData(it) }
+            }
+            is RestaurantDetailIntent.RetryDetails -> {
+                currentPlaceId?.let { loadPlaceDetails(it, forceRefresh = true) }
+            }
+            is RestaurantDetailIntent.LoadMoreReviews -> {
+                loadMoreReviews()
+            }
+            is RestaurantDetailIntent.DismissMainSheet -> {
+                resetState()
+            }
         }
     }
 
-    suspend fun loadReviews(placeId: String, page: Int, size: Int): List<ReviewItem> {
-        val response = repository.loadReviews(placeId, page, size)
-        return when (response) {
-            is ResultWrapper.Success<BaseResponse<ReviewResponse>> -> {
-                val data = response.data.data?.reviewList
-                data ?: emptyList()
+    // Mekan detayını ve kullanıcının yorumunu çeker
+    fun loadPlaceDetails(placeId: String, forceRefresh: Boolean = false) {
+        screenModelScope.launch {
+            _detailsUiState.update { state ->
+                state.copy(
+                    isLoading = true,
+                    errorMessage = null
+                )
             }
-            is ResultWrapper.Error -> {
-                println("Hata Oluştu: ${response.message}")
-                emptyList()
+            val details = repository.fetchPlaceDetails(placeId, forceRefresh)
+            when (details) {
+                is ResultWrapper.Error -> {
+                    _detailsUiState.update {
+                        it.copy(
+                            isLoading = false,
+                            errorMessage = details.message
+                        )
+                    }
+                }
+                is ResultWrapper.Success -> {
+                    _detailsUiState.update {
+                        it.copy(
+                            isLoading = false,
+                            errorMessage = null,
+                            details = details.data
+                        )
+                    }
+                }
             }
         }
     }
@@ -110,7 +152,6 @@ class RestaurantDetailScreenModel(
         collectJob?.cancel()
         pagingController?.reset()
         _reviewsPagingState.value = TastyPagingState()
-        _placeDetails.value = null
-        _isDetailsLoading.value = false
+        _detailsUiState.value = PlaceDetailsUiState()
     }
 }

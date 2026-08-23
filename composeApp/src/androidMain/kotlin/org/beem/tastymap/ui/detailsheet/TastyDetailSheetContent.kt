@@ -14,24 +14,23 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import org.beem.tastymap.core.paging.TastyPagingState
 import org.beem.tastymap.data.model.Restaurant
-import org.beem.tastymap.place.model.details.PlaceDetailsResult
 import org.beem.tastymap.place.model.review.ReviewItem
-import org.beem.tastymap.ui.detailsheet.components.QuickReviewCard
+import org.beem.tastymap.place.state.PlaceDetailsUiState
+import org.beem.tastymap.place.state.RestaurantDetailIntent
 import org.beem.tastymap.ui.theme.AppColors
+import org.beem.tastymap.ui.theme.getAppFontFamily
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TastyDetailSheetContent(
     restaurant: Restaurant,
-    placeDetails: PlaceDetailsResult?,
+    detailsUiState: PlaceDetailsUiState,
     pagingState: TastyPagingState<ReviewItem>,
-    onLoadMoreReviews: () -> Unit,
-    onAddReviewClick: (initialScore: Double) -> Unit,
-    onDismiss: () -> Unit
+    onIntent: (RestaurantDetailIntent) -> Unit
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = false)
     val listState = rememberLazyListState()
-    var quickScore by remember { mutableStateOf(0.0) }
+    val fontFamily = getAppFontFamily()
 
     val shouldLoadMore = remember {
         derivedStateOf {
@@ -43,17 +42,17 @@ fun TastyDetailSheetContent(
 
     LaunchedEffect(shouldLoadMore.value) {
         if (shouldLoadMore.value && !pagingState.isLoading && !pagingState.isEndReached) {
-            onLoadMoreReviews()
+            onIntent(RestaurantDetailIntent.LoadMoreReviews)
         }
     }
 
     ModalBottomSheet(
-        onDismissRequest = onDismiss,
+        onDismissRequest = { onIntent(RestaurantDetailIntent.DismissMainSheet) },
         sheetState = sheetState,
-        containerColor = AppColors.BackBackgroundBlue,
+        containerColor = AppColors.Surface,
         dragHandle = {
             BottomSheetDefaults.DragHandle(
-                color = AppColors.DarkGrayLines.copy(alpha = 0.4f)
+                color = AppColors.BorderStrong.copy(alpha = 0.4f)
             )
         },
         shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)
@@ -71,32 +70,71 @@ fun TastyDetailSheetContent(
                 RestaurantHeaderSection(restaurant = restaurant)
             }
 
-            // Hızlı Puanlama Kartı
             item {
-                val myReview = placeDetails?.userReview
-                if (myReview != null) {
-                    UserOwnReviewCard(
-                        review = myReview,
-                        onEditClick = {
-                            onAddReviewClick(myReview.rating)
+                when {
+                    detailsUiState.isLoading && detailsUiState.details == null -> {
+                        // Detaylar ilk kez yüklenirken hafif bir placeholder/loader
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(90.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            CircularProgressIndicator(
+                                color = AppColors.GourmetOrange,
+                                strokeWidth = 2.dp,
+                                modifier = Modifier.size(24.dp)
+                            )
                         }
-                    )
-                } else {
-                    QuickReviewCard(
-                        userName = "Emrullah Uygun",
-                        score = quickScore,
-                        onScoreChange = { newScore -> quickScore = newScore },
-                        onScoreSelected = { finalScore ->
-                            quickScore = finalScore
-                            onAddReviewClick(finalScore)
+                    }
+                    detailsUiState.errorMessage != null && detailsUiState.details == null -> {
+                        // Detay yüklenemedi uyarısı
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = "Kullanıcı bilgisi yüklenemedi",
+                                fontFamily = fontFamily,
+                                fontWeight = FontWeight.SemiBold,
+                                color = AppColors.TextSecondary,
+                                fontSize = 13.sp
+                            )
+                            TextButton(onClick = { onIntent(RestaurantDetailIntent.RetryDetails) }) {
+                                Text(
+                                    text = "Tekrar Dene",
+                                    fontFamily = fontFamily,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = AppColors.NavyBlue
+                                )
+                            }
                         }
-                    )
+                    }
+                    else -> {
+                        val myReview = detailsUiState.details?.userReview
+                        if (myReview != null) {
+                            UserOwnReviewCard(
+                                review = myReview,
+                                onEditClick = { onIntent(RestaurantDetailIntent.OpenAddReview(myReview.rating)) }
+                            )
+                        } else {
+                            QuickReviewCard(
+                                userName = "Emrullah Uygun",
+                                score = detailsUiState.quickScore,
+                                onScoreChange = { onIntent(RestaurantDetailIntent.QuickScoreChanged(it)) },
+                                onScoreSelected = { finalScore ->
+                                    onIntent(RestaurantDetailIntent.OpenAddReview(finalScore))
+                                }
+                            )
+                        }
+                    }
                 }
             }
 
             item {
                 HorizontalDivider(
-                    color = AppColors.DarkGrayLines.copy(alpha = 0.2f),
+                    color = AppColors.BorderLight,
                     thickness = 1.dp
                 )
             }
@@ -110,20 +148,22 @@ fun TastyDetailSheetContent(
                 ) {
                     Text(
                         text = "Değerlendirmeler & Yorumlar",
+                        fontFamily = fontFamily,
                         fontSize = 18.sp,
                         fontWeight = FontWeight.Bold,
-                        color = AppColors.NavyBlue
+                        color = AppColors.TextPrimary
                     )
                     if (pagingState.items.isNotEmpty()) {
                         Surface(
-                            color = AppColors.WaveColor,
+                            color = AppColors.SurfaceVariant,
                             shape = RoundedCornerShape(12.dp)
                         ) {
                             Text(
                                 text = "${pagingState.items.size} Yorum",
                                 modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                                fontFamily = fontFamily,
                                 fontSize = 12.sp,
-                                fontWeight = FontWeight.SemiBold,
+                                fontWeight = FontWeight.Bold,
                                 color = AppColors.NavyBlue
                             )
                         }
@@ -142,7 +182,8 @@ fun TastyDetailSheetContent(
                     ) {
                         Text(
                             text = "Henüz değerlendirme bulunmuyor.",
-                            color = AppColors.DarkGrayLines,
+                            fontFamily = fontFamily,
+                            color = AppColors.TextTertiary,
                             fontSize = 14.sp
                         )
                     }
@@ -166,7 +207,7 @@ fun TastyDetailSheetContent(
                         contentAlignment = Alignment.Center
                     ) {
                         CircularProgressIndicator(
-                            color = AppColors.WarmAmber,
+                            color = AppColors.GourmetOrange,
                             strokeWidth = 3.dp,
                             modifier = Modifier.size(28.dp)
                         )
