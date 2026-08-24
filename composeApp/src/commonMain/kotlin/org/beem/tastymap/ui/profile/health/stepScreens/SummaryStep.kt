@@ -31,6 +31,7 @@ import io.github.alexzhirkevich.compottie.rememberLottieComposition
 import io.github.alexzhirkevich.compottie.rememberLottiePainter
 import kotlinx.coroutines.delay
 import org.beem.tastymap.data.model.health.HealthEnum
+import org.beem.tastymap.ui.components.AuthFooter
 import org.beem.tastymap.ui.profile.health.HealthUiState
 import org.beem.tastymap.ui.theme.CustomColors
 import org.beem.tastymap.ui.theme.LocalCustomColors
@@ -90,21 +91,20 @@ fun SummaryStep(
         label = "headerScale"
     )
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background),
-        contentAlignment = Alignment.TopCenter
-    ) {
         Column(
             modifier = Modifier
-                .widthIn(max = 700.dp)
-                .fillMaxSize()
+                .fillMaxWidth()
                 .verticalScroll(rememberScrollState())
-                .padding(horizontal = 24.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
         ) {
 
+            Column(
+                modifier = Modifier
+                    .widthIn(max = 700.dp)
+                    .fillMaxWidth()
+                    .align(Alignment.CenterHorizontally)
+                    .padding(horizontal = 24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
 
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
@@ -209,9 +209,11 @@ fun SummaryStep(
                 strokecolor = customColors.navy.copy(alpha = 0.3f)
             )
 
-            Spacer(modifier = Modifier.height(24.dp))
+                Spacer(modifier = Modifier.height(40.dp))
+
+            }
+
         }
-    }
 }
 
 @Composable

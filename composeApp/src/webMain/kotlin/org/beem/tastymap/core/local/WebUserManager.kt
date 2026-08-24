@@ -22,4 +22,20 @@ class WebUserManager(): UserManager {
     override fun clear() {
         this.currentUserSession = null
     }
+
+    override fun updateProfileSession(
+        username: String,
+        name: String,
+        surname: String,
+        profilePhoto: String?,
+        biography: String?
+    ) {
+        currentUserSession = currentUserSession?.copy(
+            username = username,
+            name = name,
+            surname = surname,
+            profile = profilePhoto ?: currentUserSession?.profile,
+            biography = biography ?: currentUserSession?.biography
+        )
+    }
 }

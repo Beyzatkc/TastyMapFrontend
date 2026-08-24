@@ -131,7 +131,7 @@ class EmailScreenModel(
             is ResultWrapper.Success -> {
                 if(result.data){
                     clearContext()
-                    _uiMessage.send("Email doğrulandı")
+                    //_uiMessage.send("Email doğrulandı")
                     _navigationState.send(EmailNavEffect.OnSuccess)
                     true
                 }

@@ -1,0 +1,71 @@
+CREATE TABLE ProfileEntity (
+    userId INTEGER NOT NULL PRIMARY KEY,
+    username TEXT NOT NULL,
+    name TEXT NOT NULL,
+    profilePhoto TEXT,
+    role TEXT NOT NULL,
+    biography TEXT,
+    postCount INTEGER NOT NULL DEFAULT 0,
+    subscriberCount INTEGER NOT NULL DEFAULT 0,
+    subscribedCount INTEGER NOT NULL DEFAULT 0,
+    blockedByMe INTEGER NOT NULL DEFAULT 0,
+    blockedMe INTEGER NOT NULL DEFAULT 0,
+    updatedAt INTEGER NOT NULL
+);
+-- Profil Getir
+getProfileById:
+SELECT * FROM ProfileEntity WHERE userId = ?;
+
+-- Profil Ekle veya Güncelle (Upsert)
+insertOrUpdateProfile:
+INSERT OR REPLACE INTO ProfileEntity(
+    userId, username, name, profilePhoto, role, biography,
+    postCount, subscriberCount, subscribedCount,
+    blockedByMe, blockedMe, updatedAt
+) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+
+-- Profil Önbelleğini Sil (Cache Invalidation)
+deleteProfileById:
+DELETE FROM ProfileEntity WHERE userId = ?;
+
+-- Tüm Önbelleği Temizle (Logout durumunda)
+clearAllProfiles:
+DELETE FROM ProfileEntity;
+
+-- En son ziyaret edilen 5 profili tut, gerisini sil!
+trimOldProfiles:
+DELETE FROM ProfileEntity
+WHERE userId NOT IN (
+    SELECT userId FROM ProfileEntity
+    ORDER BY updatedAt DESC
+    LIMIT 5
+);
+updateCounts:
+UPDATE ProfileEntity
+SET subscriberCount = ?,
+    subscribedCount = ?,
+    postCount = ?,
+    updatedAt = ?
+WHERE userId = ?;
+
+-- Takip etme durumunda anlık incremental (artırımlı) güncelleme
+incrementSubscriberCount:
+UPDATE ProfileEntity
+SET subscriberCount = subscriberCount + 1,
+    updatedAt = ?
+WHERE userId = ?;
+
+decrementSubscriberCount:
+UPDATE ProfileEntity
+SET subscriberCount = MAX(0, subscriberCount - 1),
+    updatedAt = ?
+WHERE userId = ?;
+
+-- Profil metin bilgilerini (Name, Bio, Photo) güncelle
+updateProfileInfo:
+UPDATE ProfileEntity
+SET name = ?,
+    biography = ?,
+    profilePhoto = ?,
+    updatedAt = ?
+WHERE userId = ?;

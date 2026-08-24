@@ -125,7 +125,7 @@ class ForgotScreen : Screen {
                         Spacer(modifier = Modifier.height(12.dp))
 
                         Text(
-                            text = "Hesabınıza bağlı e-posta adresinizi girin. Size şifre sıfırlama bağlantısı göndereceğiz.",
+                            text = "Hesabınıza bağlı e-posta adresinizi veya kullanıcı adınızı girin. Size şifre sıfırlama bağlantısı göndereceğiz.",
                             textAlign = TextAlign.Center,
                             style = MaterialTheme.typography.bodyMedium,
                             color = Color.Gray
@@ -138,7 +138,7 @@ class ForgotScreen : Screen {
                             onValueChange = {
                                 screenModel.onEmailEvent(EmailEvent.EmailChanged(it))
                             },
-                            label = "Email",
+                            label = "Email veya Kullanıcı Adı",
                             leadingIcon = {
                                 Icon(Icons.Default.Email, null)
                             },

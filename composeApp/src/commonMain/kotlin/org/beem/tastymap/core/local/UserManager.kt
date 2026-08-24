@@ -16,4 +16,12 @@ interface UserManager {
     fun getBiography(): String?
     fun getOnBoardComplete(): Boolean?
     fun clear()
+
+    fun updateProfileSession(
+        username: String,
+        name: String,
+        surname: String,
+        profilePhoto: String?,
+        biography: String?
+    )
 }

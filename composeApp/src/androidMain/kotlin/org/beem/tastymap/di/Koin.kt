@@ -7,6 +7,8 @@ import org.koin.dsl.module
 
 import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKeys
+import app.cash.sqldelight.db.SqlDriver
+import app.cash.sqldelight.driver.android.AndroidSqliteDriver
 import com.russhwolf.settings.SharedPreferencesSettings
 import org.beem.tastymap.core.AndroidPermissionManager
 import org.beem.tastymap.core.local.MobileUserManager
@@ -16,9 +18,17 @@ import org.beem.tastymap.core.network.MobileHttpClientFactory
 import org.beem.tastymap.core.permission.PermissionManager
 import org.beem.tastymap.core.provider.AuthValidator
 import org.beem.tastymap.core.provider.HttpClientFactory
+import org.beem.tastymap.database.TastyDatabase
 
 
 val androidModule = module {
+    single<SqlDriver> {
+        AndroidSqliteDriver(
+            schema = TastyDatabase.Schema,
+            context = get(), // Android Context'i Koin'den otomatik alır
+            name = "tasty.db"
+        )
+    }
     single<DeviceInfoProvider> { AndroidDeviceInfoProvider(get()) }
     single<HttpClientFactory> { MobileHttpClientFactory(get(), get()) }
     single<Settings> {

@@ -12,7 +12,7 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import org.beem.tastymap.core.network.ResultWrapper
 import org.beem.tastymap.core.provider.DeviceInfoProvider
-import org.beem.tastymap.data.model.auth.CommonRequest
+import org.beem.tastymap.data.model.auth.PasswordRequest
 import org.beem.tastymap.data.model.domain.SecurityEventType
 import org.beem.tastymap.data.remote.AuthWebSocketClient
 import org.beem.tastymap.data.repository.UserSecurityRepository
@@ -166,14 +166,14 @@ class ForgotScreenModel(
         resetSession.clear()
     }
 
-     fun forgotPassword(email: String){
+     fun forgotPassword(identifier: String){
         if (_sendState.value.isLoading) return
         screenModelScope.launch {
             if(validateEmail()) {
                 _sendState.update { it.copy(isLoading = true) }
-                val dto = CommonRequest(
+                val dto = PasswordRequest(
                     deviceId = deviceInfoProvider.getDeviceId(),
-                    email = email
+                    identifier = identifier
                 )
                 when (val result = repoSecurity.forgotPassword(dto)) {
                     is ResultWrapper.Success -> {

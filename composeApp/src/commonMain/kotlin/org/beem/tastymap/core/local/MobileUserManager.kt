@@ -49,5 +49,19 @@ class MobileUserManager(private val settings: Settings): UserManager{
        settings.clear()
     }
 
+    override fun updateProfileSession(
+        username: String,
+        name: String,
+        surname: String,
+        profilePhoto: String?,
+        biography: String?
+    ) {
+        settings[KEY_USERNAME] = username
+        settings[KEY_NAME] = name
+        settings[KEY_SURNAME] = surname
+        profilePhoto?.let { settings[KEY_PROFILE] = it }
+        biography?.let { settings[KEY_BIOGRAPHY] = it }
+    }
+
 
 }

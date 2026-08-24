@@ -1,5 +1,7 @@
 package org.beem.tastymap.di
 
+import app.cash.sqldelight.db.SqlDriver
+import app.cash.sqldelight.driver.worker.WebWorkerDriver
 import com.russhwolf.settings.Settings
 import com.russhwolf.settings.StorageSettings
 import createNoAuthClient
@@ -18,8 +20,14 @@ import org.beem.tastymap.core.provider.DeviceInfoProvider
 import org.beem.tastymap.core.provider.HttpClientFactory
 import org.koin.core.qualifier.named
 import org.koin.dsl.module
+import org.w3c.dom.Worker
 
 val webModule = module {
+    single<SqlDriver> {
+        WebWorkerDriver(
+            Worker(js("""new URL("@cashapp/sqldelight-sqljs-worker", import.meta.url)"""))
+        )
+    }
     single<DeviceInfoProvider> { WebDeviceInfoProvider() }
     single<HttpClientFactory> { WebHttpClientFactory(get()) }
 

@@ -19,7 +19,8 @@ enum class ErrorType {
 
     SERVER_ERROR,
     NETWORK_ERROR,
-    EMPTY_RESPONSE
+    EMPTY_RESPONSE,
+    UNAUTHORIZED,
 }
 
 

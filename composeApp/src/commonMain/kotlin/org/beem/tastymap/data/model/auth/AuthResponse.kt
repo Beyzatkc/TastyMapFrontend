@@ -35,6 +35,11 @@ data class CommonRequest(
     val email: String
 )
 @Serializable
+data class PasswordRequest(
+    val deviceId: String,
+    val identifier: String
+)
+@Serializable
 data class ResetPassword(
     val token: String,
     val newPassword: String

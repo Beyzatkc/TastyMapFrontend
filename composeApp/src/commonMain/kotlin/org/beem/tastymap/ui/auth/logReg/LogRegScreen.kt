@@ -82,10 +82,11 @@ class LogRegScreen : Screen {
         AuthEffectHandler(screenModel,navigator)
 
 
-        Box(modifier = Modifier.fillMaxSize()
-            .background(colors.backgroundBlue)
-            .imePadding(),)
-        {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(colors.backgroundBlue)
+        )
 
             MapHeaderSection(
                 modifier = Modifier.fillMaxWidth().height(280.dp),
@@ -95,79 +96,84 @@ class LogRegScreen : Screen {
             )
             var isLoginTab by remember { mutableStateOf(true) }
 
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .verticalScroll(rememberScrollState())
-                    .padding(top = 260.dp),
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .imePadding()
+                .verticalScroll(rememberScrollState())
+                .padding(top = 220.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                HeaderTitles(colors.navy)
+            HeaderTitles(colors.navy)
 
-                Spacer(modifier = Modifier.height(5.dp))
+            Spacer(modifier = Modifier.height(5.dp))
 
 
-                Card(
-                    modifier = Modifier
-                        .widthIn(max = 400.dp)
-                        .fillMaxWidth()
-                        .shadow(
-                            elevation = 12.dp,
-                            shape = RoundedCornerShape(28.dp),
-                            spotColor = colors.navy.copy(alpha = 0.08f)
-                        ),
+            Card(
+                modifier = Modifier
+                    .widthIn(max = 400.dp)
+                    .fillMaxWidth()
+                    .shadow(
+                        elevation = 12.dp,
+                        shape = RoundedCornerShape(28.dp),
+                        spotColor = colors.navy.copy(alpha = 0.08f)
+                    ),
 
-                    shape = RoundedCornerShape(28.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color.White),
+                shape = RoundedCornerShape(28.dp),
+                colors = CardDefaults.cardColors(containerColor = Color.White),
+            ) {
+                Column(
+                    modifier = Modifier.padding(24.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
-                    Column(
-                        modifier = Modifier.padding(24.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(16.dp)
-                    ) {
-                        AuthTabBar(isLoginTab, colors.navy,colors.gray,
-                            onLoginClick = {
-                                isLoginTab = true
-                                screenModel.clearRegisterForm()
-                                screenModel.previousRegisterStep()
-                            },
-                            onRegisterClick = {
-                                isLoginTab = false
-                                screenModel.clearLoginForm()
-                            }
-                        )
+                    AuthTabBar(
+                        isLoginTab, colors.navy, colors.gray,
+                        onLoginClick = {
+                            isLoginTab = true
+                            screenModel.clearRegisterForm()
+                            screenModel.previousRegisterStep()
+                        },
+                        onRegisterClick = {
+                            isLoginTab = false
+                            screenModel.clearLoginForm()
+                        }
+                    )
 
-                        AnimatedContent(
-                            targetState = isLoginTab,
-                            transitionSpec = {
-                                if (targetState > initialState) {
-                                    TastyAnimations.slideInBackward()
-                                } else {
-                                    TastyAnimations.slideInForward()
-                                }.using(SizeTransform(clip = false))
-                            },
-                            label = "FormAnim"
-                        ) { targetIsLogin ->
-                            key(targetIsLogin) {
-                                if (targetIsLogin) {
-                                    LoginForm(colors.navy, screenModel,logState,navigator)
-                                } else {
-                                    RegisterForm(colors, screenModel,regState)
-                                }
+                    AnimatedContent(
+                        targetState = isLoginTab,
+                        transitionSpec = {
+                            if (targetState > initialState) {
+                                TastyAnimations.slideInBackward()
+                            } else {
+                                TastyAnimations.slideInForward()
+                            }.using(SizeTransform(clip = false))
+                        },
+                        label = "FormAnim"
+                    ) { targetIsLogin ->
+                        key(targetIsLogin) {
+                            if (targetIsLogin) {
+                                LoginForm(colors.navy, screenModel, logState, navigator)
+                            } else {
+                                RegisterForm(colors, screenModel, regState)
                             }
                         }
                     }
                 }
-                Spacer(modifier = Modifier.weight(1f))
+            }
+            Spacer(modifier = Modifier.height(25.dp))
 
-                AuthFooter(modifier = Modifier.fillMaxWidth())
+                AuthFooter(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 32.dp)
+                )
 
             }
             val currentLoading = if (isLoginTab) logState.isLoading else regState.isLoading
             FullScreenLoading(isLoading = currentLoading)
         }
     }
-}
 
 @Composable
 fun FullScreenLoading(isLoading: Boolean){

@@ -44,7 +44,7 @@ fun BaseStepContainer(
         modifier = modifier
             .fillMaxSize()
             .verticalScroll(scrollState)
-            .padding(vertical = 16.dp),
+            .padding(vertical = 16.dp, horizontal = 24.dp),
         contentAlignment = Alignment.Center
     ) {
         ElevatedCard(

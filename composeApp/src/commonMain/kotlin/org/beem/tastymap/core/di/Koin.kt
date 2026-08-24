@@ -8,13 +8,20 @@ import org.beem.tastymap.core.local.TokenManagerImpl
 import org.beem.tastymap.core.navigation.MobileVerifyNavigator
 import org.beem.tastymap.core.navigation.VerifyNavigator
 import org.beem.tastymap.core.provider.HttpClientFactory
+import org.beem.tastymap.data.cache.ProfileMemoryCache
+import org.beem.tastymap.data.local.ProfileLocalDataSource
 import org.beem.tastymap.data.remote.AuthDataSource
 import org.beem.tastymap.data.remote.AuthWebSocketClient
 import org.beem.tastymap.data.remote.HealthDataSource
 import org.beem.tastymap.data.remote.UserSecurityDataSource
+import org.beem.tastymap.data.remote.profile.MyProfileDataSource
+import org.beem.tastymap.data.remote.profile.ProfileDataSource
 import org.beem.tastymap.data.repository.AuthRepository
 import org.beem.tastymap.data.repository.HealthRepository
 import org.beem.tastymap.data.repository.UserSecurityRepository
+import org.beem.tastymap.data.repository.profile.MyProfileRepository
+import org.beem.tastymap.data.repository.profile.ProfileRepository
+import org.beem.tastymap.database.TastyDatabase
 import org.beem.tastymap.ui.auth.forgotPassword.ForgotScreenModel
 import org.beem.tastymap.ui.auth.forgotPassword.PasswordResetSessionManager
 import org.beem.tastymap.ui.auth.forgotPassword.ResetScreenModel
@@ -38,10 +45,16 @@ val appModule = module {
         val noAuth = get<HttpClient>(named("noAuth"))
         factory.createAuthClient(noAuth)
     }
+    single { TastyDatabase(driver = get()) }
+    single { get<TastyDatabase>().profileEntityQueries }
+    single { ProfileMemoryCache() }
+    single { ProfileLocalDataSource(get()) }
 
     single { AuthDataSource(get(named("noAuth"))) }
     single { UserSecurityDataSource(get(named("noAuth"))) }
     single { HealthDataSource(get(named("auth"))) }
+    single { ProfileDataSource(get(named("auth"))) }
+    single { MyProfileDataSource(get(named("auth"))) }
 
     single { AuthRepository(get(), get(),get(),get()) }
     single { UserSecurityRepository(get()) }
@@ -49,6 +62,9 @@ val appModule = module {
     single { HealthRepository(get()) }
     single { AuthWebSocketClient(get(named("auth"))) }
     single { PasswordResetSessionManager() }
+    single { ProfileRepository(get(),get(),get()) }
+    single { MyProfileRepository(get()) }
+
 
     factory { LogRegScreenModel(get(),get(),get(),get()) }
     factory { PendingScreenModel(get(),get(),get(),get()) }

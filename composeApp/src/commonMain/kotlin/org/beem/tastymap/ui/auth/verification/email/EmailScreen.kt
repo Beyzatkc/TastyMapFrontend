@@ -76,7 +76,6 @@ class EmailVerificationScreen(val email: String, val deviceId: String,val userId
                 screenModel.handleLifecycleEvent(AuthLifecycleEvent.Stop)
             }
         )
-
         Surface {
             Column(
                 modifier = Modifier

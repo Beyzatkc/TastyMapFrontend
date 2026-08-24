@@ -24,14 +24,14 @@ fun AuthFooter(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
 
-        Spacer(Modifier.height(16.dp))
+        Spacer(Modifier.height(15.dp))
 
         HorizontalDivider(
             modifier = Modifier.fillMaxWidth(),
             color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.2f),
         )
 
-        Spacer(Modifier.height(16.dp))
+        Spacer(Modifier.height(15.dp))
 
         Text(
             text = "© 2026 TastyMap",
@@ -40,7 +40,7 @@ fun AuthFooter(
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f)
         )
-        Spacer(Modifier.height(16.dp))
+        Spacer(Modifier.height(10.dp))
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterHorizontally),

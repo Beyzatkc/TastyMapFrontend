@@ -5,6 +5,12 @@ import org.beem.tastymap.core.provider.DeviceInfoProvider
 import org.koin.dsl.module
 
 val iosModule = module {
+    single<SqlDriver> {
+        NativeSqliteDriver(
+            schema = TastyDatabase.Schema,
+            name = "tasty.db"
+        )
+    }
     single<DeviceInfoProvider> { IosDeviceInfoProvider() }
     single<HttpClientFactory> { MobileHttpClientFactory(get(), get()) }
     single<Settings> {

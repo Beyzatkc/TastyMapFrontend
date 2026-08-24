@@ -8,11 +8,9 @@ import org.beem.tastymap.core.network.safeApiCall
 import org.beem.tastymap.core.provider.AuthValidator
 import org.beem.tastymap.data.model.auth.ApprovedRefreshRequestDTO
 import org.beem.tastymap.data.model.auth.AuthStatus
-import org.beem.tastymap.data.model.auth.CommonRequest
 import org.beem.tastymap.data.model.auth.LoginRequest
 import org.beem.tastymap.data.model.auth.LoginResponse
 import org.beem.tastymap.data.model.auth.LoginStatus
-import org.beem.tastymap.data.model.auth.NotificationResponse
 import org.beem.tastymap.data.model.auth.RegisterRequest
 import org.beem.tastymap.data.model.auth.ResetPassword
 import org.beem.tastymap.data.model.auth.ResetPasswordResponse
