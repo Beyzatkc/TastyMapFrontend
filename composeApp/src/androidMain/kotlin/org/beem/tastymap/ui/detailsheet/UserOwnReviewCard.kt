@@ -1,7 +1,9 @@
 package org.beem.tastymap.ui.detailsheet
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Edit
@@ -10,6 +12,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -30,7 +33,7 @@ fun UserOwnReviewCard(
         modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
-            containerColor = AppColors.SurfaceVariant // Boğucu mavi yerine ferah yüzey rengi
+            containerColor = AppColors.SurfaceVariant
         ),
         border = BorderStroke(1.dp, AppColors.BorderLight)
     ) {
@@ -40,6 +43,7 @@ fun UserOwnReviewCard(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
+            // Üst Satır: Başlık, Puan Rozeti ve Düzenle Butonu
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -57,8 +61,9 @@ fun UserOwnReviewCard(
                         color = AppColors.TextPrimary
                     )
 
+                    // TastyMap Gurme Turuncusu Puan Rozeti
                     Surface(
-                        color = AppColors.WarmAmber,
+                        color = AppColors.GourmetOrange,
                         shape = RoundedCornerShape(8.dp)
                     ) {
                         Row(
@@ -83,19 +88,24 @@ fun UserOwnReviewCard(
                     }
                 }
 
+                // Modern, tıklanabilirliği belirginleştirilmiş Düzenle Butonu
                 IconButton(
                     onClick = onEditClick,
-                    modifier = Modifier.size(32.dp)
+                    modifier = Modifier
+                        .size(32.dp)
+                        .clip(CircleShape)
+                        .background(AppColors.NavySoft.copy(alpha = 0.08f))
                 ) {
                     Icon(
                         imageVector = Icons.Default.Edit,
                         contentDescription = "Düzenle",
-                        tint = AppColors.TextSecondary,
-                        modifier = Modifier.size(18.dp)
+                        tint = AppColors.NavySoft,
+                        modifier = Modifier.size(16.dp)
                     )
                 }
             }
 
+            // Yorum Metni
             review.text?.takeIf { it.isNotBlank() }?.let { reviewText ->
                 Text(
                     text = reviewText,

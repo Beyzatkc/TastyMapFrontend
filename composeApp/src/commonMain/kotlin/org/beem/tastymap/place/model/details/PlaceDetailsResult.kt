@@ -30,5 +30,7 @@ data class PlaceDetailsResult(
     val openingHours: OpeningHoursDto? = null,
     val geometry: GeometryContainer? = null,
     val reviews: List<ReviewItem> = emptyList(),
-    val userReview: UserReviewSummaryDto? = null
+    val userReview: UserReviewSummaryDto? = null,
+
+    val stats: PlaceStatsResult? = null
 )

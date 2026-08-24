@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
@@ -15,6 +16,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import org.beem.tastymap.place.model.review.ReviewItem
@@ -22,6 +24,8 @@ import org.beem.tastymap.place.model.review.UserReviewSummaryDto
 import org.beem.tastymap.review.AddReviewEvent
 import org.beem.tastymap.review.AddReviewScreenModel
 import org.beem.tastymap.review.model.ScoreType
+import org.beem.tastymap.ui.components.dialog.TastyConfirmationDialog
+import org.beem.tastymap.ui.components.dialog.TastyDialogType
 import org.beem.tastymap.ui.review.components.TastyRatingBar
 import org.beem.tastymap.ui.review.components.TastyScoreSlider
 import org.beem.tastymap.ui.theme.AppColors
@@ -48,6 +52,8 @@ fun AddReviewBottomSheet(
     LaunchedEffect(existingReview) {
         screenModel.setupReviewForm(existingReview, initialMainScore)
     }
+
+    var showDeleteDialog by remember { mutableStateOf(false) }
 
     LaunchedEffect(screenModel) {
         screenModel.event.collect { event ->
@@ -183,6 +189,9 @@ fun AddReviewBottomSheet(
                     OutlinedTextField(
                         value = state.comment,
                         onValueChange = screenModel::onCommentChange,
+                        keyboardOptions = KeyboardOptions(
+                            capitalization = KeyboardCapitalization.Sentences
+                        ),
                         placeholder = {
                             Text(
                                 "Mekan hakkındaki diğer notlarını yaz...",
@@ -221,7 +230,7 @@ fun AddReviewBottomSheet(
                 ) {
                     if (isEditMode) {
                         OutlinedButton(
-                            onClick = { screenModel.deleteReview(placeId) },
+                            onClick = { showDeleteDialog = true },
                             enabled = !state.isDeleting && !state.isSubmitting,
                             modifier = Modifier
                                 .weight(0.32f)
@@ -247,6 +256,21 @@ fun AddReviewBottomSheet(
                                     color = AppColors.ErrorRed
                                 )
                             }
+                        }
+                        if (showDeleteDialog) {
+                            TastyConfirmationDialog(
+                                title = "Yorumu Sil?",
+                                message = "Bu mekana yaptığın değerlendirme ve verdiğin puanlar kalıcı olarak silinecektir.",
+                                confirmText = "Sil",
+                                dismissText = "Vazgeç",
+                                type = TastyDialogType.DANGER,
+                                isLoading = state.isDeleting,
+                                onConfirm = {
+                                    screenModel.deleteReview(placeId)
+                                    showDeleteDialog = false
+                                },
+                                onDismiss = { showDeleteDialog = false }
+                            )
                         }
                     }
 

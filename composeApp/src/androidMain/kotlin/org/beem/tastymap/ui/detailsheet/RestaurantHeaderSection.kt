@@ -94,7 +94,7 @@ fun RestaurantHeaderSection(
                 // 2. Google Puanı
                 val hasGoogleRating = restaurant.rating != null
                 Surface(
-                    color = AppColors.WarmAmber.copy(alpha = 0.15f),
+                    color = AppColors.NavySoft.copy(alpha = 0.15f),
                     shape = RoundedCornerShape(10.dp)
                 ) {
                     Row(
@@ -105,20 +105,20 @@ fun RestaurantHeaderSection(
                         Icon(
                             imageVector = Icons.Default.Star,
                             contentDescription = "Google Puanı",
-                            tint = AppColors.WarmAmber,
+                            tint = AppColors.NavySoft,
                             modifier = Modifier.size(13.dp)
                         )
                         Text(
                             text = if (hasGoogleRating) "${restaurant.rating}" else "-",
                             fontFamily = fontFamily,
-                            color = AppColors.WarmAmber,
+                            color = AppColors.NavySoft,
                             fontWeight = FontWeight.Bold,
                             fontSize = 12.sp
                         )
                         Text(
                             text = "Google",
                             fontFamily = fontFamily,
-                            color = AppColors.WarmAmber.copy(alpha = 0.8f),
+                            color = AppColors.NavySoft.copy(alpha = 0.75f),
                             fontWeight = FontWeight.SemiBold,
                             fontSize = 10.sp
                         )

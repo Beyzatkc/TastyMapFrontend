@@ -17,6 +17,13 @@ import org.beem.tastymap.data.model.Restaurant
 import org.beem.tastymap.place.model.review.ReviewItem
 import org.beem.tastymap.place.state.PlaceDetailsUiState
 import org.beem.tastymap.place.state.RestaurantDetailIntent
+import org.beem.tastymap.ui.detailsheet.components.ReviewItemCard
+import org.beem.tastymap.ui.detailsheet.components.TastyDetailTabBar
+import org.beem.tastymap.ui.detailsheet.model.DetailTabType
+import org.beem.tastymap.ui.detailsheet.tabs.hoursTabSection
+import org.beem.tastymap.ui.detailsheet.tabs.menuTabSection
+import org.beem.tastymap.ui.detailsheet.tabs.reviewsTabSection
+import org.beem.tastymap.ui.detailsheet.tabs.statsTabSection
 import org.beem.tastymap.ui.theme.AppColors
 import org.beem.tastymap.ui.theme.getAppFontFamily
 
@@ -31,6 +38,8 @@ fun TastyDetailSheetContent(
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = false)
     val listState = rememberLazyListState()
     val fontFamily = getAppFontFamily()
+
+    var selectedTab by remember { mutableStateOf(DetailTabType.REVIEWS) }
 
     val shouldLoadMore = remember {
         derivedStateOf {
@@ -137,85 +146,42 @@ fun TastyDetailSheetContent(
             }
 
             item {
+                TastyDetailTabBar(
+                    selectedTab = selectedTab,
+                    onTabSelected = { selectedTab = it }
+                )
+            }
+
+            item {
                 HorizontalDivider(
                     color = AppColors.BorderLight,
                     thickness = 1.dp
                 )
             }
 
-            // Değerlendirmeler Başlığı & Sayaç
-            item {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = "Değerlendirmeler & Yorumlar",
-                        fontFamily = fontFamily,
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = AppColors.TextPrimary
+            when (selectedTab) {
+                DetailTabType.REVIEWS -> {
+                    reviewsTabSection(
+                        pagingState = pagingState,
+                        fontFamily = fontFamily
                     )
-                    if (pagingState.items.isNotEmpty()) {
-                        Surface(
-                            color = AppColors.SurfaceVariant,
-                            shape = RoundedCornerShape(12.dp)
-                        ) {
-                            Text(
-                                text = "${pagingState.items.size} Yorum",
-                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                                fontFamily = fontFamily,
-                                fontSize = 12.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = AppColors.NavyBlue
-                            )
-                        }
-                    }
                 }
-            }
-
-            // Boş Durum
-            if (pagingState.items.isEmpty() && !pagingState.isLoading) {
-                item {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 24.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = "Henüz değerlendirme bulunmuyor.",
-                            fontFamily = fontFamily,
-                            color = AppColors.TextTertiary,
-                            fontSize = 14.sp
-                        )
-                    }
+                DetailTabType.STATS -> {
+                    statsTabSection(
+                        details = detailsUiState.details,
+                        fontFamily = fontFamily
+                    )
                 }
-            } else {
-                items(
-                    items = pagingState.items,
-                    key = { it.id }
-                ) { review ->
-                    ReviewItemCard(review = review)
+                DetailTabType.HOURS -> {
+                    hoursTabSection(
+                        details = detailsUiState.details,
+                        fontFamily = fontFamily
+                    )
                 }
-            }
-
-            // Yükleme Animasyonu
-            if (pagingState.isLoading) {
-                item {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        CircularProgressIndicator(
-                            color = AppColors.GourmetOrange,
-                            strokeWidth = 3.dp,
-                            modifier = Modifier.size(28.dp)
-                        )
-                    }
+                DetailTabType.MENU -> {
+                    menuTabSection(
+                        fontFamily = fontFamily
+                    )
                 }
             }
         }
