@@ -7,11 +7,14 @@ import org.beem.tastymap.data.model.BaseResponse
 import org.beem.tastymap.place.api.PlaceDataSource
 import org.beem.tastymap.place.cache.InMemoryPlaceCache
 import org.beem.tastymap.place.model.details.PlaceDetailsResult
+import org.beem.tastymap.place.model.review.ReviewItem
 import org.beem.tastymap.place.model.review.ReviewResponse
 import org.beem.tastymap.review.model.CreatedReviewRes
 import org.beem.tastymap.review.model.ScoreDto
 import org.beem.tastymap.review.model.ScoreType
 import org.beem.tastymap.review.model.SentReviewReq
+import org.beem.tastymap.review.model.UpdateReviewReq
+import org.beem.tastymap.review.model.UpdatedReviewRes
 import kotlin.time.Clock
 
 class PlaceRepository(
@@ -78,19 +81,18 @@ class PlaceRepository(
         comment: String?,
         scores: Map<ScoreType, Double>,
         parentId: Long? = null
-    ): ResultWrapper<BaseResponse<CreatedReviewRes>> {
+    ): ResultWrapper<BaseResponse<ReviewItem>> {
         val scoreDtoList = mutableListOf<ScoreDto>()
 
-        // 1. Ana Puanı her zaman OVERALL olarak ekle (Backend ReviewEntity rating'ini buradan hesaplar)
         scoreDtoList.add(ScoreDto(type = ScoreType.OVERALL, score = mainScore))
 
-        // 2. Kullanıcının puanladığı (> 0.0) alt kriterleri ekle
         scores.filter { it.value > 0.0 }.forEach { (type, score) ->
             scoreDtoList.add(ScoreDto(type = type, score = score))
         }
 
         val request = SentReviewReq(
             parentId = parentId,
+            mainRating = mainScore,
             content = comment?.takeIf { it.isNotBlank() },
             placeId = placeId,
             scores = scoreDtoList
@@ -98,6 +100,50 @@ class PlaceRepository(
 
         val result = safeApiCall {
             placeDataSource.sendPlaceReview(request)
+        }
+
+        if (result is ResultWrapper.Success) {
+            clearPlaceCache(placeId)
+        }
+
+        return result
+    }
+
+    suspend fun updateReview(
+        reviewId: Long,
+        placeId: String,
+        mainScore: Double,
+        comment: String?,
+        scores: Map<ScoreType, Double>
+    ): ResultWrapper<BaseResponse<ReviewItem>> {
+        val scoreDtoList = scores
+            .filter { it.key != ScoreType.OVERALL && it.value > 0.0 }
+            .map { (type, score) -> ScoreDto(type = type, score = score) }
+
+        val request = UpdateReviewReq(
+            reviewId = reviewId,
+            mainRating = mainScore,
+            content = comment?.takeIf { it.isNotBlank() },
+            scores = scoreDtoList
+        )
+
+        val result = safeApiCall {
+            placeDataSource.updatePlaceReview(request)
+        }
+
+        if (result is ResultWrapper.Success) {
+            clearPlaceCache(placeId)
+        }
+
+        return result
+    }
+
+    suspend fun deleteReview(
+        reviewId: Long,
+        placeId: String
+    ): ResultWrapper<BaseResponse<Boolean>> {
+        val result = safeApiCall {
+            placeDataSource.deletePlaceReview(reviewId)
         }
 
         if (result is ResultWrapper.Success) {

@@ -41,11 +41,24 @@ actual fun TastyDetailSheet(
             placeId = restaurant.id,
             restaurantName = restaurant.name,
             initialMainScore = detailsUiState.quickScore,
+            existingReview = detailsUiState.details?.userReview,
             onDismiss = {
                 detailScreenModel.handleIntent(RestaurantDetailIntent.DismissAddReview)
             },
-            onReviewSubmittedSuccessfully = {
-                detailScreenModel.handleIntent(RestaurantDetailIntent.ReviewSubmittedSuccess)
+            onReviewSubmittedSuccessfully = { review, userSummary ->
+                detailScreenModel.handleIntent(
+                    RestaurantDetailIntent.ReviewCreatedLocally(review, userSummary)
+                )
+            },
+            onReviewUpdatedSuccessfully = { review, userSummary ->
+                detailScreenModel.handleIntent(
+                    RestaurantDetailIntent.ReviewUpdatedLocally(review, userSummary)
+                )
+            },
+            onReviewDeletedSuccessfully = { reviewId, score ->
+                detailScreenModel.handleIntent(
+                    RestaurantDetailIntent.ReviewDeletedLocally(reviewId, score)
+                )
             }
         )
     }

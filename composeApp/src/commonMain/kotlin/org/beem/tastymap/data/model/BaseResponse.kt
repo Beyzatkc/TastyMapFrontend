@@ -5,8 +5,8 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class BaseResponse<T>(
     val success: Boolean,
-    val message: String,
-    val data: T?,
-    val timestamp: String,
-    val errorCode: String?
+    val message: String? = null,
+    val data: T? = null,
+    val timestamp: String? = null,
+    val errorCode: String? = null
 )

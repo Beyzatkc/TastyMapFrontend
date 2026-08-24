@@ -4,6 +4,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import org.beem.tastymap.map.model.GeometryContainer
 import org.beem.tastymap.place.model.review.ReviewDto
+import org.beem.tastymap.place.model.review.ReviewItem
 import org.beem.tastymap.place.model.review.UserReviewSummaryDto
 
 
@@ -28,6 +29,6 @@ data class PlaceDetailsResult(
 
     val openingHours: OpeningHoursDto? = null,
     val geometry: GeometryContainer? = null,
-    val reviews: List<ReviewDto> = emptyList(),
+    val reviews: List<ReviewItem> = emptyList(),
     val userReview: UserReviewSummaryDto? = null
 )

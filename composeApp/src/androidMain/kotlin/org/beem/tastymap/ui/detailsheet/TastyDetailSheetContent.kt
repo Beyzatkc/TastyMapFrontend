@@ -67,7 +67,11 @@ fun TastyDetailSheetContent(
         ) {
             // Başlık & Mekan Bilgileri
             item {
-                RestaurantHeaderSection(restaurant = restaurant)
+                RestaurantHeaderSection(
+                    restaurant = restaurant,
+                    tastyMapRating = detailsUiState.details?.tastyMapRating,
+                    tastyMapReviewCount = detailsUiState.details?.tastyMapReviewCount
+                )
             }
 
             item {

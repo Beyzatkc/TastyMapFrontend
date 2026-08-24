@@ -1,5 +1,6 @@
 package org.beem.tastymap.ui.review
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -16,6 +17,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import org.beem.tastymap.place.model.review.ReviewItem
+import org.beem.tastymap.place.model.review.UserReviewSummaryDto
 import org.beem.tastymap.review.AddReviewEvent
 import org.beem.tastymap.review.AddReviewScreenModel
 import org.beem.tastymap.review.model.ScoreType
@@ -30,20 +33,37 @@ import org.koin.compose.koinInject
 fun AddReviewBottomSheet(
     placeId: String,
     restaurantName: String,
-    initialMainScore: Double,
+    initialMainScore: Double = 0.0,
+    existingReview: UserReviewSummaryDto? = null,
     onDismiss: () -> Unit,
-    onReviewSubmittedSuccessfully: () -> Unit,
+    onReviewSubmittedSuccessfully: (review: ReviewItem, userSummary: UserReviewSummaryDto) -> Unit,
+    onReviewUpdatedSuccessfully: (review: ReviewItem, userSummary: UserReviewSummaryDto) -> Unit,
+    onReviewDeletedSuccessfully: (reviewId: Long, score: Double) -> Unit,
     screenModel: AddReviewScreenModel = koinInject()
 ) {
     val state by screenModel.state.collectAsState()
     val fontFamily = getAppFontFamily()
+    val isEditMode = existingReview != null
 
-    LaunchedEffect(Unit) {
-        screenModel.initInitialScore(initialMainScore)
+    LaunchedEffect(existingReview) {
+        screenModel.setupReviewForm(existingReview, initialMainScore)
+    }
+
+    LaunchedEffect(screenModel) {
         screenModel.event.collect { event ->
             when (event) {
-                is AddReviewEvent.Success -> onReviewSubmittedSuccessfully()
-                is AddReviewEvent.Error -> { /* Snackbar/Toast gösterilebilir */ }
+                is AddReviewEvent.Created -> {
+                    onReviewSubmittedSuccessfully(event.review, event.userSummary)
+                }
+                is AddReviewEvent.Updated -> {
+                    onReviewUpdatedSuccessfully(event.review, event.userSummary)
+                }
+                is AddReviewEvent.Deleted -> {
+                    onReviewDeletedSuccessfully(event.reviewId, event.deletedScore)
+                }
+                is AddReviewEvent.Error -> {
+                    println("TastyMap UI -> Hata Eventi: ${event.message}")
+                }
             }
         }
     }
@@ -52,7 +72,7 @@ fun AddReviewBottomSheet(
         listOf(ScoreType.TASTE, ScoreType.SERVICE, ScoreType.PRICE_PERFORMANCE)
     }
     val secondaryCriteria = remember {
-        ScoreType.entries.filter { it !in primaryCriteria }
+        ScoreType.entries.filter { it !in primaryCriteria && it != ScoreType.OVERALL }
     }
 
     ModalBottomSheet(
@@ -75,18 +95,18 @@ fun AddReviewBottomSheet(
                 contentPadding = PaddingValues(horizontal = 20.dp, vertical = 8.dp),
                 verticalArrangement = Arrangement.spacedBy(14.dp)
             ) {
-                // Mekan Başlığı
+                // Başlık Alanı
                 item {
                     Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
                         Text(
-                            text = restaurantName,
+                            text = if (isEditMode) "Değerlendirmeni Düzenle" else restaurantName,
                             fontFamily = fontFamily,
                             fontSize = 20.sp,
                             fontWeight = FontWeight.Bold,
                             color = AppColors.TextPrimary
                         )
                         Text(
-                            text = "Deneyimini puanla ve değerlendir",
+                            text = if (isEditMode) "$restaurantName için deneyimini güncelle veya sil" else "Deneyimini puanla ve değerlendir",
                             fontFamily = fontFamily,
                             fontSize = 13.sp,
                             color = AppColors.TextTertiary
@@ -94,7 +114,7 @@ fun AddReviewBottomSheet(
                     }
                 }
 
-                // 1. Hero Pin Puanlama Barı
+                // 1. Ana Yıldız Puanı Barı
                 item {
                     TastyRatingBar(
                         rating = state.mainScore,
@@ -186,23 +206,58 @@ fun AddReviewBottomSheet(
                 }
             }
 
-            // 5. Sticky Gönder Butonu
+            // 5. Alt Buton Barı (Edit Modunda: Sil & Güncelle / Normal Modda: Tamamla)
             Surface(
                 modifier = Modifier.fillMaxWidth(),
                 color = AppColors.Surface,
                 shadowElevation = 8.dp
             ) {
-                Box(
+                Row(
                     modifier = Modifier
                         .fillMaxWidth()
                         .navigationBarsPadding()
-                        .padding(horizontal = 20.dp, vertical = 12.dp)
+                        .padding(horizontal = 20.dp, vertical = 12.dp),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
+                    if (isEditMode) {
+                        OutlinedButton(
+                            onClick = { screenModel.deleteReview(placeId) },
+                            enabled = !state.isDeleting && !state.isSubmitting,
+                            modifier = Modifier
+                                .weight(0.32f)
+                                .height(48.dp),
+                            shape = RoundedCornerShape(12.dp),
+                            colors = ButtonDefaults.outlinedButtonColors(
+                                contentColor = AppColors.ErrorRed
+                            ),
+                            border = BorderStroke(1.dp, AppColors.ErrorRed.copy(alpha = 0.5f))
+                        ) {
+                            if (state.isDeleting) {
+                                CircularProgressIndicator(
+                                    color = AppColors.ErrorRed,
+                                    strokeWidth = 2.dp,
+                                    modifier = Modifier.size(18.dp)
+                                )
+                            } else {
+                                Text(
+                                    text = "Sil",
+                                    fontFamily = fontFamily,
+                                    fontSize = 14.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = AppColors.ErrorRed
+                                )
+                            }
+                        }
+                    }
+
                     Button(
-                        onClick = { screenModel.submitReview(placeId) },
-                        enabled = !state.isSubmitting,
+                        onClick = {
+                            if (isEditMode) screenModel.updateReview(placeId)
+                            else screenModel.submitReview(placeId)
+                        },
+                        enabled = !state.isSubmitting && !state.isDeleting,
                         modifier = Modifier
-                            .fillMaxWidth()
+                            .weight(if (isEditMode) 0.68f else 1f)
                             .height(48.dp),
                         shape = RoundedCornerShape(12.dp),
                         colors = ButtonDefaults.buttonColors(
@@ -218,7 +273,7 @@ fun AddReviewBottomSheet(
                             )
                         } else {
                             Text(
-                                text = "Değerlendirmeyi Tamamla",
+                                text = if (isEditMode) "Güncelle" else "Değerlendirmeyi Tamamla",
                                 fontFamily = fontFamily,
                                 fontSize = 15.sp,
                                 fontWeight = FontWeight.Bold,

@@ -7,6 +7,7 @@ import org.beem.tastymap.review.model.ScoreDto
 @Serializable
 data class ReviewItem(
     val id: Long,
+    val userId: Long? = null,
     val name: String,
     val userProfile: String? = null,
     val rating: Double,

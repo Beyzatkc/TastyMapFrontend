@@ -11,30 +11,25 @@ import kotlinx.coroutines.launch
 import org.beem.tastymap.core.network.ResultWrapper
 import org.beem.tastymap.core.paging.TastyPagingController
 import org.beem.tastymap.core.paging.TastyPagingState
-import org.beem.tastymap.data.model.BaseResponse
-import org.beem.tastymap.place.model.details.PlaceDetailsResult
 import org.beem.tastymap.place.model.review.ReviewItem
-import org.beem.tastymap.place.model.review.ReviewResponse
 import org.beem.tastymap.place.repository.PlaceRepository
 import org.beem.tastymap.place.state.PlaceDetailsUiState
 import org.beem.tastymap.place.state.RestaurantDetailIntent
+import org.beem.tastymap.place.util.RatingCalculator
 
 class RestaurantDetailScreenModel(
     private val repository: PlaceRepository
 ) : ScreenModel {
 
-    // --- Paging Yorumlar State ---
     private val _reviewsPagingState = MutableStateFlow(TastyPagingState<ReviewItem>())
     val reviewsPagingState: StateFlow<TastyPagingState<ReviewItem>> = _reviewsPagingState.asStateFlow()
 
-    // --- Mekan Detayı & Kullanıcının Kendi Yorumu State ---
     private val _detailsUiState = MutableStateFlow(PlaceDetailsUiState())
     val detailsUiState: StateFlow<PlaceDetailsUiState> = _detailsUiState.asStateFlow()
 
     private var currentPlaceId: String? = null
     private var pagingController: TastyPagingController<ReviewItem, Long>? = null
     private var collectJob: Job? = null
-
 
     fun handleIntent(intent: RestaurantDetailIntent) {
         when (intent) {
@@ -51,12 +46,6 @@ class RestaurantDetailScreenModel(
                     it.copy(quickScore = 0.0, isAddReviewOpen = false)
                 }
             }
-            is RestaurantDetailIntent.ReviewSubmittedSuccess -> {
-                _detailsUiState.update {
-                    it.copy(quickScore = 0.0, isAddReviewOpen = false)
-                }
-                currentPlaceId?.let { loadPlaceData(it) }
-            }
             is RestaurantDetailIntent.RetryDetails -> {
                 currentPlaceId?.let { loadPlaceDetails(it, forceRefresh = true) }
             }
@@ -66,10 +55,85 @@ class RestaurantDetailScreenModel(
             is RestaurantDetailIntent.DismissMainSheet -> {
                 resetState()
             }
+
+            // 1. OLUŞTURULDU
+            is RestaurantDetailIntent.ReviewCreatedLocally -> {
+                _detailsUiState.update { state ->
+                    val (newRating, newCount) = RatingCalculator.onReviewAdded(
+                        currentRating = state.details?.tastyMapRating ?: 0.0,
+                        currentCount = state.details?.tastyMapReviewCount ?: 0,
+                        newScore = intent.review.rating
+                    )
+
+                    state.copy(
+                        isAddReviewOpen = false,
+                        quickScore = intent.review.rating,
+                        details = state.details?.copy(
+                            userReview = intent.userSummary,
+                            tastyMapRating = newRating,
+                            tastyMapReviewCount = newCount
+                        )
+                    )
+                }
+                _reviewsPagingState.update { paging ->
+                    paging.copy(items = listOf(intent.review) + paging.items)
+                }
+            }
+
+            // 2. GÜNCELLENDİ
+            is RestaurantDetailIntent.ReviewUpdatedLocally -> {
+                _detailsUiState.update { state ->
+                    val oldScore = state.details?.userReview?.rating ?: intent.review.rating
+                    val updatedRating = RatingCalculator.onReviewUpdated(
+                        currentRating = state.details?.tastyMapRating ?: 0.0,
+                        currentCount = state.details?.tastyMapReviewCount ?: 1,
+                        oldScore = oldScore,
+                        newScore = intent.review.rating
+                    )
+
+                    state.copy(
+                        isAddReviewOpen = false,
+                        quickScore = intent.review.rating,
+                        details = state.details?.copy(
+                            userReview = intent.userSummary,
+                            tastyMapRating = updatedRating
+                        )
+                    )
+                }
+                _reviewsPagingState.update { paging ->
+                    val updatedList = paging.items.map { item ->
+                        if (item.id == intent.review.id) intent.review else item
+                    }
+                    paging.copy(items = updatedList)
+                }
+            }
+
+            // 3. SİLİNDİ
+            is RestaurantDetailIntent.ReviewDeletedLocally -> {
+                _detailsUiState.update { state ->
+                    val (newRating, newCount) = RatingCalculator.onReviewDeleted(
+                        currentRating = state.details?.tastyMapRating ?: 0.0,
+                        currentCount = state.details?.tastyMapReviewCount ?: 0,
+                        deletedScore = intent.deletedScore
+                    )
+
+                    state.copy(
+                        isAddReviewOpen = false,
+                        quickScore = 0.0,
+                        details = state.details?.copy(
+                            userReview = null,
+                            tastyMapRating = newRating,
+                            tastyMapReviewCount = newCount
+                        )
+                    )
+                }
+                _reviewsPagingState.update { paging ->
+                    paging.copy(items = paging.items.filterNot { it.id == intent.reviewId })
+                }
+            }
         }
     }
 
-    // Mekan detayını ve kullanıcının yorumunu çeker
     fun loadPlaceDetails(placeId: String, forceRefresh: Boolean = false) {
         screenModelScope.launch {
             _detailsUiState.update { state ->
@@ -101,9 +165,8 @@ class RestaurantDetailScreenModel(
         }
     }
 
-    // Mekan açıldığında hem detayları hem yorumları başlatan ana fonksiyon
-    fun loadPlaceData(placeId: String) {
-        loadPlaceDetails(placeId)
+    fun loadPlaceData(placeId: String, forceRefresh: Boolean = false) {
+        loadPlaceDetails(placeId, forceRefresh)
         loadReviewsForPlace(placeId)
     }
 
@@ -111,10 +174,8 @@ class RestaurantDetailScreenModel(
         if (currentPlaceId == placeId && pagingController != null) return
 
         currentPlaceId = placeId
-
         collectJob?.cancel()
         pagingController?.reset()
-
         _reviewsPagingState.value = TastyPagingState()
 
         pagingController = TastyPagingController(
@@ -145,7 +206,6 @@ class RestaurantDetailScreenModel(
     fun loadMoreReviews() {
         pagingController?.loadNextPage()
     }
-
 
     fun resetState() {
         currentPlaceId = null

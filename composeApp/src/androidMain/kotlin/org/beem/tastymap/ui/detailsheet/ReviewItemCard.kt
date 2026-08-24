@@ -15,12 +15,16 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.FilterQuality
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil3.compose.AsyncImage
 import org.beem.tastymap.core.util.toFormatTimestamp
 import org.beem.tastymap.place.model.MapReviewSource
 import org.beem.tastymap.place.model.review.ReviewItem
@@ -32,6 +36,15 @@ import org.beem.tastymap.ui.theme.getAppFontFamily
 @Composable
 fun ReviewItemCard(review: ReviewItem) {
     val fontFamily = getAppFontFamily()
+
+    val initials = remember(review.name) {
+        val parts = review.name.trim().split(" ").filter { it.isNotBlank() }
+        when {
+            parts.size >= 2 -> "${parts[0].first()}${parts[1].first()}".uppercase()
+            parts.isNotEmpty() && parts[0].isNotEmpty() -> parts[0].take(2).uppercase()
+            else -> "TM"
+        }
+    }
 
     Card(
         shape = RoundedCornerShape(16.dp),
@@ -54,19 +67,42 @@ fun ReviewItemCard(review: ReviewItem) {
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
-                    Box(
-                        modifier = Modifier
-                            .size(36.dp)
-                            .clip(CircleShape)
-                            .background(AppColors.SurfaceVariant),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Person,
-                            contentDescription = "Kullanıcı",
-                            tint = AppColors.TextSecondary,
-                            modifier = Modifier.size(18.dp)
+                    if (!review.userProfile.isNullOrBlank()) {
+                        AsyncImage(
+                            model = review.userProfile,
+                            contentDescription = review.name,
+                            modifier = Modifier
+                                .size(38.dp)
+                                .clip(CircleShape)
+                                .background(AppColors.SurfaceVariant),
+                            contentScale = ContentScale.Crop,
+                            filterQuality = FilterQuality.Medium
                         )
+                    } else {
+                        // URL yoksa Baş Harflerle Şık Avatar
+                        Box(
+                            modifier = Modifier
+                                .size(38.dp)
+                                .clip(CircleShape)
+                                .background(
+                                    if (review.source == MapReviewSource.INTERNAL)
+                                        AppColors.GourmetOrange.copy(alpha = 0.15f)
+                                    else
+                                        AppColors.SurfaceVariant
+                                ),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = initials,
+                                fontFamily = fontFamily,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 13.sp,
+                                color = if (review.source == MapReviewSource.INTERNAL)
+                                    AppColors.GourmetOrange
+                                else
+                                    AppColors.TextSecondary
+                            )
+                        }
                     }
 
                     Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {

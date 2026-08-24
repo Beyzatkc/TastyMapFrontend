@@ -1,15 +1,11 @@
 package org.beem.tastymap.ui.detailsheet
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.rounded.Star
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -26,13 +22,18 @@ import org.beem.tastymap.ui.theme.AppColors
 import org.beem.tastymap.ui.theme.getAppFontFamily
 
 @Composable
-fun RestaurantHeaderSection(restaurant: Restaurant) {
+fun RestaurantHeaderSection(
+    restaurant: Restaurant,
+    tastyMapRating: Double? = null,
+    tastyMapReviewCount: Int? = null
+) {
     val fontFamily = getAppFontFamily()
 
     Column(
         modifier = Modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(8.dp)
+        verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
+        // 1. Satır: Mekan Adı ve Puan Rozetleri
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
@@ -46,38 +47,87 @@ fun RestaurantHeaderSection(restaurant: Restaurant) {
                 color = AppColors.TextPrimary,
                 modifier = Modifier
                     .weight(1f)
-                    .padding(end = 8.dp),
+                    .padding(end = 12.dp),
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis
             )
 
-            Surface(
-                color = AppColors.WarmAmber,
-                shape = RoundedCornerShape(12.dp)
+            // Puan Rozetleri (Yan yana TastyMap + Google)
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Row(
-                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                // 1. TastyMap Topluluk Puanı
+                val hasTastyScore = tastyMapRating != null && tastyMapRating > 0.0
+                Surface(
+                    color = if (hasTastyScore) AppColors.GourmetOrange else AppColors.SurfaceVariant,
+                    shape = RoundedCornerShape(10.dp)
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.Star,
-                        contentDescription = "Puan",
-                        tint = Color.White,
-                        modifier = Modifier.size(15.dp)
-                    )
-                    Text(
-                        text = if (restaurant.rating != null && restaurant.rating!! > 0.0) restaurant.rating.toString() else "-",
-                        fontFamily = fontFamily,
-                        color = Color.White,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 13.sp
-                    )
+                    Row(
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 5.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Rounded.Star,
+                            contentDescription = "TastyMap Puanı",
+                            tint = if (hasTastyScore) Color.White else AppColors.TextTertiary,
+                            modifier = Modifier.size(14.dp)
+                        )
+                        Text(
+                            text = if (hasTastyScore) "$tastyMapRating" else "-",
+                            fontFamily = fontFamily,
+                            color = if (hasTastyScore) Color.White else AppColors.TextTertiary,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 12.sp
+                        )
+                        Text(
+                            text = "Tasty",
+                            fontFamily = fontFamily,
+                            color = if (hasTastyScore) Color.White.copy(alpha = 0.85f) else AppColors.TextTertiary,
+                            fontWeight = FontWeight.SemiBold,
+                            fontSize = 10.sp
+                        )
+                    }
+                }
+
+                // 2. Google Puanı
+                val hasGoogleRating = restaurant.rating != null
+                Surface(
+                    color = AppColors.WarmAmber.copy(alpha = 0.15f),
+                    shape = RoundedCornerShape(10.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 5.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Star,
+                            contentDescription = "Google Puanı",
+                            tint = AppColors.WarmAmber,
+                            modifier = Modifier.size(13.dp)
+                        )
+                        Text(
+                            text = if (hasGoogleRating) "${restaurant.rating}" else "-",
+                            fontFamily = fontFamily,
+                            color = AppColors.WarmAmber,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 12.sp
+                        )
+                        Text(
+                            text = "Google",
+                            fontFamily = fontFamily,
+                            color = AppColors.WarmAmber.copy(alpha = 0.8f),
+                            fontWeight = FontWeight.SemiBold,
+                            fontSize = 10.sp
+                        )
+                    }
                 }
             }
         }
 
-        // Kategori & Çalışma Durumu Etiketleri
+        // 2. Satır: Kategori, Durum ve Yorum Sayısı Bilgileri
         Row(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalAlignment = Alignment.CenterVertically
@@ -116,9 +166,20 @@ fun RestaurantHeaderSection(restaurant: Restaurant) {
                     )
                 }
             }
+
+            // Toplam TastyMap Değerlendirme Sayısı
+            if (tastyMapReviewCount != null && tastyMapReviewCount > 0) {
+                Text(
+                    text = "•  $tastyMapReviewCount Tasty Değerlendirmesi",
+                    fontFamily = fontFamily,
+                    fontSize = 12.sp,
+                    color = AppColors.TextTertiary,
+                    fontWeight = FontWeight.Medium
+                )
+            }
         }
 
-        // Adres Satırı
+        // 3. Satır: Adres
         if (restaurant.address.isNotBlank()) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
@@ -129,7 +190,7 @@ fun RestaurantHeaderSection(restaurant: Restaurant) {
                     imageVector = Icons.Default.LocationOn,
                     contentDescription = "Adres",
                     tint = AppColors.TextTertiary,
-                    modifier = Modifier.size(16.dp)
+                    modifier = Modifier.size(15.dp)
                 )
                 Text(
                     text = restaurant.address,
