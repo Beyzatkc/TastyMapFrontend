@@ -68,7 +68,13 @@ class MyProfileRepository(
         if (result is ResultWrapper.Success) {
             val myUserId = userManager.getUserId()
             if (myUserId != null) {
-               //Session guncelledık
+               //Session guncelledıkpublic void invalidateUserSessions(Long userId) {
+                //        String key = PREFIX + userId;
+                //        long currentTimestamp = Instant.now().getEpochSecond();
+                //
+                //        // Milisaniyeyi saniyeye çevirerek Redis TTL olarak veriyoruz
+                //        redisTemplate.opsForValue().set(key, String.valueOf(currentTimestamp), accessExpMs, TimeUnit.MILLISECONDS);
+                //    }
                 userManager.updateProfileSession(
                     username = request.username,
                     name = request.name,

@@ -29,7 +29,7 @@ val webModule = module {
         )
     }
     single<DeviceInfoProvider> { WebDeviceInfoProvider() }
-    single<HttpClientFactory> { WebHttpClientFactory(get()) }
+    single<HttpClientFactory> { WebHttpClientFactory(get(),get(),get()) }
 
     single<Settings> {
         val storage = kotlinx.browser.window.localStorage

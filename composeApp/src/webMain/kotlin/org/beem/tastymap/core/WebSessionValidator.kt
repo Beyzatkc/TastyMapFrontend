@@ -41,26 +41,31 @@ class WebSessionValidator(
     }
 
     suspend fun validateSession(): ResultWrapper<UserResponse> {
-        return safeApiCall {
-            val response = authClient.get("api/myProfile/me").body<UserResponse>()
+        var result = safeApiCall { fetchProfile() }
 
-            val session = UserSession(
-                status = LoginStatus.SUCCESS.toString(),
-                message = "Giriş yapılmış",
-                userId = response.id,
-                username = response.username,
-                name = response.name,
-                surname = response.surname,
-                profile = response.profile,
-                role = response.role,
-                date = response.date,
-                biography = response.biography,
-                onBoardComplete = response.onboardingCompleted
-            )
-            println("Validate sessiona girdi")
-            userManager.saveUser(session)
-
-            response
+        if (result is ResultWrapper.Error) {
+            result = safeApiCall { fetchProfile() }
         }
+
+        return result
+    }
+
+    private suspend fun fetchProfile(): UserResponse {
+        val response = authClient.get("api/myProfile/me").body<UserResponse>()
+        val session = UserSession(
+            status = LoginStatus.SUCCESS.toString(),
+            message = "Giriş yapılmış",
+            userId = response.id,
+            username = response.username,
+            name = response.name,
+            surname = response.surname,
+            profile = response.profile,
+            role = response.role,
+            date = response.date,
+            biography = response.biography,
+            onBoardComplete = response.onboardingCompleted
+        )
+        userManager.saveUser(session)
+        return response
     }
 }

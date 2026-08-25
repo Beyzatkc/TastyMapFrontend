@@ -3,6 +3,7 @@ package org.beem.tastymap.core.di
 import org.koin.dsl.module
 import createNoAuthClient
 import io.ktor.client.HttpClient
+import org.beem.tastymap.core.auth.AuthEventBus
 import org.beem.tastymap.core.local.TokenManager
 import org.beem.tastymap.core.local.TokenManagerImpl
 import org.beem.tastymap.core.navigation.MobileVerifyNavigator
@@ -45,6 +46,7 @@ val appModule = module {
         val noAuth = get<HttpClient>(named("noAuth"))
         factory.createAuthClient(noAuth)
     }
+    single { AuthEventBus() }
     single { TastyDatabase(driver = get()) }
     single { get<TastyDatabase>().profileEntityQueries }
     single { ProfileMemoryCache() }
@@ -63,7 +65,7 @@ val appModule = module {
     single { AuthWebSocketClient(get(named("auth"))) }
     single { PasswordResetSessionManager() }
     single { ProfileRepository(get(),get(),get()) }
-    single { MyProfileRepository(get()) }
+    single { MyProfileRepository(get(),get(),get(),get()) }
 
 
     factory { LogRegScreenModel(get(),get(),get(),get()) }

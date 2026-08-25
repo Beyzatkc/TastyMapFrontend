@@ -53,5 +53,6 @@ data class MessageResponse(
 data class ChangePassword(
     val oldPassword: String,
     val newPassword: String,
-    val againNew: String
+    val againNew: String,
+    val deviceId: String
 )
