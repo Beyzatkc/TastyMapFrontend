@@ -26,7 +26,6 @@ class MainActivity : ComponentActivity() {
         getKoin().declare(permissionsController)
         Log.d("DEEPLINK", "ONCREATE INTENT: ${intent?.data}")
 
-        enableEdgeToEdge()
         installSplashScreen()
         super.onCreate(savedInstanceState)
         FirebaseApp.initializeApp(this)

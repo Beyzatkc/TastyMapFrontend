@@ -8,6 +8,7 @@ import cafe.adriel.voyager.transitions.SlideTransition
 import org.beem.tastymap.core.auth.AuthEventBus
 import org.beem.tastymap.core.navigation.DeepLinkManager
 import org.beem.tastymap.core.util.ToastManager
+import org.beem.tastymap.domain.auth.ClearSessionUseCase
 import org.beem.tastymap.ui.auth.logReg.LogRegScreen
 import org.beem.tastymap.ui.splash.SplashScreen
 import org.beem.tastymap.ui.components.AppToast
@@ -20,6 +21,7 @@ import org.koin.compose.koinInject
 fun App() {
     var isDark by remember { mutableStateOf(false) }
     val authEventBus: AuthEventBus = koinInject()
+    val clearSessionUseCase: ClearSessionUseCase = koinInject()
 
     TastyTheme(useDarkTheme = isDark) {
         Navigator(SplashScreen()) { navigator ->
@@ -32,9 +34,18 @@ fun App() {
             }
             LaunchedEffect(Unit) {
                 authEventBus.events.collect { event ->
+                    clearSessionUseCase()
                     when (event) {
-                        AuthEventBus.AuthEvent.OnUnauthenticated -> {
+                        is AuthEventBus.AuthEvent.OnSessionExpired -> {
                             ToastManager.show("Oturum süreniz doldu, lütfen tekrar giriş yapın.")
+                            navigator.replaceAll(LogRegScreen())
+                        }
+                        is AuthEventBus.AuthEvent.OnPasswordChanged -> {
+                            ToastManager.show("Şifreniz değiştirildiği için oturumunuz kapatıldı.")
+                            navigator.replaceAll(LogRegScreen())
+                        }
+                        is AuthEventBus.AuthEvent.OnLoggedOut -> {
+                            ToastManager.show("Başarıyla çıkış yapıldı.")
                             navigator.replaceAll(LogRegScreen())
                         }
                     }

@@ -2,6 +2,7 @@ package org.beem.tastymap.data.repository.profile
 
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
+import org.beem.tastymap.core.local.TokenManager
 import org.beem.tastymap.core.local.UserManager
 import org.beem.tastymap.core.local.UserSession
 import org.beem.tastymap.core.network.ErrorType
@@ -18,13 +19,15 @@ import org.beem.tastymap.data.model.profile.ProfileResponse
 import org.beem.tastymap.data.model.profile.RefreshTokenRequest
 import org.beem.tastymap.data.model.profile.UpdateProfile
 import org.beem.tastymap.data.remote.profile.MyProfileDataSource
+import org.beem.tastymap.domain.auth.ClearSessionUseCase
 import org.beem.tastymap.domain.model.UserProfile
 
 class MyProfileRepository(
     private val dataSource: MyProfileDataSource,
     private val memoryCache: ProfileMemoryCache,
     private val localDataSource: ProfileLocalDataSource,
-    private val userManager: UserManager
+    private val userManager: UserManager,
+    private val clearSessionUseCase: ClearSessionUseCase
 ) {
 
     fun getMyProfile(): Flow<ResultWrapper<UserProfile>> = flow {
@@ -56,6 +59,7 @@ class MyProfileRepository(
         }
     }
 
+    // BUUNA BAKILCAK
     suspend fun getActiveDevices(): ResultWrapper<ActiveDevicesResponse> {
         return safeApiCall {
             dataSource.getActiveDevices()
@@ -68,13 +72,6 @@ class MyProfileRepository(
         if (result is ResultWrapper.Success) {
             val myUserId = userManager.getUserId()
             if (myUserId != null) {
-               //Session guncelledıkpublic void invalidateUserSessions(Long userId) {
-                //        String key = PREFIX + userId;
-                //        long currentTimestamp = Instant.now().getEpochSecond();
-                //
-                //        // Milisaniyeyi saniyeye çevirerek Redis TTL olarak veriyoruz
-                //        redisTemplate.opsForValue().set(key, String.valueOf(currentTimestamp), accessExpMs, TimeUnit.MILLISECONDS);
-                //    }
                 userManager.updateProfileSession(
                     username = request.username,
                     name = request.name,
@@ -113,12 +110,7 @@ class MyProfileRepository(
     }
 
     suspend fun changePassword(request: ChangePassword): ResultWrapper<MessageResponse> {
-        val result = safeApiCall { dataSource.changePassword(request) }
-        if (result is ResultWrapper.Success) {
-            //dıger butun cıhazlardan cıkıs verılcek backendden de olabılır
-        }
-
-        return result
+        return safeApiCall { dataSource.changePassword(request) }
     }
 
     suspend fun getMe(): ResultWrapper<UserResponse> {
@@ -128,12 +120,10 @@ class MyProfileRepository(
     }
 
     suspend fun logout(request: RefreshTokenRequest): ResultWrapper<Unit> {
-        val result = safeApiCall { dataSource.logout(request) }
-
-        memoryCache.clear()
-        localDataSource.clearAll()
-        userManager.clear()
-//tokenmanager.celarda laızm olblr bakcaz
-        return result
+        return try {
+            safeApiCall { dataSource.logout(request) }
+        } finally {
+            clearSessionUseCase()
+        }
     }
 }

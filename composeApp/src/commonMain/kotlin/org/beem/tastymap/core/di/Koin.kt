@@ -23,6 +23,7 @@ import org.beem.tastymap.data.repository.UserSecurityRepository
 import org.beem.tastymap.data.repository.profile.MyProfileRepository
 import org.beem.tastymap.data.repository.profile.ProfileRepository
 import org.beem.tastymap.database.TastyDatabase
+import org.beem.tastymap.domain.auth.ClearSessionUseCase
 import org.beem.tastymap.ui.auth.forgotPassword.ForgotScreenModel
 import org.beem.tastymap.ui.auth.forgotPassword.PasswordResetSessionManager
 import org.beem.tastymap.ui.auth.forgotPassword.ResetScreenModel
@@ -31,6 +32,7 @@ import org.beem.tastymap.ui.splash.SplashScreenModel
 import org.beem.tastymap.ui.auth.verification.email.EmailScreenModel
 import org.beem.tastymap.ui.auth.verification.loginPending.PendingScreenModel
 import org.beem.tastymap.ui.profile.health.HealthScreenModel
+import org.beem.tastymap.ui.profile.otherprofile.ProfileScreenModel
 import org.koin.core.qualifier.named
 
 val appModule = module {
@@ -52,29 +54,30 @@ val appModule = module {
     single { ProfileMemoryCache() }
     single { ProfileLocalDataSource(get()) }
 
+    factory { ClearSessionUseCase(get(), get(), get(), get()) }
+
     single { AuthDataSource(get(named("noAuth"))) }
     single { UserSecurityDataSource(get(named("noAuth"))) }
     single { HealthDataSource(get(named("auth"))) }
     single { ProfileDataSource(get(named("auth"))) }
     single { MyProfileDataSource(get(named("auth"))) }
 
-    single { AuthRepository(get(), get(),get(),get()) }
-    single { UserSecurityRepository(get()) }
+    single { AuthRepository(get(), get(), get(), get()) }
     single { UserSecurityRepository(get()) }
     single { HealthRepository(get()) }
     single { AuthWebSocketClient(get(named("auth"))) }
     single { PasswordResetSessionManager() }
-    single { ProfileRepository(get(),get(),get()) }
-    single { MyProfileRepository(get(),get(),get(),get()) }
+    single { ProfileRepository(get(), get(), get()) }
+    single { MyProfileRepository(get(), get(), get(), get(), get()) }
 
-
-    factory { LogRegScreenModel(get(),get(),get(),get()) }
-    factory { PendingScreenModel(get(),get(),get(),get()) }
-    factory { EmailScreenModel(get(),get()) }
+    factory { LogRegScreenModel(get(), get(), get(), get()) }
+    factory { PendingScreenModel(get(), get(), get(), get()) }
+    factory { EmailScreenModel(get(), get()) }
     factory { SplashScreenModel(get()) }
-    factory { ForgotScreenModel(get(),get(),get(),get()) }
+    factory { ForgotScreenModel(get(), get(), get(), get()) }
     factory { ResetScreenModel(get()) }
     factory { HealthScreenModel(get()) }
+    factory { ProfileScreenModel(get()) }
 
     single<VerifyNavigator> { MobileVerifyNavigator() }
 }

@@ -33,7 +33,9 @@ suspend fun <T> safeApiCall(
                 }
 
                 println("Hata %: ${e.message}")
-                val errorMessage = errorResponse?.message ?: "Sunucu hatası: ${e.response.status.value}"
+                val errorMessage = errorResponse?.message
+                    ?: errorResponse?.error
+                    ?: "Sunucu hatası: ${e.response.status.value}"
 
                 if (errorResponse?.error == "EMAIL_NOT_VERIFIED") {
                     ResultWrapper.Error(

@@ -12,11 +12,11 @@ import org.beem.tastymap.core.auth.AuthEventBus
 import org.beem.tastymap.core.local.TokenManager
 import org.beem.tastymap.core.local.UserManager
 import org.beem.tastymap.core.provider.HttpClientFactory
+import org.beem.tastymap.data.model.auth.ErrorResponse
 import org.beem.tastymap.data.model.auth.RefreshTokenResponseDTO
 
 class MobileHttpClientFactory(
     private val tokenManager: TokenManager,
-    private val userManager: UserManager,
     private val authEventBus: AuthEventBus
 ) : HttpClientFactory {
 
@@ -55,9 +55,15 @@ class MobileHttpClientFactory(
                                 tokenManager.saveTokens(newTokens.accessToken, newTokens.refreshToken)
                                 BearerTokens(newTokens.accessToken, newTokens.refreshToken)
                             } else {
-                                tokenManager.clear()
-                                userManager.clear()
-                                authEventBus.emitUnauthenticated()
+
+                                val errorResponse = runCatching { response.body<ErrorResponse>() }.getOrNull()
+
+                                when (errorResponse?.error) {
+                                    "PASSWORD_CHANGED" -> authEventBus.emit(AuthEventBus.AuthEvent.OnPasswordChanged)
+                                    "LOGGED_OUT" -> authEventBus.emit(AuthEventBus.AuthEvent.OnLoggedOut)
+                                    else -> authEventBus.emit(AuthEventBus.AuthEvent.OnSessionExpired)
+                                }
+
                                 null
                             }
                         } catch (e: Exception) {
