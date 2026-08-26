@@ -43,7 +43,7 @@ fun TastyDetailTabBar(
             val isSelected = tab == selectedTab
 
             val backgroundColor by animateColorAsState(
-                targetValue = if (isSelected) AppColors.GourmetOrange else AppColors.SurfaceVariant,
+                targetValue = if (isSelected) AppColors.NavyBlue else AppColors.SurfaceVariant,
                 animationSpec = tween(durationMillis = 200, easing = FastOutSlowInEasing)
             )
             val contentColor by animateColorAsState(

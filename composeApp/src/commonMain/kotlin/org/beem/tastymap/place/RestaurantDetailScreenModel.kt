@@ -65,13 +65,20 @@ class RestaurantDetailScreenModel(
                         newScore = intent.review.rating
                     )
 
+                    val updatedStats = RatingCalculator.onStatsAdded(
+                        currentStats = state.details?.stats,
+                        newRating = intent.review.rating,
+                        newScores = intent.review.scores
+                    )
+
                     state.copy(
                         isAddReviewOpen = false,
                         quickScore = intent.review.rating,
                         details = state.details?.copy(
                             userReview = intent.userSummary,
                             tastyMapRating = newRating,
-                            tastyMapReviewCount = newCount
+                            tastyMapReviewCount = newCount,
+                            stats = updatedStats
                         )
                     )
                 }
@@ -84,6 +91,8 @@ class RestaurantDetailScreenModel(
             is RestaurantDetailIntent.ReviewUpdatedLocally -> {
                 _detailsUiState.update { state ->
                     val oldScore = state.details?.userReview?.rating ?: intent.review.rating
+                    val oldScores = state.details?.userReview?.scores ?: emptyList()
+
                     val updatedRating = RatingCalculator.onReviewUpdated(
                         currentRating = state.details?.tastyMapRating ?: 0.0,
                         currentCount = state.details?.tastyMapReviewCount ?: 1,
@@ -91,12 +100,21 @@ class RestaurantDetailScreenModel(
                         newScore = intent.review.rating
                     )
 
+                    val updatedStats = RatingCalculator.onStatsUpdated(
+                        currentStats = state.details?.stats,
+                        oldRating = oldScore,
+                        newRating = intent.review.rating,
+                        oldScores = oldScores,
+                        newScores = intent.review.scores
+                    )
+
                     state.copy(
                         isAddReviewOpen = false,
                         quickScore = intent.review.rating,
                         details = state.details?.copy(
                             userReview = intent.userSummary,
-                            tastyMapRating = updatedRating
+                            tastyMapRating = updatedRating,
+                            stats = updatedStats
                         )
                     )
                 }
@@ -111,10 +129,18 @@ class RestaurantDetailScreenModel(
             // 3. SİLİNDİ
             is RestaurantDetailIntent.ReviewDeletedLocally -> {
                 _detailsUiState.update { state ->
+                    val userReviewScores = state.details?.userReview?.scores ?: emptyList()
+
                     val (newRating, newCount) = RatingCalculator.onReviewDeleted(
                         currentRating = state.details?.tastyMapRating ?: 0.0,
                         currentCount = state.details?.tastyMapReviewCount ?: 0,
                         deletedScore = intent.deletedScore
+                    )
+
+                    val updatedStats = RatingCalculator.onStatsDeleted(
+                        currentStats = state.details?.stats,
+                        deletedRating = intent.deletedScore,
+                        deletedScores = userReviewScores
                     )
 
                     state.copy(
@@ -123,7 +149,8 @@ class RestaurantDetailScreenModel(
                         details = state.details?.copy(
                             userReview = null,
                             tastyMapRating = newRating,
-                            tastyMapReviewCount = newCount
+                            tastyMapReviewCount = newCount,
+                            stats = updatedStats
                         )
                     )
                 }

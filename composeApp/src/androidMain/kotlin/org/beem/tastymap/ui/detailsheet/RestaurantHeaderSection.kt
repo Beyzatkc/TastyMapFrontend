@@ -57,11 +57,10 @@ fun RestaurantHeaderSection(
                 horizontalArrangement = Arrangement.spacedBy(6.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // 1. TastyMap Topluluk Puanı
-                val hasTastyScore = tastyMapRating != null && tastyMapRating > 0.0
+                // 1. TastyMap Rozeti (Doğal ve Net Vurgulu)
                 Surface(
-                    color = if (hasTastyScore) AppColors.GourmetOrange else AppColors.SurfaceVariant,
-                    shape = RoundedCornerShape(10.dp)
+                    color = AppColors.GourmetOrange.copy(alpha = 0.14f),
+                    shape = RoundedCornerShape(8.dp)
                 ) {
                     Row(
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 5.dp),
@@ -69,33 +68,32 @@ fun RestaurantHeaderSection(
                         horizontalArrangement = Arrangement.spacedBy(4.dp)
                     ) {
                         Icon(
-                            imageVector = Icons.Rounded.Star,
+                            imageVector = Icons.Default.Star,
                             contentDescription = "TastyMap Puanı",
-                            tint = if (hasTastyScore) Color.White else AppColors.TextTertiary,
-                            modifier = Modifier.size(14.dp)
+                            tint = AppColors.Gold,
+                            modifier = Modifier.size(13.dp)
                         )
                         Text(
-                            text = if (hasTastyScore) "$tastyMapRating" else "-",
+                            text = if (tastyMapRating != null) "$tastyMapRating" else "-",
                             fontFamily = fontFamily,
-                            color = if (hasTastyScore) Color.White else AppColors.TextTertiary,
+                            color = AppColors.TextPrimary,
                             fontWeight = FontWeight.Bold,
                             fontSize = 12.sp
                         )
                         Text(
                             text = "Tasty",
                             fontFamily = fontFamily,
-                            color = if (hasTastyScore) Color.White.copy(alpha = 0.85f) else AppColors.TextTertiary,
-                            fontWeight = FontWeight.SemiBold,
-                            fontSize = 10.sp
+                            color = AppColors.GourmetOrange,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 11.sp
                         )
                     }
                 }
 
-                // 2. Google Puanı
-                val hasGoogleRating = restaurant.rating != null
+                // 2. Google Rozeti (Dengeli, Temiz Nötr Zemin)
                 Surface(
-                    color = AppColors.NavySoft.copy(alpha = 0.15f),
-                    shape = RoundedCornerShape(10.dp)
+                    color = AppColors.SurfaceVariant,
+                    shape = RoundedCornerShape(8.dp)
                 ) {
                     Row(
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 5.dp),
@@ -105,22 +103,22 @@ fun RestaurantHeaderSection(
                         Icon(
                             imageVector = Icons.Default.Star,
                             contentDescription = "Google Puanı",
-                            tint = AppColors.NavySoft,
+                            tint = AppColors.Gold,
                             modifier = Modifier.size(13.dp)
                         )
                         Text(
-                            text = if (hasGoogleRating) "${restaurant.rating}" else "-",
+                            text = if (restaurant.rating != null) "${restaurant.rating}" else "-",
                             fontFamily = fontFamily,
-                            color = AppColors.NavySoft,
+                            color = AppColors.TextPrimary,
                             fontWeight = FontWeight.Bold,
                             fontSize = 12.sp
                         )
                         Text(
                             text = "Google",
                             fontFamily = fontFamily,
-                            color = AppColors.NavySoft.copy(alpha = 0.75f),
+                            color = AppColors.NavySoft,
                             fontWeight = FontWeight.SemiBold,
-                            fontSize = 10.sp
+                            fontSize = 11.sp
                         )
                     }
                 }

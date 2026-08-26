@@ -10,6 +10,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -17,8 +18,10 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import org.beem.tastymap.core.util.toHighlightUiModels
 import org.beem.tastymap.place.model.details.PlaceDetailsResult
 import org.beem.tastymap.review.model.ScoreType
+import org.beem.tastymap.ui.components.TastyProgressBar
 import org.beem.tastymap.ui.theme.AppColors
 
 fun LazyListScope.statsTabSection(
@@ -28,7 +31,6 @@ fun LazyListScope.statsTabSection(
     val stats = details?.stats
     val totalReviews = stats?.totalReviewCount ?: 0
 
-    // Henüz hiç TastyMap değerlendirmesi yoksa
     if (totalReviews == 0) {
         item {
             Surface(
@@ -44,7 +46,7 @@ fun LazyListScope.statsTabSection(
                     Icon(
                         imageVector = Icons.Rounded.AutoAwesome,
                         contentDescription = null,
-                        tint = AppColors.GourmetOrange,
+                        tint = AppColors.NavySoft,
                         modifier = Modifier.size(36.dp)
                     )
                     Text(
@@ -79,18 +81,18 @@ fun LazyListScope.statsTabSection(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                // Sol: Büyük Ortalama Skoru
+                // Sol: Tipografik ve Asil Skor
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.spacedBy(4.dp),
                     modifier = Modifier.weight(0.38f)
                 ) {
                     Text(
-                        text = "${stats?.overallRating}",
+                        text = "${stats?.overallRating ?: 0.0}",
                         fontFamily = fontFamily,
                         fontSize = 32.sp,
                         fontWeight = FontWeight.Bold,
-                        color = AppColors.GourmetOrange
+                        color = AppColors.TextPrimary // Aşırı turuncu yerine tok koyu renk
                     )
                     Row(
                         horizontalArrangement = Arrangement.spacedBy(2.dp),
@@ -101,7 +103,7 @@ fun LazyListScope.statsTabSection(
                             Icon(
                                 imageVector = Icons.Rounded.Star,
                                 contentDescription = null,
-                                tint = if (index < starScore.toInt()) AppColors.GourmetOrange else AppColors.BorderLight,
+                                tint = if (index < starScore.toInt()) AppColors.Gold else AppColors.BorderStrong.copy(alpha = 0.5f),
                                 modifier = Modifier.size(14.dp)
                             )
                         }
@@ -114,13 +116,13 @@ fun LazyListScope.statsTabSection(
                     )
                 }
 
-                // Sağ: 5'ten 1'e Yıldız Dağılım Barları
+                // Sağ: 5'ten 1'e Yıldız Dağılım Barları (Sakin NavySoft)
                 Column(
                     modifier = Modifier.weight(0.62f),
                     verticalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
                     (5 downTo 1).forEach { star ->
-                        val count = stats?.starDistribution[star] ?: 0
+                        val count = stats?.starDistribution?.get(star) ?: 0
                         val progress = if (totalReviews > 0) count.toFloat() / totalReviews else 0f
 
                         Row(
@@ -134,14 +136,12 @@ fun LazyListScope.statsTabSection(
                                 fontWeight = FontWeight.Bold,
                                 color = AppColors.TextSecondary
                             )
-                            LinearProgressIndicator(
-                                progress = { progress },
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .height(5.dp)
-                                    .clip(RoundedCornerShape(3.dp)),
-                                color = AppColors.GourmetOrange,
-                                trackColor = AppColors.BorderLight
+                            TastyProgressBar(
+                                progress = progress,
+                                height = 4.dp,
+                                activeColor = AppColors.NavySoft,
+                                trackColor = AppColors.BorderLight,
+                                modifier = Modifier.weight(1f)
                             )
                             Text(
                                 text = "$count",
@@ -157,9 +157,13 @@ fun LazyListScope.statsTabSection(
         }
     }
 
-    // 2. Öne Çıkan Özellikler Rozetleri (Highlights)
+    // 2. Öne Çıkan Özellikler Rozetleri (GourmetOrange'ın parladığı mikro vurgu)
     if (stats != null && stats.highlights.isNotEmpty()) {
         item {
+            val highlightUiModels = remember(stats.highlights) {
+                stats.highlights.toHighlightUiModels()
+            }
+
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -173,11 +177,14 @@ fun LazyListScope.statsTabSection(
                     fontWeight = FontWeight.Bold,
                     color = AppColors.TextPrimary
                 )
-                Row(
+
+                // Taşan rozetleri otomatik alt satıra geçiren düzen
+                FlowRow(
+                    modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    modifier = Modifier.fillMaxWidth()
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    stats.highlights.forEach { badge ->
+                    highlightUiModels.forEach { badge ->
                         Surface(
                             color = AppColors.GourmetOrange.copy(alpha = 0.12f),
                             shape = RoundedCornerShape(8.dp)
@@ -194,7 +201,7 @@ fun LazyListScope.statsTabSection(
                                     modifier = Modifier.size(13.dp)
                                 )
                                 Text(
-                                    text = badge,
+                                    text = badge.content,
                                     fontFamily = fontFamily,
                                     fontSize = 12.sp,
                                     fontWeight = FontWeight.SemiBold,
@@ -261,14 +268,12 @@ fun LazyListScope.statsTabSection(
                                 color = AppColors.NavySoft
                             )
                         }
-                        LinearProgressIndicator(
-                            progress = { (score / 5.0f).coerceIn(0f, 1f) },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(6.dp)
-                                .clip(RoundedCornerShape(3.dp)),
-                            color = AppColors.GourmetOrange,
-                            trackColor = AppColors.BorderLight
+                        TastyProgressBar(
+                            progress = (score / 5.0f),
+                            height = 4.dp,
+                            activeColor = AppColors.NavySoft,
+                            trackColor = AppColors.BorderLight,
+                            modifier = Modifier.fillMaxWidth()
                         )
                     }
                 }

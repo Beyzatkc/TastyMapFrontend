@@ -63,8 +63,9 @@ fun UserOwnReviewCard(
 
                     // TastyMap Gurme Turuncusu Puan Rozeti
                     Surface(
-                        color = AppColors.GourmetOrange,
-                        shape = RoundedCornerShape(8.dp)
+                        color = AppColors.Surface, // Kart içi ferah beyaz zemin
+                        shape = RoundedCornerShape(8.dp),
+                        border = BorderStroke(1.dp, AppColors.BorderLight)
                     ) {
                         Row(
                             modifier = Modifier.padding(horizontal = 7.dp, vertical = 3.dp),
@@ -74,7 +75,7 @@ fun UserOwnReviewCard(
                             Icon(
                                 imageVector = Icons.Default.Star,
                                 contentDescription = null,
-                                tint = Color.White,
+                                tint = AppColors.Gold,
                                 modifier = Modifier.size(13.dp)
                             )
                             Text(
@@ -82,7 +83,7 @@ fun UserOwnReviewCard(
                                 fontFamily = fontFamily,
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 12.sp,
-                                color = Color.White
+                                color = AppColors.TextPrimary
                             )
                         }
                     }
