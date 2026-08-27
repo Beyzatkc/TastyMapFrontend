@@ -251,6 +251,7 @@ fun AuthEffectHandler(
                 is AuthEffect.NavigateToWelcome -> {
                     navigator.replaceAll(OnBoardingScreen())
                 }
+
                 else -> Unit
             }
         }

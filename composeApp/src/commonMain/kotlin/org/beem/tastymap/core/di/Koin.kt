@@ -32,6 +32,7 @@ import org.beem.tastymap.ui.splash.SplashScreenModel
 import org.beem.tastymap.ui.auth.verification.email.EmailScreenModel
 import org.beem.tastymap.ui.auth.verification.loginPending.PendingScreenModel
 import org.beem.tastymap.ui.profile.health.HealthScreenModel
+import org.beem.tastymap.ui.profile.myprofile.MyProfileScreenModel
 import org.beem.tastymap.ui.profile.otherprofile.ProfileScreenModel
 import org.koin.core.qualifier.named
 
@@ -78,6 +79,7 @@ val appModule = module {
     factory { ResetScreenModel(get()) }
     factory { HealthScreenModel(get()) }
     factory { ProfileScreenModel(get()) }
+    factory { MyProfileScreenModel(get(),get()) }
 
     single<VerifyNavigator> { MobileVerifyNavigator() }
 }

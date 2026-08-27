@@ -20,6 +20,7 @@ import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import kotlinx.coroutines.delay
 import org.beem.tastymap.ui.auth.logReg.LogRegScreen
+import org.beem.tastymap.ui.profile.myprofile.MyProfileScreen
 import org.beem.tastymap.ui.profile.otherprofile.ProfileScreen
 import org.jetbrains.compose.resources.painterResource
 import tastymap.composeapp.generated.resources.Res
@@ -44,11 +45,10 @@ class SplashScreen: Screen {
                     is SplashEffect.NavigateToOnBoard -> navigator.replaceAll(OnBoardingScreen())
 
                      */
-
-                    is SplashEffect.NavigateToDeepLink -> navigator.replaceAll(ProfileScreen(1))
-                    is SplashEffect.NavigateToLogin -> navigator.replaceAll(ProfileScreen(1))
-                    is SplashEffect.NavigateToHome -> {  navigator.replaceAll(ProfileScreen(1)) }
-                    is SplashEffect.NavigateToOnBoard -> navigator.replaceAll(ProfileScreen(1))
+                    is SplashEffect.NavigateToDeepLink -> navigator.replaceAll(MyProfileScreen())
+                    is SplashEffect.NavigateToLogin -> navigator.replaceAll(MyProfileScreen())
+                    is SplashEffect.NavigateToHome -> {  navigator.replaceAll(MyProfileScreen()) }
+                    is SplashEffect.NavigateToOnBoard -> navigator.replaceAll(MyProfileScreen())
                 }
             }
         }

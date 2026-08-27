@@ -10,16 +10,17 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.unit.dp
 @Composable
+
 fun TastyButton(
     text: String,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
-    isPrimary: Boolean = true, // true ise koyu Teal, false ise Outlined
+    isPrimary: Boolean = true,
     isLoading: Boolean = false,
     enabled: Boolean = true,
     backcolor: Color,
-    textcolor:Color,
-    strokecolor:Color
+    textcolor: Color,
+    strokecolor: Color
 ) {
     val buttonShape = RoundedCornerShape(20.dp)
     val focusManager = LocalFocusManager.current
@@ -36,11 +37,11 @@ fun TastyButton(
             enabled = enabled && !isLoading,
             shape = buttonShape,
             colors = ButtonDefaults.buttonColors(
-                containerColor = backcolor, // Teal
-                contentColor = Color.White
+                containerColor = backcolor,
+                contentColor = textcolor // Burada dışarıdan gelen textcolor kullanıldı
             )
         ) {
-            ButtonContent(text, isLoading, Color.White)
+            ButtonContent(text, isLoading, textcolor)
         }
     } else {
         OutlinedButton(
@@ -48,7 +49,7 @@ fun TastyButton(
             modifier = modifier.fillMaxWidth().height(50.dp),
             enabled = enabled && !isLoading,
             shape = buttonShape,
-            border = BorderStroke(1.dp, strokecolor), // Teal çizgi
+            border = BorderStroke(1.dp, strokecolor),
             colors = ButtonDefaults.outlinedButtonColors(
                 contentColor = textcolor
             )
@@ -69,6 +70,7 @@ private fun ButtonContent(text: String, isLoading: Boolean, contentColor: Color)
     } else {
         Text(
             text = text,
+            color = contentColor,
             style = MaterialTheme.typography.titleMedium
         )
     }

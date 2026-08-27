@@ -9,10 +9,17 @@ import kotlinx.coroutines.launch
 import org.beem.tastymap.core.network.ResultWrapper
 import org.beem.tastymap.core.provider.DeviceInfoProvider
 import org.beem.tastymap.data.model.auth.PasswordRequest
+import org.beem.tastymap.data.model.profile.ActiveDeviceDTO
 import org.beem.tastymap.data.model.profile.ChangePassword
 import org.beem.tastymap.data.model.profile.RefreshTokenRequest
 import org.beem.tastymap.data.model.profile.UpdateProfile
 import org.beem.tastymap.data.repository.profile.MyProfileRepository
+import org.beem.tastymap.domain.model.UserProfile
+import org.beem.tastymap.ui.auth.common.CheckValidator
+import org.beem.tastymap.ui.auth.common.PasswordStrength
+import org.beem.tastymap.ui.auth.common.ValidationResult
+import org.beem.tastymap.ui.profile.otherprofile.ProfileUiState
+import kotlin.String
 
 
 class MyProfileScreenModel(
@@ -23,6 +30,42 @@ class MyProfileScreenModel(
     private val _myProfileState = MutableStateFlow(MyProfileUiState())
     val myProfileState = _myProfileState.asStateFlow()
 
+    fun getProfileMock() {
+        _myProfileState.update {
+            it.copy(
+                isLoading = false,
+                errorMessage = null,
+                profile = UserProfile(
+                    userId = 1L,
+                    username = "mryazilimci",
+                    name = "Melih Öztürk",
+                    profilePhoto = null,
+                    role = "KULLANICI",
+                    biography = "Android geliştirici & Lezzet avcısı 🎯",
+                    postCount = 15,
+                    subscriberCount = 230,
+                    subscribedCount = 180,
+                    blockedByMe = false,
+                    blockedMe = false
+                ),
+                activeDeviceCount = 2,
+                activeDevices = listOf(
+                    ActiveDeviceDTO(
+                        deviceId = "dev_123",
+                        userAgent = "ıphone",
+                        city = "KOnya",
+                        lastUsedAt = "2026-08-27 19:30"
+                    ),
+                    ActiveDeviceDTO(
+                        deviceId = "dev_456",
+                        userAgent = "Ndroıd",
+                        city = "KOnya",
+                        lastUsedAt = "2026-08-25 14:10"
+                    )
+                )
+            )
+        }
+    }
     fun getMyProfile() {
         screenModelScope.launch {
             _myProfileState.update { it.copy(isLoading = true, errorMessage = null) }
@@ -83,9 +126,43 @@ class MyProfileScreenModel(
         }
     }
 
-    fun changePassword(request: ChangePassword) {
+    fun changePassword(
+        oldPassword: String,
+        newPassword: String,
+        againNew: String
+    ) {
+        if (oldPassword.isBlank()) {
+            _myProfileState.update { it.copy(errorMessage = "Mevcut şifrenizi giriniz.") }
+            return
+        }
+
+        val passwordValidation = CheckValidator.validatePassword(newPassword.trim())
+        if (passwordValidation is ValidationResult.Invalid) {
+            _myProfileState.update { it.copy(errorMessage = passwordValidation.message) }
+            return
+        }
+        if (againNew.isBlank()) {
+            _myProfileState.update { it.copy(errorMessage = "Lütfen yeni şifrenizi tekrar giriniz.") }
+            return
+        }
+        if (newPassword != againNew) {
+            _myProfileState.update { it.copy(errorMessage = "Yeni şifreler birbiriyle eşleşmiyor.") }
+            return
+        }
         screenModelScope.launch {
-            _myProfileState.update { it.copy(isActionLoading = true, errorMessage = null, successMessage = null) }
+            _myProfileState.update {
+                it.copy(
+                    isActionLoading = true,
+                    errorMessage = null,
+                    successMessage = null
+                )
+            }
+            val request = ChangePassword(
+                oldPassword = oldPassword,
+                newPassword = newPassword,
+                againNew = againNew,
+                deviceId = deviceInfoProvider.getDeviceId()
+            )
 
             when (val result = repo.changePassword(request)) {
                 is ResultWrapper.Success -> {
@@ -106,6 +183,15 @@ class MyProfileScreenModel(
                 }
             }
         }
+    }
+
+    fun calculatePasswordStrength(password: String): PasswordStrength {
+        return PasswordStrength(
+            hasMinLength = password.length >= 8,
+            hasUppercase = password.any { it.isUpperCase() },
+            hasDigit = password.any { it.isDigit() },
+            hasSpecialChar = password.contains(Regex("[@#\$!%^&*(),.?\":{}|<>]"))
+        )
     }
     fun getActiveDevices() {
         screenModelScope.launch {
