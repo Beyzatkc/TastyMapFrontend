@@ -5,15 +5,11 @@ import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import com.google.firebase.FirebaseApp
 import dev.icerock.moko.permissions.PermissionsController
 import org.beem.tastymap.core.navigation.DeepLinkManager
 import org.koin.android.ext.android.getKoin
-import kotlin.getValue
 
 class MainActivity : ComponentActivity() {
 
@@ -22,17 +18,15 @@ class MainActivity : ComponentActivity() {
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        permissionsController.bind(this)
-        getKoin().declare(permissionsController)
-        Log.d("DEEPLINK", "ONCREATE INTENT: ${intent?.data}")
-
         installSplashScreen()
         super.onCreate(savedInstanceState)
+
+        permissionsController.bind(this)
+        getKoin().declare(permissionsController)
         FirebaseApp.initializeApp(this)
-        intent?.data?.toString()?.let {
-            Log.d("DEEPLINK", "HANDLE LINK CALLED: $it")
-            DeepLinkManager.handleLink(it)
-        }
+
+        // 1. Uygulama Kapalıyken Gelen Linki İşle
+        processDeepLink(intent)
 
         setContent {
             App()
@@ -42,16 +36,18 @@ class MainActivity : ComponentActivity() {
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         setIntent(intent)
-        intent.data?.toString()?.let {
-            Log.d("DEEPLINK", "NEW INTENT: ${intent.data}")
-            DeepLinkManager.handleLink(it)
-        }
+
+        // 2. Uygulama Açık/Arkaplandayken Gelen Linki İşle
+        processDeepLink(intent)
     }
 
-}
+    private fun processDeepLink(intent: Intent?) {
+        val dataUri = intent?.data
+        Log.d("DEEPLINK_DEBUG", "Gelen Raw Intent Data: $dataUri")
 
-@Preview
-@Composable
-fun AppAndroidPreview() {
-    App()
+        dataUri?.toString()?.let { url ->
+            Log.d("DEEPLINK_DEBUG", "Yönlendirilen URL: $url")
+            DeepLinkManager.handleLink(url)
+        }
+    }
 }

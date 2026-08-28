@@ -18,7 +18,7 @@ import kotlin.time.Duration.Companion.seconds
 val JsFetchCredentials = AttributeKey<String>("js.fetch.credentials")
 fun HttpClientConfig<*>.commonConfig() {
     platformConfig()
-    expectSuccess = true
+    expectSuccess = false
 
     install(WebSockets) {
         pingInterval = 30.seconds

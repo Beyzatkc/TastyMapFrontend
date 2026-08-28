@@ -67,6 +67,7 @@ import org.beem.tastymap.ui.auth.forgotPassword.ForgotScreen
 import org.beem.tastymap.ui.auth.verification.loginPending.PendingScreen
 import org.beem.tastymap.ui.components.AuthFooter
 import org.beem.tastymap.ui.components.PasswordStrengthIndicator
+import org.beem.tastymap.ui.profile.myprofile.MyProfileScreen
 import org.beem.tastymap.ui.theme.CustomColors
 import org.beem.tastymap.ui.theme.LocalCustomColors
 
@@ -250,6 +251,9 @@ fun AuthEffectHandler(
                 }
                 is AuthEffect.NavigateToWelcome -> {
                     navigator.replaceAll(OnBoardingScreen())
+                }
+                is AuthEffect.NavigateToHome -> {
+                    navigator.replaceAll(MyProfileScreen())
                 }
 
                 else -> Unit

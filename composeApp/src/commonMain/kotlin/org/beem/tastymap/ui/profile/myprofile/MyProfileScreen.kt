@@ -39,23 +39,10 @@ class MyProfileScreen : Screen {
         val snackbarHostState = remember { SnackbarHostState() }
         val navigator = LocalNavigator.currentOrThrow
 
-        var showChangePasswordSheet by remember { mutableStateOf(false) }
-
         LaunchedEffect(Unit) {
-            screenModel.getProfileMock()
+            screenModel.getMyProfile()
         }
 
-        LaunchedEffect(state.errorMessage, state.successMessage) {
-            state.errorMessage?.let { message ->
-                snackbarHostState.showSnackbar(message)
-                screenModel.clearMessages()
-            }
-            state.successMessage?.let { message ->
-                snackbarHostState.showSnackbar(message)
-                showChangePasswordSheet = false // Başarılı işlem sonrası sheet'i kapat
-                screenModel.clearMessages()
-            }
-        }
 
         MyProfileContent(
             state = state,
@@ -63,7 +50,6 @@ class MyProfileScreen : Screen {
             onSettingsClick = {
                 navigator.push(
                     SettingsScreen(
-                        state = state,
                         onChangePasswordSubmit = { oldPassword, newPassword, againNew ->
                             screenModel.changePassword(oldPassword, newPassword, againNew)
                         },
@@ -75,22 +61,6 @@ class MyProfileScreen : Screen {
             },
             onEditProfileClick = { /* Düzenleme BottomSheet/Dialog aç */ }
         )
-
-        // ŞİFRE DEĞİŞTİRME BOTTOM SHEET
-        if (showChangePasswordSheet) {
-            ChangePasswordBottomSheet(
-                isActionLoading = state.isActionLoading,
-                onDismissRequest = { showChangePasswordSheet = false },
-                onSubmitClick = { oldPassword, newPassword, againNew ->
-                    // Tüm kontrol ve doğrulamalar MyProfileScreenModel.changePassword() içinde gerçekleşir
-                    screenModel.changePassword(
-                        oldPassword = oldPassword,
-                        newPassword = newPassword,
-                        againNew = againNew
-                    )
-                }
-            )
-        }
     }
 }
 

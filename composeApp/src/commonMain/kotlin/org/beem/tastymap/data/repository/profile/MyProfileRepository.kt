@@ -2,9 +2,7 @@ package org.beem.tastymap.data.repository.profile
 
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
-import org.beem.tastymap.core.local.TokenManager
 import org.beem.tastymap.core.local.UserManager
-import org.beem.tastymap.core.local.UserSession
 import org.beem.tastymap.core.network.ErrorType
 import org.beem.tastymap.core.network.ResultWrapper
 import org.beem.tastymap.core.network.safeApiCall
@@ -15,7 +13,6 @@ import org.beem.tastymap.data.model.auth.UserResponse
 import org.beem.tastymap.data.model.profile.ActiveDevicesResponse
 import org.beem.tastymap.data.model.profile.ChangePassword
 import org.beem.tastymap.data.model.profile.MessageResponse
-import org.beem.tastymap.data.model.profile.ProfileResponse
 import org.beem.tastymap.data.model.profile.RefreshTokenRequest
 import org.beem.tastymap.data.model.profile.UpdateProfile
 import org.beem.tastymap.data.remote.profile.MyProfileDataSource
@@ -56,6 +53,7 @@ class MyProfileRepository(
             if (l1Profile == null && l2Profile == null) {
                 emit(ResultWrapper.Error(e.message ?: "Profil yüklenemedi.", ErrorType.SERVER_ERROR))
             }
+            emit(ResultWrapper.Error(e.cause.toString()+ e.message, ErrorType.UNAUTHORIZED))
         }
     }
 

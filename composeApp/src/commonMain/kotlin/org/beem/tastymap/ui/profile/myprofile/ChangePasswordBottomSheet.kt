@@ -4,25 +4,21 @@ import TastyButton
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.shrinkVertically
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Lock
-import androidx.compose.material.icons.filled.LockReset
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
@@ -45,7 +41,9 @@ import org.beem.tastymap.ui.theme.LocalCustomColors
 @Composable
 fun ChangePasswordBottomSheet(
     isActionLoading: Boolean = false,
+    errorMessage: String? = null,
     onDismissRequest: () -> Unit = {},
+    onClearError: () -> Unit = {},
     onSubmitClick: (oldPassword: String, newPassword: String, againNew: String) -> Unit = { _, _, _ -> }
 ) {
     val customColors = LocalCustomColors.current
@@ -83,26 +81,20 @@ fun ChangePasswordBottomSheet(
                 text = "Şifre Değiştir",
                 style = MaterialTheme.typography.titleMedium.copy(
                     fontWeight = FontWeight.Bold,
-                    color = Color.Black
+                    color = MaterialTheme.colorScheme.onSurface
                 ),
                 textAlign = TextAlign.Center
-            )
-            Spacer(modifier = Modifier.height(10.dp))
-
-            HorizontalDivider(
-                modifier = Modifier.fillMaxWidth(),
-                thickness = 1.dp,
-                color = Color.LightGray.copy(alpha = 0.25f)
             )
 
             Spacer(modifier = Modifier.height(20.dp))
 
-
-            // Mevcut Şifre
             TastyTextField(
                 value = oldPassword,
                 isPassword = true,
-                onValueChange = { oldPassword = it },
+                onValueChange = {
+                    oldPassword = it
+                    if (errorMessage != null) onClearError()
+                },
                 label = "Mevcut Şifre",
                 leadingIcon = {
                     Icon(Icons.Default.Lock, contentDescription = null)
@@ -111,18 +103,19 @@ fun ChangePasswordBottomSheet(
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            // Yeni Şifre
             TastyTextField(
                 value = newPassword,
                 isPassword = true,
-                onValueChange = { newPassword = it },
+                onValueChange = {
+                    newPassword = it
+                    if (errorMessage != null) onClearError()
+                },
                 label = "Yeni Şifre",
                 leadingIcon = {
                     Icon(Icons.Default.Lock, contentDescription = null)
                 }
             )
 
-            // Canlı Şifre Güç Göstergesi
             AnimatedVisibility(
                 visible = newPassword.isNotEmpty(),
                 enter = expandVertically(),
@@ -136,16 +129,42 @@ fun ChangePasswordBottomSheet(
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            // Yeni Şifre Tekrar
             TastyTextField(
                 value = againNew,
                 isPassword = true,
-                onValueChange = { againNew = it },
+                onValueChange = {
+                    againNew = it
+                    if (errorMessage != null) onClearError()
+                },
                 label = "Yeni Şifre (Tekrar)",
                 leadingIcon = {
                     Icon(Icons.Default.Lock, contentDescription = null)
                 }
             )
+
+            // HATA MESAJI ALANI (Sadece Hata Olduğunda Görünür)
+            AnimatedVisibility(
+                visible = !errorMessage.isNullOrBlank(),
+                enter = expandVertically(),
+                exit = shrinkVertically()
+            ) {
+                Column {
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Surface(
+                        color = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.2f),
+                        shape = RoundedCornerShape(8.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text(
+                            text = errorMessage ?: "",
+                            color = MaterialTheme.colorScheme.error,
+                            style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold),
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)
+                        )
+                    }
+                }
+            }
 
             Spacer(modifier = Modifier.height(24.dp))
 
@@ -157,9 +176,9 @@ fun ChangePasswordBottomSheet(
                 modifier = Modifier.fillMaxWidth(),
                 isLoading = isActionLoading,
                 enabled = oldPassword.isNotBlank() && newPassword.isNotBlank() && againNew.isNotBlank(),
-                backcolor = customColors.navy,
+                backcolor = customColors.gourmetOrange,
                 textcolor = Color.White,
-                strokecolor = customColors.navy
+                strokecolor = customColors.gourmetOrange
             )
         }
     }

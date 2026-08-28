@@ -37,6 +37,7 @@ import org.beem.tastymap.ui.theme.CustomColors
 import org.beem.tastymap.ui.theme.LocalCustomColors
 import tastymap.composeapp.generated.resources.Res
 
+@Suppress("SuspiciousIndentation")
 @Composable
 fun SummaryStep(
     state: HealthUiState,

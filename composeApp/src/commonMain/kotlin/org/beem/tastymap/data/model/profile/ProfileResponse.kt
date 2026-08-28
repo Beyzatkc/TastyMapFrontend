@@ -7,9 +7,9 @@ import kotlinx.serialization.Serializable
 data class ProfileResponse(
     val username: String,
     val name: String,
-    val profile: String,
-    val role: String,
-    val biography: String,
+    val profile: String? = null,
+    val role: String? = null,
+    val biography: String? = null,
     val postCount: Long,
     val subscriberCount: Long,
     val subscribedCount: Long,

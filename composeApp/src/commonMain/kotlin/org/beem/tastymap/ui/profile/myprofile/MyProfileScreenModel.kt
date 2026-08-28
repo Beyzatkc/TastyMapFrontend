@@ -8,7 +8,6 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import org.beem.tastymap.core.network.ResultWrapper
 import org.beem.tastymap.core.provider.DeviceInfoProvider
-import org.beem.tastymap.data.model.auth.PasswordRequest
 import org.beem.tastymap.data.model.profile.ActiveDeviceDTO
 import org.beem.tastymap.data.model.profile.ChangePassword
 import org.beem.tastymap.data.model.profile.RefreshTokenRequest
@@ -18,7 +17,6 @@ import org.beem.tastymap.domain.model.UserProfile
 import org.beem.tastymap.ui.auth.common.CheckValidator
 import org.beem.tastymap.ui.auth.common.PasswordStrength
 import org.beem.tastymap.ui.auth.common.ValidationResult
-import org.beem.tastymap.ui.profile.otherprofile.ProfileUiState
 import kotlin.String
 
 
@@ -185,14 +183,7 @@ class MyProfileScreenModel(
         }
     }
 
-    fun calculatePasswordStrength(password: String): PasswordStrength {
-        return PasswordStrength(
-            hasMinLength = password.length >= 8,
-            hasUppercase = password.any { it.isUpperCase() },
-            hasDigit = password.any { it.isDigit() },
-            hasSpecialChar = password.contains(Regex("[@#\$!%^&*(),.?\":{}|<>]"))
-        )
-    }
+
     fun getActiveDevices() {
         screenModelScope.launch {
             _myProfileState.update { it.copy(isDevicesLoading = true, errorMessage = null) }

@@ -24,14 +24,13 @@ class MobileHttpClientFactory(
         return HttpClient {
             commonConfig()
 
-            install(DefaultRequest) {
-                tokenManager.getAccessToken()?.let { token ->
-                    header("Authorization", "Bearer $token")
-                }
-            }
 
             install(Auth) {
                 bearer {
+                    sendWithoutRequest { request ->
+                        true
+                    }
+
                     loadTokens {
                         val access = tokenManager.getAccessToken()
                         val refresh = tokenManager.getRefreshToken()
@@ -42,31 +41,44 @@ class MobileHttpClientFactory(
                         val deviceId = tokenManager.getDeviceId() ?: "unknown_device"
                         val refreshToken = tokenManager.getRefreshToken()
 
+                        println("--> [REFRESH DEBUG] 401 Yakalandı! Refresh başlatılıyor. RefreshToken: $refreshToken")
+
+                        if (refreshToken.isNullOrEmpty()) {
+                            println("--> [REFRESH DEBUG] Refresh token boş, yönlendiriliyor.")
+                            authEventBus.emit(AuthEventBus.AuthEvent.OnSessionExpired)
+                            return@refreshTokens null
+                        }
+
                         try {
                             val response = noAuthClient.post("api/users/refresh") {
-                                setBody(mapOf(
-                                    "deviceId" to deviceId,
-                                    "refreshToken" to (refreshToken ?: "")
-                                ))
+                                contentType(ContentType.Application.Json)
+                                setBody(
+                                    mapOf(
+                                        "deviceId" to deviceId,
+                                        "refreshToken" to refreshToken
+                                    )
+                                )
                             }
+
+                            println("--> [REFRESH DEBUG] Refresh Yanıt Kodu: ${response.status}")
 
                             if (response.status == HttpStatusCode.OK) {
                                 val newTokens = response.body<RefreshTokenResponseDTO>()
-                                tokenManager.saveTokens(newTokens.accessToken, newTokens.refreshToken)
-                                BearerTokens(newTokens.accessToken, newTokens.refreshToken)
+                                println("--> [REFRESH DEBUG] Başarılı! Yeni Access Token: ${newTokens.accessToken.take(10)}...")
+
+                                tokenManager.saveTokens(newTokens.accessToken, newTokens.refreshtoken)
+                                BearerTokens(newTokens.accessToken, newTokens.refreshtoken)
                             } else {
+                                val errorBody = response.body<String>()
+                                println("--> [REFRESH DEBUG] Refresh İsteği Başarısız Oldu! Body: $errorBody")
 
-                                val errorResponse = runCatching { response.body<ErrorResponse>() }.getOrNull()
-
-                                when (errorResponse?.error) {
-                                    "PASSWORD_CHANGED" -> authEventBus.emit(AuthEventBus.AuthEvent.OnPasswordChanged)
-                                    "LOGGED_OUT" -> authEventBus.emit(AuthEventBus.AuthEvent.OnLoggedOut)
-                                    else -> authEventBus.emit(AuthEventBus.AuthEvent.OnSessionExpired)
-                                }
-
+                                authEventBus.emit(AuthEventBus.AuthEvent.OnSessionExpired)
                                 null
                             }
                         } catch (e: Exception) {
+                            println("--> [REFRESH DEBUG] Exception Fırlatıldı: ${e.message}")
+                            e.printStackTrace()
+                            authEventBus.emit(AuthEventBus.AuthEvent.OnSessionExpired)
                             null
                         }
                     }

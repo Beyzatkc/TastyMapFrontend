@@ -38,17 +38,21 @@ class SplashScreen: Screen {
             effect?.let {
                 delay(2000)
                 when (it) {
-                    /*
+
                     is SplashEffect.NavigateToDeepLink -> navigator.replaceAll(it.screen)
                     is SplashEffect.NavigateToLogin -> navigator.replaceAll(LogRegScreen())
-                    is SplashEffect.NavigateToHome -> { /* navigator.replaceAll(HomeScreen()) */ }
+                    is SplashEffect.NavigateToHome -> {  navigator.replaceAll(MyProfileScreen()) }
+                    //is SplashEffect.NavigateToHome -> { /* navigator.replaceAll(HomeScreen()) */ }
                     is SplashEffect.NavigateToOnBoard -> navigator.replaceAll(OnBoardingScreen())
 
-                     */
+                     /*
+
                     is SplashEffect.NavigateToDeepLink -> navigator.replaceAll(MyProfileScreen())
                     is SplashEffect.NavigateToLogin -> navigator.replaceAll(MyProfileScreen())
                     is SplashEffect.NavigateToHome -> {  navigator.replaceAll(MyProfileScreen()) }
                     is SplashEffect.NavigateToOnBoard -> navigator.replaceAll(MyProfileScreen())
+
+                      */
                 }
             }
         }

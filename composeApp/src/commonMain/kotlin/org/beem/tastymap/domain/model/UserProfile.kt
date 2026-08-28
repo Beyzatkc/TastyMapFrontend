@@ -4,7 +4,7 @@ data class UserProfile(
     val username: String,
     val name: String,
     val profilePhoto: String?,
-    val role: String,
+    val role: String?,
     val biography: String?,
     val postCount: Long,
     val subscriberCount: Long,

@@ -19,12 +19,11 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import cafe.adriel.voyager.core.screen.Screen
+import cafe.adriel.voyager.koin.koinScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
-import org.beem.tastymap.ui.theme.LocalCustomColors
 
 class SettingsScreen(
-    private val state: MyProfileUiState,
     private val onChangePasswordSubmit: (old: String, new: String, again: String) -> Unit,
     private val onActiveDevicesClick: () -> Unit,
     private val onLogoutClick: () -> Unit,
@@ -34,23 +33,21 @@ class SettingsScreen(
     @OptIn(ExperimentalMaterial3Api::class)
     @Composable
     override fun Content() {
+        // ViewModel'i doğrudan dinliyoruz, böylece errorMessage değiştiğinde bu ekran REAKTİF olarak yeniden çizilir.
+        val screenModel = koinScreenModel<MyProfileScreenModel>()
+        val state by screenModel.myProfileState.collectAsState()
+
         val navigator = LocalNavigator.currentOrThrow
-        val customColors = LocalCustomColors.current
         val darkHeaderColor = Color(0xFF18345A)
         val pageBackgroundColor = Color(0xFFFAFAF8)
         val snackbarHostState = remember { SnackbarHostState() }
 
         var showChangePasswordSheet by remember { mutableStateOf(false) }
 
-        // Hata veya başarı mesajı geldiğinde Toast/Snackbar gösterimi
-        LaunchedEffect(state.errorMessage, state.successMessage) {
-            state.errorMessage?.let { message ->
-                snackbarHostState.showSnackbar(message)
-                onClearMessages()
-            }
+        LaunchedEffect(state.successMessage) {
             state.successMessage?.let { message ->
+                showChangePasswordSheet = false
                 snackbarHostState.showSnackbar(message)
-                showChangePasswordSheet = false // İşlem başarılıysa sheet'i kapat
                 onClearMessages()
             }
         }
@@ -108,7 +105,10 @@ class SettingsScreen(
                             SettingsOptionItem(
                                 icon = Icons.Default.Lock,
                                 title = "Şifre Değiştir",
-                                onClick = { showChangePasswordSheet = true }
+                                onClick = {
+                                    onClearMessages()
+                                    showChangePasswordSheet = true
+                                }
                             )
                             HorizontalDivider(
                                 modifier = Modifier.padding(horizontal = 16.dp),
@@ -151,11 +151,14 @@ class SettingsScreen(
                 }
             }
 
-            // ŞİFRE DEĞİŞTİRME BOTTOM SHEET
             if (showChangePasswordSheet) {
                 ChangePasswordBottomSheet(
                     isActionLoading = state.isActionLoading,
-                    onDismissRequest = { showChangePasswordSheet = false },
+                    errorMessage = state.errorMessage,
+                    onDismissRequest = {
+                        showChangePasswordSheet = false
+                        onClearMessages()
+                    },
                     onSubmitClick = { oldPassword, newPassword, againNew ->
                         onChangePasswordSubmit(oldPassword, newPassword, againNew)
                     }

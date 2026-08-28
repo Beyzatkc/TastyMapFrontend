@@ -11,34 +11,49 @@ object DeepLinkManager {
 
     var pendingInitialScreen: Screen? = null
 
-    /*
+
     fun handleLink(url: String) {
         try {
+            // 1. ADIM: Fonksiyona URL gerçekten ulaştı mı?
+            println("DEEPLINK_MGR: Gelen Ham URL -> $url")
+
             val parts = url.split("?")
             val basePath = parts.getOrNull(0) ?: ""
             val queryString = parts.getOrNull(1)
 
+            println("DEEPLINK_MGR: BasePath -> $basePath")
+            println("DEEPLINK_MGR: QueryString -> $queryString")
+
             val token = queryString
                 ?.split("&")
                 ?.map { it.split("=") }
-                ?.firstOrNull { it.size == 2 && it[0] == "token" }
+                ?.firstOrNull { it.size >= 2 && it[0] == "token" }
                 ?.getOrNull(1)
 
-            if (token.isNullOrEmpty()) return
+            println("DEEPLINK_MGR: Ayrıştırılan Token -> $token")
 
+            if (token.isNullOrEmpty()) {
+                println("DEEPLINK_MGR: HATA - Token bulunamadı veya boş!")
+                return
+            }
+
+            // Katı 'endsWith' yerine daha esnek olan 'contains' kontrolü
             when {
-                basePath.endsWith("/auth/verify") -> {
+                basePath.contains("/auth/verify") -> {
                     val screen = VerifyScreen(token)
                     pendingInitialScreen = screen
-                    _navigationEvents.trySend(screen)
-                    println("DEEPLINK_MGR: Email doğrulama ekranına yönlendiriliyor. Token: $token")
+                    val result = _navigationEvents.trySend(screen)
+                    println("DEEPLINK_MGR: VerifyScreen Event Gönderildi mi? -> ${result.isSuccess}")
                 }
 
-                basePath.endsWith("/auth/resetPassword/validate") -> {
+                basePath.contains("/auth/resetPassword/validate") -> {
                     val screen = ResetScreen(token)
                     pendingInitialScreen = screen
-                    _navigationEvents.trySend(screen)
-                    println("DEEPLINK_MGR: Şifre sıfırlama ekranına yönlendiriliyor. Token: $token")
+                    val result = _navigationEvents.trySend(screen)
+                    println("DEEPLINK_MGR: ResetScreen Event Gönderildi mi? -> ${result.isSuccess}")
+                }
+                else -> {
+                    println("DEEPLINK_MGR: HATA - Path eşleşmedi! BasePath: $basePath")
                 }
             }
         } catch (e: Exception) {
@@ -46,10 +61,9 @@ object DeepLinkManager {
         }
     }
 
-     */
 
 
-
+/*
     fun handleLink(url: String) {
         when {
             url.contains("#verify") -> {
@@ -72,6 +86,8 @@ object DeepLinkManager {
             }
         }
     }
+
+ */
 
 
     private fun extractToken(url: String): String? {

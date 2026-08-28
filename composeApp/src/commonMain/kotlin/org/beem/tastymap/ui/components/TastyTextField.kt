@@ -77,11 +77,14 @@ fun TastyTextField(
                 focusedTextColor = Color.Black,
                 unfocusedTextColor = Color.Black,
                 focusedBorderColor = MaterialTheme.colorScheme.primary,
-                unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+                unfocusedBorderColor = Color.Gray,
                 errorTextColor = Color.Black,
 
+                unfocusedLabelColor = Color.Gray, // Seçili değilken gri yapar
+                focusedLabelColor = MaterialTheme.colorScheme.primary,
+
                 focusedLeadingIconColor = MaterialTheme.colorScheme.primary,
-                unfocusedLeadingIconColor = MaterialTheme.colorScheme.outline,
+                unfocusedLeadingIconColor = Color.Gray,
                 errorLeadingIconColor = MaterialTheme.colorScheme.error,
             )
         )

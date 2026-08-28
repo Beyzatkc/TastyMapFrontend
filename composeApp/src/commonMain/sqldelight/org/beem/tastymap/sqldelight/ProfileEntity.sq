@@ -3,7 +3,7 @@ CREATE TABLE ProfileEntity (
     username TEXT NOT NULL,
     name TEXT NOT NULL,
     profilePhoto TEXT,
-    role TEXT NOT NULL,
+    role TEXT,
     biography TEXT,
     postCount INTEGER NOT NULL DEFAULT 0,
     subscriberCount INTEGER NOT NULL DEFAULT 0,

@@ -21,6 +21,7 @@ import org.beem.tastymap.ui.profile.health.stepScreens.AllergiesStep
 import org.beem.tastymap.ui.profile.health.stepScreens.DiabetesStep
 import org.beem.tastymap.ui.profile.health.stepScreens.EatTypeStep
 import org.beem.tastymap.ui.profile.health.stepScreens.SummaryStep
+import org.beem.tastymap.ui.profile.myprofile.MyProfileScreen
 import org.beem.tastymap.ui.theme.LocalCustomColors
 
 class HealthWizardScreen : Screen {
@@ -39,6 +40,11 @@ class HealthWizardScreen : Screen {
                 screenModel.previousStep()
             } else {
                 navigator.pop()
+            }
+        }
+        LaunchedEffect(state.isSuccess) {
+            if (state.isSuccess) {
+                navigator.replace(MyProfileScreen())
             }
         }
 
