@@ -167,7 +167,8 @@ class MyProfileScreenModel(
                     _myProfileState.update {
                         it.copy(
                             isActionLoading = false,
-                            successMessage = result.data.message ?: "Şifreniz başarıyla değiştirildi."
+                            successMessage = result.data.message ?: "Şifreniz başarıyla değiştirildi.",
+                            errorMessage = null
                         )
                     }
                 }
@@ -175,7 +176,8 @@ class MyProfileScreenModel(
                     _myProfileState.update {
                         it.copy(
                             isActionLoading = false,
-                            errorMessage = result.message
+                            errorMessage = result.message,
+                            successMessage = null
                         )
                     }
                 }

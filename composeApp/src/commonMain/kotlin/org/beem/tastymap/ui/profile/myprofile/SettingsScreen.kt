@@ -24,16 +24,14 @@ import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 
 class SettingsScreen(
-    private val onChangePasswordSubmit: (old: String, new: String, again: String) -> Unit,
     private val onActiveDevicesClick: () -> Unit,
-    private val onLogoutClick: () -> Unit,
-    private val onClearMessages: () -> Unit = {}
+    private val onLogoutClick: () -> Unit
 ) : Screen {
 
     @OptIn(ExperimentalMaterial3Api::class)
     @Composable
     override fun Content() {
-        // ViewModel'i doğrudan dinliyoruz, böylece errorMessage değiştiğinde bu ekran REAKTİF olarak yeniden çizilir.
+        // ViewModel'i Koin üzerinden alıyoruz (Voyager kilitlenmelerini önler)
         val screenModel = koinScreenModel<MyProfileScreenModel>()
         val state by screenModel.myProfileState.collectAsState()
 
@@ -44,13 +42,18 @@ class SettingsScreen(
 
         var showChangePasswordSheet by remember { mutableStateOf(false) }
 
+        // SADECE successMessage Dolduğunda Kapanır (Hata olunca bu blok çalışmaz!)
         LaunchedEffect(state.successMessage) {
+            println("SUCCESS MESSAGE = ${state.successMessage}")
+            println("ERROR MESSAGE = ${state.errorMessage}")
+
             state.successMessage?.let { message ->
                 showChangePasswordSheet = false
                 snackbarHostState.showSnackbar(message)
-                onClearMessages()
+                screenModel.clearMessages()
             }
         }
+
 
         Scaffold(
             containerColor = pageBackgroundColor,
@@ -86,7 +89,6 @@ class SettingsScreen(
                     .padding(horizontal = 16.dp, vertical = 12.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                // HESAP AYARLARI GRUBU
                 item {
                     Text(
                         text = "Hesabınız",
@@ -106,7 +108,7 @@ class SettingsScreen(
                                 icon = Icons.Default.Lock,
                                 title = "Şifre Değiştir",
                                 onClick = {
-                                    onClearMessages()
+                                    screenModel.clearMessages()
                                     showChangePasswordSheet = true
                                 }
                             )
@@ -124,7 +126,6 @@ class SettingsScreen(
                     }
                 }
 
-                // GİRİŞ / ÇIKIŞ GRUBU
                 item {
                     Text(
                         text = "Giriş",
@@ -157,17 +158,20 @@ class SettingsScreen(
                     errorMessage = state.errorMessage,
                     onDismissRequest = {
                         showChangePasswordSheet = false
-                        onClearMessages()
+                        screenModel.clearMessages()
                     },
                     onSubmitClick = { oldPassword, newPassword, againNew ->
-                        onChangePasswordSubmit(oldPassword, newPassword, againNew)
+                        screenModel.changePassword(
+                            oldPassword = oldPassword,
+                            newPassword = newPassword,
+                            againNew = againNew
+                        )
                     }
                 )
             }
         }
     }
 }
-
 @Composable
 private fun SettingsOptionItem(
     icon: ImageVector,

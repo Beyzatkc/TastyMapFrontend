@@ -50,12 +50,8 @@ class MyProfileScreen : Screen {
             onSettingsClick = {
                 navigator.push(
                     SettingsScreen(
-                        onChangePasswordSubmit = { oldPassword, newPassword, againNew ->
-                            screenModel.changePassword(oldPassword, newPassword, againNew)
-                        },
                         onActiveDevicesClick = { },
-                        onLogoutClick = { },
-                        onClearMessages = { screenModel.clearMessages() }
+                        onLogoutClick = { }
                     )
                 )
             },
