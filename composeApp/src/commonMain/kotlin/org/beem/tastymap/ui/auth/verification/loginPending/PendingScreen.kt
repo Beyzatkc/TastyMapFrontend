@@ -33,8 +33,8 @@ import org.beem.tastymap.core.util.ToastManager
 import org.beem.tastymap.ui.auth.common.AuthEffect
 import org.beem.tastymap.ui.auth.common.AuthLifecycleEvent
 import org.beem.tastymap.ui.auth.logReg.LogRegScreen
-import org.beem.tastymap.ui.splash.SplashScreen
 import org.beem.tastymap.ui.components.AuthFooter
+import org.beem.tastymap.ui.splash.SplashScreen
 import org.beem.tastymap.ui.theme.LocalCustomColors
 
 class PendingScreen(val deviceId: String) : Screen {
@@ -46,8 +46,6 @@ class PendingScreen(val deviceId: String) : Screen {
         val lifecycleOwner = LocalLifecycleOwner.current
         val navigator = LocalNavigator.currentOrThrow
         val colors = LocalCustomColors.current
-        val materialColors = MaterialTheme.colorScheme
-
 
         LaunchedEffect(Unit) {
             screenModel.pendingLogin.collect { pendingLogin ->
@@ -58,7 +56,6 @@ class PendingScreen(val deviceId: String) : Screen {
                         navigator.replaceAll(PendingScreen(pendingLogin.deviceId))
                     }
                     else -> Unit
-
                 }
             }
         }
@@ -73,7 +70,6 @@ class PendingScreen(val deviceId: String) : Screen {
             val observer = LifecycleEventObserver { _, event ->
                 when (event) {
                     Lifecycle.Event.ON_RESUME -> {
-                        println("LIFECYCLE: RESUME pendıngscreen")
                         screenModel.onLifecycleEvent(
                             AuthLifecycleEvent.Resume,
                             deviceId
@@ -100,7 +96,7 @@ class PendingScreen(val deviceId: String) : Screen {
 
         Surface(
             modifier = Modifier.fillMaxSize(),
-            color = materialColors.background
+            color = colors.background
         ) {
             Column(
                 modifier = Modifier
@@ -108,14 +104,12 @@ class PendingScreen(val deviceId: String) : Screen {
                     .statusBarsPadding()
                     .navigationBarsPadding()
             ) {
-
                 Box(
                     modifier = Modifier
                         .weight(1f)
                         .fillMaxWidth(),
                     contentAlignment = Alignment.Center
                 ) {
-
                     Column(
                         modifier = Modifier
                             .widthIn(max = 500.dp)
@@ -125,18 +119,17 @@ class PendingScreen(val deviceId: String) : Screen {
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.Center
                     ) {
-
                         Surface(
                             modifier = Modifier.size(80.dp),
                             shape = CircleShape,
-                            color = colors.navy.copy(alpha = 0.1f)
+                            color = colors.surfaceVariant
                         ) {
                             Box(contentAlignment = Alignment.Center) {
                                 Icon(
                                     imageVector = Icons.Outlined.Security,
                                     contentDescription = null,
                                     modifier = Modifier.size(40.dp),
-                                    tint = colors.navy
+                                    tint = colors.textPrimary
                                 )
                             }
                         }
@@ -146,7 +139,7 @@ class PendingScreen(val deviceId: String) : Screen {
                         Text(
                             text = "Güvenlik Doğrulaması",
                             style = MaterialTheme.typography.headlineSmall,
-                            color = colors.navy,
+                            color = colors.textPrimary,
                             fontWeight = FontWeight.Bold,
                             textAlign = TextAlign.Center
                         )
@@ -156,7 +149,7 @@ class PendingScreen(val deviceId: String) : Screen {
                         Text(
                             text = "Hesabınızın güvenliğini sağlamak için bu giriş denemesi ek doğrulama gerektirmektedir.",
                             style = MaterialTheme.typography.bodyMedium,
-                            color = materialColors.onSurfaceVariant,
+                            color = colors.textSecondary,
                             textAlign = TextAlign.Center
                         )
 
@@ -166,7 +159,7 @@ class PendingScreen(val deviceId: String) : Screen {
                             modifier = Modifier.fillMaxWidth(),
                             shape = MaterialTheme.shapes.medium,
                             colors = CardDefaults.cardColors(
-                                containerColor = materialColors.surfaceVariant.copy(alpha = 0.35f)
+                                containerColor = colors.surfaceVariant
                             )
                         ) {
                             Column(modifier = Modifier.padding(16.dp)) {
@@ -174,20 +167,22 @@ class PendingScreen(val deviceId: String) : Screen {
                                     Icon(
                                         imageVector = Icons.Outlined.CheckCircle,
                                         contentDescription = null,
-                                        tint = colors.navy,
+                                        tint = colors.textPrimary,
                                         modifier = Modifier.size(20.dp)
                                     )
                                     Spacer(Modifier.width(8.dp))
                                     Text(
                                         text = "Doğrulama e-postası gönderildi",
                                         style = MaterialTheme.typography.titleSmall,
+                                        color = colors.textPrimary,
                                         fontWeight = FontWeight.SemiBold
                                     )
                                 }
                                 Spacer(Modifier.height(6.dp))
                                 Text(
                                     text = "Kayıtlı e-posta adresinize doğrulama bağlantısı gönderildi. Onay işlemi tamamlandığında bu ekran otomatik olarak güncellenecektir.",
-                                    style = MaterialTheme.typography.bodySmall
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = colors.textSecondary
                                 )
                             }
                         }
@@ -205,6 +200,7 @@ class PendingScreen(val deviceId: String) : Screen {
                         Text(
                             text = "Doğrulama bekleniyor...",
                             style = MaterialTheme.typography.labelMedium,
+                            color = colors.textSecondary,
                             fontWeight = FontWeight.Medium
                         )
 
@@ -214,13 +210,13 @@ class PendingScreen(val deviceId: String) : Screen {
                             modifier = Modifier.fillMaxWidth(),
                             shape = MaterialTheme.shapes.medium,
                             colors = CardDefaults.cardColors(
-                                containerColor = materialColors.errorContainer
+                                containerColor = colors.error.copy(alpha = 0.1f)
                             )
                         ) {
                             Text(
                                 text = "Lütfen bu ekranı kapatmayın. Onay işlemi tamamlandığında giriş işleminiz otomatik olarak devam edecektir.",
                                 modifier = Modifier.padding(12.dp),
-                                color = materialColors.onErrorContainer,
+                                color = colors.error,
                                 textAlign = TextAlign.Center,
                                 style = MaterialTheme.typography.bodySmall
                             )
@@ -251,6 +247,7 @@ fun ResendSection(
 ) {
     val timeLeft by screenModel.timeLeft.collectAsState()
     val state by screenModel.sendState.collectAsState()
+    val customColors = LocalCustomColors.current
 
     val isButtonEnabled = timeLeft == 0 && !state.isLoading
 
@@ -277,12 +274,10 @@ fun ResendSection(
                     } else {
                         "Tekrar gönder: ${timeLeft}s"
                     },
-                    color = if (isButtonEnabled) navyIcons else Color.Gray,
+                    color = if (isButtonEnabled) navyIcons else customColors.textSecondary,
                     style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium)
                 )
             }
-
         }
     }
-
 }

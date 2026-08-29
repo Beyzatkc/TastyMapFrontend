@@ -4,6 +4,8 @@ import org.koin.dsl.module
 import createNoAuthClient
 import io.ktor.client.HttpClient
 import org.beem.tastymap.core.auth.AuthEventBus
+import org.beem.tastymap.core.local.SettingsManager
+import org.beem.tastymap.core.local.SettingsManagerImpl
 import org.beem.tastymap.core.local.TokenManager
 import org.beem.tastymap.core.local.TokenManagerImpl
 import org.beem.tastymap.core.navigation.MobileVerifyNavigator
@@ -33,12 +35,16 @@ import org.beem.tastymap.ui.auth.verification.email.EmailScreenModel
 import org.beem.tastymap.ui.auth.verification.loginPending.PendingScreenModel
 import org.beem.tastymap.ui.profile.health.HealthScreenModel
 import org.beem.tastymap.ui.profile.myprofile.MyProfileScreenModel
+import org.beem.tastymap.ui.profile.myprofile.settings.SettingsScreenModel
+import org.beem.tastymap.ui.profile.myprofile.settings.activedevices.ActiveDevicesScreenModel
+import org.beem.tastymap.ui.profile.myprofile.settings.changepassword.ChangePasswordScreenModel
 import org.beem.tastymap.ui.profile.otherprofile.ProfileScreenModel
 import org.koin.core.qualifier.named
 
 val appModule = module {
 
     single<TokenManager> { TokenManagerImpl(get()) }
+    single<SettingsManager> { SettingsManagerImpl(get()) }
 
     single<HttpClient>(named("noAuth")) {
         createNoAuthClient()
@@ -79,7 +85,10 @@ val appModule = module {
     factory { ResetScreenModel(get()) }
     factory { HealthScreenModel(get()) }
     factory { ProfileScreenModel(get()) }
-    factory { MyProfileScreenModel(get(),get()) }
+    factory { MyProfileScreenModel(get()) }
+    factory { SettingsScreenModel(get(),get(),get()) }
+    factory { ActiveDevicesScreenModel(get()) }
+    factory { ChangePasswordScreenModel(get(),get()) }
 
     single<VerifyNavigator> { MobileVerifyNavigator() }
 }

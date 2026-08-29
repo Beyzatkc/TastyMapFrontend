@@ -13,7 +13,6 @@ import org.beem.tastymap.data.model.auth.UserResponse
 import org.beem.tastymap.data.model.profile.ActiveDevicesResponse
 import org.beem.tastymap.data.model.profile.ChangePassword
 import org.beem.tastymap.data.model.profile.MessageResponse
-import org.beem.tastymap.data.model.profile.RefreshTokenRequest
 import org.beem.tastymap.data.model.profile.UpdateProfile
 import org.beem.tastymap.data.remote.profile.MyProfileDataSource
 import org.beem.tastymap.domain.auth.ClearSessionUseCase
@@ -52,8 +51,9 @@ class MyProfileRepository(
         } catch (e: Exception) {
             if (l1Profile == null && l2Profile == null) {
                 emit(ResultWrapper.Error(e.message ?: "Profil yüklenemedi.", ErrorType.SERVER_ERROR))
+            }else {
+                emit(ResultWrapper.Error(e.cause.toString() + e.message, ErrorType.UNKNOWN_ERROR))
             }
-            emit(ResultWrapper.Error(e.cause.toString()+ e.message, ErrorType.UNAUTHORIZED))
         }
     }
 
@@ -117,9 +117,9 @@ class MyProfileRepository(
         }
     }
 
-    suspend fun logout(request: RefreshTokenRequest): ResultWrapper<Unit> {
+    suspend fun logout(deviceId: String): ResultWrapper<Unit> {
         return try {
-            safeApiCall { dataSource.logout(request) }
+            safeApiCall { dataSource.logout(deviceId) }
         } finally {
             clearSessionUseCase()
         }

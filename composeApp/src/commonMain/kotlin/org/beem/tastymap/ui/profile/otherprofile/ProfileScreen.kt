@@ -12,12 +12,14 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.GridOn
 import androidx.compose.material.icons.filled.Map
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -26,6 +28,7 @@ import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.koin.koinScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
+import coil3.compose.AsyncImage
 import org.beem.tastymap.domain.model.UserProfile
 import org.beem.tastymap.ui.theme.LocalCustomColors
 import org.beem.tastymap.ui.theme.TastyTheme
@@ -62,12 +65,10 @@ fun ProfileContent(
     onShareClick: () -> Unit = {}
 ) {
     val customColors = LocalCustomColors.current
-    val pageBackgroundColor = Color(0xFFFAFAF8)
-    val darkHeaderColor = Color(0xFF18345A)
     var selectedTab by remember { mutableIntStateOf(0) }
 
     Scaffold(
-        containerColor = pageBackgroundColor,
+        containerColor = customColors.background,
         topBar = {
             TopAppBar(
                 title = {
@@ -86,7 +87,7 @@ fun ProfileContent(
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = darkHeaderColor
+                    containerColor = customColors.darkHeaderColor
                 )
             )
         }
@@ -94,13 +95,13 @@ fun ProfileContent(
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
-                .background(pageBackgroundColor)
+                .background(customColors.background)
                 .padding(innerPadding)
         ) {
             // 1. HERO BAŞLIK KARTI
             item {
                 Surface(
-                    color = darkHeaderColor,
+                    color = customColors.darkHeaderColor,
                     shape = RoundedCornerShape(bottomStart = 28.dp, bottomEnd = 28.dp),
                     modifier = Modifier.fillMaxWidth()
                 ) {
@@ -114,8 +115,27 @@ fun ProfileContent(
                                     .size(92.dp)
                                     .clip(CircleShape)
                                     .border(3.dp, customColors.gourmetOrange, CircleShape)
-                                    .background(Color.DarkGray)
-                            )
+                                    .background(customColors.placeHolderBack),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                if (!profile?.profilePhoto.isNullOrBlank()) {
+                                    AsyncImage(
+                                        model = profile.profilePhoto,
+                                        contentDescription = "Profil Fotoğrafı",
+                                        modifier = Modifier
+                                            .fillMaxSize()
+                                            .clip(CircleShape),
+                                        contentScale = ContentScale.Crop
+                                    )
+                                } else {
+                                    Icon(
+                                        imageVector = Icons.Default.Person,
+                                        contentDescription = "Varsayılan Profil",
+                                        tint = customColors.placeHolderIcon,
+                                        modifier = Modifier.size(48.dp)
+                                    )
+                                }
+                            }
 
                             profile?.role?.let { role ->
                                 Surface(
@@ -139,7 +159,6 @@ fun ProfileContent(
 
                         Text(
                             text = profile?.name ?: "Kullanıcı",
-                            color = Color.White,
                             style = MaterialTheme.typography.headlineMedium.copy(color = Color.White)
                         )
 
@@ -148,7 +167,7 @@ fun ProfileContent(
                         Text(
                             text = profile?.biography ?: "Henüz bir lezzet biyografisi eklenmedi.",
                             style = MaterialTheme.typography.bodyMedium.copy(
-                                color = Color.White.copy(alpha = 0.9f),
+                                color = Color.White.copy(alpha = 0.8f),
                                 textAlign = TextAlign.Center
                             ),
                             modifier = Modifier.padding(horizontal = 16.dp)
@@ -173,7 +192,7 @@ fun ProfileContent(
                                 modifier = Modifier.weight(1f),
                                 isPrimary = true,
                                 isLoading = isLoading,
-                                backcolor = if (isSubscribed) Color.Gray else customColors.gourmetOrange,
+                                backcolor = if (isSubscribed) customColors.textSecondary else customColors.gourmetOrange,
                                 textcolor = Color.White,
                                 strokecolor = Color.Transparent
                             )
@@ -206,19 +225,19 @@ fun ProfileContent(
                         title = "Paylaşım",
                         value = (profile?.postCount ?: 0).toString(),
                         modifier = Modifier.weight(1f),
-                        cardColor = Color.LightGray.copy(alpha = 0.2f)
+                        cardColor = customColors.surfaceVariant
                     )
                     MetricCard(
                         title = "Abone",
                         value = (profile?.subscriberCount ?: 0).toString(),
                         modifier = Modifier.weight(1f),
-                        cardColor = Color.LightGray.copy(alpha = 0.2f)
+                        cardColor = customColors.surfaceVariant
                     )
                     MetricCard(
                         title = "Takip",
                         value = (profile?.subscribedCount ?: 0).toString(),
                         modifier = Modifier.weight(1f),
-                        cardColor = Color.LightGray.copy(alpha = 0.2f)
+                        cardColor = customColors.surfaceVariant
                     )
                 }
                 Spacer(modifier = Modifier.height(16.dp))
@@ -227,7 +246,7 @@ fun ProfileContent(
             // 3. TAB SEÇİM ALANI
             item {
                 Surface(
-                    color = Color.LightGray.copy(alpha = 0.3f),
+                    color = customColors.surfaceVariant,
                     shape = RoundedCornerShape(12.dp),
                     modifier = Modifier
                         .fillMaxWidth()
@@ -289,6 +308,8 @@ private fun MetricCard(
     modifier: Modifier = Modifier,
     cardColor: Color
 ) {
+    val customColors = LocalCustomColors.current
+
     Surface(
         color = cardColor,
         shape = RoundedCornerShape(14.dp),
@@ -300,12 +321,12 @@ private fun MetricCard(
         ) {
             Text(
                 text = value,
-                style = MaterialTheme.typography.headlineMedium.copy(color = Color.Black)
+                style = MaterialTheme.typography.headlineMedium.copy(color = customColors.textPrimary)
             )
             Spacer(modifier = Modifier.height(2.dp))
             Text(
                 text = title,
-                color = Color.DarkGray,
+                color = customColors.textSecondary,
                 style = MaterialTheme.typography.labelSmall
             )
         }
@@ -322,6 +343,8 @@ private fun TabButton(
     activeColor: Color,
     accentColor: Color
 ) {
+    val customColors = LocalCustomColors.current
+
     Surface(
         color = if (isSelected) activeColor else Color.Transparent,
         shape = RoundedCornerShape(10.dp),
@@ -335,14 +358,14 @@ private fun TabButton(
             Icon(
                 imageVector = icon,
                 contentDescription = text,
-                tint = if (isSelected) accentColor else Color.DarkGray,
+                tint = if (isSelected) accentColor else customColors.textSecondary,
                 modifier = Modifier.size(16.dp)
             )
             Spacer(modifier = Modifier.width(6.dp))
             Text(
                 text = text,
                 style = if (isSelected) MaterialTheme.typography.titleMedium.copy(color = Color.White)
-                else MaterialTheme.typography.bodyMedium.copy(color = Color.DarkGray)
+                else MaterialTheme.typography.bodyMedium.copy(color = customColors.textSecondary)
             )
         }
     }
@@ -369,4 +392,3 @@ private fun ProfileScreenPreview() {
         )
     }
 }
-

@@ -1,4 +1,4 @@
-package org.beem.tastymap.ui.profile.myprofile
+package org.beem.tastymap.ui.profile.myprofile.settings
 
 import TastyButton
 import androidx.compose.animation.AnimatedVisibility
@@ -42,6 +42,9 @@ import org.beem.tastymap.ui.theme.LocalCustomColors
 fun ChangePasswordBottomSheet(
     isActionLoading: Boolean = false,
     errorMessage: String? = null,
+    oldPasswordError: String? = null,
+    newPasswordError: String? = null,
+    againNewPasswordError: String? = null,
     onDismissRequest: () -> Unit = {},
     onClearError: () -> Unit = {},
     onSubmitClick: (oldPassword: String, newPassword: String, againNew: String) -> Unit = { _, _, _ -> }
@@ -66,7 +69,7 @@ fun ChangePasswordBottomSheet(
         onDismissRequest = onDismissRequest,
         sheetState = sheetState,
         shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
-        containerColor = MaterialTheme.colorScheme.surface
+        containerColor = customColors.surface
     ) {
         Column(
             modifier = Modifier
@@ -81,38 +84,50 @@ fun ChangePasswordBottomSheet(
                 text = "Şifre Değiştir",
                 style = MaterialTheme.typography.titleMedium.copy(
                     fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface
+                    color = customColors.textPrimary
                 ),
                 textAlign = TextAlign.Center
             )
 
             Spacer(modifier = Modifier.height(20.dp))
 
+            // Mevcut Şifre
             TastyTextField(
                 value = oldPassword,
                 isPassword = true,
                 onValueChange = {
                     oldPassword = it
-                    if (errorMessage != null) onClearError()
+                    onClearError()
                 },
                 label = "Mevcut Şifre",
+                error = oldPasswordError,
                 leadingIcon = {
-                    Icon(Icons.Default.Lock, contentDescription = null)
+                    Icon(
+                        imageVector = Icons.Default.Lock,
+                        contentDescription = null,
+                        tint = customColors.textSecondary
+                    )
                 }
             )
 
             Spacer(modifier = Modifier.height(12.dp))
 
+            // Yeni Şifre
             TastyTextField(
                 value = newPassword,
                 isPassword = true,
                 onValueChange = {
                     newPassword = it
-                    if (errorMessage != null) onClearError()
+                    onClearError()
                 },
                 label = "Yeni Şifre",
+                error = newPasswordError,
                 leadingIcon = {
-                    Icon(Icons.Default.Lock, contentDescription = null)
+                    Icon(
+                        imageVector = Icons.Default.Lock,
+                        contentDescription = null,
+                        tint = customColors.textSecondary
+                    )
                 }
             )
 
@@ -129,20 +144,26 @@ fun ChangePasswordBottomSheet(
 
             Spacer(modifier = Modifier.height(12.dp))
 
+            // Yeni Şifre Tekrar
             TastyTextField(
                 value = againNew,
                 isPassword = true,
                 onValueChange = {
                     againNew = it
-                    if (errorMessage != null) onClearError()
+                    onClearError()
                 },
                 label = "Yeni Şifre (Tekrar)",
+                error = againNewPasswordError,
                 leadingIcon = {
-                    Icon(Icons.Default.Lock, contentDescription = null)
+                    Icon(
+                        imageVector = Icons.Default.Lock,
+                        contentDescription = null,
+                        tint = customColors.textSecondary
+                    )
                 }
             )
 
-            // HATA MESAJI ALANI (Sadece Hata Olduğunda Görünür)
+            // GENEL API HATA MESAJI ALANI
             AnimatedVisibility(
                 visible = !errorMessage.isNullOrBlank(),
                 enter = expandVertically(),
@@ -151,13 +172,13 @@ fun ChangePasswordBottomSheet(
                 Column {
                     Spacer(modifier = Modifier.height(12.dp))
                     Surface(
-                        color = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.2f),
+                        color = customColors.error.copy(alpha = 0.15f),
                         shape = RoundedCornerShape(8.dp),
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         Text(
                             text = errorMessage ?: "",
-                            color = MaterialTheme.colorScheme.error,
+                            color = customColors.error,
                             style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold),
                             textAlign = TextAlign.Center,
                             modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)
@@ -177,8 +198,8 @@ fun ChangePasswordBottomSheet(
                 isLoading = isActionLoading,
                 enabled = oldPassword.isNotBlank() && newPassword.isNotBlank() && againNew.isNotBlank(),
                 backcolor = customColors.gourmetOrange,
-                textcolor = Color.White,
-                strokecolor = customColors.gourmetOrange
+                textcolor = customColors.surface,
+                strokecolor = Color.Transparent
             )
         }
     }

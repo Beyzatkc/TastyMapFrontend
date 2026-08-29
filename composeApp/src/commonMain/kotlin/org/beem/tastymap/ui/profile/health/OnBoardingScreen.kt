@@ -1,3 +1,6 @@
+package org.beem.tastymap.ui.profile.health
+
+import TastyButton
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.BorderStroke
@@ -41,65 +44,66 @@ class OnBoardingScreen : Screen {
             showContent = true
         }
 
-    val customColors = LocalCustomColors.current
-    val scrollState = rememberScrollState()
+        val customColors = LocalCustomColors.current
+        val scrollState = rememberScrollState()
 
-    Box(
-        modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
-    ) {
-        AnimatedVisibility(
-            visible = showContent,
-            enter = fadeIn(animationSpec = tween(800)) +
-                    slideInVertically(
-                        initialOffsetY = { it / 10 },
-                        animationSpec = tween(800, easing = EaseOutCubic)
-                    )
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(customColors.background),
+            contentAlignment = Alignment.Center
         ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .statusBarsPadding()
-                    .navigationBarsPadding()
-                    .padding(horizontal = 24.dp)
-                    .widthIn(max = 440.dp)
-                    .verticalScroll(scrollState),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
+            AnimatedVisibility(
+                visible = showContent,
+                enter = fadeIn(animationSpec = tween(800)) +
+                        slideInVertically(
+                            initialOffsetY = { it / 10 },
+                            animationSpec = tween(800, easing = EaseOutCubic)
+                        )
             ) {
-                Spacer(modifier = Modifier.height(32.dp))
-
-
                 Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .statusBarsPadding()
+                        .navigationBarsPadding()
+                        .padding(horizontal = 24.dp)
+                        .widthIn(max = 440.dp)
+                        .verticalScroll(scrollState),
                     horizontalAlignment = Alignment.CenterHorizontally,
-                    modifier = Modifier.fillMaxWidth()
+                    verticalArrangement = Arrangement.Center
                 ) {
-                    WelcomeLogo(customColors = customColors)
+                    Spacer(modifier = Modifier.height(32.dp))
 
-                    Spacer(modifier = Modifier.height(16.dp))
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        WelcomeLogo(customColors = customColors)
 
-                    Text(
-                        text = "Yapay zekamız size en doğru restoran ve beslenme önerilerini sunabilmek için sizi tanımak istiyor.",
-                        fontSize = 15.sp,
-                        lineHeight = 22.sp,
-                        textAlign = TextAlign.Center,
-                        color = customColors.navy.copy(alpha = 0.75f),
-                        fontWeight = FontWeight.Medium
+                        Spacer(modifier = Modifier.height(16.dp))
+
+                        Text(
+                            text = "Yapay zekamız size en doğru restoran ve beslenme önerilerini sunabilmek için sizi tanımak istiyor.",
+                            fontSize = 15.sp,
+                            lineHeight = 22.sp,
+                            textAlign = TextAlign.Center,
+                            color = customColors.textSecondary,
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(32.dp))
+
+                    WelcomeCardContent(
+                        customColors = customColors,
+                        navigator = navigator,
+                        screenModel = screenModel
                     )
+
+                    Spacer(modifier = Modifier.height(32.dp))
                 }
-
-                Spacer(modifier = Modifier.height(32.dp))
-
-                WelcomeCardContent(
-                    customColors = customColors,
-                    navigator = navigator,
-                    screenModel = screenModel
-                )
-
-                Spacer(modifier = Modifier.height(32.dp))
             }
         }
-       }
     }
 }
 
@@ -111,7 +115,7 @@ fun WelcomeLogo(customColors: CustomColors) {
     ) {
         Text(
             text = "HOŞ GELDİNİZ",
-            color = customColors.navy.copy(alpha = 0.35f),
+            color = customColors.textTertiary,
             fontSize = 13.sp,
             fontWeight = FontWeight.Bold,
             letterSpacing = 3.sp
@@ -125,7 +129,7 @@ fun WelcomeLogo(customColors: CustomColors) {
         ) {
             Text(
                 text = "TastyMap",
-                color = customColors.navy,
+                color = customColors.textPrimary,
                 fontWeight = FontWeight.Black,
                 fontSize = 40.sp,
                 letterSpacing = (-1).sp
@@ -143,7 +147,7 @@ fun WelcomeLogo(customColors: CustomColors) {
             ) {
                 Text(
                     text = "AI",
-                    color = Color.White,
+                    color = customColors.surface,
                     fontWeight = FontWeight.Bold,
                     fontSize = 13.sp,
                     letterSpacing = 0.5.sp
@@ -173,7 +177,7 @@ fun WelcomeLogo(customColors: CustomColors) {
 
                 Text(
                     text = "Kişisel lezzet asistanınız",
-                    color = customColors.navy,
+                    color = customColors.textPrimary,
                     fontSize = 13.sp,
                     fontWeight = FontWeight.Bold
                 )
@@ -196,11 +200,11 @@ fun WelcomeCardContent(
                 elevation = 16.dp,
                 shape = RoundedCornerShape(32.dp),
                 clip = false,
-                ambientColor = customColors.navy.copy(alpha = 0.12f),
-                spotColor = customColors.navy.copy(alpha = 0.22f)
+                ambientColor = customColors.textPrimary.copy(alpha = 0.08f),
+                spotColor = customColors.textPrimary.copy(alpha = 0.12f)
             ),
         shape = RoundedCornerShape(32.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White)
+        colors = CardDefaults.cardColors(containerColor = customColors.surface)
     ) {
         Column(
             modifier = Modifier
@@ -242,20 +246,19 @@ fun WelcomeCardContent(
                 onClick = { navigator.push(HealthWizardScreen()) },
                 isPrimary = true,
                 backcolor = customColors.navy,
-                textcolor = Color.White,
+                textcolor = customColors.surface,
                 strokecolor = Color.Transparent
             )
 
             Spacer(modifier = Modifier.height(12.dp))
 
-
             TastyButton(
                 text = "Şimdilik Atla",
-                onClick = screenModel::skipHealthWizard,// Ana sayfa yonlendırmesı olcak
+                onClick = screenModel::skipHealthWizard,
                 isPrimary = false,
                 backcolor = Color.Transparent,
-                textcolor = customColors.navy.copy(alpha = 0.85f),
-                strokecolor = customColors.navy.copy(alpha = 0.15f)
+                textcolor = customColors.textSecondary,
+                strokecolor = customColors.borderLight
             )
         }
     }
@@ -277,7 +280,7 @@ fun FeatureColumn(
             modifier = Modifier
                 .size(48.dp)
                 .background(
-                    color = customColors.navy.copy(alpha = 0.06f),
+                    color = customColors.surfaceVariant,
                     shape = RoundedCornerShape(16.dp)
                 ),
             contentAlignment = Alignment.Center
@@ -296,7 +299,7 @@ fun FeatureColumn(
             text = title,
             fontSize = 14.sp,
             fontWeight = FontWeight.Bold,
-            color = customColors.navy,
+            color = customColors.textPrimary,
             textAlign = TextAlign.Center
         )
 
@@ -306,7 +309,7 @@ fun FeatureColumn(
             text = description,
             fontSize = 13.sp,
             fontWeight = FontWeight.Medium,
-            color = customColors.navy.copy(alpha = 0.88f),
+            color = customColors.textSecondary,
             textAlign = TextAlign.Center,
             lineHeight = 17.sp
         )

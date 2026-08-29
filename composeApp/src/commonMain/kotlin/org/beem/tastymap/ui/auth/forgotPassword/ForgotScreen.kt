@@ -68,7 +68,10 @@ class ForgotScreen : Screen {
             }
         }
 
-        Surface {
+        Surface(
+            modifier = Modifier.fillMaxSize(),
+            color = colors.background
+        ) {
             Column(
                 modifier = Modifier
                     .fillMaxSize()
@@ -99,7 +102,7 @@ class ForgotScreen : Screen {
                             modifier = Modifier
                                 .size(96.dp)
                                 .background(
-                                    color = colors.navy.copy(alpha = 0.08f),
+                                    color = colors.surfaceVariant,
                                     shape = RoundedCornerShape(28.dp)
                                 ),
                             contentAlignment = Alignment.Center
@@ -108,7 +111,7 @@ class ForgotScreen : Screen {
                                 imageVector = Icons.Default.LockReset,
                                 contentDescription = null,
                                 modifier = Modifier.size(40.dp),
-                                tint = colors.navy
+                                tint = colors.textPrimary
                             )
                         }
 
@@ -118,7 +121,7 @@ class ForgotScreen : Screen {
                             text = "Şifrenizi mi Unuttunuz?",
                             style = MaterialTheme.typography.headlineSmall,
                             fontWeight = FontWeight.Bold,
-                            color = colors.navy,
+                            color = colors.textPrimary,
                             textAlign = TextAlign.Center
                         )
 
@@ -128,7 +131,7 @@ class ForgotScreen : Screen {
                             text = "Hesabınıza bağlı e-posta adresinizi veya kullanıcı adınızı girin. Size şifre sıfırlama bağlantısı göndereceğiz.",
                             textAlign = TextAlign.Center,
                             style = MaterialTheme.typography.bodyMedium,
-                            color = Color.Gray
+                            color = colors.textSecondary
                         )
 
                         Spacer(modifier = Modifier.height(32.dp))
@@ -153,8 +156,8 @@ class ForgotScreen : Screen {
                             isLoading = state.isLoading,
                             enabled = state.pasEmail.isNotBlank(),
                             backcolor = colors.navy,
-                            textcolor = Color.White,
-                            strokecolor = colors.navy
+                            textcolor = colors.surface,
+                            strokecolor = Color.Transparent
                         )
 
                         Spacer(modifier = Modifier.height(16.dp))
@@ -178,7 +181,7 @@ class ForgotScreen : Screen {
                             modifier = Modifier.fillMaxWidth(),
                             shape = RoundedCornerShape(16.dp),
                             colors = CardDefaults.cardColors(
-                                containerColor = colors.navy.copy(alpha = 0.05f)
+                                containerColor = colors.surfaceVariant
                             )
                         ) {
                             Column(
@@ -188,19 +191,19 @@ class ForgotScreen : Screen {
                                 Text(
                                     text = "Şifre sıfırlama bağlantısı yalnızca kayıtlı e-posta adreslerine gönderilir.",
                                     style = MaterialTheme.typography.bodySmall,
-                                    color = Color.Gray
+                                    color = colors.textSecondary
                                 )
 
                                 Text(
                                     text = "Gönderilen doğrulama bağlantısının geçerlilik süresi 10 dakikadır.",
                                     style = MaterialTheme.typography.bodySmall,
-                                    color = Color.Gray
+                                    color = colors.textSecondary
                                 )
 
                                 Text(
                                     text = "E-posta kutunuzda göremiyorsanız Spam klasörünü kontrol etmeyi unutmayın.",
                                     style = MaterialTheme.typography.bodySmall,
-                                    color = Color.Gray
+                                    color = colors.textSecondary
                                 )
                             }
                         }

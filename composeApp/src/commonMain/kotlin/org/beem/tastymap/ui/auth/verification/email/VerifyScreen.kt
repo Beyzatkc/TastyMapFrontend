@@ -44,6 +44,7 @@ import org.beem.tastymap.core.util.ToastManager
 import org.beem.tastymap.ui.animations.TastyAnimations
 import org.beem.tastymap.ui.components.AuthFooter
 import org.beem.tastymap.ui.components.BackPage
+import org.beem.tastymap.ui.theme.LocalCustomColors
 import org.koin.compose.koinInject
 
 class VerifyScreen(val token: String) : Screen {
@@ -54,6 +55,7 @@ class VerifyScreen(val token: String) : Screen {
         val screenModel = koinScreenModel<EmailScreenModel>()
         val state by screenModel.verificationState.collectAsState()
         val verifyNavigator = koinInject<VerifyNavigator>()
+        val colors = LocalCustomColors.current
 
         LaunchedEffect(state.isEmailVerified) {
             if (state.isEmailVerified) {
@@ -61,6 +63,7 @@ class VerifyScreen(val token: String) : Screen {
                 verifyNavigator.verifyEmailOnSuccess(navigator)
             }
         }
+
         DisposableEffect(Unit) {
             onDispose {
                 DeepLinkManager.clear()
@@ -79,7 +82,7 @@ class VerifyScreen(val token: String) : Screen {
 
         Surface(
             modifier = Modifier.fillMaxSize(),
-            color = MaterialTheme.colorScheme.background
+            color = colors.background
         ) {
             Column(
                 modifier = Modifier
@@ -88,7 +91,6 @@ class VerifyScreen(val token: String) : Screen {
                     .navigationBarsPadding()
                     .imePadding()
             ) {
-
                 BackPage(
                     header = "Hesap Doğrulama",
                     onBackClick = { navigator.pop() }
@@ -100,7 +102,6 @@ class VerifyScreen(val token: String) : Screen {
                         .fillMaxWidth(),
                     contentAlignment = Alignment.Center
                 ) {
-
                     Column(
                         modifier = Modifier
                             .widthIn(max = 480.dp)
@@ -108,22 +109,19 @@ class VerifyScreen(val token: String) : Screen {
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.Center
                     ) {
-
                         AnimatedContent(
                             targetState = state.verificationError != null,
                             transitionSpec = { TastyAnimations.scaleFade() },
                             label = "VerifyStateAnim"
                         ) { isError ->
-
                             Column(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalAlignment = Alignment.CenterHorizontally
                             ) {
-
                                 if (!isError) {
                                     CircularProgressIndicator(
                                         modifier = Modifier.size(54.dp),
-                                        color = MaterialTheme.colorScheme.primary,
+                                        color = colors.navy,
                                         strokeWidth = 4.dp
                                     )
 
@@ -132,6 +130,7 @@ class VerifyScreen(val token: String) : Screen {
                                     Text(
                                         text = "Hesabınız Doğrulanıyor",
                                         style = MaterialTheme.typography.headlineSmall,
+                                        color = colors.textPrimary,
                                         fontWeight = FontWeight.Bold,
                                         textAlign = TextAlign.Center
                                     )
@@ -141,25 +140,24 @@ class VerifyScreen(val token: String) : Screen {
                                     Text(
                                         text = "Lütfen bekleyiniz.",
                                         style = MaterialTheme.typography.bodyMedium,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        color = colors.textSecondary,
                                         textAlign = TextAlign.Center,
                                         lineHeight = 22.sp
                                     )
-
                                 } else {
                                     Box(
                                         modifier = Modifier
                                             .size(100.dp)
                                             .background(
-                                                MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.4f),
+                                                colors.error.copy(alpha = 0.12f),
                                                 CircleShape
                                             ),
                                         contentAlignment = Alignment.Center
                                     ) {
                                         Icon(
                                             Icons.Default.ErrorOutline,
-                                            null,
-                                            tint = MaterialTheme.colorScheme.error,
+                                            contentDescription = null,
+                                            tint = colors.error,
                                             modifier = Modifier.size(56.dp)
                                         )
                                     }
@@ -169,7 +167,7 @@ class VerifyScreen(val token: String) : Screen {
                                     Text(
                                         text = "Bir Sorun Oluştu",
                                         style = MaterialTheme.typography.headlineMedium,
-                                        color = MaterialTheme.colorScheme.error,
+                                        color = colors.error,
                                         fontWeight = FontWeight.ExtraBold,
                                         textAlign = TextAlign.Center
                                     )
@@ -180,7 +178,7 @@ class VerifyScreen(val token: String) : Screen {
                                         text = state.verificationError
                                             ?: "Beklenmedik bir hata oluştu. Lütfen tekrar deneyiniz.",
                                         style = MaterialTheme.typography.bodyLarge,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        color = colors.textSecondary,
                                         textAlign = TextAlign.Center,
                                         lineHeight = 24.sp
                                     )

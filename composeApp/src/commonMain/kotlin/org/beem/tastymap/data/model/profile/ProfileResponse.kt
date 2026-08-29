@@ -29,11 +29,6 @@ data class ActiveDeviceDTO(
     val city: String?,
     val lastUsedAt: String
 )
-@Serializable
-data class RefreshTokenRequest(
-    val refreshToken: String,
-    val deviceId: String
-)
 
 @Serializable
 data class UpdateProfile(

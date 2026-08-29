@@ -10,17 +10,20 @@ object AppColors {
 
     // Arka Plan ve Yüzey Renkleri
     val BackBackgroundBlue = Color(0xFFF6F8FC)
+    val darkHeaderColor = Color(0xFF18345A) // koyu mavi lcvrtımsı
     val Background = Color(0xFFF8F9FA)       // Genel ekran arka planı (hafif sıcak nötr)
     val Surface = Color(0xFFFFFFFF)          // Kartlar, Sheet içi ana container
     val SurfaceVariant = Color(0xFFF1F4F9)   // Hafif ayrışan alt kartlar / input kutuları
     val LightGray = Color(0xFFF5F5F5)        // acik gri
     val WaveColor = Color(0xFFD6E4FF)        // pastel mavi
+    val placeHolderBack = Color(0xFFF2F2F7)
+    val placeHolderIcon = Color(0xFF8E8E93)
+
 
     // Vurgu ve İkincil Renkler
     val EmeraldAccent = Color(0xFF00A86B)
     val GourmetOrange = Color(0xFFFF6B4A)
     val WarmAmber = Color(0xFFD97706)
-    //val Gold = Color(0xFFB8860B)
     val Gold = Color(0xFFF5A623)
 
     // Metin Renkleri

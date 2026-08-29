@@ -21,7 +21,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import org.beem.tastymap.ui.auth.common.PasswordStrength
@@ -50,14 +49,14 @@ fun PasswordStrengthIndicator(
     Column(
         modifier = Modifier.fillMaxWidth()
     ) {
-
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Text(
                 text = "Şifre",
-                style = MaterialTheme.typography.labelSmall
+                style = MaterialTheme.typography.labelSmall,
+                color = colors.textSecondary
             )
 
             Text(
@@ -76,7 +75,8 @@ fun PasswordStrengthIndicator(
                 .fillMaxWidth()
                 .height(4.dp)
                 .clip(RoundedCornerShape(50)),
-            color = color
+            color = color,
+            trackColor = colors.surfaceVariant
         )
 
         Spacer(modifier = Modifier.height(4.dp))
@@ -86,14 +86,13 @@ fun PasswordStrengthIndicator(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.padding(vertical = 1.dp)
             ) {
-
                 Icon(
                     imageVector = if (passed)
                         Icons.Default.CheckCircle
                     else
                         Icons.Default.RadioButtonUnchecked,
                     contentDescription = null,
-                    tint = if (passed) colors.green else Color.Gray,
+                    tint = if (passed) colors.green else colors.textSecondary,
                     modifier = Modifier.size(14.dp)
                 )
 
@@ -102,10 +101,7 @@ fun PasswordStrengthIndicator(
                 Text(
                     text = text,
                     style = MaterialTheme.typography.labelSmall,
-                    color = if (passed)
-                        MaterialTheme.colorScheme.onSurface
-                    else
-                        Color.Gray
+                    color = if (passed) colors.textPrimary else colors.textSecondary
                 )
             }
         }

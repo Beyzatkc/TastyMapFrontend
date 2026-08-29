@@ -1,4 +1,5 @@
 package org.beem.tastymap.ui.profile.health.stepScreens
+
 import androidx.compose.runtime.Composable
 import org.beem.tastymap.ui.profile.health.HealthUiState
 import org.beem.tastymap.ui.profile.health.components.BaseStepContainer
@@ -23,8 +24,8 @@ fun AllergiesStep(
         onNextClick = onNextClick,
         onBackClick = onBackClick,
         isNextEnabled = true
-    ){
-        state.availableAllergies.forEach {allergy ->
+    ) {
+        state.availableAllergies.forEach { allergy ->
             val isSelected = state.selectedAllergyIds.contains(allergy.id)
             CheckboxOption(
                 text = allergy.name,
@@ -35,23 +36,5 @@ fun AllergiesStep(
                 }
             )
         }
-
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

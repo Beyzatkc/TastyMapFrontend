@@ -55,6 +55,7 @@ class HealthWizardScreen : Screen {
         }
 
         Scaffold(
+            containerColor = customColors.background,
             topBar = {
                 Row(
                     modifier = Modifier
@@ -72,7 +73,7 @@ class HealthWizardScreen : Screen {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Geri Dön",
-                            tint = MaterialTheme.colorScheme.onSurface
+                            tint = customColors.textPrimary
                         )
                     }
 
@@ -89,7 +90,7 @@ class HealthWizardScreen : Screen {
                     Text(
                         text = "Adım ${state.currentStep + 1} / ${state.totalSteps}",
                         style = MaterialTheme.typography.labelMedium,
-                        color = customColors.navy.copy(alpha = 0.7f),
+                        color = customColors.textSecondary,
                         maxLines = 1
                     )
                 }
@@ -100,7 +101,6 @@ class HealthWizardScreen : Screen {
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(paddingValues),
-                    //.padding(horizontal = 24.dp),
                 contentAlignment = Alignment.Center
             ) {
 
@@ -123,21 +123,21 @@ class HealthWizardScreen : Screen {
                             state = state,
                             onDiabetesChanged = screenModel::toggleDiabetes,
                             onNextClick = screenModel::nextStep,
-                            onBackClick = {handleBack()}
+                            onBackClick = { handleBack() }
                         )
 
                         1 -> EatTypeStep(
                             state = state,
                             onEatTypeChanged = screenModel::selectEatType,
                             onNextClick = screenModel::nextStep,
-                            onBackClick = {handleBack()}
+                            onBackClick = { handleBack() }
                         )
 
                         2 -> AllergiesStep(
                             state = state,
                             onAllergyToggle = screenModel::toggleAllergy,
                             onNextClick = screenModel::nextStep,
-                            onBackClick = {handleBack()}
+                            onBackClick = { handleBack() }
                         )
 
                         3 -> SummaryStep(
@@ -145,7 +145,7 @@ class HealthWizardScreen : Screen {
                             onNextClick = {
                                 screenModel.saveHealthProfile()
                             },
-                            onBackClick = {handleBack()}
+                            onBackClick = { handleBack() }
                         )
                     }
                 }

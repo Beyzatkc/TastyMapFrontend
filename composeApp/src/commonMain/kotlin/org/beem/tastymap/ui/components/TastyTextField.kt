@@ -23,10 +23,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
+import org.beem.tastymap.ui.theme.LocalCustomColors
 
 @Composable
 fun TastyTextField(
@@ -40,6 +40,8 @@ fun TastyTextField(
     leadingIcon: @Composable (() -> Unit)? = null
 ) {
     var passwordVisible by remember { mutableStateOf(false) }
+    val customColors = LocalCustomColors.current
+
     Column(modifier = modifier.fillMaxWidth()) {
         OutlinedTextField(
             value = value,
@@ -50,7 +52,6 @@ fun TastyTextField(
             visualTransformation = if (isPassword && !passwordVisible) PasswordVisualTransformation() else VisualTransformation.None,
             keyboardOptions = keyboardOptions,
             leadingIcon = leadingIcon,
-
             trailingIcon = {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
@@ -59,14 +60,18 @@ fun TastyTextField(
                     if (isPassword) {
                         val image = if (passwordVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff
                         IconButton(onClick = { passwordVisible = !passwordVisible }) {
-                            Icon(imageVector = image, contentDescription = "Şifre Göster")
+                            Icon(
+                                imageVector = image,
+                                contentDescription = "Şifre Göster",
+                                tint = customColors.textSecondary
+                            )
                         }
                     }
                     if (error != null) {
                         Icon(
                             imageVector = Icons.Default.Warning,
                             contentDescription = "Hata",
-                            tint = MaterialTheme.colorScheme.error
+                            tint = customColors.error
                         )
                     }
                 }
@@ -74,24 +79,34 @@ fun TastyTextField(
             shape = RoundedCornerShape(12.dp),
             singleLine = true,
             colors = OutlinedTextFieldDefaults.colors(
-                focusedTextColor = Color.Black,
-                unfocusedTextColor = Color.Black,
-                focusedBorderColor = MaterialTheme.colorScheme.primary,
-                unfocusedBorderColor = Color.Gray,
-                errorTextColor = Color.Black,
+                focusedTextColor = customColors.textPrimary,
+                unfocusedTextColor = customColors.textPrimary,
+                errorTextColor = customColors.textPrimary,
 
-                unfocusedLabelColor = Color.Gray, // Seçili değilken gri yapar
-                focusedLabelColor = MaterialTheme.colorScheme.primary,
+                focusedBorderColor = customColors.navy,
+                unfocusedBorderColor = customColors.borderLight,
+                errorBorderColor = customColors.error,
 
-                focusedLeadingIconColor = MaterialTheme.colorScheme.primary,
-                unfocusedLeadingIconColor = Color.Gray,
-                errorLeadingIconColor = MaterialTheme.colorScheme.error,
+                focusedLabelColor = customColors.navy,
+                unfocusedLabelColor = customColors.textSecondary,
+                errorLabelColor = customColors.error,
+
+                focusedLeadingIconColor = customColors.navy,
+                unfocusedLeadingIconColor = customColors.textSecondary,
+                errorLeadingIconColor = customColors.error,
+
+                focusedTrailingIconColor = customColors.navy,
+                unfocusedTrailingIconColor = customColors.textSecondary,
+                errorTrailingIconColor = customColors.error,
+
+                cursorColor = customColors.navy,
+                errorCursorColor = customColors.error
             )
         )
         if (error != null) {
             Text(
                 text = error,
-                color = MaterialTheme.colorScheme.error,
+                color = customColors.error,
                 style = MaterialTheme.typography.bodySmall,
                 modifier = Modifier.padding(start = 8.dp, top = 4.dp)
             )

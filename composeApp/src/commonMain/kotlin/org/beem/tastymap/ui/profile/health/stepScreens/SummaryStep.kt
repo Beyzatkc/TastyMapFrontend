@@ -1,4 +1,5 @@
 package org.beem.tastymap.ui.profile.health.stepScreens
+
 import TastyButton
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.Image
@@ -31,7 +32,6 @@ import io.github.alexzhirkevich.compottie.rememberLottieComposition
 import io.github.alexzhirkevich.compottie.rememberLottiePainter
 import kotlinx.coroutines.delay
 import org.beem.tastymap.data.model.health.HealthEnum
-import org.beem.tastymap.ui.components.AuthFooter
 import org.beem.tastymap.ui.profile.health.HealthUiState
 import org.beem.tastymap.ui.theme.CustomColors
 import org.beem.tastymap.ui.theme.LocalCustomColors
@@ -48,7 +48,7 @@ fun SummaryStep(
 
     var showHeader by remember { mutableStateOf(false) }
     var visibleCards by remember { mutableStateOf(0) }
-    val composition by rememberLottieComposition{
+    val composition by rememberLottieComposition {
         LottieCompositionSpec.JsonString(
             Res.readBytes("files/check.json").decodeToString()
         )
@@ -57,7 +57,6 @@ fun SummaryStep(
         composition = composition,
         iterations = 1
     )
-
 
     LaunchedEffect(Unit) {
         showHeader = true
@@ -92,21 +91,19 @@ fun SummaryStep(
         label = "headerScale"
     )
 
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .verticalScroll(rememberScrollState())
+    ) {
         Column(
             modifier = Modifier
+                .widthIn(max = 700.dp)
                 .fillMaxWidth()
-                .verticalScroll(rememberScrollState())
+                .align(Alignment.CenterHorizontally)
+                .padding(horizontal = 24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-
-            Column(
-                modifier = Modifier
-                    .widthIn(max = 700.dp)
-                    .fillMaxWidth()
-                    .align(Alignment.CenterHorizontally)
-                    .padding(horizontal = 24.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 modifier = Modifier
@@ -116,15 +113,14 @@ fun SummaryStep(
                         scaleY = headerScale
                     }
             ) {
-
-                    Image(
-                        painter = rememberLottiePainter(
-                            composition = composition,
-                            progress = { progress }
-                        ),
-                        contentDescription = "Başarı Rozeti",
-                        modifier = Modifier.size(150.dp)
-                    )
+                Image(
+                    painter = rememberLottiePainter(
+                        composition = composition,
+                        progress = { progress }
+                    ),
+                    contentDescription = "Başarı Rozeti",
+                    modifier = Modifier.size(150.dp)
+                )
 
                 Spacer(modifier = Modifier.height(15.dp))
 
@@ -132,7 +128,7 @@ fun SummaryStep(
                     text = "Sağlık Profiliniz Hazır",
                     fontSize = 24.sp,
                     fontWeight = FontWeight.Bold,
-                    color = customColors.navy
+                    color = customColors.textPrimary
                 )
 
                 Spacer(modifier = Modifier.height(10.dp))
@@ -140,14 +136,13 @@ fun SummaryStep(
                 Text(
                     text = "Tercihlerinizi analiz ettik.\nArtık size özel restoran ve menü önerileri sunabiliriz.",
                     fontSize = 14.sp,
-                    color = customColors.navy.copy(alpha = 0.65f),
+                    color = customColors.textSecondary,
                     textAlign = TextAlign.Center,
                     lineHeight = 20.sp
                 )
             }
 
             Spacer(modifier = Modifier.height(35.dp))
-
 
             AnimatedSummaryCard(
                 visible = visibleCards >= 1,
@@ -183,7 +178,7 @@ fun SummaryStep(
                 text = "Bu bilgileri profilinizden istediğiniz zaman değiştirebilirsiniz.",
                 fontSize = 12.sp,
                 textAlign = TextAlign.Center,
-                color = customColors.navy.copy(alpha = 0.60f)
+                color = customColors.textTertiary
             )
 
             Spacer(modifier = Modifier.height(18.dp))
@@ -194,7 +189,7 @@ fun SummaryStep(
                 isPrimary = true,
                 isLoading = state.isLoading,
                 backcolor = customColors.navy,
-                textcolor = Color.White,
+                textcolor = customColors.surface,
                 strokecolor = Color.Transparent
             )
 
@@ -206,15 +201,13 @@ fun SummaryStep(
                 isPrimary = false,
                 enabled = !state.isLoading,
                 backcolor = Color.Transparent,
-                textcolor = customColors.navy,
-                strokecolor = customColors.navy.copy(alpha = 0.3f)
+                textcolor = customColors.textPrimary,
+                strokecolor = customColors.borderLight
             )
 
-                Spacer(modifier = Modifier.height(40.dp))
-
-            }
-
+            Spacer(modifier = Modifier.height(40.dp))
         }
+    }
 }
 
 @Composable
@@ -245,10 +238,10 @@ private fun AnimatedSummaryCard(
                 this.translationY = offsetY
             }
             .clip(RoundedCornerShape(18.dp))
-            .background(Color.White)
+            .background(customColors.surface)
             .border(
-                width = 2.dp,
-                color = customColors.navy.copy(alpha = 0.1f),
+                width = 1.5.dp,
+                color = customColors.borderLight,
                 shape = RoundedCornerShape(18.dp)
             )
             .padding(16.dp),
@@ -276,7 +269,7 @@ private fun AnimatedSummaryCard(
                 text = title,
                 fontSize = 12.sp,
                 fontWeight = FontWeight.Bold,
-                color = customColors.navy.copy(alpha = 0.6f)
+                color = customColors.textSecondary
             )
 
             Spacer(modifier = Modifier.height(3.dp))
@@ -285,7 +278,7 @@ private fun AnimatedSummaryCard(
                 text = value,
                 fontSize = 15.sp,
                 fontWeight = FontWeight.Bold,
-                color = customColors.navy
+                color = customColors.textPrimary
             )
         }
     }

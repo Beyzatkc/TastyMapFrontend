@@ -53,7 +53,7 @@ import org.beem.tastymap.ui.components.TastyTextField
 import org.beem.tastymap.ui.theme.LocalCustomColors
 import org.koin.compose.koinInject
 
-class ResetScreen(val token: String): Screen {
+class ResetScreen(val token: String) : Screen {
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
@@ -74,7 +74,10 @@ class ResetScreen(val token: String): Screen {
             }
         }
 
-        Surface {
+        Surface(
+            modifier = Modifier.fillMaxSize(),
+            color = colors.background
+        ) {
             Column(
                 modifier = Modifier
                     .fillMaxSize()
@@ -82,8 +85,8 @@ class ResetScreen(val token: String): Screen {
                     .navigationBarsPadding()
             ) {
                 BackPage("Şifre Sıfırlama", {
-                   screenModel.backClickReset()
-                   navigator.pop()
+                    screenModel.backClickReset()
+                    navigator.pop()
                 })
                 Box(
                     modifier = Modifier
@@ -105,7 +108,7 @@ class ResetScreen(val token: String): Screen {
                             modifier = Modifier
                                 .size(96.dp)
                                 .background(
-                                    color = colors.navy.copy(alpha = 0.08f),
+                                    color = colors.surfaceVariant,
                                     shape = RoundedCornerShape(28.dp)
                                 ),
                             contentAlignment = Alignment.Center
@@ -114,7 +117,7 @@ class ResetScreen(val token: String): Screen {
                                 imageVector = Icons.Default.LockReset,
                                 contentDescription = null,
                                 modifier = Modifier.size(40.dp),
-                                tint = colors.navy
+                                tint = colors.textPrimary
                             )
                         }
 
@@ -124,7 +127,7 @@ class ResetScreen(val token: String): Screen {
                             text = "Şifrenizi mi Unuttunuz?",
                             style = MaterialTheme.typography.headlineSmall,
                             fontWeight = FontWeight.Bold,
-                            color = colors.navy,
+                            color = colors.textPrimary,
                             textAlign = TextAlign.Center
                         )
 
@@ -149,7 +152,7 @@ class ResetScreen(val token: String): Screen {
                         ) {
                             Column {
                                 Spacer(modifier = Modifier.height(4.dp))
-                                PasswordStrengthIndicator(state.passwordStrength,colors)
+                                PasswordStrengthIndicator(state.passwordStrength, colors)
                             }
                         }
                         Spacer(modifier = Modifier.height(5.dp))
@@ -174,8 +177,8 @@ class ResetScreen(val token: String): Screen {
                             isLoading = state.isLoading,
                             enabled = state.regPassword.isNotBlank() && state.confirmPassword.isNotBlank(),
                             backcolor = colors.navy,
-                            textcolor = Color.White,
-                            strokecolor = colors.navy
+                            textcolor = colors.surface,
+                            strokecolor = Color.Transparent
                         )
 
                         Spacer(modifier = Modifier.height(16.dp))
@@ -199,7 +202,7 @@ class ResetScreen(val token: String): Screen {
                             modifier = Modifier.fillMaxWidth(),
                             shape = RoundedCornerShape(16.dp),
                             colors = CardDefaults.cardColors(
-                                containerColor = colors.navy.copy(alpha = 0.05f)
+                                containerColor = colors.surfaceVariant
                             )
                         ) {
                             Column(
@@ -209,12 +212,10 @@ class ResetScreen(val token: String): Screen {
                                 Text(
                                     text = "Şifrenizi sıfırladıktan sonra hesabınıza giriş yapabilirsiniz.",
                                     style = MaterialTheme.typography.bodySmall,
-                                    color = Color.Gray
+                                    color = colors.textSecondary
                                 )
-
                             }
                         }
-
                     }
                 }
                 AuthFooter(
@@ -223,5 +224,4 @@ class ResetScreen(val token: String): Screen {
             }
         }
     }
-
 }

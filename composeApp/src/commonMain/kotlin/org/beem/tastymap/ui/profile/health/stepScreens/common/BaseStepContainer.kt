@@ -9,7 +9,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ElevatedCard
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -53,7 +52,7 @@ fun BaseStepContainer(
                 .fillMaxWidth(),
             shape = RoundedCornerShape(24.dp),
             colors = CardDefaults.elevatedCardColors(
-                containerColor = MaterialTheme.colorScheme.surface
+                containerColor = customColors.surface
             ),
             elevation = CardDefaults.elevatedCardElevation(
                 defaultElevation = 3.dp
@@ -69,7 +68,7 @@ fun BaseStepContainer(
                     modifier = Modifier
                         .size(96.dp)
                         .clip(RoundedCornerShape(28.dp))
-                        .background(customColors.navy.copy(alpha = 0.08f)),
+                        .background(customColors.surfaceVariant),
                     contentAlignment = Alignment.Center
                 ) {
                     Image(
@@ -86,7 +85,7 @@ fun BaseStepContainer(
                     fontSize = 24.sp,
                     lineHeight = 30.sp,
                     fontWeight = FontWeight.ExtraBold,
-                    color = customColors.navy,
+                    color = customColors.textPrimary,
                     textAlign = TextAlign.Center
                 )
 
@@ -97,7 +96,7 @@ fun BaseStepContainer(
                     fontSize = 14.sp,
                     lineHeight = 20.sp,
                     fontWeight = FontWeight.Medium,
-                    color = customColors.lineAlpha.copy(alpha = .75f),
+                    color = customColors.textSecondary,
                     textAlign = TextAlign.Center
                 )
 
@@ -123,8 +122,8 @@ fun BaseStepContainer(
                         enabled = true,
                         isPrimary = false,
                         backcolor = Color.Transparent,
-                        textcolor = customColors.navy,
-                        strokecolor = customColors.navy.copy(alpha = 0.5f),
+                        textcolor = customColors.textPrimary,
+                        strokecolor = customColors.borderLight,
                         modifier = Modifier.weight(1f)
                     )
 
@@ -134,8 +133,8 @@ fun BaseStepContainer(
                         enabled = isNextEnabled,
                         isPrimary = true,
                         backcolor = customColors.navy,
-                        textcolor = Color.White,
-                        strokecolor = customColors.navy,
+                        textcolor = customColors.surface,
+                        strokecolor = Color.Transparent,
                         modifier = Modifier.weight(1f)
                     )
                 }

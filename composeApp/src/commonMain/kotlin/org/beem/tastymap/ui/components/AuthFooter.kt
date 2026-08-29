@@ -1,4 +1,5 @@
 package org.beem.tastymap.ui.components
+
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -14,11 +15,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import org.beem.tastymap.ui.theme.LocalCustomColors
 
 @Composable
 fun AuthFooter(
     modifier: Modifier = Modifier
 ) {
+    val colors = LocalCustomColors.current
+
     Column(
         modifier = modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally
@@ -28,7 +32,7 @@ fun AuthFooter(
 
         HorizontalDivider(
             modifier = Modifier.fillMaxWidth(),
-            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.2f),
+            color = colors.borderLight,
         )
 
         Spacer(Modifier.height(15.dp))
@@ -38,7 +42,7 @@ fun AuthFooter(
             modifier = Modifier.fillMaxWidth(),
             textAlign = TextAlign.Center,
             style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f)
+            color = colors.textSecondary
         )
         Spacer(Modifier.height(10.dp))
         Row(
@@ -49,7 +53,7 @@ fun AuthFooter(
             Text(
                 text = "Gizlilik",
                 style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f),
+                color = colors.textSecondary,
                 modifier = Modifier.clickable {
                     /* Gizlilik tıklandığında ne olacağını buraya yaz */
                 }
@@ -57,7 +61,7 @@ fun AuthFooter(
             Text(
                 text = "Kullanım Koşulları",
                 style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f),
+                color = colors.textSecondary,
                 modifier = Modifier.clickable {
                     /* Kullanım Koşulları tıklandığında ne olacağını buraya yaz */
                 }
@@ -65,7 +69,7 @@ fun AuthFooter(
             Text(
                 text = "İletişim",
                 style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f),
+                color = colors.textSecondary,
                 modifier = Modifier.clickable {
                     /* İletişim tıklandığında ne olacağını buraya yaz */
                 }
@@ -73,7 +77,7 @@ fun AuthFooter(
             Text(
                 text = "Yardım",
                 style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f),
+                color = colors.textSecondary,
                 modifier = Modifier.clickable {
                     /* Yardım tıklandığında ne olacağını buraya yaz */
                 }

@@ -1,6 +1,5 @@
 package org.beem.tastymap.ui.splash
 
-import OnBoardingScreen
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -20,6 +19,7 @@ import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import kotlinx.coroutines.delay
 import org.beem.tastymap.ui.auth.logReg.LogRegScreen
+import org.beem.tastymap.ui.profile.health.OnBoardingScreen
 import org.beem.tastymap.ui.profile.myprofile.MyProfileScreen
 import org.beem.tastymap.ui.profile.otherprofile.ProfileScreen
 import org.jetbrains.compose.resources.painterResource
