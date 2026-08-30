@@ -10,6 +10,7 @@ fun ProfileResponse.toDomain(userId: Long): UserProfile {
         userId = userId,
         username = username,
         name = name,
+        surname = surname,
         profilePhoto = profile,
         role = role,
         biography = biography,

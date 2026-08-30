@@ -9,5 +9,15 @@ data class MyProfileUiState(
     val profile: UserProfile? = null,
     val errorMessage: String? = null,
     val isActionLoading: Boolean = false,
-    val successMessage: String? = null
+    val successMessage: String? = null,
+
+    val usernameInput: String = "",
+    val nameInput: String = "",
+    val surnameInput: String = "",
+    val bioInput: String = "",
+
+
+    val usernameError: String? = null,
+    val nameError: String? = null,
+    val surnameError: String? = null
 )

@@ -33,6 +33,7 @@ import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import coil3.compose.AsyncImage
 import org.beem.tastymap.core.util.ToastManager
+import org.beem.tastymap.ui.profile.myprofile.editprofile.EditProfileScreen
 import org.beem.tastymap.ui.profile.myprofile.settings.SettingsScreen
 import org.beem.tastymap.ui.theme.LocalCustomColors
 
@@ -54,10 +55,10 @@ class MyProfileScreen : Screen {
         }
 
         LaunchedEffect(state.successMessage, state.errorMessage) {
-            state.successMessage?.let { screenModel.clearMessages() }
+            state.successMessage?.let { screenModel.clearMessagesProfile() }
             state.errorMessage?.let { message ->
                 ToastManager.show(message)
-                screenModel.clearMessages()
+                screenModel.clearMessagesProfile()
             }
         }
 
@@ -128,7 +129,7 @@ class MyProfileScreen : Screen {
                                 ) {
                                     Column(
                                         modifier = Modifier
-                                            .widthIn(max = 480.dp)
+                                            .widthIn(max = 600.dp)
                                             .padding(horizontal = 20.dp, vertical = 20.dp),
                                         horizontalAlignment = Alignment.CenterHorizontally
                                     ) {
@@ -204,7 +205,7 @@ class MyProfileScreen : Screen {
 
                                         TastyButton(
                                             text = "Profili Düzenle",
-                                            onClick = { /* Profil Düzenleme Aç */ },
+                                            onClick = { navigator.push(EditProfileScreen())},
                                             modifier = Modifier.fillMaxWidth(),
                                             isPrimary = true,
                                             isLoading = state.isActionLoading,
@@ -227,7 +228,7 @@ class MyProfileScreen : Screen {
                                 contentAlignment = Alignment.Center
                             ) {
                                 Row(
-                                    modifier = Modifier.widthIn(max = 480.dp),
+                                    modifier = Modifier.widthIn(max = 600.dp),
                                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                                 ) {
                                     MetricCard(
@@ -264,7 +265,7 @@ class MyProfileScreen : Screen {
                                 Surface(
                                     color = customColors.surfaceVariant,
                                     shape = RoundedCornerShape(12.dp),
-                                    modifier = Modifier.widthIn(max = 480.dp)
+                                    modifier = Modifier.widthIn(max = 600.dp)
                                 ) {
                                     Row(modifier = Modifier.padding(4.dp)) {
                                         TabButton(
@@ -300,7 +301,7 @@ class MyProfileScreen : Screen {
                                 contentAlignment = Alignment.Center
                             ) {
                                 Box(
-                                    modifier = Modifier.widthIn(max = 480.dp),
+                                    modifier = Modifier.widthIn(max = 600.dp),
                                     contentAlignment = Alignment.Center
                                 ) {
                                     if (selectedTab == 0) {

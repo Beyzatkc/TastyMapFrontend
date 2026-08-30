@@ -69,10 +69,19 @@ class MobileHttpClientFactory(
                                 tokenManager.saveTokens(newTokens.accessToken, newTokens.refreshtoken)
                                 BearerTokens(newTokens.accessToken, newTokens.refreshtoken)
                             } else {
-                                val errorBody = response.body<String>()
-                                println("--> [REFRESH DEBUG] Refresh İsteği Başarısız Oldu! Body: $errorBody")
+                                // Hatanın ham string halini logla ki backend'in ne döndüğünü kesin gör
+                                val errorBodyString = response.body<String>()
+                                println("--> [REFRESH DEBUG] Refresh Hata Body: $errorBodyString")
 
-                                authEventBus.emit(AuthEventBus.AuthEvent.OnSessionExpired)
+                                // String yanıtı manuel kontrol et veya ErrorResponse'a çevir
+                                val isPasswordChanged = errorBodyString.contains("PASSWORD_CHANGED")
+                                val isLoggedOut = errorBodyString.contains("LOGGED_OUT")
+
+                                when {
+                                    isPasswordChanged -> authEventBus.emit(AuthEventBus.AuthEvent.OnPasswordChanged)
+                                    isLoggedOut -> authEventBus.emit(AuthEventBus.AuthEvent.OnLoggedOut)
+                                    else -> authEventBus.emit(AuthEventBus.AuthEvent.OnSessionExpired)
+                                }
                                 null
                             }
                         } catch (e: Exception) {

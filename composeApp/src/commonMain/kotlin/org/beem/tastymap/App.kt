@@ -59,7 +59,7 @@ fun App() {
                     clearSessionUseCase()
                     when (event) {
                         is AuthEventBus.AuthEvent.OnSessionExpired -> {
-                            ToastManager.show("Oturum süreniz doldu, lütfen tekrar giriş yapın.")
+                            ToastManager.show("Oturum süreniz doldu veya şifre değiştirildi, lütfen tekrar giriş yapın.")
                             navigator.replaceAll(LogRegScreen())
                         }
                         is AuthEventBus.AuthEvent.OnPasswordChanged -> {

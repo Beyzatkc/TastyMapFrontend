@@ -34,6 +34,8 @@ class AuthRepository(
             if (response.status == LoginStatus.SUCCESS && response.accessToken != null) {
                 tokenManager.saveTokens(response.accessToken, response.refreshToken)
                 tokenManager.saveDeviceId(loginRequest.deviceId)
+            }
+            if(response.status == LoginStatus.SUCCESS) {
                 val user = UserSession(response.status.toString(),response.message,
                     response.userResponseDTO?.id,
                     response.userResponseDTO?.username,

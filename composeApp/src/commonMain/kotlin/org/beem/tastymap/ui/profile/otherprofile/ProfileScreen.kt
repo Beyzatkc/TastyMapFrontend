@@ -143,7 +143,7 @@ fun ProfileContent(
                             ) {
                                 Column(
                                     modifier = Modifier
-                                        .widthIn(max = 480.dp)
+                                        .widthIn(max = 600.dp)
                                         .padding(horizontal = 20.dp, vertical = 20.dp),
                                     horizontalAlignment = Alignment.CenterHorizontally
                                 ) {
@@ -261,7 +261,7 @@ fun ProfileContent(
                             contentAlignment = Alignment.Center
                         ) {
                             Row(
-                                modifier = Modifier.widthIn(max = 480.dp),
+                                modifier = Modifier.widthIn(max = 600.dp),
                                 horizontalArrangement = Arrangement.spacedBy(12.dp)
                             ) {
                                 MetricCard(
@@ -298,7 +298,7 @@ fun ProfileContent(
                             Surface(
                                 color = customColors.surfaceVariant,
                                 shape = RoundedCornerShape(12.dp),
-                                modifier = Modifier.widthIn(max = 480.dp)
+                                modifier = Modifier.widthIn(max = 600.dp)
                             ) {
                                 Row(modifier = Modifier.padding(4.dp)) {
                                     TabButton(
@@ -334,7 +334,7 @@ fun ProfileContent(
                             contentAlignment = Alignment.Center
                         ) {
                             Box(
-                                modifier = Modifier.widthIn(max = 480.dp),
+                                modifier = Modifier.widthIn(max = 600.dp),
                                 contentAlignment = Alignment.Center
                             ) {
                                 if (selectedTab == 0) {
@@ -438,6 +438,7 @@ private fun ProfileScreenPreview() {
                 userId = 101L,
                 username = "gurme_ahmet",
                 name = "Ahmet Yılmaz",
+                surname = "yılmaz",
                 profilePhoto = null,
                 role = "GURME",
                 biography = "İstanbul lezzet haritasını çıkaran sokak gurmesi 🍕🍔",

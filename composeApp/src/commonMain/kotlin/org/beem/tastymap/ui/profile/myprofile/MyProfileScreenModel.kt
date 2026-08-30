@@ -7,9 +7,11 @@ import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import org.beem.tastymap.core.network.ResultWrapper
-import org.beem.tastymap.core.provider.DeviceInfoProvider
 import org.beem.tastymap.data.model.profile.UpdateProfile
 import org.beem.tastymap.data.repository.profile.MyProfileRepository
+import org.beem.tastymap.ui.auth.common.CheckValidator
+import org.beem.tastymap.ui.auth.common.ValidationResult
+
 class MyProfileScreenModel(
     private val repo: MyProfileRepository
 ): ScreenModel{
@@ -57,6 +59,9 @@ class MyProfileScreenModel(
     }
 
     fun updateProfile(request: UpdateProfile) {
+        val isValid = validateUpdateState(request.username, request.name, request.surname)
+        if (!isValid) return
+
         screenModelScope.launch {
             _myProfileState.update { it.copy(isActionLoading = true, errorMessage = null, successMessage = null) }
 
@@ -64,10 +69,10 @@ class MyProfileScreenModel(
                 is ResultWrapper.Success -> {
                     _myProfileState.update { currentState ->
                         val updatedProfile = currentState.profile?.copy(
-                            username = request.username,
-                            name = request.name,
+                            username = request.username.trim(),
+                            name = request.name.trim(),
                             profilePhoto = request.profilePhoto ?: currentState.profile.profilePhoto,
-                            biography = request.biography ?: currentState.profile.biography
+                            biography = request.biography?.trim() ?: currentState.profile.biography
                         )
                         currentState.copy(
                             isActionLoading = false,
@@ -88,8 +93,43 @@ class MyProfileScreenModel(
         }
     }
 
+    fun validateUpdateState(username: String,name: String, surname:String): Boolean {
+        val uResult = CheckValidator.validateUsername(username.trim())
+        val nResult = CheckValidator.validateName(name.trim().replace("\\s+".toRegex(), " "))
+        val sResult = CheckValidator.validateSurname(surname.replace("\\s+".toRegex(), " "))
+
+        val usernameError = (uResult as? ValidationResult.Invalid)?.message
+        val nameError = (nResult as? ValidationResult.Invalid)?.message
+        val surnameError = (sResult as? ValidationResult.Invalid)?.message
+
+        _myProfileState.update {
+            it.copy(
+                usernameError = usernameError,
+                surnameError = surnameError,
+                nameError = nameError
+            )
+        }
+
+        return uResult is ValidationResult.Valid &&
+                nResult is ValidationResult.Valid &&
+                sResult is ValidationResult.Valid
+
+    }
+
     // Toast/Snackbar gösterildikten sonra mesajları temizlemek için yardımcı fonksiyon
-    fun clearMessages() {
+    fun clearMessagesProfile() {
         _myProfileState.update { it.copy(errorMessage = null, successMessage = null) }
+
+    }
+    fun clearMessagesEdit() {
+        _myProfileState.update {
+            it.copy(
+                errorMessage = null,
+                successMessage = null,
+                usernameError = null,
+                nameError = null,
+                surnameError = null
+            )
+        }
     }
 }

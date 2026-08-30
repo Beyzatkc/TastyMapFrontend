@@ -8,7 +8,6 @@ import org.beem.tastymap.core.network.safeApiCall
 import org.beem.tastymap.data.cache.ProfileMemoryCache
 import org.beem.tastymap.data.local.ProfileLocalDataSource
 import org.beem.tastymap.data.mapper.toDomain
-import org.beem.tastymap.data.model.profile.ProfileResponse
 import org.beem.tastymap.data.remote.profile.ProfileDataSource
 import org.beem.tastymap.domain.model.UserProfile
 

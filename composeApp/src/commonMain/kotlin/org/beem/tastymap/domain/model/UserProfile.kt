@@ -3,6 +3,7 @@ data class UserProfile(
     val userId: Long,
     val username: String,
     val name: String,
+    val surname: String,
     val profilePhoto: String?,
     val role: String?,
     val biography: String?,

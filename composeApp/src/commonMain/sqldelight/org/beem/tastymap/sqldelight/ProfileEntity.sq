@@ -2,6 +2,7 @@ CREATE TABLE ProfileEntity (
     userId INTEGER NOT NULL PRIMARY KEY,
     username TEXT NOT NULL,
     name TEXT NOT NULL,
+    surname Text NOT NULL,
     profilePhoto TEXT,
     role TEXT,
     biography TEXT,
@@ -19,10 +20,10 @@ SELECT * FROM ProfileEntity WHERE userId = ?;
 -- Profil Ekle veya Güncelle (Upsert)
 insertOrUpdateProfile:
 INSERT OR REPLACE INTO ProfileEntity(
-    userId, username, name, profilePhoto, role, biography,
+    userId, username, name, surname, profilePhoto, role, biography,
     postCount, subscriberCount, subscribedCount,
     blockedByMe, blockedMe, updatedAt
-) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+) VALUES (?, ?, ?, ?,?, ?, ?, ?, ?, ?, ?, ?, ?);
 
 -- Profil Önbelleğini Sil (Cache Invalidation)
 deleteProfileById:

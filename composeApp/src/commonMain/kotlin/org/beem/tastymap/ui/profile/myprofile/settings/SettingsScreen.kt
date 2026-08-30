@@ -18,6 +18,7 @@ import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Policy
+import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -57,6 +58,7 @@ class SettingsScreen : Screen {
         var showLogoutDialog by remember { mutableStateOf(false) }
         var isNotificationsEnabled by remember { mutableStateOf(true) }
         var mod by remember { mutableStateOf(false) }
+        var isAccountPrivate by remember { mutableStateOf(false) }
 
         LaunchedEffect(changePasswordState.successMessage) {
             changePasswordState.successMessage?.let { message ->
@@ -138,6 +140,30 @@ class SettingsScreen : Screen {
                                 title = "Aktif Cihazlar",
                                 onClick = {
                                     navigator.push(ActiveDevicesScreen())
+                                }
+                            )
+                            SettingsDivider()
+                            SettingsOptionItem(
+                                icon = Icons.Default.VisibilityOff,
+                                title = "Gizli Hesap",
+                                subtitle = "Hesabınız gizli olduğunda sadece takipçileriniz içeriklerinizi görebilir.",
+                                trailingContent = {
+                                    Switch(
+                                        checked = isAccountPrivate,
+                                        onCheckedChange = null, // Çift tetiklenmeyi önlemek için tıklamayı ana satıra veriyoruz
+                                        colors = SwitchDefaults.colors(
+                                            checkedThumbColor = customColors.surface,
+                                            checkedTrackColor = customColors.navy,
+
+                                            uncheckedThumbColor = customColors.surface,
+                                            uncheckedTrackColor = customColors.borderStrong,
+                                            uncheckedBorderColor = customColors.borderStrong
+                                        )
+                                    )
+                                },
+
+                                onClick = {
+                                    isAccountPrivate = !isAccountPrivate
                                 }
                             )
                         }
@@ -417,6 +443,7 @@ private fun SettingsDivider() {
 private fun SettingsOptionItem(
     icon: ImageVector,
     title: String,
+    subtitle: String? = null, // Alt açıklama metni parametresi
     badgeText: String? = null,
     textColor: Color = Color.Unspecified,
     iconColor: Color? = null,
@@ -442,14 +469,28 @@ private fun SettingsOptionItem(
             modifier = Modifier.size(22.dp)
         )
         Spacer(modifier = Modifier.width(14.dp))
-        Text(
-            text = title,
-            style = MaterialTheme.typography.bodyMedium.copy(
-                fontWeight = FontWeight.Medium,
-                color = effectiveTextColor
-            ),
+
+        // Başlık ve Alt Açıklama Alanı
+        Column(
             modifier = Modifier.weight(1f)
-        )
+        ) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.bodyMedium.copy(
+                    fontWeight = FontWeight.Medium,
+                    color = effectiveTextColor
+                )
+            )
+            if (subtitle != null) {
+                Spacer(modifier = Modifier.height(2.dp))
+                Text(
+                    text = subtitle,
+                    style = MaterialTheme.typography.bodySmall.copy(
+                        color = customColors.textSecondary
+                    )
+                )
+            }
+        }
 
         if (trailingContent != null) {
             trailingContent()
