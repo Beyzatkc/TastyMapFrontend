@@ -6,14 +6,13 @@ import com.russhwolf.settings.set
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import org.beem.tastymap.getPlatform
 
 interface SettingsManager {
     val isDarkMode: StateFlow<Boolean?>
     fun setDarkMode(isEnabled: Boolean)
 }
-
 class SettingsManagerImpl(private val settings: Settings) : SettingsManager {
-
     companion object {
         private const val KEY_DARK_MODE = "is_dark_mode"
     }

@@ -11,7 +11,7 @@ class ClearSessionUseCase(
     private val memoryCache: ProfileMemoryCache,
     private val localDataSource: ProfileLocalDataSource
 ) {
-    operator fun invoke() {
+    suspend operator fun invoke() {
         tokenManager.clear()
         userManager.clear()
         memoryCache.clear()

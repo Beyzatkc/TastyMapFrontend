@@ -4,6 +4,7 @@ import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import org.beem.tastymap.core.network.ResultWrapper
@@ -37,11 +38,21 @@ class ProfileScreenModel(
             )
         )
     }
-    fun getProfile(userId: Long) {
+    fun getProfile(userId: Long,isFromPullToRefresh: Boolean = false) {
         screenModelScope.launch {
-            _profileState.update { it.copy(isLoading = true, errorMessage = null) }
+            _profileState.update {
+                if (isFromPullToRefresh) {
+                    it.copy(isRefreshing = true, errorMessage = null)
+                } else {
+                    it.copy(isLoading = it.profile == null, errorMessage = null)
+                }
+            }
 
-            repo.getProfile(userId).collect { result ->
+            repo.getProfile(userId)
+                .onCompletion {
+                    _profileState.update { it.copy(isRefreshing = false, isLoading = false) }
+                }
+                .collect { result ->
                 when (result) {
                     is ResultWrapper.Success -> {
                         _profileState.update {

@@ -54,9 +54,7 @@ class MyProfileScreen : Screen {
         }
 
         LaunchedEffect(state.successMessage, state.errorMessage) {
-            state.successMessage?.let { message ->
-                screenModel.clearMessages()
-            }
+            state.successMessage?.let { screenModel.clearMessages() }
             state.errorMessage?.let { message ->
                 ToastManager.show(message)
                 screenModel.clearMessages()
@@ -69,7 +67,6 @@ class MyProfileScreen : Screen {
                     title = {
                         Text(
                             text = "Profilim",
-                            // customColors.surface yerine Color.White verildi (her iki modda da okunabilir)
                             style = MaterialTheme.typography.titleMedium.copy(color = Color.White)
                         )
                     },
@@ -94,39 +91,45 @@ class MyProfileScreen : Screen {
                 onRefresh = { screenModel.getMyProfile(true) },
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(innerPadding),
+                    .padding(innerPadding)
+                    .background(customColors.placeHolderBack),
                 indicator = {
                     PullToRefreshDefaults.Indicator(
                         state = pullToRefreshState,
                         isRefreshing = state.isRefreshing,
                         modifier = Modifier.align(Alignment.TopCenter),
-                        containerColor = customColors.background,
-                        color = customColors.darkHeaderColor
+                        containerColor =customColors.placeHolderBack,
+                        color = customColors.placeHolderIcon
                     )
                 }
             ) {
-                Box(modifier = Modifier.fillMaxSize()) {
-                    if (state.isLoading && state.profile == null) {
-                        Box(
-                            modifier = Modifier.fillMaxSize(),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            CircularProgressIndicator(color = customColors.gourmetOrange)
-                        }
-                    } else {
-                        LazyColumn(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .background(customColors.background)
-                        ) {
-                            item {
-                                Surface(
-                                    color = customColors.darkHeaderColor,
-                                    shape = RoundedCornerShape(bottomStart = 28.dp, bottomEnd = 28.dp),
-                                    modifier = Modifier.fillMaxWidth()
+                if (state.isLoading && state.profile == null) {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator(color = customColors.gourmetOrange)
+                    }
+                } else {
+                    LazyColumn(
+                        modifier = Modifier.fillMaxSize(),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        // 1. Lacivert Üst Alan (Ekranı tam kaplar, içeriği ortalar)
+                        item {
+                            Surface(
+                                color = customColors.darkHeaderColor,
+                                shape = RoundedCornerShape(bottomStart = 28.dp, bottomEnd = 28.dp),
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Box(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    contentAlignment = Alignment.Center
                                 ) {
                                     Column(
-                                        modifier = Modifier.padding(horizontal = 20.dp, vertical = 20.dp),
+                                        modifier = Modifier
+                                            .widthIn(max = 480.dp)
+                                            .padding(horizontal = 20.dp, vertical = 20.dp),
                                         horizontalAlignment = Alignment.CenterHorizontally
                                     ) {
                                         Box(contentAlignment = Alignment.BottomEnd) {
@@ -157,7 +160,6 @@ class MyProfileScreen : Screen {
                                                 }
                                             }
 
-
                                             state.profile?.role?.let { role ->
                                                 Surface(
                                                     color = customColors.gourmetOrange,
@@ -178,7 +180,6 @@ class MyProfileScreen : Screen {
 
                                         Spacer(modifier = Modifier.height(12.dp))
 
-                                        // Kullanıcı Adı
                                         Text(
                                             text = state.profile?.name ?: "Benim Adım",
                                             style = MaterialTheme.typography.bodyLarge.copy(
@@ -190,7 +191,6 @@ class MyProfileScreen : Screen {
 
                                         Spacer(modifier = Modifier.height(4.dp))
 
-                                        // Biyografi
                                         Text(
                                             text = state.profile?.biography ?: "Henüz bir biyografi eklemediniz.",
                                             style = MaterialTheme.typography.bodyMedium.copy(
@@ -214,15 +214,20 @@ class MyProfileScreen : Screen {
                                         )
                                     }
                                 }
-                                Spacer(modifier = Modifier.height(16.dp))
                             }
+                            Spacer(modifier = Modifier.height(16.dp))
+                        }
 
-
-                            item {
+                        // 2. Metrik Kartlar (Max 480dp genişlikle ortalanır)
+                        item {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 20.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
                                 Row(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(horizontal = 20.dp),
+                                    modifier = Modifier.widthIn(max = 480.dp),
                                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                                 ) {
                                     MetricCard(
@@ -244,16 +249,22 @@ class MyProfileScreen : Screen {
                                         cardColor = customColors.surfaceVariant
                                     )
                                 }
-                                Spacer(modifier = Modifier.height(16.dp))
                             }
+                            Spacer(modifier = Modifier.height(16.dp))
+                        }
 
-                            item {
+                        // 3. Sekmeler (Max 480dp genişlikle ortalanır)
+                        item {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 20.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
                                 Surface(
                                     color = customColors.surfaceVariant,
                                     shape = RoundedCornerShape(12.dp),
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(horizontal = 20.dp)
+                                    modifier = Modifier.widthIn(max = 480.dp)
                                 ) {
                                     Row(modifier = Modifier.padding(4.dp)) {
                                         TabButton(
@@ -276,25 +287,33 @@ class MyProfileScreen : Screen {
                                         )
                                     }
                                 }
-                                Spacer(modifier = Modifier.height(16.dp))
                             }
+                            Spacer(modifier = Modifier.height(16.dp))
+                        }
 
-                            item {
+                        // 4. İçerik Yazısı (Max 480dp genişlikle ortalanır)
+                        item {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(16.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
                                 Box(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(16.dp),
+                                    modifier = Modifier.widthIn(max = 480.dp),
                                     contentAlignment = Alignment.Center
                                 ) {
                                     if (selectedTab == 0) {
                                         Text(
                                             text = "Paylaştığınız tüm lezzet incelemeleri burada listelenecek.",
-                                            style = MaterialTheme.typography.bodyMedium.copy(color = customColors.textSecondary)
+                                            style = MaterialTheme.typography.bodyMedium.copy(color = customColors.textSecondary),
+                                            textAlign = TextAlign.Center
                                         )
                                     } else {
                                         Text(
                                             text = "Kaydettiğiniz ve işaretlediğiniz kişisel lezzet haritanız.",
-                                            style = MaterialTheme.typography.bodyMedium.copy(color = customColors.textSecondary)
+                                            style = MaterialTheme.typography.bodyMedium.copy(color = customColors.textSecondary),
+                                            textAlign = TextAlign.Center
                                         )
                                     }
                                 }

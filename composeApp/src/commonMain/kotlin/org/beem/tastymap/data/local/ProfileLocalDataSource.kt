@@ -1,13 +1,15 @@
 package org.beem.tastymap.data.local
 
+import app.cash.sqldelight.async.coroutines.awaitAsOneOrNull
 import org.beem.tastymap.domain.model.UserProfile
 import org.beem.tastymap.sqldelight.ProfileEntityQueries
 import kotlin.time.Clock
 
 class ProfileLocalDataSource(private val queries: ProfileEntityQueries) {
 
-    fun getProfile(userId: Long): UserProfile? {
-        val entity = queries.getProfileById(userId).executeAsOneOrNull() ?: return null
+    // SELECT sorgularında awaitAsOneOrNull() kullanılmaya devam eder
+    suspend fun getProfile(userId: Long): UserProfile? {
+        val entity = queries.getProfileById(userId).awaitAsOneOrNull() ?: return null
         return UserProfile(
             userId = entity.userId,
             username = entity.username,
@@ -23,7 +25,8 @@ class ProfileLocalDataSource(private val queries: ProfileEntityQueries) {
         )
     }
 
-    fun saveProfile(profile: UserProfile) {
+    // INSERT / UPDATE / DELETE sorguları zaten suspend fonksiyondur, .await() yazmayın
+    suspend fun saveProfile(profile: UserProfile) {
         queries.insertOrUpdateProfile(
             userId = profile.userId,
             username = profile.username,
@@ -38,18 +41,19 @@ class ProfileLocalDataSource(private val queries: ProfileEntityQueries) {
             blockedMe = if (profile.blockedMe) 1L else 0L,
             updatedAt = Clock.System.now().toEpochMilliseconds()
         )
+
         queries.trimOldProfiles()
     }
 
-    fun deleteProfile(userId: Long) {
+    suspend fun deleteProfile(userId: Long) {
         queries.deleteProfileById(userId)
     }
 
-    fun clearAll() {
+    suspend fun clearAll() {
         queries.clearAllProfiles()
     }
 
-    fun updateCounts(userId: Long, subscriberCount: Long, subscribedCount: Long, postCount: Long) {
+    suspend fun updateCounts(userId: Long, subscriberCount: Long, subscribedCount: Long, postCount: Long) {
         queries.updateCounts(
             subscriberCount = subscriberCount,
             subscribedCount = subscribedCount,
@@ -59,14 +63,14 @@ class ProfileLocalDataSource(private val queries: ProfileEntityQueries) {
         )
     }
 
-    fun incrementSubscriber(userId: Long) {
+    suspend fun incrementSubscriber(userId: Long) {
         queries.incrementSubscriberCount(
             updatedAt = Clock.System.now().toEpochMilliseconds(),
             userId = userId
         )
     }
 
-    fun decrementSubscriber(userId: Long) {
+    suspend fun decrementSubscriber(userId: Long) {
         queries.decrementSubscriberCount(
             updatedAt = Clock.System.now().toEpochMilliseconds(),
             userId = userId

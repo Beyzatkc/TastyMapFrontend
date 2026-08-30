@@ -162,7 +162,11 @@ class SettingsScreen : Screen {
                                         onCheckedChange = { isNotificationsEnabled = it },
                                         colors = SwitchDefaults.colors(
                                             checkedThumbColor = customColors.surface,
-                                            checkedTrackColor = customColors.navy
+                                            checkedTrackColor = customColors.navy,
+
+                                            uncheckedThumbColor = customColors.surface,
+                                            uncheckedTrackColor = customColors.borderStrong,
+                                            uncheckedBorderColor = customColors.borderStrong
                                         )
                                     )
                                 },
@@ -180,7 +184,11 @@ class SettingsScreen : Screen {
                                         },
                                         colors = SwitchDefaults.colors(
                                             checkedThumbColor = customColors.surface,
-                                            checkedTrackColor = customColors.navy
+                                            checkedTrackColor = customColors.navy,
+
+                                            uncheckedThumbColor = customColors.surface,
+                                            uncheckedTrackColor = customColors.borderStrong,
+                                            uncheckedBorderColor = customColors.borderStrong
                                         )
                                     )
                                 },

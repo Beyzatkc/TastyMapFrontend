@@ -30,7 +30,7 @@ class MyProfileScreenModel(
 
             repo.getMyProfile()
                 .onCompletion {
-                    _myProfileState.update { it.copy(isRefreshing = false) }
+                    _myProfileState.update { it.copy(isRefreshing = false, isLoading = false) }
                 }
                 .collect { result ->
                 when (result) {

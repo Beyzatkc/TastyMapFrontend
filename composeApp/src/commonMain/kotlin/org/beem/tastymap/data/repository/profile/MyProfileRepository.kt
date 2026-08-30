@@ -27,8 +27,16 @@ class MyProfileRepository(
 ) {
 
     fun getMyProfile(): Flow<ResultWrapper<UserProfile>> = flow {
+        println("LOG_PROFILE: [1] getMyProfile Flow başladı")
+
         val myUserId = userManager.getUserId()
-            ?: return@flow emit(ResultWrapper.Error("Kullanıcı oturumu bulunamadı.", ErrorType.UNAUTHORIZED))
+        println("LOG_PROFILE: [2] userManager.getUserId() -> $myUserId")
+
+        if (myUserId == null) {
+            println("LOG_PROFILE: [HATA] myUserId null geldi! Flow durduruluyor.")
+            emit(ResultWrapper.Error("Kullanıcı oturumu bulunamadı.", ErrorType.UNAUTHORIZED))
+            return@flow
+        }
 
         val l1Profile = memoryCache.get(myUserId)
         val l2Profile = if (l1Profile == null) localDataSource.getProfile(myUserId) else null
@@ -42,22 +50,24 @@ class MyProfileRepository(
 
         try {
             val remoteDto = dataSource.getUserProfile()
+
             val freshProfile = remoteDto.toDomain(myUserId)
 
             memoryCache.put(myUserId, freshProfile)
             localDataSource.saveProfile(freshProfile)
-
             emit(ResultWrapper.Success(freshProfile))
         } catch (e: Exception) {
+            val errorMessage = e.message ?: e.cause?.message ?: "Profil güncellenirken bir hata oluştu."
+
             if (l1Profile == null && l2Profile == null) {
-                emit(ResultWrapper.Error(e.message ?: "Profil yüklenemedi.", ErrorType.SERVER_ERROR))
-            }else {
-                emit(ResultWrapper.Error(e.cause.toString() + e.message, ErrorType.UNKNOWN_ERROR))
+                emit(ResultWrapper.Error(errorMessage, ErrorType.SERVER_ERROR))
+            } else {
+                emit(ResultWrapper.Error(errorMessage, ErrorType.UNKNOWN_ERROR))
             }
         }
     }
 
-    // BUUNA BAKILCAK
+
     suspend fun getActiveDevices(): ResultWrapper<ActiveDevicesResponse> {
         return safeApiCall {
             dataSource.getActiveDevices()

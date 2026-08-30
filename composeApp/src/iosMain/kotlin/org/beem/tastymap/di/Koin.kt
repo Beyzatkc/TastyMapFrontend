@@ -7,7 +7,7 @@ import org.koin.dsl.module
 val iosModule = module {
     single<SqlDriver> {
         NativeSqliteDriver(
-            schema = TastyDatabase.Schema,
+            schema = TastyDatabase.Schema.synchronous(),
             name = "tasty.db"
         )
     }

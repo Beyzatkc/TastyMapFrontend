@@ -7,6 +7,7 @@ import org.koin.dsl.module
 
 import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKeys
+import app.cash.sqldelight.async.coroutines.synchronous
 import app.cash.sqldelight.db.SqlDriver
 import app.cash.sqldelight.driver.android.AndroidSqliteDriver
 import com.russhwolf.settings.SharedPreferencesSettings
@@ -24,8 +25,8 @@ import org.beem.tastymap.database.TastyDatabase
 val androidModule = module {
     single<SqlDriver> {
         AndroidSqliteDriver(
-            schema = TastyDatabase.Schema,
-            context = get(), // Android Context'i Koin'den otomatik alır
+            schema = TastyDatabase.Schema.synchronous(),
+            context = get(),
             name = "tasty.db"
         )
     }
