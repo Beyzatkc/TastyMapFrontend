@@ -2,14 +2,15 @@ package org.beem.tastymap.ui.review
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.KeyboardArrowDown
-import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.material.icons.rounded.KeyboardArrowDown
+import androidx.compose.material.icons.rounded.KeyboardArrowUp
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -86,7 +87,7 @@ fun AddReviewBottomSheet(
         containerColor = AppColors.Surface,
         shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
         dragHandle = {
-            BottomSheetDefaults.DragHandle(color = AppColors.BorderStrong.copy(alpha = 0.5f))
+            BottomSheetDefaults.DragHandle(color = AppColors.BorderStrong.copy(alpha = 0.4f))
         }
     ) {
         Column(
@@ -99,11 +100,11 @@ fun AddReviewBottomSheet(
                     .weight(1f)
                     .fillMaxWidth(),
                 contentPadding = PaddingValues(horizontal = 20.dp, vertical = 8.dp),
-                verticalArrangement = Arrangement.spacedBy(14.dp)
+                verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 // Başlık Alanı
                 item {
-                    Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                    Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
                         Text(
                             text = if (isEditMode) "Değerlendirmeni Düzenle" else restaurantName,
                             fontFamily = fontFamily,
@@ -115,28 +116,39 @@ fun AddReviewBottomSheet(
                             text = if (isEditMode) "$restaurantName için deneyimini güncelle veya sil" else "Deneyimini puanla ve değerlendir",
                             fontFamily = fontFamily,
                             fontSize = 13.sp,
-                            color = AppColors.TextTertiary
+                            color = AppColors.TextSecondary
                         )
                     }
                 }
 
                 // 1. Ana Yıldız Puanı Barı
                 item {
-                    TastyRatingBar(
-                        rating = state.mainScore,
-                        onRatingChange = screenModel::onMainScoreChange
-                    )
+                    Surface(
+                        color = AppColors.SurfaceVariant,
+                        shape = RoundedCornerShape(16.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Box(
+                            modifier = Modifier.padding(vertical = 16.dp, horizontal = 12.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            TastyRatingBar(
+                                rating = state.mainScore,
+                                onRatingChange = screenModel::onMainScoreChange
+                            )
+                        }
+                    }
                 }
 
-                // 2. Temel Kriterler
+                // 2. Temel Kriterler Başlığı
                 item {
                     Text(
                         text = "Detaylı Kriterler (İsteğe Bağlı)",
                         fontFamily = fontFamily,
-                        fontSize = 14.sp,
+                        fontSize = 15.sp,
                         fontWeight = FontWeight.Bold,
                         color = AppColors.TextPrimary,
-                        modifier = Modifier.padding(top = 4.dp)
+                        modifier = Modifier.padding(top = 2.dp)
                     )
                 }
 
@@ -150,27 +162,37 @@ fun AddReviewBottomSheet(
 
                 // 3. İkincil Kriterler (Accordion)
                 item {
-                    Row(
+                    Surface(
+                        shape = RoundedCornerShape(12.dp),
+                        color = AppColors.SurfaceVariant,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .clickable { screenModel.toggleAdvancedCriteria() }
-                            .padding(vertical = 4.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
+                            .clickable(
+                                interactionSource = remember { MutableInteractionSource() },
+                                indication = null
+                            ) {
+                                screenModel.toggleAdvancedCriteria()
+                            }
                     ) {
-                        Text(
-                            text = if (state.isAdvancedExpanded) "Daha az kriter göster" else "Diğer kriterleri ekle (Temizlik, Hız vb.)",
-                            fontFamily = fontFamily,
-                            fontSize = 13.sp,
-                            fontWeight = FontWeight.SemiBold,
-                            color = AppColors.NavySoft
-                        )
-                        Icon(
-                            imageVector = if (state.isAdvancedExpanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
-                            contentDescription = null,
-                            tint = AppColors.NavySoft,
-                            modifier = Modifier.size(20.dp)
-                        )
+                        Row(
+                            modifier = Modifier.padding(horizontal = 14.dp, vertical = 12.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = if (state.isAdvancedExpanded) "Daha az kriter göster" else "Diğer kriterleri ekle (Temizlik, Hız vb.)",
+                                fontFamily = fontFamily,
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                color = AppColors.NavySoft
+                            )
+                            Icon(
+                                imageVector = if (state.isAdvancedExpanded) Icons.Rounded.KeyboardArrowUp else Icons.Rounded.KeyboardArrowDown,
+                                contentDescription = null,
+                                tint = AppColors.NavySoft,
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
                     }
                 }
 
@@ -194,7 +216,7 @@ fun AddReviewBottomSheet(
                         ),
                         placeholder = {
                             Text(
-                                "Mekan hakkındaki diğer notlarını yaz...",
+                                "Mekan hakkındaki deneyimini ve gurme notlarını paylaş...",
                                 fontFamily = fontFamily,
                                 fontSize = 13.sp,
                                 color = AppColors.TextTertiary
@@ -202,11 +224,11 @@ fun AddReviewBottomSheet(
                         },
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(72.dp),
-                        shape = RoundedCornerShape(12.dp),
+                            .height(84.dp),
+                        shape = RoundedCornerShape(14.dp),
                         colors = OutlinedTextFieldDefaults.colors(
-                            focusedContainerColor = AppColors.SurfaceVariant,
-                            unfocusedContainerColor = AppColors.SurfaceVariant,
+                            focusedContainerColor = AppColors.Surface,
+                            unfocusedContainerColor = AppColors.Surface,
                             focusedBorderColor = AppColors.GourmetOrange,
                             unfocusedBorderColor = AppColors.BorderLight,
                             cursorColor = AppColors.GourmetOrange
@@ -215,11 +237,11 @@ fun AddReviewBottomSheet(
                 }
             }
 
-            // 5. Alt Buton Barı (Edit Modunda: Sil & Güncelle / Normal Modda: Tamamla)
+            // 5. Alt Buton Barı (Edit Modu / Yeni Kayıt Modu)
             Surface(
                 modifier = Modifier.fillMaxWidth(),
                 color = AppColors.Surface,
-                shadowElevation = 8.dp
+                border = BorderStroke(1.dp, AppColors.BorderLight)
             ) {
                 Row(
                     modifier = Modifier
@@ -239,7 +261,7 @@ fun AddReviewBottomSheet(
                             colors = ButtonDefaults.outlinedButtonColors(
                                 contentColor = AppColors.ErrorRed
                             ),
-                            border = BorderStroke(1.dp, AppColors.ErrorRed.copy(alpha = 0.5f))
+                            border = BorderStroke(1.dp, AppColors.ErrorRed.copy(alpha = 0.4f))
                         ) {
                             if (state.isDeleting) {
                                 CircularProgressIndicator(

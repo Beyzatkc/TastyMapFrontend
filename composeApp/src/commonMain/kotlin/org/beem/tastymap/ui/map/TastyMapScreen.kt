@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import org.beem.tastymap.map.TastyMapComponent
 import org.beem.tastymap.permission.LocationPermissionWrapper
@@ -15,6 +16,7 @@ import org.beem.tastymap.map.MapEvent
 import org.beem.tastymap.map.MapScreenModel
 import org.beem.tastymap.map.rememberTastyMapState
 import org.beem.tastymap.ui.detailsheet.TastyDetailSheet
+import org.beem.tastymap.ui.map.components.ActiveRouteBottomCard
 
 
 class TastyMapScreen : Screen {
@@ -29,6 +31,8 @@ class TastyMapScreen : Screen {
         val userLocation by mapScreenModel.userLocation.collectAsState()
 
         val selectedRestaurant = mapState.selectedRestaurant
+
+        val activeRouteState by mapScreenModel.activeRoute.collectAsState()
 
         var activeRestaurant by remember { mutableStateOf<Restaurant?>(null) }
 
@@ -51,6 +55,16 @@ class TastyMapScreen : Screen {
                     is MapEvent.OpenRestaurantDetails -> {
                         println("TastyMap UI -> OpenRestaurantDetails Eventi Geldi! Restoran: ${event.restaurant.name}")
                         activeRestaurant = event.restaurant
+                    }
+                    is MapEvent.DrawRoute -> {
+                        mapState.drawRoute(
+                            mainRoute = event.mainRouteCoordinates,
+                            startConnector = event.startConnector,
+                            endConnector = event.endConnector
+                        )
+                    }
+                    is MapEvent.ClearRoute -> {
+                        mapState.clearRoute()
                     }
                 }
             }
@@ -88,12 +102,35 @@ class TastyMapScreen : Screen {
                     }
                 )
 
+                ActiveRouteBottomCard(
+                    routeState = activeRouteState,
+                    onCloseRoute = {
+                        mapScreenModel.clearRoute()
+                    },
+                    modifier = Modifier.align(Alignment.BottomCenter)
+                )
+
                 activeRestaurant?.let { restaurant ->
                     TastyDetailSheet(
                         restaurant = restaurant,
                         onDismiss = {
                             activeRestaurant = null
                             mapState.clearSelectedRestaurant()
+                        },
+                        onDirectionsClick = {
+                            val placeId = restaurant.id
+                            val targetLat = restaurant.latitude
+                            val targetLng = restaurant.longitude
+
+                            activeRestaurant = null // Sheet'i kapat
+                            mapState.clearSelectedRestaurant()
+
+                            // Rotayı başlat
+                            mapScreenModel.fetchDirections(
+                                placeId = placeId,
+                                targetLat = targetLat,
+                                targetLng = targetLng
+                            )
                         }
                     )
                 }

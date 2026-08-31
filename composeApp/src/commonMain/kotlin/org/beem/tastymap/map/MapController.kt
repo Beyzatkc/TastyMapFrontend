@@ -8,4 +8,11 @@ interface MapController {
     fun userMarker(lat: Double, lng: Double, title: String, bearing: Float)
     fun updateMapData(geoJson: String)
     fun setupRestaurantMarkerClickListener(onRestaurantSelected: (restaurant: Restaurant) -> Unit)
+
+    fun drawRoute(
+        mainRoute: List<List<Double>>,
+        startConnector: List<List<Double>>,
+        endConnector: List<List<Double>>
+    )
+    fun clearRoute()
 }

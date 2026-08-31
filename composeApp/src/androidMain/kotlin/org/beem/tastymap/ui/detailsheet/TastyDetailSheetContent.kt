@@ -17,6 +17,7 @@ import org.beem.tastymap.data.model.Restaurant
 import org.beem.tastymap.place.model.review.ReviewItem
 import org.beem.tastymap.place.state.PlaceDetailsUiState
 import org.beem.tastymap.place.state.RestaurantDetailIntent
+import org.beem.tastymap.ui.detailsheet.components.PlaceActionBar
 import org.beem.tastymap.ui.detailsheet.components.ReviewItemCard
 import org.beem.tastymap.ui.detailsheet.components.TastyDetailTabBar
 import org.beem.tastymap.ui.detailsheet.model.DetailTabType
@@ -78,8 +79,12 @@ fun TastyDetailSheetContent(
             item {
                 RestaurantHeaderSection(
                     restaurant = restaurant,
-                    tastyMapRating = detailsUiState.details?.tastyMapRating,
-                    tastyMapReviewCount = detailsUiState.details?.tastyMapReviewCount
+                    detailsUiState = detailsUiState,
+                    isSaved = false,
+                    onSaveClick = { /* kaydetme aksiyonu */ },
+                    onDirectionsClick = {
+                        onIntent(RestaurantDetailIntent.StartDirections)
+                    }
                 )
             }
 

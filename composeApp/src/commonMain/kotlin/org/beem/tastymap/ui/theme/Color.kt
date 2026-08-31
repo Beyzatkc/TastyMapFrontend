@@ -33,4 +33,8 @@ object AppColors {
     val passwordGreen =  Color(0xFF43A047)
     val passwordYellow = Color(0xFFFFB300)
     val passwordRed = Color(0xFFE53935)
+
+    val RoutePrimary = GourmetOrange
+    val RouteOutline = Color(0xFFFFFFFF)
+    val RouteAlternative = Color(0xFF94A3B8)
 }

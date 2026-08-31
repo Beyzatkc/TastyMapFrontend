@@ -44,6 +44,22 @@ class TastyMapState {
     fun selectRestaurant(restaurant: Restaurant?) {
         selectedRestaurant = restaurant
     }
+
+    fun drawRoute(
+        mainRoute: List<List<Double>>,
+        startConnector: List<List<Double>>,
+        endConnector: List<List<Double>>
+    ) {
+        controller?.drawRoute(
+            mainRoute,
+            startConnector,
+            endConnector
+        )
+    }
+
+    fun clearRoute() {
+        controller?.clearRoute()
+    }
 }
 
 @Composable

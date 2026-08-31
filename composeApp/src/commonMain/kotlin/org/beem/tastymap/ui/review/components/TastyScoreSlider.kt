@@ -39,7 +39,7 @@ fun TastyScoreSlider(
         modifier = modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(2.dp)
     ) {
-        // Başlık ve Sabit Genişlikli Rozet
+        // Başlık ve Rozet
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
@@ -53,14 +53,14 @@ fun TastyScoreSlider(
                 color = if (isEvaluated) AppColors.TextPrimary else AppColors.TextSecondary
             )
 
-            // Layout shift yaratmayan sabit genişlikli rozet slotu
+            // Kartlardakiyle aynı tonlara sahip rozet
             Surface(
-                color = if (isEvaluated) AppColors.WarmAmber else AppColors.SurfaceVariant,
+                color = AppColors.SurfaceVariant,
                 shape = RoundedCornerShape(6.dp),
                 modifier = Modifier.widthIn(min = 44.dp)
-            ){
+            ) {
                 Row(
-                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                    modifier = Modifier.padding(horizontal = 7.dp, vertical = 3.dp),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.Center
                 ) {
@@ -68,14 +68,14 @@ fun TastyScoreSlider(
                         Icon(
                             imageVector = Icons.Default.Star,
                             contentDescription = null,
-                            tint = Color.White,
+                            tint = AppColors.Gold,
                             modifier = Modifier.size(12.dp)
                         )
                         Spacer(modifier = Modifier.width(3.dp))
                         Text(
-                            text = score.toString(),
+                            text = "$score",
                             fontFamily = fontFamily,
-                            color = Color.White,
+                            color = AppColors.TextPrimary,
                             fontWeight = FontWeight.Bold,
                             fontSize = 12.sp
                         )
@@ -92,11 +92,10 @@ fun TastyScoreSlider(
             }
         }
 
-        // Dokunulabilir ve Sürüklenebilir Gerçek Slider
+        // Dokunulabilir ve Sürüklenebilir Slider
         Slider(
             value = score.toFloat(),
             onValueChange = { rawValue ->
-                // 0.5 adımlarla yuvarla
                 val stepped = (rawValue * 2).roundToInt() / 2.0
                 onScoreChange(stepped)
             },
@@ -107,11 +106,11 @@ fun TastyScoreSlider(
                 Box(
                     modifier = Modifier
                         .size(20.dp)
-                        .shadow(elevation = 3.dp, shape = CircleShape)
+                        .shadow(elevation = 2.dp, shape = CircleShape)
                         .background(Color.White, shape = CircleShape)
                         .border(
                             width = 2.5.dp,
-                            color = if (isEvaluated) AppColors.WarmAmber else AppColors.BorderStrong,
+                            color = if (isEvaluated) AppColors.NavySoft else AppColors.BorderStrong.copy(alpha = 0.5f),
                             shape = CircleShape
                         )
                 )
@@ -121,8 +120,8 @@ fun TastyScoreSlider(
                     sliderState = sliderState,
                     modifier = Modifier.height(4.dp),
                     colors = SliderDefaults.colors(
-                        activeTrackColor = AppColors.WarmAmber,
-                        inactiveTrackColor = AppColors.SurfaceVariant,
+                        activeTrackColor = AppColors.NavySoft,
+                        inactiveTrackColor = AppColors.BorderLight,
                         activeTickColor = Color.Transparent,
                         inactiveTickColor = Color.Transparent
                     )

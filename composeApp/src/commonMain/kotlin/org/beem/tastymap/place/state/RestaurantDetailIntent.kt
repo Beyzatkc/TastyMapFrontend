@@ -25,4 +25,7 @@ sealed interface RestaurantDetailIntent {
         val reviewId: Long,
         val deletedScore: Double
     ) : RestaurantDetailIntent
+
+
+    data object StartDirections : RestaurantDetailIntent
 }

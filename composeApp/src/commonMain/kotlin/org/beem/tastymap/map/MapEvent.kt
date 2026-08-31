@@ -18,4 +18,16 @@ sealed class MapEvent{
         val source: String
     ): MapEvent()
     data class OpenRestaurantDetails(val restaurant: Restaurant) : MapEvent()
+
+    data class DrawRoute(
+        val mainRouteCoordinates: List<List<Double>>,
+        val startConnector: List<List<Double>> = emptyList(),
+        val endConnector: List<List<Double>> = emptyList(),
+        val formattedDistance: String,
+        val formattedDuration: String,
+        val targetLat: Double,
+        val targetLng: Double
+    ) : MapEvent()
+
+    data object ClearRoute : MapEvent()
 }

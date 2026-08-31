@@ -6,5 +6,6 @@ import org.beem.tastymap.data.model.Restaurant
 @Composable
 expect fun TastyDetailSheet(
     restaurant: Restaurant,
+    onDirectionsClick: () -> Unit,
     onDismiss: () -> Unit
 )

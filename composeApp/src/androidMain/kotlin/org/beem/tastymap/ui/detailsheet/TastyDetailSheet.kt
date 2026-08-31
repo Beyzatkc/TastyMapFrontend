@@ -10,6 +10,7 @@ import org.koin.compose.koinInject
 @Composable
 actual fun TastyDetailSheet(
     restaurant: Restaurant,
+    onDirectionsClick: () -> Unit,
     onDismiss: () -> Unit
 ) {
     val detailScreenModel: RestaurantDetailScreenModel = koinInject()
@@ -29,6 +30,9 @@ actual fun TastyDetailSheet(
             if (intent is RestaurantDetailIntent.DismissMainSheet) {
                 detailScreenModel.handleIntent(intent)
                 onDismiss()
+            }
+            else if (intent is RestaurantDetailIntent.StartDirections) {
+                onDirectionsClick()
             } else {
                 detailScreenModel.handleIntent(intent)
             }

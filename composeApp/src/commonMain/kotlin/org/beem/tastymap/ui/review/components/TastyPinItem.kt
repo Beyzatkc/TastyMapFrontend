@@ -15,10 +15,11 @@ import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.clipRect
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import org.beem.tastymap.ui.theme.AppColors
 
-
+@Preview
 @Composable
 fun TastyPinItem(
     fillFraction: Float,

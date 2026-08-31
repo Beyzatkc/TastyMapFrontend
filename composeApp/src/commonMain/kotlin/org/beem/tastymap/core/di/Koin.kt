@@ -16,6 +16,9 @@ import org.beem.tastymap.place.api.PlaceDataSource
 import org.beem.tastymap.place.cache.InMemoryPlaceCache
 import org.beem.tastymap.place.repository.PlaceRepository
 import org.beem.tastymap.review.AddReviewScreenModel
+import org.beem.tastymap.route.network.RouteDataSource
+import org.beem.tastymap.route.repository.RouteRepository
+import org.beem.tastymap.route.repository.RouteRepositoryImpl
 import org.beem.tastymap.ui.auth.AuthScreenModel
 import org.koin.core.qualifier.named
 
@@ -35,7 +38,11 @@ val appModule = module {
 
     single { MapDataSource(get(named("auth"))) }
     single { MapRepository(get()) }
-    factory { MapScreenModel(get(), get()) }
+
+    single { RouteDataSource( get(named("auth"))) }
+    single { RouteRepositoryImpl(get()) }
+
+    factory { MapScreenModel(get(), get(), get()) }
 
     single { PlaceDataSource(get(named("auth"))) }
     single { InMemoryPlaceCache() }

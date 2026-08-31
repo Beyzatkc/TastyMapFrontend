@@ -158,6 +158,8 @@ class RestaurantDetailScreenModel(
                     paging.copy(items = paging.items.filterNot { it.id == intent.reviewId })
                 }
             }
+
+            else -> {}
         }
     }
 

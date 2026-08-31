@@ -102,13 +102,13 @@ fun QuickReviewCard(
                 // Seçilen Puan Rozeti
                 if (tempScore > 0.0) {
                     Surface(
-                        color = AppColors.WarmAmber,
+                        color = AppColors.GourmetOrange.copy(alpha = 0.14f),
                         shape = RoundedCornerShape(8.dp)
                     ) {
                         Text(
                             text = "$tempScore",
                             fontFamily = fontFamily,
-                            color = Color.White,
+                            color = AppColors.GourmetOrange,
                             fontSize = 12.sp,
                             fontWeight = FontWeight.Bold,
                             modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
