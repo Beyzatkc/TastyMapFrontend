@@ -23,6 +23,9 @@ class HealthScreenModel(
 
     private val _uiMessage = Channel<String>()
     val uiMessage = _uiMessage.receiveAsFlow()
+    companion object {
+        private const val NO_ALLERGY_ID = 6L
+    }
 
     init {
         val defaultAllergies = listOf(
@@ -35,8 +38,42 @@ class HealthScreenModel(
             AllergyInfo(id = 6L, name = "Alerjim yok"),
 
         )
-        val NO_ALLERGY_ID = 6L
         _healthState.update { it.copy(availableAllergies = defaultAllergies, selectedAllergyIds = listOf(NO_ALLERGY_ID)) }
+    }
+ //BURASIDA ILK BASTA SQLDELIGHTEDN KOKUYCAK
+    fun loadUserHealthProfile() {
+        screenModelScope.launch {
+            _healthState.update { it.copy(isLoading = true) }
+
+            when (val result = repo.getHealth()) {
+                is ResultWrapper.Success -> {
+                    val userHealth = result.data
+
+                    val parsedEatType = try {
+                        userHealth.eatType?.let { HealthEnum.valueOf(it) } ?: HealthEnum.NORMAL
+                    } catch (e: IllegalArgumentException) {
+                        HealthEnum.NORMAL
+                    }
+
+                    // 2. AllergyInfo listesinden ID listesini çıkarma
+                    val allergyIds = userHealth.allergyInfo?.map { it.id } ?: emptyList()
+                    val finalAllergyIds = if (allergyIds.isEmpty()) listOf(6L) else allergyIds
+
+                    _healthState.update { state ->
+                        state.copy(
+                            isLoading = false,
+                            hasDiabetes = userHealth.hasDiabetes ?: false,
+                            selectedEatType = parsedEatType,
+                            selectedAllergyIds = finalAllergyIds
+                        )
+                    }
+                }
+                is ResultWrapper.Error -> {
+                    _healthState.update { it.copy(isLoading = false) }
+                    _uiMessage.send("Mevcut bilgiler yüklenemedi: ${result.message}")
+                }
+            }
+        }
     }
 
     fun nextStep() {
@@ -109,6 +146,33 @@ class HealthScreenModel(
             }
         }
     }
+    fun updateHealthProfile() {
+        val currentState = _healthState.value
+        if (currentState.isLoading) return
+
+        screenModelScope.launch {
+            _healthState.update { it.copy(isLoading = true, error = null) }
+
+            val payloadAllergies = currentState.selectedAllergyIds
+                .filter { it != NO_ALLERGY_ID }
+
+            val request = HealthRequest(
+                hasDiabetes = currentState.hasDiabetes,
+                eatType = currentState.selectedEatType,
+                allergyIds = payloadAllergies
+            )
+
+            when (val result = repo.updateHealth(request)) {
+                is ResultWrapper.Success -> {
+                    _healthState.update { it.copy(isLoading = false, isSuccess = true) }
+                }
+                is ResultWrapper.Error -> {
+                    _healthState.update { it.copy(isLoading = false, error = result.message) }
+                    _uiMessage.send(result.message)
+                }
+            }
+        }
+    }
     fun skipHealthWizard() {
         screenModelScope.launch {
             _healthState.update { it.copy(isLoading = true) }
@@ -129,5 +193,8 @@ class HealthScreenModel(
                 }
             }
         }
+    }
+    fun resetSuccessState() {
+        _healthState.update { it.copy(isSuccess = false) }
     }
 }

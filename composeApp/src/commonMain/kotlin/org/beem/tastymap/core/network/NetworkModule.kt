@@ -45,6 +45,7 @@ fun HttpClientConfig<*>.commonConfig() {
         header("ngrok-skip-browser-warning", "true")
         header("Content-Type", "application/json")
     }
+
 }
 
 fun createNoAuthClient() = HttpClient {

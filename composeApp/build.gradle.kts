@@ -115,6 +115,12 @@ kotlin {
             implementation(libs.compottie)
             implementation(libs.compottie.resources)
             implementation(libs.kotlinx.datetime)
+
+            implementation(libs.filekit.core)
+            implementation(libs.filekit.compose)
+
+
+
         }
 
         androidMain.dependencies {

@@ -1,5 +1,6 @@
 package org.beem.tastymap.data.repository.profile
 
+import io.github.vinceglb.filekit.core.PlatformFile
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import org.beem.tastymap.core.local.UserManager
@@ -14,6 +15,7 @@ import org.beem.tastymap.data.model.profile.ActiveDevicesResponse
 import org.beem.tastymap.data.model.profile.ChangePassword
 import org.beem.tastymap.data.model.profile.MessageResponse
 import org.beem.tastymap.data.model.profile.UpdateProfile
+import org.beem.tastymap.data.remote.FileRemoteDataSource
 import org.beem.tastymap.data.remote.profile.MyProfileDataSource
 import org.beem.tastymap.domain.auth.ClearSessionUseCase
 import org.beem.tastymap.domain.model.UserProfile
@@ -23,17 +25,13 @@ class MyProfileRepository(
     private val memoryCache: ProfileMemoryCache,
     private val localDataSource: ProfileLocalDataSource,
     private val userManager: UserManager,
+    private val fileRemoteDataSource: FileRemoteDataSource,
     private val clearSessionUseCase: ClearSessionUseCase
 ) {
 
     fun getMyProfile(): Flow<ResultWrapper<UserProfile>> = flow {
-        println("LOG_PROFILE: [1] getMyProfile Flow başladı")
-
         val myUserId = userManager.getUserId()
-        println("LOG_PROFILE: [2] userManager.getUserId() -> $myUserId")
-
         if (myUserId == null) {
-            println("LOG_PROFILE: [HATA] myUserId null geldi! Flow durduruluyor.")
             emit(ResultWrapper.Error("Kullanıcı oturumu bulunamadı.", ErrorType.UNAUTHORIZED))
             return@flow
         }
@@ -74,6 +72,12 @@ class MyProfileRepository(
         }
     }
 
+    suspend fun uploadProfilePhoto(file: PlatformFile): ResultWrapper<String> {
+        return safeApiCall {
+            val response = fileRemoteDataSource.uploadFile(file)
+            response.imageUrl
+        }
+    }
     suspend fun updateProfile(request: UpdateProfile): ResultWrapper<MessageResponse> {
         val result = safeApiCall { dataSource.updateProfile(request) }
 
@@ -88,25 +92,25 @@ class MyProfileRepository(
                     biography = request.biography
                 )
 
-              //ramden guncelleıdk
                 memoryCache.get(myUserId)?.let { oldProfile ->
                     memoryCache.put(
                         myUserId,
                         oldProfile.copy(
-                            username = request.username,
-                            name = request.name,
+                            username = request.username ?: oldProfile.username,
+                            name = request.name ?: oldProfile.name,
+                            surname = request.surname ?: oldProfile.surname,
                             profilePhoto = request.profilePhoto ?: oldProfile.profilePhoto,
                             biography = request.biography ?: oldProfile.biography
                         )
                     )
                 }
 
-              //sqldelıghtdan guncelledık
                 localDataSource.getProfile(myUserId)?.let { oldProfile ->
                     localDataSource.saveProfile(
                         oldProfile.copy(
-                            username = request.username,
-                            name = request.name,
+                            username = request.username ?: oldProfile.username,
+                            name = request.name ?: oldProfile.name,
+                            surname = request.surname ?: oldProfile.surname,
                             profilePhoto = request.profilePhoto ?: oldProfile.profilePhoto,
                             biography = request.biography ?: oldProfile.biography
                         )
@@ -116,7 +120,6 @@ class MyProfileRepository(
         }
         return result
     }
-
     suspend fun changePassword(request: ChangePassword): ResultWrapper<MessageResponse> {
         return safeApiCall { dataSource.changePassword(request) }
     }
@@ -134,4 +137,6 @@ class MyProfileRepository(
             clearSessionUseCase()
         }
     }
+
+
 }

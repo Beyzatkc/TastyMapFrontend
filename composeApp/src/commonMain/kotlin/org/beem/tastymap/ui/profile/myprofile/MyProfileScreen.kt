@@ -67,7 +67,7 @@ class MyProfileScreen : Screen {
                 TopAppBar(
                     title = {
                         Text(
-                            text = "Profilim",
+                            text = "@"+ state.profile?.username,
                             style = MaterialTheme.typography.titleMedium.copy(color = Color.White)
                         )
                     },

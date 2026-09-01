@@ -1,10 +1,13 @@
 package org.beem.tastymap.ui.profile.health.stepScreens
 
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.tooling.preview.Preview
+import org.beem.tastymap.data.model.health.AllergyInfo
 import org.beem.tastymap.ui.profile.health.HealthUiState
 import org.beem.tastymap.ui.profile.health.components.BaseStepContainer
 import org.beem.tastymap.ui.profile.health.stepScreens.common.CheckboxOption
 import org.beem.tastymap.ui.theme.LocalCustomColors
+import org.beem.tastymap.ui.theme.TastyTheme
 import tastymap.composeapp.generated.resources.Res
 import tastymap.composeapp.generated.resources.ic_allergy_svg
 
@@ -36,5 +39,26 @@ fun AllergiesStep(
                 }
             )
         }
+    }
+}
+@Preview
+@Composable
+private fun AllergiesStepPreview() {
+    TastyTheme(useDarkTheme = false) {
+        AllergiesStep(
+            state = HealthUiState(
+                availableAllergies = listOf(
+                    AllergyInfo(id = 1L, name = "Süt ve Süt Ürünleri"),
+                    AllergyInfo(id = 2L, name = "Gluten"),
+                    AllergyInfo(id = 3L, name = "Yer Fıstığı"),
+                    AllergyInfo(id = 4L, name = "Yumurta"),
+                    AllergyInfo(id = 5L, name = "Alerjim Yok")
+                ),
+                selectedAllergyIds = listOf(2L)
+            ),
+            onAllergyToggle = {},
+            onNextClick = {},
+            onBackClick = {}
+        )
     }
 }

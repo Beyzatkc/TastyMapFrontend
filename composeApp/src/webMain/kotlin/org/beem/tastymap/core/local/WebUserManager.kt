@@ -24,7 +24,7 @@ class WebUserManager(): UserManager {
     }
 
     override fun updateProfileSession(
-        username: String,
+        username: String?,
         name: String,
         surname: String,
         profilePhoto: String?,

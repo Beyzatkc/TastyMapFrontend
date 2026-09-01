@@ -11,10 +11,13 @@ import org.beem.tastymap.core.local.TokenManagerImpl
 import org.beem.tastymap.core.navigation.MobileVerifyNavigator
 import org.beem.tastymap.core.navigation.VerifyNavigator
 import org.beem.tastymap.core.provider.HttpClientFactory
+import org.beem.tastymap.data.cache.CacheManager
+import org.beem.tastymap.data.cache.HealthMemoryCache
 import org.beem.tastymap.data.cache.ProfileMemoryCache
 import org.beem.tastymap.data.local.ProfileLocalDataSource
 import org.beem.tastymap.data.remote.AuthDataSource
 import org.beem.tastymap.data.remote.AuthWebSocketClient
+import org.beem.tastymap.data.remote.FileRemoteDataSource
 import org.beem.tastymap.data.remote.HealthDataSource
 import org.beem.tastymap.data.remote.UserSecurityDataSource
 import org.beem.tastymap.data.remote.profile.MyProfileDataSource
@@ -50,6 +53,7 @@ val appModule = module {
         createNoAuthClient()
     }
 
+
     single<HttpClient>(named("auth")) {
         val factory = get<HttpClientFactory>()
         val noAuth = get<HttpClient>(named("noAuth"))
@@ -59,8 +63,10 @@ val appModule = module {
     single { TastyDatabase(driver = get()) }
     single { get<TastyDatabase>().profileEntityQueries }
     single { ProfileMemoryCache() }
-    single { ProfileLocalDataSource(get()) }
+    single { HealthMemoryCache() }
+    single { CacheManager(get(), get()) }
 
+    single { ProfileLocalDataSource(get()) }
     factory { ClearSessionUseCase(get(), get(), get(), get()) }
 
     single { AuthDataSource(get(named("noAuth"))) }
@@ -68,14 +74,15 @@ val appModule = module {
     single { HealthDataSource(get(named("auth"))) }
     single { ProfileDataSource(get(named("auth"))) }
     single { MyProfileDataSource(get(named("auth"))) }
+    single { FileRemoteDataSource(get(named("auth"))) }
 
     single { AuthRepository(get(), get(), get(), get()) }
     single { UserSecurityRepository(get()) }
-    single { HealthRepository(get()) }
+    single { HealthRepository(get(),get(),get()) }
     single { AuthWebSocketClient(get(named("auth"))) }
     single { PasswordResetSessionManager() }
     single { ProfileRepository(get(), get(), get()) }
-    single { MyProfileRepository(get(), get(), get(), get(), get()) }
+    single { MyProfileRepository(get(), get(), get(), get(), get(),get()) }
 
     factory { LogRegScreenModel(get(), get(), get(), get()) }
     factory { PendingScreenModel(get(), get(), get(), get()) }
@@ -85,7 +92,7 @@ val appModule = module {
     factory { ResetScreenModel(get()) }
     factory { HealthScreenModel(get()) }
     factory { ProfileScreenModel(get()) }
-    factory { MyProfileScreenModel(get()) }
+    single { MyProfileScreenModel(get()) }
     factory { SettingsScreenModel(get(),get(),get()) }
     factory { ActiveDevicesScreenModel(get()) }
     factory { ChangePasswordScreenModel(get(),get()) }

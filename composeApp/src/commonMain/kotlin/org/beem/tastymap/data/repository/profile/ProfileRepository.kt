@@ -4,7 +4,6 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import org.beem.tastymap.core.network.ErrorType
 import org.beem.tastymap.core.network.ResultWrapper
-import org.beem.tastymap.core.network.safeApiCall
 import org.beem.tastymap.data.cache.ProfileMemoryCache
 import org.beem.tastymap.data.local.ProfileLocalDataSource
 import org.beem.tastymap.data.mapper.toDomain
@@ -40,5 +39,6 @@ class ProfileRepository(
             }
         }
     }
+
 
 }

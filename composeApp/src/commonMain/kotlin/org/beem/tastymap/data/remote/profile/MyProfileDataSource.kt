@@ -4,6 +4,7 @@ import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.get
 import io.ktor.client.request.parameter
+import io.ktor.client.request.patch
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import org.beem.tastymap.data.model.auth.UserResponse
@@ -26,7 +27,7 @@ class MyProfileDataSource(private val client: HttpClient) {
         }
     }
     suspend fun updateProfile(request: UpdateProfile): MessageResponse =
-         client.post("api/myProfile/update") {
+         client.patch("api/myProfile/update") {
             setBody(request)
         }.body()
 

@@ -25,6 +25,7 @@ class WebHttpClientFactory(
         noAuthClient: HttpClient
     ): HttpClient = HttpClient {
         commonConfig()
+
     }.apply {
         plugin(HttpSend).intercept { request ->
 

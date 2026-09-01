@@ -1,16 +1,17 @@
 package org.beem.tastymap.data.local
 
 import app.cash.sqldelight.async.coroutines.awaitAsOneOrNull
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import org.beem.tastymap.domain.model.UserProfile
 import org.beem.tastymap.sqldelight.ProfileEntityQueries
 import kotlin.time.Clock
 
 class ProfileLocalDataSource(private val queries: ProfileEntityQueries) {
 
-    // SELECT sorgularında awaitAsOneOrNull() kullanılmaya devam eder
-    suspend fun getProfile(userId: Long): UserProfile? {
-        val entity = queries.getProfileById(userId).awaitAsOneOrNull() ?: return null
-        return UserProfile(
+    suspend fun getProfile(userId: Long): UserProfile? = withContext(Dispatchers.Default) {
+        val entity = queries.getProfileById(userId).awaitAsOneOrNull() ?: return@withContext null
+        UserProfile(
             userId = entity.userId,
             username = entity.username,
             name = entity.name,
@@ -26,8 +27,7 @@ class ProfileLocalDataSource(private val queries: ProfileEntityQueries) {
         )
     }
 
-    // INSERT / UPDATE / DELETE sorguları zaten suspend fonksiyondur, .await() yazmayın
-    suspend fun saveProfile(profile: UserProfile) {
+    suspend fun saveProfile(profile: UserProfile) = withContext(Dispatchers.Default) {
         queries.insertOrUpdateProfile(
             userId = profile.userId,
             username = profile.username,
@@ -47,15 +47,15 @@ class ProfileLocalDataSource(private val queries: ProfileEntityQueries) {
         queries.trimOldProfiles()
     }
 
-    suspend fun deleteProfile(userId: Long) {
+    suspend fun deleteProfile(userId: Long) = withContext(Dispatchers.Default) {
         queries.deleteProfileById(userId)
     }
 
-    suspend fun clearAll() {
+    suspend fun clearAll() = withContext(Dispatchers.Default) {
         queries.clearAllProfiles()
     }
 
-    suspend fun updateCounts(userId: Long, subscriberCount: Long, subscribedCount: Long, postCount: Long) {
+    suspend fun updateCounts(userId: Long, subscriberCount: Long, subscribedCount: Long, postCount: Long) = withContext(Dispatchers.Default) {
         queries.updateCounts(
             subscriberCount = subscriberCount,
             subscribedCount = subscribedCount,
@@ -65,14 +65,14 @@ class ProfileLocalDataSource(private val queries: ProfileEntityQueries) {
         )
     }
 
-    suspend fun incrementSubscriber(userId: Long) {
+    suspend fun incrementSubscriber(userId: Long) = withContext(Dispatchers.Default) {
         queries.incrementSubscriberCount(
             updatedAt = Clock.System.now().toEpochMilliseconds(),
             userId = userId
         )
     }
 
-    suspend fun decrementSubscriber(userId: Long) {
+    suspend fun decrementSubscriber(userId: Long) = withContext(Dispatchers.Default) {
         queries.decrementSubscriberCount(
             updatedAt = Clock.System.now().toEpochMilliseconds(),
             userId = userId

@@ -1,5 +1,6 @@
 package org.beem.tastymap.ui.profile.myprofile.settings
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
@@ -12,12 +13,16 @@ import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.DeleteForever
 import androidx.compose.material.icons.filled.Devices
+import androidx.compose.material.icons.filled.FilterList
+import androidx.compose.material.icons.filled.HealthAndSafety
 import androidx.compose.material.icons.filled.HelpOutline
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Policy
+import androidx.compose.material.icons.filled.Restaurant
+import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -26,6 +31,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.koin.koinScreenModel
@@ -35,7 +41,10 @@ import org.beem.tastymap.core.util.ToastManager
 import org.beem.tastymap.ui.auth.logReg.LogRegScreen
 import org.beem.tastymap.ui.profile.myprofile.settings.activedevices.ActiveDevicesScreen
 import org.beem.tastymap.ui.profile.myprofile.settings.changepassword.ChangePasswordScreenModel
+import org.beem.tastymap.ui.profile.myprofile.settings.edithealth.EditHealthScreen
 import org.beem.tastymap.ui.theme.LocalCustomColors
+import org.beem.tastymap.ui.theme.TastyTheme
+import kotlin.time.Clock
 
 class SettingsScreen : Screen {
 
@@ -164,6 +173,25 @@ class SettingsScreen : Screen {
 
                                 onClick = {
                                     isAccountPrivate = !isAccountPrivate
+                                }
+                            )
+                        }
+                    }
+                }
+                item {
+                    SettingsSectionHeader(title = "Beslenme & Alerjenler")
+                    Card(
+                        colors = CardDefaults.cardColors(containerColor = customColors.surface),
+                        shape = RoundedCornerShape(16.dp),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+                    ) {
+                        Column {
+                            SettingsOptionItem(
+                                icon = Icons.Default.Tune,
+                                title = "Beslenme & Alerjen Tercihleri",
+                                subtitle = "AI önerileri, diyabet, alerji ve beslenme kısıtlamalarınızı yönetin.",
+                                onClick = {
+                                     navigator.push(EditHealthScreen())
                                 }
                             )
                         }

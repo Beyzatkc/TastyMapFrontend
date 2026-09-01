@@ -10,7 +10,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Badge
 import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Person
@@ -22,6 +21,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.tooling.preview.Preview
@@ -30,7 +30,12 @@ import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.koin.koinScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
-import org.beem.tastymap.data.model.profile.UpdateProfile
+import coil3.compose.AsyncImage
+import io.github.vinceglb.filekit.compose.rememberFilePickerLauncher
+import io.github.vinceglb.filekit.core.PickerType
+import io.github.vinceglb.filekit.core.PlatformFile
+import kotlinx.coroutines.launch
+import org.beem.tastymap.core.util.ToastManager
 import org.beem.tastymap.domain.model.UserProfile
 import org.beem.tastymap.ui.components.TastyTextField
 import org.beem.tastymap.ui.profile.myprofile.MyProfileScreenModel
@@ -47,8 +52,16 @@ class EditProfileScreen : Screen {
 
         LaunchedEffect(uiState.successMessage) {
             if (uiState.successMessage != null) {
+                ToastManager.show(uiState.successMessage.toString())
                 screenModel.clearMessagesEdit()
                 navigator.pop()
+            }
+        }
+
+        LaunchedEffect(uiState.errorMessage) {
+            uiState.errorMessage?.let { error ->
+                ToastManager.show(error)
+                screenModel.clearMessagesEdit()
             }
         }
 
@@ -59,8 +72,14 @@ class EditProfileScreen : Screen {
             nameError = uiState.nameError,
             surnameError = uiState.surnameError,
             onBackClick = { navigator.pop() },
-            onSaveClick = { updatedProfile ->
-                screenModel.updateProfile(updatedProfile)
+            onSaveClick = { username, name, surname, biography, platformFile ->
+                screenModel.updateProfile(
+                    inputUsername = username,
+                    inputName = name,
+                    inputSurname = surname,
+                    inputBiography = biography,
+                    selectedFile = platformFile
+                )
             }
         )
     }
@@ -75,14 +94,28 @@ fun EditProfileContent(
     nameError: String? = null,
     surnameError: String? = null,
     onBackClick: () -> Unit = {},
-    onSaveClick: (UpdateProfile) -> Unit = {}
+    onSaveClick: (username: String, name: String, surname: String, biography: String?, file: PlatformFile?) -> Unit
 ) {
     val customColors = LocalCustomColors.current
+    val scope = rememberCoroutineScope()
+    var selectedFile by remember { mutableStateOf<PlatformFile?>(null) }
+    var selectedImageBytes by remember { mutableStateOf<ByteArray?>(null) }
 
-    var username by rememberSaveable { mutableStateOf(userProfile?.username.orEmpty()) }
-    var name by rememberSaveable { mutableStateOf(userProfile?.name.orEmpty()) }
-    var surname by rememberSaveable { mutableStateOf(userProfile?.surname.orEmpty()) }
-    var biography by rememberSaveable { mutableStateOf(userProfile?.biography.orEmpty()) }
+    val launcher = rememberFilePickerLauncher(
+        type = PickerType.Image
+    ) { file: PlatformFile? ->
+        file?.let {
+            selectedFile = it
+            scope.launch {
+                selectedImageBytes = it.readBytes()
+            }
+        }
+    }
+
+    var username by rememberSaveable(userProfile?.username) { mutableStateOf(userProfile?.username.orEmpty()) }
+    var name by rememberSaveable(userProfile?.name) { mutableStateOf(userProfile?.name.orEmpty()) }
+    var surname by rememberSaveable(userProfile?.surname) { mutableStateOf(userProfile?.surname.orEmpty()) }
+    var biography by rememberSaveable(userProfile?.biography) { mutableStateOf(userProfile?.biography.orEmpty()) }
 
     Scaffold(
         containerColor = customColors.background,
@@ -110,21 +143,13 @@ fun EditProfileContent(
                     TextButton(
                         enabled = !isLoading,
                         onClick = {
-                            val updateProfileReq = UpdateProfile(
-                                username = username,
-                                name = name,
-                                surname = surname,
-                                profilePhoto = userProfile?.profilePhoto,
-                                biography = biography,
-                                isPrivate = false
-                            )
-                            onSaveClick(updateProfileReq)
+                            onSaveClick(username, name, surname, biography, selectedFile)
                         }
                     ) {
                         if (isLoading) {
                             CircularProgressIndicator(
                                 modifier = Modifier.size(18.dp),
-                                color = customColors.navy,
+                                color = customColors.gourmetOrange,
                                 strokeWidth = 2.dp
                             )
                         } else {
@@ -148,7 +173,6 @@ fun EditProfileContent(
                 .padding(innerPadding),
             contentPadding = PaddingValues(bottom = 24.dp)
         ) {
-            // 1. HEADER & PROFİL FOTOĞRAFI ALANI
             item {
                 Box(
                     modifier = Modifier
@@ -156,8 +180,7 @@ fun EditProfileContent(
                         .height(130.dp)
                 ) {
                     Box(
-                        modifier = Modifier
-                            .align(Alignment.BottomCenter)
+                        modifier = Modifier.align(Alignment.BottomCenter)
                     ) {
                         Surface(
                             modifier = Modifier
@@ -166,33 +189,56 @@ fun EditProfileContent(
                                 .border(3.dp, customColors.background, CircleShape),
                             color = customColors.placeHolderBack
                         ) {
-                            Icon(
-                                imageVector = Icons.Default.Person,
-                                contentDescription = null,
-                                tint = customColors.placeHolderIcon,
-                                modifier = Modifier.padding(22.dp)
-                            )
+                            when {
+                                selectedImageBytes != null -> {
+                                    AsyncImage(
+                                        model = selectedImageBytes,
+                                        contentDescription = "Seçilen Profil Fotoğrafı",
+                                        modifier = Modifier.fillMaxSize(),
+                                        contentScale = ContentScale.Crop
+                                    )
+                                }
+                                !userProfile?.profilePhoto.isNullOrEmpty() -> {
+                                    AsyncImage(
+                                        model = userProfile?.profilePhoto,
+                                        contentDescription = "Profil Fotoğrafı",
+                                        modifier = Modifier.fillMaxSize(),
+                                        contentScale = ContentScale.Crop
+                                    )
+                                }
+                                else -> {
+                                    Icon(
+                                        imageVector = Icons.Default.Person,
+                                        contentDescription = null,
+                                        tint = customColors.placeHolderIcon,
+                                        modifier = Modifier.padding(22.dp)
+                                    )
+                                }
+                            }
                         }
                         Box(
                             modifier = Modifier
                                 .align(Alignment.BottomEnd)
                                 .offset(x = 6.dp, y = 6.dp)
-                                .size(38.dp) // Lacivert dairenin gerçek boyutu
+                                .size(38.dp)
                                 .clip(CircleShape)
                                 .background(customColors.navy)
-                                .clickable { /* ImagePicker */ },
+                                .clickable {
+                                    launcher.launch()
+                                },
                             contentAlignment = Alignment.Center
                         ) {
                             Icon(
                                 imageVector = Icons.Default.CameraAlt,
                                 contentDescription = "Fotoğraf Değiştir",
                                 tint = customColors.surface,
-                                modifier = Modifier.size(20.dp) // Kamera ikonunun boyutu
+                                modifier = Modifier.size(20.dp)
                             )
                         }
                     }
                 }
             }
+
             item {
                 Column(
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
@@ -243,7 +289,6 @@ fun EditProfileContent(
                 }
             }
 
-            // 3. BİYOGRAFİ KARTI
             item {
                 Column(
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
@@ -281,7 +326,6 @@ fun EditProfileContent(
                 }
             }
 
-            // 4. BİLGİLENDİRME BANNER'I
             item {
                 Surface(
                     modifier = Modifier
@@ -359,7 +403,8 @@ private fun EditProfileContentLightPreview() {
                 subscribedCount = 0L,
                 blockedByMe = false,
                 blockedMe = false
-            )
+            ),
+            onSaveClick = { _, _, _, _, _ -> }
         )
     }
 }

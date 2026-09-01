@@ -33,6 +33,8 @@ mokoPermissionsVersion = "0.18.0"
 compottie = "2.0.0-beta02"
 kotlinx-datetime = "0.6.0"
 coil3 = "3.0.4"
+filekit = "0.8.7"
+
 
 
 
@@ -107,6 +109,8 @@ kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-c
 kotlinx-browser = { module = "org.jetbrains.kotlinx:kotlinx-browser", version.ref = "kotlinx-browser" }
 androidx-security-crypto = { module = "androidx.security:security-crypto", version.ref = "androidx-security" }
 
+filekit-core = { module = "io.github.vinceglb:filekit-core", version.ref = "filekit" }
+filekit-compose = { module = "io.github.vinceglb:filekit-compose", version.ref = "filekit" }
 
 
 [plugins]

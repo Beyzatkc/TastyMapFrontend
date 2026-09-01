@@ -111,7 +111,7 @@ class ActiveDevicesScreen : Screen {
                                 modifier = Modifier.fillMaxSize(),
                                 contentAlignment = Alignment.Center
                             ) {
-                                CircularProgressIndicator(color = customColors.navy)
+                                CircularProgressIndicator(color = customColors.gourmetOrange)
                             }
                         }
 

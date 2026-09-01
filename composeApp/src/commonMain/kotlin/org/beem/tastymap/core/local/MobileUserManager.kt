@@ -50,12 +50,12 @@ class MobileUserManager(private val settings: Settings): UserManager{
     }
 
     override fun updateProfileSession(
-        username: String,
-        name: String,
-        surname: String,
+        username: String?,
+        name: String?,
+        surname: String?,
         profilePhoto: String?,
         biography: String?
-    ) {
+    ){
         settings[KEY_USERNAME] = username
         settings[KEY_NAME] = name
         settings[KEY_SURNAME] = surname

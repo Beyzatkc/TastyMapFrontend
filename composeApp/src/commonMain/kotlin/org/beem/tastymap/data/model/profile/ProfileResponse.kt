@@ -33,13 +33,11 @@ data class ActiveDeviceDTO(
 
 @Serializable
 data class UpdateProfile(
-    val username: String,
-    val name: String,
-    val surname: String,
+    val username: String? = null,
+    val name: String? = null,
+    val surname: String? = null,
     val profilePhoto: String? = null,
-    val biography: String? = null,
-    @SerialName("isPrivate")
-    val isPrivate: Boolean
+    val biography: String? = null
 )
 @Serializable
 data class MessageResponse(
