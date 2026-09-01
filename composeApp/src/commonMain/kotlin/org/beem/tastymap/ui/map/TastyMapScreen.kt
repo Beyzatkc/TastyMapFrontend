@@ -4,9 +4,12 @@ package org.beem.tastymap.ui.map
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import org.beem.tastymap.map.TastyMapComponent
 import org.beem.tastymap.permission.LocationPermissionWrapper
 import cafe.adriel.voyager.core.screen.Screen
@@ -17,6 +20,7 @@ import org.beem.tastymap.map.MapScreenModel
 import org.beem.tastymap.map.rememberTastyMapState
 import org.beem.tastymap.ui.detailsheet.TastyDetailSheet
 import org.beem.tastymap.ui.map.components.ActiveRouteBottomCard
+import org.beem.tastymap.ui.map.components.SearchThisAreaChip
 
 
 class TastyMapScreen : Screen {
@@ -36,7 +40,17 @@ class TastyMapScreen : Screen {
 
         var activeRestaurant by remember { mutableStateOf<Restaurant?>(null) }
 
+        var showSearchThisArea by remember { mutableStateOf(false) }
 
+
+        DisposableEffect(mapState) {
+            mapState.onCameraIdleCallback = { lat, lng, zoom ->
+                mapScreenModel.onCameraIdle(lat, lng, zoom)
+            }
+            onDispose {
+                mapState.onCameraIdleCallback = null
+            }
+        }
 
         LaunchedEffect(Unit){
             mapScreenModel.event.collect{ event ->
@@ -60,11 +74,15 @@ class TastyMapScreen : Screen {
                         mapState.drawRoute(
                             mainRoute = event.mainRouteCoordinates,
                             startConnector = event.startConnector,
-                            endConnector = event.endConnector
+                            endConnector = event.endConnector,
+                            targetPlaceId = event.targetPlaceId
                         )
                     }
                     is MapEvent.ClearRoute -> {
                         mapState.clearRoute()
+                    }
+                    is MapEvent.ToggleSearchThisAreaButton -> {
+                        showSearchThisArea = event.visible
                     }
                 }
             }
@@ -100,6 +118,18 @@ class TastyMapScreen : Screen {
                             userLocation.longitude
                         )
                     }
+                )
+
+                SearchThisAreaChip(
+                    visible = showSearchThisArea,
+                    isLoading = false,
+                    onClick = {
+                        mapScreenModel.onSearchThisAreaClicked()
+                    },
+                    modifier = Modifier
+                        .align(Alignment.TopCenter)
+                        .statusBarsPadding()
+                        .padding(top = 16.dp)
                 )
 
                 ActiveRouteBottomCard(

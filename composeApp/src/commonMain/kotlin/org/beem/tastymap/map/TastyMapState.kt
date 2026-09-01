@@ -15,7 +15,10 @@ class TastyMapState {
         set(value) {
             _controller.value = value
             setupMarkerClickListener()
+            setupCameraIdleListener()
         }
+
+    var onCameraIdleCallback: ((lat: Double, lng: Double, zoom: Double) -> Unit)? = null
 
     var selectedRestaurant by mutableStateOf<Restaurant?>(null)
         private set
@@ -45,15 +48,23 @@ class TastyMapState {
         selectedRestaurant = restaurant
     }
 
+    private fun setupCameraIdleListener() {
+        controller?.setOnCameraIdleListener { lat, lng, zoom ->
+            onCameraIdleCallback?.invoke(lat, lng, zoom)
+        }
+    }
+
     fun drawRoute(
         mainRoute: List<List<Double>>,
         startConnector: List<List<Double>>,
-        endConnector: List<List<Double>>
+        endConnector: List<List<Double>>,
+        targetPlaceId: String?
     ) {
         controller?.drawRoute(
             mainRoute,
             startConnector,
-            endConnector
+            endConnector,
+            targetPlaceId
         )
     }
 

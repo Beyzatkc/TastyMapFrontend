@@ -12,7 +12,10 @@ interface MapController {
     fun drawRoute(
         mainRoute: List<List<Double>>,
         startConnector: List<List<Double>>,
-        endConnector: List<List<Double>>
+        endConnector: List<List<Double>>,
+        targetPlaceId: String?
     )
     fun clearRoute()
+
+    fun setOnCameraIdleListener(onCameraIdle: (centerLat: Double, centerLng: Double, zoom: Double) -> Unit)
 }

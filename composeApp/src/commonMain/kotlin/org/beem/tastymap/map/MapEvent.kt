@@ -26,8 +26,11 @@ sealed class MapEvent{
         val formattedDistance: String,
         val formattedDuration: String,
         val targetLat: Double,
-        val targetLng: Double
+        val targetLng: Double,
+        val targetPlaceId: String
     ) : MapEvent()
 
     data object ClearRoute : MapEvent()
+
+    data class ToggleSearchThisAreaButton(val visible: Boolean) : MapEvent()
 }

@@ -56,7 +56,11 @@ class MapScreenModel(
     private var lastValidBearing: Float = 0f
     private var lastEmittedBearing = 0f
 
-
+    private var lastSearchedLat: Double = 0.0
+    private var lastSearchedLng: Double = 0.0
+    private var currentCameraLat: Double = 0.0
+    private var currentCameraLng: Double = 0.0
+    private var isSearching = false
 
     private val _activeRoute = MutableStateFlow<ActiveRouteState>(ActiveRouteState.Idle)
     val activeRoute = _activeRoute.asStateFlow()
@@ -126,6 +130,12 @@ class MapScreenModel(
 
     fun fetchNearbyRestaurants(lat: Double, lng: Double) {
         screenModelScope.launch {
+            isSearching = true
+            _event.emit(MapEvent.ToggleSearchThisAreaButton(visible = false))
+
+            lastSearchedLat = lat
+            lastSearchedLng = lng
+
             val request = MapRequest(
                 lat = lat,
                 lng = lng,
@@ -143,7 +153,30 @@ class MapScreenModel(
                     println("Hata Oluştu: ${response.message}")
                 }
             }
+            isSearching = false
         }
+    }
+
+
+    fun onCameraIdle(lat: Double, lng: Double, zoom: Double) {
+        currentCameraLat = lat
+        currentCameraLng = lng
+
+        if (_activeRoute.value is ActiveRouteState.Active || isSearching) return
+
+        if (lastSearchedLat != 0.0 && lastSearchedLng != 0.0) {
+            val distance = calculateDistance(lastSearchedLat, lastSearchedLng, lat, lng)
+            if (distance > 400.0) {
+                screenModelScope.launch {
+                    _event.emit(MapEvent.ToggleSearchThisAreaButton(visible = true))
+                }
+            }
+        }
+    }
+
+    fun onSearchThisAreaClicked() {
+        if (currentCameraLat == 0.0 && currentCameraLng == 0.0) return
+        fetchNearbyRestaurants(currentCameraLat, currentCameraLng)
     }
 
     fun onMarkerClicked(restaurant: Restaurant) {
@@ -261,7 +294,8 @@ class MapScreenModel(
                                 formattedDistance = routeData.formattedDistance,
                                 formattedDuration = routeData.formattedDuration,
                                 targetLat = targetLat,
-                                targetLng = targetLng
+                                targetLng = targetLng,
+                                targetPlaceId = placeId
                             )
                         )
                     } else {
