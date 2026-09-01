@@ -104,18 +104,14 @@ class MyProfileRepository(
                         )
                     )
                 }
-
-                localDataSource.getProfile(myUserId)?.let { oldProfile ->
-                    localDataSource.saveProfile(
-                        oldProfile.copy(
-                            username = request.username ?: oldProfile.username,
-                            name = request.name ?: oldProfile.name,
-                            surname = request.surname ?: oldProfile.surname,
-                            profilePhoto = request.profilePhoto ?: oldProfile.profilePhoto,
-                            biography = request.biography ?: oldProfile.biography
-                        )
-                    )
-                }
+                localDataSource.updatePartialProfile(
+                    userId = myUserId,
+                    username = request.username,
+                    name = request.name,
+                    surname = request.surname,
+                    profilePhoto = request.profilePhoto,
+                    biography = request.biography
+                )
             }
         }
         return result

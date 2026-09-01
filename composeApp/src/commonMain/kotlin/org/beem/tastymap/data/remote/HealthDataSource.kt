@@ -3,6 +3,7 @@ package org.beem.tastymap.data.remote
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.get
+import io.ktor.client.request.patch
 import io.ktor.client.request.post
 import io.ktor.client.request.put
 import io.ktor.client.request.setBody
@@ -18,7 +19,7 @@ class HealthDataSource(private val client: HttpClient) {
     }
 
     suspend fun updateHealth(request: HealthRequest): HealthResponse{
-        return client.put("api/HealthInfo/updateHealth"){
+        return client.patch("api/HealthInfo/updateHealth"){
             setBody(request)
         }.body()
     }

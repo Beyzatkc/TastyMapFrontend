@@ -40,7 +40,6 @@ class HealthScreenModel(
         )
         _healthState.update { it.copy(availableAllergies = defaultAllergies, selectedAllergyIds = listOf(NO_ALLERGY_ID)) }
     }
- //BURASIDA ILK BASTA SQLDELIGHTEDN KOKUYCAK
     fun loadUserHealthProfile() {
         screenModelScope.launch {
             _healthState.update { it.copy(isLoading = true) }
@@ -55,7 +54,6 @@ class HealthScreenModel(
                         HealthEnum.NORMAL
                     }
 
-                    // 2. AllergyInfo listesinden ID listesini çıkarma
                     val allergyIds = userHealth.allergyInfo?.map { it.id } ?: emptyList()
                     val finalAllergyIds = if (allergyIds.isEmpty()) listOf(6L) else allergyIds
 
@@ -64,7 +62,8 @@ class HealthScreenModel(
                             isLoading = false,
                             hasDiabetes = userHealth.hasDiabetes ?: false,
                             selectedEatType = parsedEatType,
-                            selectedAllergyIds = finalAllergyIds
+                            selectedAllergyIds = finalAllergyIds,
+                            initialHealthProfile = userHealth
                         )
                     }
                 }
@@ -148,19 +147,40 @@ class HealthScreenModel(
     }
     fun updateHealthProfile() {
         val currentState = _healthState.value
-        if (currentState.isLoading) return
+        if (currentState.isLoading) {
+            return
+        }
+        val initial = currentState.initialHealthProfile
+
+        val changedDiabetes = if (initial == null || currentState.hasDiabetes != initial.hasDiabetes) {
+            currentState.hasDiabetes
+        } else null
+        val initialEatType = initial?.eatType?.let { runCatching { HealthEnum.valueOf(it) }.getOrNull() }
+        val changedEatType = if (initial == null || currentState.selectedEatType != initialEatType) {
+            currentState.selectedEatType
+        } else null
+
+        val currentAllergiesClean = currentState.selectedAllergyIds.filter { it != NO_ALLERGY_ID }.sorted()
+        val initialAllergiesClean = (initial?.allergyInfo?.map { it.id } ?: emptyList())
+            .filter { it != NO_ALLERGY_ID }.sorted()
+
+        val changedAllergies = if (initial == null || currentAllergiesClean != initialAllergiesClean) {
+            currentAllergiesClean
+        } else null
+
+        if (changedDiabetes == null && changedEatType == null && changedAllergies == null) {
+            _healthState.update { it.copy(isSuccess = true) }
+            return
+        }
+
+        val request = HealthRequest(
+            hasDiabetes = changedDiabetes,
+            eatType = changedEatType,
+            allergyIds = changedAllergies
+        )
 
         screenModelScope.launch {
             _healthState.update { it.copy(isLoading = true, error = null) }
-
-            val payloadAllergies = currentState.selectedAllergyIds
-                .filter { it != NO_ALLERGY_ID }
-
-            val request = HealthRequest(
-                hasDiabetes = currentState.hasDiabetes,
-                eatType = currentState.selectedEatType,
-                allergyIds = payloadAllergies
-            )
 
             when (val result = repo.updateHealth(request)) {
                 is ResultWrapper.Success -> {

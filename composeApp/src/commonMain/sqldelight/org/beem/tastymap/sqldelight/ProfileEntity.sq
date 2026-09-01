@@ -25,6 +25,16 @@ INSERT OR REPLACE INTO ProfileEntity(
     blockedByMe, blockedMe, updatedAt
 ) VALUES (?, ?, ?, ?,?, ?, ?, ?, ?, ?, ?, ?, ?);
 
+updatePartialProfile:
+UPDATE ProfileEntity
+SET
+    username = COALESCE(:username, username),
+    name = COALESCE(:name, name),
+    surname = COALESCE(:surname, surname),
+    profilePhoto = COALESCE(:profilePhoto, profilePhoto),
+    biography = COALESCE(:biography, biography)
+WHERE userId = :userId;
+
 -- Profil Önbelleğini Sil (Cache Invalidation)
 deleteProfileById:
 DELETE FROM ProfileEntity WHERE userId = ?;

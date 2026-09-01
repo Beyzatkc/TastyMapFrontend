@@ -27,6 +27,23 @@ class ProfileLocalDataSource(private val queries: ProfileEntityQueries) {
         )
     }
 
+    suspend fun updatePartialProfile(
+        userId: Long,
+        username: String?,
+        name: String?,
+        surname: String?,
+        profilePhoto: String?,
+        biography: String?
+    ) {
+        queries.updatePartialProfile(
+            userId = userId,
+            username = username,
+            name = name,
+            surname = surname,
+            profilePhoto = profilePhoto,
+            biography = biography
+        )
+    }
     suspend fun saveProfile(profile: UserProfile) = withContext(Dispatchers.Default) {
         queries.insertOrUpdateProfile(
             userId = profile.userId,

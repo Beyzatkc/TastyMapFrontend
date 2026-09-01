@@ -18,7 +18,6 @@ class ActiveDevicesScreenModel(
     private val _uiState = MutableStateFlow(ActiveDevicesUiState())
     val uiState = _uiState.asStateFlow()
 
-
     private fun detectDeviceType(userAgent: String): DeviceType {
         val combined = "$userAgent".lowercase()
         return when {

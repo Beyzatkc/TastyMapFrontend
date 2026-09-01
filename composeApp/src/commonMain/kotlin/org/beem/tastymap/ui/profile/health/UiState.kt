@@ -2,6 +2,7 @@ package org.beem.tastymap.ui.profile.health
 
 import org.beem.tastymap.data.model.health.AllergyInfo
 import org.beem.tastymap.data.model.health.HealthEnum
+import org.beem.tastymap.data.model.health.HealthResponse
 
 data class HealthUiState(
     val currentStep: Int = 0,
@@ -10,6 +11,8 @@ data class HealthUiState(
     val hasDiabetes: Boolean = false,
     val selectedEatType: HealthEnum = HealthEnum.NORMAL,
     val selectedAllergyIds: List<Long> = emptyList(),
+
+    val initialHealthProfile: HealthResponse? = null,
 
     val availableAllergies: List<AllergyInfo> = emptyList(),
     val error: String? = null,
