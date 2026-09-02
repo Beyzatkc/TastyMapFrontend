@@ -18,4 +18,7 @@ interface MapController {
     fun clearRoute()
 
     fun setOnCameraIdleListener(onCameraIdle: (centerLat: Double, centerLng: Double, zoom: Double) -> Unit)
+
+    fun showSearchPin(lat: Double, lng: Double)
+    fun clearSearchPin()
 }

@@ -19,6 +19,9 @@ import org.beem.tastymap.review.AddReviewScreenModel
 import org.beem.tastymap.route.network.RouteDataSource
 import org.beem.tastymap.route.repository.RouteRepository
 import org.beem.tastymap.route.repository.RouteRepositoryImpl
+import org.beem.tastymap.search.SearchScreenModel
+import org.beem.tastymap.search.network.SearchDataSource
+import org.beem.tastymap.search.repository.SearchRepository
 import org.beem.tastymap.ui.auth.AuthScreenModel
 import org.koin.core.qualifier.named
 
@@ -50,5 +53,9 @@ val appModule = module {
     factory { RestaurantDetailScreenModel(get()) }
 
     factory { AddReviewScreenModel(get()) }
+
+    single { SearchDataSource(get(named("auth"))) }
+    single { SearchRepository(get()) }
+    factory { SearchScreenModel(get()) }
 
 }

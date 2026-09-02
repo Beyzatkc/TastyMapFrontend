@@ -42,6 +42,10 @@ class MapControllerImp(
     val LAYER_ID = "user-location-layer"
     val ICON_ID = "user-navigation-icon"
 
+    private val SEARCH_PIN_SOURCE_ID = "tastymap-search-pin-source"
+    private val SEARCH_PIN_OUTER_LAYER_ID = "tastymap-search-pin-outer-layer"
+    private val SEARCH_PIN_INNER_LAYER_ID = "tastymap-search-pin-inner-layer"
+
     private var animator: ValueAnimator? = null
     private var lastLat = 0.0
     private var lastLng = 0.0
@@ -298,4 +302,70 @@ class MapControllerImp(
             }
         }
     }
+
+    override fun showSearchPin(lat: Double, lng: Double) {
+        map.post {
+            try {
+                val point = Point.fromLngLat(lng, lat)
+                val featureCollection = FeatureCollection.fromFeature(Feature.fromGeometry(point))
+                val source = style.getSourceAs<GeoJsonSource>(SEARCH_PIN_SOURCE_ID)
+
+                if (source != null) {
+                    // Kaynak zaten varsa sadece koordinatı güncelle
+                    source.setGeoJson(featureCollection)
+                } else {
+                    // İlk defa çağrılıyorsa Source ve Katmanları kur
+                    style.addSource(GeoJsonSource(SEARCH_PIN_SOURCE_ID, featureCollection))
+
+                    // 1. Dış Beyaz Kontur Halkası
+                    val outerLayer = org.maplibre.android.style.layers.CircleLayer(
+                        SEARCH_PIN_OUTER_LAYER_ID,
+                        SEARCH_PIN_SOURCE_ID
+                    ).apply {
+                        setProperties(
+                            PropertyFactory.circleColor(Color.White.toArgb()),
+                            PropertyFactory.circleRadius(13f),
+                            PropertyFactory.circleOpacity(1.0f)
+                        )
+                    }
+
+                    // 2. İç Turuncu Gurme Pin Halkası
+                    val innerLayer = org.maplibre.android.style.layers.CircleLayer(
+                        SEARCH_PIN_INNER_LAYER_ID,
+                        SEARCH_PIN_SOURCE_ID
+                    ).apply {
+                        setProperties(
+                            PropertyFactory.circleColor(AppColors.GourmetOrange.toArgb()),
+                            PropertyFactory.circleRadius(9f),
+                            PropertyFactory.circleOpacity(1.0f)
+                        )
+                    }
+
+                    // Kullanıcı lokasyon layer'ının hemen altına ekle (varsa), yoksa en üste
+                    val topLayer = if (style.getLayer(LAYER_ID) != null) LAYER_ID else null
+                    if (topLayer != null) {
+                        style.addLayerBelow(outerLayer, topLayer)
+                        style.addLayerBelow(innerLayer, topLayer)
+                    } else {
+                        style.addLayer(outerLayer)
+                        style.addLayer(innerLayer)
+                    }
+                }
+            } catch (e: Exception) {
+                println("TastyMap HATA -> Search Pin basılırken hata: ${e.message}")
+            }
+        }
+    }
+
+    override fun clearSearchPin() {
+        map.post {
+            try {
+                val source = style.getSourceAs<GeoJsonSource>(SEARCH_PIN_SOURCE_ID)
+                source?.setGeoJson(FeatureCollection.fromFeatures(arrayOf()))
+            } catch (e: Exception) {
+                println("TastyMap HATA -> Search Pin temizlenirken hata: ${e.message}")
+            }
+        }
+    }
+
 }

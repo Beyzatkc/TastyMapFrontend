@@ -71,6 +71,14 @@ class TastyMapState {
     fun clearRoute() {
         controller?.clearRoute()
     }
+
+    fun showSearchPin(lat: Double, lng: Double) {
+        controller?.showSearchPin(lat, lng)
+    }
+
+    fun clearSearchPin() {
+        controller?.clearSearchPin()
+    }
 }
 
 @Composable
