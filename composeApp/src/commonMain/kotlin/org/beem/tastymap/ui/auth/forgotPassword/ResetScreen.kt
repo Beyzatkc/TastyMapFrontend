@@ -51,7 +51,17 @@ import org.beem.tastymap.ui.components.BackPage
 import org.beem.tastymap.ui.components.PasswordStrengthIndicator
 import org.beem.tastymap.ui.components.TastyTextField
 import org.beem.tastymap.ui.theme.LocalCustomColors
+import org.jetbrains.compose.resources.getString
+import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.koinInject
+import tastymap.composeapp.generated.resources.Res
+import tastymap.composeapp.generated.resources.reset_btn_back_to_login
+import tastymap.composeapp.generated.resources.reset_btn_submit
+import tastymap.composeapp.generated.resources.reset_field_confirm_password
+import tastymap.composeapp.generated.resources.reset_field_new_password
+import tastymap.composeapp.generated.resources.reset_header
+import tastymap.composeapp.generated.resources.reset_info_note
+import tastymap.composeapp.generated.resources.reset_title
 
 class ResetScreen(val token: String) : Screen {
     @Composable
@@ -70,7 +80,11 @@ class ResetScreen(val token: String) : Screen {
 
         LaunchedEffect(screenModel.uiMessage) {
             screenModel.uiMessage.collect { message ->
-                ToastManager.show(message)
+                val text = when (message) {
+                    is ResetScreenModel.UiMessage.Dynamic -> message.message
+                    is ResetScreenModel.UiMessage.Resource -> getString(message.res)
+                }
+                ToastManager.show(text)
             }
         }
 
@@ -84,7 +98,7 @@ class ResetScreen(val token: String) : Screen {
                     .statusBarsPadding()
                     .navigationBarsPadding()
             ) {
-                BackPage("Şifre Sıfırlama", {
+                BackPage(stringResource(Res.string.reset_header), {
                     screenModel.backClickReset()
                     navigator.pop()
                 })
@@ -124,7 +138,7 @@ class ResetScreen(val token: String) : Screen {
                         Spacer(modifier = Modifier.height(24.dp))
 
                         Text(
-                            text = "Şifrenizi mi Unuttunuz?",
+                            text = stringResource(Res.string.reset_title),
                             style = MaterialTheme.typography.headlineSmall,
                             fontWeight = FontWeight.Bold,
                             color = colors.textPrimary,
@@ -139,11 +153,12 @@ class ResetScreen(val token: String) : Screen {
                             onValueChange = {
                                 screenModel.onPasswordEvent(PasswordEvent.PasswordChanged(it))
                             },
-                            label = "Yeni Şifre",
+                            label = stringResource(Res.string.reset_field_new_password),
                             leadingIcon = {
                                 Icon(Icons.Default.Lock, null)
                             },
-                            error = state.regPasswordError
+
+                            error = state.regPasswordError?.let { stringResource(it) }
                         )
                         AnimatedVisibility(
                             visible = state.regPassword.isNotEmpty(),
@@ -162,17 +177,18 @@ class ResetScreen(val token: String) : Screen {
                             onValueChange = {
                                 screenModel.onPasswordEvent(PasswordEvent.ConfirmPasswordChanged(it))
                             },
-                            label = "Yeni Şifre tekrar",
+                            label = stringResource(Res.string.reset_field_confirm_password),
                             leadingIcon = {
                                 Icon(Icons.Default.Lock, null)
                             },
-                            error = state.confirmPasswordError
+
+                            error = state.confirmPasswordError?.let { stringResource(it) }
                         )
 
                         Spacer(modifier = Modifier.height(24.dp))
 
                         TastyButton(
-                            text = "Şifreyi değiştir",
+                            text = stringResource(Res.string.reset_btn_submit),
                             onClick = { screenModel.resetPassword(token) },
                             isLoading = state.isLoading,
                             enabled = state.regPassword.isNotBlank() && state.confirmPassword.isNotBlank(),
@@ -190,7 +206,7 @@ class ResetScreen(val token: String) : Screen {
                             }
                         ) {
                             Text(
-                                text = "Giriş ekranına geri dön",
+                                text = stringResource(Res.string.reset_btn_back_to_login),
                                 color = colors.navy,
                                 style = MaterialTheme.typography.labelLarge
                             )
@@ -210,7 +226,7 @@ class ResetScreen(val token: String) : Screen {
                                 verticalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
                                 Text(
-                                    text = "Şifrenizi sıfırladıktan sonra hesabınıza giriş yapabilirsiniz.",
+                                    text = stringResource(Res.string.reset_info_note),
                                     style = MaterialTheme.typography.bodySmall,
                                     color = colors.textSecondary
                                 )

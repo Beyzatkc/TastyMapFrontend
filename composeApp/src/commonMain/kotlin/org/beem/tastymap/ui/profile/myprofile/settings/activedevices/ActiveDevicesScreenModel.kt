@@ -36,7 +36,7 @@ class ActiveDevicesScreenModel(
                         ActiveDeviceUiItem(
                             deviceId = dto.deviceId,
                             deviceName = dto.userAgent.parseDeviceName(),
-                            formattedLastSeen = "Giriş yapıldı: ${formatToRelativeDateTime(dto.lastUsedAt)}",
+                            formattedLastSeen = formatToRelativeDateTime(dto.lastUsedAt),
                             location = dto.city,
                             deviceType = detectDeviceType(dto.userAgent)
                         )

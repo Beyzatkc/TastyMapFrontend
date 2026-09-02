@@ -1,6 +1,5 @@
 package org.beem.tastymap.ui.profile.myprofile.settings
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
@@ -13,8 +12,6 @@ import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.DeleteForever
 import androidx.compose.material.icons.filled.Devices
-import androidx.compose.material.icons.filled.FilterList
-import androidx.compose.material.icons.filled.HealthAndSafety
 import androidx.compose.material.icons.filled.HelpOutline
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Language
@@ -40,10 +37,40 @@ import cafe.adriel.voyager.navigator.currentOrThrow
 import org.beem.tastymap.core.util.ToastManager
 import org.beem.tastymap.ui.auth.logReg.LogRegScreen
 import org.beem.tastymap.ui.profile.myprofile.settings.activedevices.ActiveDevicesScreen
+import org.beem.tastymap.ui.profile.myprofile.settings.changepassword.ChangePasswordBottomSheet
 import org.beem.tastymap.ui.profile.myprofile.settings.changepassword.ChangePasswordScreenModel
 import org.beem.tastymap.ui.profile.myprofile.settings.edithealth.EditHealthScreen
 import org.beem.tastymap.ui.theme.LocalCustomColors
-import org.beem.tastymap.ui.theme.TastyTheme
+import org.jetbrains.compose.resources.getString
+import org.jetbrains.compose.resources.stringResource
+import tastymap.composeapp.generated.resources.Res
+import tastymap.composeapp.generated.resources.settings_active_devices
+import tastymap.composeapp.generated.resources.settings_app_version
+import tastymap.composeapp.generated.resources.settings_back_cd
+import tastymap.composeapp.generated.resources.settings_cancel
+import tastymap.composeapp.generated.resources.settings_change_password
+import tastymap.composeapp.generated.resources.settings_contact_us
+import tastymap.composeapp.generated.resources.settings_dark_mode
+import tastymap.composeapp.generated.resources.settings_delete_account
+import tastymap.composeapp.generated.resources.settings_language
+import tastymap.composeapp.generated.resources.settings_language_default
+import tastymap.composeapp.generated.resources.settings_logout
+import tastymap.composeapp.generated.resources.settings_logout_dialog_loading_text
+import tastymap.composeapp.generated.resources.settings_logout_dialog_loading_title
+import tastymap.composeapp.generated.resources.settings_logout_dialog_message
+import tastymap.composeapp.generated.resources.settings_logout_dialog_title
+import tastymap.composeapp.generated.resources.settings_notifications
+import tastymap.composeapp.generated.resources.settings_nutrition_preferences
+import tastymap.composeapp.generated.resources.settings_nutrition_preferences_sub
+import tastymap.composeapp.generated.resources.settings_privacy_policy
+import tastymap.composeapp.generated.resources.settings_private_account
+import tastymap.composeapp.generated.resources.settings_private_account_sub
+import tastymap.composeapp.generated.resources.settings_section_account_security
+import tastymap.composeapp.generated.resources.settings_section_app_preferences
+import tastymap.composeapp.generated.resources.settings_section_nutrition
+import tastymap.composeapp.generated.resources.settings_section_session_privacy
+import tastymap.composeapp.generated.resources.settings_section_support_about
+import tastymap.composeapp.generated.resources.settings_title
 import kotlin.time.Clock
 
 class SettingsScreen : Screen {
@@ -60,6 +87,9 @@ class SettingsScreen : Screen {
         val isDarkModePref by settingsScreenModel.isDarkMode.collectAsState()
         val isDarkModeActive = isDarkModePref ?: isSystemInDarkTheme()
 
+        val currentLanguageCode by settingsScreenModel.languageCode.collectAsState()
+        var showLanguageDialog by remember { mutableStateOf(false) }
+
         val customColors = LocalCustomColors.current
         val navigator = LocalNavigator.currentOrThrow
 
@@ -69,10 +99,10 @@ class SettingsScreen : Screen {
         var mod by remember { mutableStateOf(false) }
         var isAccountPrivate by remember { mutableStateOf(false) }
 
-        LaunchedEffect(changePasswordState.successMessage) {
-            changePasswordState.successMessage?.let { message ->
+        LaunchedEffect(changePasswordState.successMessageRes) {
+            changePasswordState.successMessageRes?.let { res ->
                 showChangePasswordSheet = false
-                ToastManager.show(message)
+                ToastManager.show(getString(res))
                 changePasswordScreenModel.clearMessages()
             }
         }
@@ -97,7 +127,7 @@ class SettingsScreen : Screen {
                 TopAppBar(
                     title = {
                         Text(
-                            text = "Ayarlar ve Hareketler",
+                            text = stringResource(Res.string.settings_title),
                             style = MaterialTheme.typography.titleMedium.copy(
                                 color = customColors.textPrimary,
                                 fontWeight = FontWeight.Bold
@@ -108,7 +138,7 @@ class SettingsScreen : Screen {
                         IconButton(onClick = { navigator.pop() }) {
                             Icon(
                                 imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                contentDescription = "Geri",
+                                contentDescription = stringResource(Res.string.settings_back_cd),
                                 tint = customColors.textPrimary
                             )
                         }
@@ -128,7 +158,7 @@ class SettingsScreen : Screen {
             ) {
                 // 1. Hesabım & Güvenlik
                 item {
-                    SettingsSectionHeader(title = "Hesabım & Güvenlik")
+                    SettingsSectionHeader(title = stringResource(Res.string.settings_section_account_security))
                     Card(
                         colors = CardDefaults.cardColors(containerColor = customColors.surface),
                         shape = RoundedCornerShape(16.dp),
@@ -137,7 +167,7 @@ class SettingsScreen : Screen {
                         Column {
                             SettingsOptionItem(
                                 icon = Icons.Default.Lock,
-                                title = "Şifre Değiştir",
+                                title = stringResource(Res.string.settings_change_password),
                                 onClick = {
                                     changePasswordScreenModel.clearMessages()
                                     showChangePasswordSheet = true
@@ -146,7 +176,7 @@ class SettingsScreen : Screen {
                             SettingsDivider()
                             SettingsOptionItem(
                                 icon = Icons.Default.Devices,
-                                title = "Aktif Cihazlar",
+                                title = stringResource(Res.string.settings_active_devices),
                                 onClick = {
                                     navigator.push(ActiveDevicesScreen())
                                 }
@@ -154,8 +184,8 @@ class SettingsScreen : Screen {
                             SettingsDivider()
                             SettingsOptionItem(
                                 icon = Icons.Default.VisibilityOff,
-                                title = "Gizli Hesap",
-                                subtitle = "Hesabınız gizli olduğunda sadece takipçileriniz içeriklerinizi görebilir.",
+                                title = stringResource(Res.string.settings_private_account),
+                                subtitle = stringResource(Res.string.settings_private_account_sub),
                                 trailingContent = {
                                     Switch(
                                         checked = isAccountPrivate,
@@ -179,7 +209,7 @@ class SettingsScreen : Screen {
                     }
                 }
                 item {
-                    SettingsSectionHeader(title = "Beslenme & Alerjenler")
+                    SettingsSectionHeader(title = stringResource(Res.string.settings_section_nutrition))
                     Card(
                         colors = CardDefaults.cardColors(containerColor = customColors.surface),
                         shape = RoundedCornerShape(16.dp),
@@ -188,8 +218,8 @@ class SettingsScreen : Screen {
                         Column {
                             SettingsOptionItem(
                                 icon = Icons.Default.Tune,
-                                title = "Beslenme & Alerjen Tercihleri",
-                                subtitle = "AI önerileri, diyabet, alerji ve beslenme kısıtlamalarınızı yönetin.",
+                                title = stringResource(Res.string.settings_nutrition_preferences),
+                                subtitle = stringResource(Res.string.settings_nutrition_preferences_sub),
                                 onClick = {
                                      navigator.push(EditHealthScreen())
                                 }
@@ -200,7 +230,7 @@ class SettingsScreen : Screen {
 
                 // 2. Uygulama Tercihleri
                 item {
-                    SettingsSectionHeader(title = "Uygulama Tercihleri")
+                    SettingsSectionHeader(title = stringResource(Res.string.settings_section_app_preferences))
                     Card(
                         colors = CardDefaults.cardColors(containerColor = customColors.surface),
                         shape = RoundedCornerShape(16.dp),
@@ -209,7 +239,7 @@ class SettingsScreen : Screen {
                         Column {
                             SettingsOptionItem(
                                 icon = Icons.Default.Notifications,
-                                title = "Bildirim Ayarları",
+                                title = stringResource(Res.string.settings_notifications),
                                 trailingContent = {
                                     Switch(
                                         checked = isNotificationsEnabled,
@@ -229,7 +259,7 @@ class SettingsScreen : Screen {
                             SettingsDivider()
                             SettingsOptionItem(
                                 icon = Icons.Default.DarkMode,
-                                title = "Karanlık Mod",
+                                title = stringResource(Res.string.settings_dark_mode),
                                 trailingContent = {
                                     Switch(
                                         checked = isDarkModeActive,
@@ -253,10 +283,10 @@ class SettingsScreen : Screen {
                             SettingsDivider()
                             SettingsOptionItem(
                                 icon = Icons.Default.Language,
-                                title = "Dil Seçimi",
-                                badgeText = "Türkçe",
+                                title = stringResource(Res.string.settings_language),
+                                badgeText = if (currentLanguageCode == "tr") "Türkçe" else "English",
                                 onClick = {
-                                    // Dil Seçimi Dialog
+                                    showLanguageDialog = true
                                 }
                             )
                         }
@@ -265,7 +295,7 @@ class SettingsScreen : Screen {
 
                 // 3. Destek & Hakkında
                 item {
-                    SettingsSectionHeader(title = "Destek & Hakkında")
+                    SettingsSectionHeader(title = stringResource(Res.string.settings_section_support_about))
                     Card(
                         colors = CardDefaults.cardColors(containerColor = customColors.surface),
                         shape = RoundedCornerShape(16.dp),
@@ -274,7 +304,7 @@ class SettingsScreen : Screen {
                         Column {
                             SettingsOptionItem(
                                 icon = Icons.Default.Policy,
-                                title = "Gizlilik Politikası & Kullanım Koşulları",
+                                title = stringResource(Res.string.settings_privacy_policy),
                                 onClick = {
                                     // Webview veya Tarayıcı Yönlendirmesi
                                 }
@@ -282,7 +312,7 @@ class SettingsScreen : Screen {
                             SettingsDivider()
                             SettingsOptionItem(
                                 icon = Icons.Default.HelpOutline,
-                                title = "Bize Ulaşın / Destek",
+                                title = stringResource(Res.string.settings_contact_us),
                                 onClick = {
                                     // Destek ekranı / e-posta tetikleyici
                                 }
@@ -290,7 +320,7 @@ class SettingsScreen : Screen {
                             SettingsDivider()
                             SettingsOptionItem(
                                 icon = Icons.Default.Info,
-                                title = "Uygulama Sürümü",
+                                title = stringResource(Res.string.settings_app_version),
                                 badgeText = "v1.0.0",
                                 showChevron = false,
                                 onClick = {}
@@ -301,7 +331,7 @@ class SettingsScreen : Screen {
 
                 // 4. Oturum & Gizlilik
                 item {
-                    SettingsSectionHeader(title = "Oturum & Gizlilik")
+                    SettingsSectionHeader(title = stringResource(Res.string.settings_section_session_privacy))
                     Card(
                         colors = CardDefaults.cardColors(containerColor = customColors.surface),
                         shape = RoundedCornerShape(16.dp),
@@ -310,7 +340,7 @@ class SettingsScreen : Screen {
                         Column {
                             SettingsOptionItem(
                                 icon = Icons.AutoMirrored.Filled.Logout,
-                                title = "Çıkış Yap",
+                                title = stringResource(Res.string.settings_logout),
                                 textColor = customColors.error,
                                 iconColor = customColors.error,
                                 showChevron = false,
@@ -321,7 +351,7 @@ class SettingsScreen : Screen {
                             SettingsDivider()
                             SettingsOptionItem(
                                 icon = Icons.Default.DeleteForever,
-                                title = "Hesabımı Sil",
+                                title = stringResource(Res.string.settings_delete_account),
                                 textColor = customColors.error,
                                 iconColor = customColors.error,
                                 showChevron = false,
@@ -336,6 +366,86 @@ class SettingsScreen : Screen {
                 item {
                     Spacer(modifier = Modifier.height(16.dp))
                 }
+            }
+
+            if (showLanguageDialog) {
+                AlertDialog(
+                    onDismissRequest = { showLanguageDialog = false },
+                    title = {
+                        Text(
+                            text = stringResource(Res.string.settings_language),
+                            style = MaterialTheme.typography.titleMedium.copy(
+                                fontWeight = FontWeight.Bold,
+                                color = customColors.textPrimary
+                            )
+                        )
+                    },
+                    text = {
+                        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            // Türkçe Seçeneği
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable {
+                                        settingsScreenModel.setLanguage("tr")
+                                        showLanguageDialog = false
+                                    }
+                                    .padding(vertical = 12.dp, horizontal = 8.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                RadioButton(
+                                    selected = currentLanguageCode == "tr",
+                                    onClick = {
+                                        settingsScreenModel.setLanguage("tr")
+                                        showLanguageDialog = false
+                                    }
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(
+                                    text = "Türkçe",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = customColors.textPrimary
+                                )
+                            }
+
+                            // İngilizce Seçeneği
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable {
+                                        settingsScreenModel.setLanguage("en")
+                                        showLanguageDialog = false
+                                    }
+                                    .padding(vertical = 12.dp, horizontal = 8.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                RadioButton(
+                                    selected = currentLanguageCode == "en",
+                                    onClick = {
+                                        settingsScreenModel.setLanguage("en")
+                                        showLanguageDialog = false
+                                    }
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(
+                                    text = "English",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = customColors.textPrimary
+                                )
+                            }
+                        }
+                    },
+                    confirmButton = {
+                        TextButton(onClick = { showLanguageDialog = false }) {
+                            Text(
+                                text = stringResource(Res.string.settings_cancel),
+                                color = customColors.textSecondary
+                            )
+                        }
+                    },
+                    containerColor = customColors.surface,
+                    shape = RoundedCornerShape(20.dp)
+                )
             }
 
             if (showLogoutDialog) {
@@ -353,7 +463,7 @@ class SettingsScreen : Screen {
                     },
                     title = {
                         Text(
-                            text = if (settingsState.isActionLoading) "Lütfen Bekleyin" else "Çıkış Yapılsın mı?",
+                            text = if (settingsState.isActionLoading) stringResource(Res.string.settings_logout_dialog_loading_title) else stringResource(Res.string.settings_logout_dialog_title),
                             style = MaterialTheme.typography.titleMedium.copy(
                                 fontWeight = FontWeight.Bold,
                                 color = customColors.textPrimary
@@ -372,14 +482,14 @@ class SettingsScreen : Screen {
                                     strokeWidth = 2.5.dp
                                 )
                                 Text(
-                                    text = "Çıkış yapılıyor...",
+                                    text = stringResource(Res.string.settings_logout_dialog_loading_text),
                                     style = MaterialTheme.typography.bodyMedium,
                                     color = customColors.textPrimary
                                 )
                             }
                         } else {
                             Text(
-                                text = "Hesabınızdan çıkış yapmak istediğinize emin misiniz?",
+                                text = stringResource(Res.string.settings_logout_dialog_message),
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = customColors.textSecondary
                             )
@@ -397,7 +507,7 @@ class SettingsScreen : Screen {
                                 shape = RoundedCornerShape(10.dp)
                             ) {
                                 Text(
-                                    text = "Çıkış Yap",
+                                    text = stringResource(Res.string.settings_logout),
                                     style = MaterialTheme.typography.labelLarge.copy(
                                         fontWeight = FontWeight.Bold,
                                         color = customColors.surface
@@ -409,7 +519,7 @@ class SettingsScreen : Screen {
                     dismissButton = {
                         if (!settingsState.isActionLoading) {
                             TextButton(onClick = { showLogoutDialog = false }) {
-                                Text(text = "Vazgeç", color = customColors.textSecondary)
+                                Text(text = stringResource(Res.string.settings_cancel), color = customColors.textSecondary)
                             }
                         }
                     },
@@ -422,9 +532,9 @@ class SettingsScreen : Screen {
                 ChangePasswordBottomSheet(
                     isActionLoading = changePasswordState.isLoading,
                     errorMessage = changePasswordState.errorMessage,
-                    oldPasswordError = changePasswordState.oldPasswordError,
-                    newPasswordError = changePasswordState.newPasswordError,
-                    againNewPasswordError = changePasswordState.againNewPasswordError,
+                    oldPasswordError = changePasswordState.oldPasswordError?.let { stringResource(it) },
+                    newPasswordError = changePasswordState.newPasswordError?.let { stringResource(it) },
+                    againNewPasswordError = changePasswordState.againNewPasswordError?.let { stringResource(it) },
                     onDismissRequest = {
                         showChangePasswordSheet = false
                         changePasswordScreenModel.clearMessages()

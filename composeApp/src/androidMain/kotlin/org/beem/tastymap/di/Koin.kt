@@ -31,7 +31,7 @@ val androidModule = module {
         )
     }
     single<DeviceInfoProvider> { AndroidDeviceInfoProvider(get()) }
-    single<HttpClientFactory> { MobileHttpClientFactory(get(), get()) }
+    single<HttpClientFactory> { MobileHttpClientFactory(get(), get(),get()) }
     single<Settings> {
         val masterKeyAlias = MasterKeys.getOrCreate(MasterKeys.AES256_GCM_SPEC)
 

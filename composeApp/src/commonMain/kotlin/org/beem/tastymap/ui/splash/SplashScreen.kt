@@ -22,9 +22,12 @@ import org.beem.tastymap.ui.auth.logReg.LogRegScreen
 import org.beem.tastymap.ui.profile.health.OnBoardingScreen
 import org.beem.tastymap.ui.profile.myprofile.MyProfileScreen
 import org.beem.tastymap.ui.profile.otherprofile.ProfileScreen
+import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.painterResource
+import org.jetbrains.compose.resources.stringResource
 import tastymap.composeapp.generated.resources.Res
 import tastymap.composeapp.generated.resources.app_logo
+import tastymap.composeapp.generated.resources.splash_app_logo_cd
 
 
 class SplashScreen: Screen {
@@ -66,7 +69,7 @@ class SplashScreen: Screen {
             ) {
                 Image(
                     painter = painterResource(Res.drawable.app_logo),
-                    contentDescription = "App Logo",
+                    contentDescription = stringResource(Res.string.splash_app_logo_cd),
                     modifier = Modifier.size(500.dp)
                 )
             }

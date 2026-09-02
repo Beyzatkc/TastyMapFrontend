@@ -25,6 +25,15 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import org.beem.tastymap.ui.auth.common.PasswordStrength
 import org.beem.tastymap.ui.theme.CustomColors
+import org.jetbrains.compose.resources.stringResource
+import tastymap.composeapp.generated.resources.Res
+import tastymap.composeapp.generated.resources.password_req_digit
+import tastymap.composeapp.generated.resources.password_req_min_length
+import tastymap.composeapp.generated.resources.password_req_special_char
+import tastymap.composeapp.generated.resources.password_req_uppercase
+import tastymap.composeapp.generated.resources.password_strength_medium
+import tastymap.composeapp.generated.resources.password_strength_strong
+import tastymap.composeapp.generated.resources.password_strength_weak
 
 @Composable
 fun PasswordStrengthIndicator(
@@ -32,18 +41,18 @@ fun PasswordStrengthIndicator(
     colors: CustomColors
 ) {
     val checks = listOf(
-        "8+ karakter" to passwordStrength.hasMinLength,
-        "Büyük harf" to passwordStrength.hasUppercase,
-        "Rakam" to passwordStrength.hasDigit,
-        "Özel karakter" to passwordStrength.hasSpecialChar
+        stringResource(Res.string.password_req_min_length) to passwordStrength.hasMinLength,
+        stringResource(Res.string.password_req_uppercase) to passwordStrength.hasUppercase,
+        stringResource(Res.string.password_req_digit) to passwordStrength.hasDigit,
+        stringResource(Res.string.password_req_special_char) to passwordStrength.hasSpecialChar
     )
 
     val score = checks.count { it.second }
 
     val (strengthText, color) = when (score) {
-        0, 1 -> "Zayıf" to colors.red
-        2, 3 -> "Orta" to colors.yellow
-        else -> "Güçlü" to colors.green
+        0, 1 -> stringResource(Res.string.password_strength_weak) to colors.red
+        2, 3 -> stringResource(Res.string.password_strength_medium) to colors.yellow
+        else -> stringResource(Res.string.password_strength_strong) to colors.green
     }
 
     Column(

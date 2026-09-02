@@ -52,7 +52,7 @@ val webModule = module {
     }
 
     single<HttpClientFactory> {
-        WebHttpClientFactory(get(), get())
+        WebHttpClientFactory(get(), get(),get())
     }
 
     single<Settings> {
@@ -65,7 +65,7 @@ val webModule = module {
     }
 
     single(named("noAuth")) {
-        createNoAuthClient()
+        createNoAuthClient(get())
     }
 
     single(named("auth")) {

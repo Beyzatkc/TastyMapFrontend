@@ -26,6 +26,11 @@ import androidx.compose.ui.unit.sp
 import cafe.adriel.voyager.core.screen.Screen
 import org.beem.tastymap.ui.components.AuthFooter
 import org.beem.tastymap.ui.theme.LocalCustomColors
+import org.jetbrains.compose.resources.stringResource
+import tastymap.composeapp.generated.resources.Res
+import tastymap.composeapp.generated.resources.verification_success_desc
+import tastymap.composeapp.generated.resources.verification_success_icon_cd
+import tastymap.composeapp.generated.resources.verification_success_title
 
 class VerificationSuccessScreen : Screen {
     @Composable
@@ -56,7 +61,7 @@ class VerificationSuccessScreen : Screen {
                     ) {
                         Icon(
                             imageVector = Icons.Default.CheckCircle,
-                            contentDescription = "Success",
+                            contentDescription = stringResource(Res.string.verification_success_icon_cd),
                             modifier = Modifier.size(64.dp),
                             tint = colors.green
                         )
@@ -65,7 +70,7 @@ class VerificationSuccessScreen : Screen {
                     Spacer(Modifier.height(32.dp))
 
                     Text(
-                        text = "E-posta Doğrulandı!",
+                        text = stringResource(Res.string.verification_success_title),
                         style = MaterialTheme.typography.headlineMedium,
                         fontWeight = FontWeight.ExtraBold,
                         color = colors.textPrimary,
@@ -75,7 +80,7 @@ class VerificationSuccessScreen : Screen {
                     Spacer(Modifier.height(16.dp))
 
                     Text(
-                        text = "Hesabınız başarıyla doğrulandı. Bu sekmeyi kapatıp uygulamadaki giriş ekranına dönerek oturum açabilirsiniz.",
+                        text = stringResource(Res.string.verification_success_desc),
                         textAlign = TextAlign.Center,
                         style = MaterialTheme.typography.bodyLarge,
                         color = colors.textSecondary,

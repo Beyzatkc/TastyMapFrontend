@@ -35,6 +35,24 @@ import coil3.compose.AsyncImage
 import org.beem.tastymap.domain.model.UserProfile
 import org.beem.tastymap.ui.theme.LocalCustomColors
 import org.beem.tastymap.ui.theme.TastyTheme
+import org.jetbrains.compose.resources.stringResource
+import tastymap.composeapp.generated.resources.Res
+import tastymap.composeapp.generated.resources.profile_back_cd
+import tastymap.composeapp.generated.resources.profile_default_bio
+import tastymap.composeapp.generated.resources.profile_default_name
+import tastymap.composeapp.generated.resources.profile_default_photo_cd
+import tastymap.composeapp.generated.resources.profile_default_title
+import tastymap.composeapp.generated.resources.profile_map_empty_placeholder
+import tastymap.composeapp.generated.resources.profile_metric_following
+import tastymap.composeapp.generated.resources.profile_metric_posts
+import tastymap.composeapp.generated.resources.profile_metric_subscribers
+import tastymap.composeapp.generated.resources.profile_photo_cd
+import tastymap.composeapp.generated.resources.profile_posts_empty_placeholder
+import tastymap.composeapp.generated.resources.profile_share
+import tastymap.composeapp.generated.resources.profile_subscribe
+import tastymap.composeapp.generated.resources.profile_subscribed
+import tastymap.composeapp.generated.resources.profile_tab_posts
+import tastymap.composeapp.generated.resources.profile_tab_taste_map
 
 class ProfileScreen(private val userId: Long) : Screen {
 
@@ -81,7 +99,7 @@ fun ProfileContent(
             TopAppBar(
                 title = {
                     Text(
-                        text = profile?.username?.let { "@$it" } ?: "Gurme Profili",
+                        text = profile?.username?.let { "@$it" } ?: stringResource(Res.string.profile_default_title),
                         style = MaterialTheme.typography.titleMedium.copy(color = Color.White)
                     )
                 },
@@ -89,7 +107,7 @@ fun ProfileContent(
                     IconButton(onClick = onBackClick) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Geri",
+                            contentDescription = stringResource(Res.string.profile_back_cd),
                             tint = Color.White
                         )
                     }
@@ -159,7 +177,7 @@ fun ProfileContent(
                                             if (!profile?.profilePhoto.isNullOrBlank()) {
                                                 AsyncImage(
                                                     model = profile.profilePhoto,
-                                                    contentDescription = "Profil Fotoğrafı",
+                                                    contentDescription = stringResource(Res.string.profile_photo_cd),
                                                     modifier = Modifier
                                                         .fillMaxSize()
                                                         .clip(CircleShape),
@@ -168,7 +186,7 @@ fun ProfileContent(
                                             } else {
                                                 Icon(
                                                     imageVector = Icons.Default.Person,
-                                                    contentDescription = "Varsayılan Profil",
+                                                    contentDescription =stringResource(Res.string.profile_default_photo_cd),
                                                     tint = customColors.placeHolderIcon,
                                                     modifier = Modifier.size(48.dp)
                                                 )
@@ -196,14 +214,14 @@ fun ProfileContent(
                                     Spacer(modifier = Modifier.height(12.dp))
 
                                     Text(
-                                        text = profile?.name ?: "Kullanıcı",
+                                        text = profile?.name ?: stringResource(Res.string.profile_default_name),
                                         style = MaterialTheme.typography.headlineMedium.copy(color = Color.White)
                                     )
 
                                     Spacer(modifier = Modifier.height(4.dp))
 
                                     Text(
-                                        text = profile?.biography ?: "Henüz bir lezzet biyografisi eklenmedi.",
+                                        text = profile?.biography ?: stringResource(Res.string.profile_default_bio),
                                         style = MaterialTheme.typography.bodyMedium.copy(
                                             color = Color.White.copy(alpha = 0.8f),
                                             textAlign = TextAlign.Center
@@ -222,7 +240,7 @@ fun ProfileContent(
                                         var isSubscribed by remember { mutableStateOf(false) }
 
                                         TastyButton(
-                                            text = if (isSubscribed) "Abonesin" else "Abone Ol",
+                                            text = if (isSubscribed) stringResource(Res.string.profile_subscribed) else stringResource(Res.string.profile_subscribe),
                                             onClick = {
                                                 isSubscribed = !isSubscribed
                                                 onSubscribeClick()
@@ -236,7 +254,7 @@ fun ProfileContent(
                                         )
 
                                         TastyButton(
-                                            text = "Paylaş",
+                                            text = stringResource(Res.string.profile_share),
                                             onClick = onShareClick,
                                             modifier = Modifier.weight(1f),
                                             isPrimary = false,
@@ -265,19 +283,19 @@ fun ProfileContent(
                                 horizontalArrangement = Arrangement.spacedBy(12.dp)
                             ) {
                                 MetricCard(
-                                    title = "Paylaşım",
+                                    title = stringResource(Res.string.profile_metric_posts),
                                     value = (profile?.postCount ?: 0).toString(),
                                     modifier = Modifier.weight(1f),
                                     cardColor = customColors.surfaceVariant
                                 )
                                 MetricCard(
-                                    title = "Abone",
+                                    title = stringResource(Res.string.profile_metric_subscribers),
                                     value = (profile?.subscriberCount ?: 0).toString(),
                                     modifier = Modifier.weight(1f),
                                     cardColor = customColors.surfaceVariant
                                 )
                                 MetricCard(
-                                    title = "Takip",
+                                    title = stringResource(Res.string.profile_metric_following),
                                     value = (profile?.subscribedCount ?: 0).toString(),
                                     modifier = Modifier.weight(1f),
                                     cardColor = customColors.surfaceVariant
@@ -302,7 +320,7 @@ fun ProfileContent(
                             ) {
                                 Row(modifier = Modifier.padding(4.dp)) {
                                     TabButton(
-                                        text = "Paylaşımlar",
+                                        text = stringResource(Res.string.profile_tab_posts),
                                         icon = Icons.Default.GridOn,
                                         isSelected = selectedTab == 0,
                                         onClick = { selectedTab = 0 },
@@ -311,7 +329,7 @@ fun ProfileContent(
                                         accentColor = customColors.gourmetOrange
                                     )
                                     TabButton(
-                                        text = "Lezzet Haritası",
+                                        text = stringResource(Res.string.profile_tab_taste_map),
                                         icon = Icons.Default.Map,
                                         isSelected = selectedTab == 1,
                                         onClick = { selectedTab = 1 },
@@ -339,13 +357,13 @@ fun ProfileContent(
                             ) {
                                 if (selectedTab == 0) {
                                     Text(
-                                        text = "Gurmenin Son İncelemeleri ve Fotoğrafları",
+                                        text = stringResource(Res.string.profile_posts_empty_placeholder),
                                         style = MaterialTheme.typography.bodyMedium.copy(color = customColors.textSecondary),
                                         textAlign = TextAlign.Center
                                     )
                                 } else {
                                     Text(
-                                        text = "Gurmenin İşaretlediği Mekanlar ve İğneler (Map View)",
+                                        text = stringResource(Res.string.profile_map_empty_placeholder),
                                         style = MaterialTheme.typography.bodyMedium.copy(color = customColors.textSecondary),
                                         textAlign = TextAlign.Center
                                     )

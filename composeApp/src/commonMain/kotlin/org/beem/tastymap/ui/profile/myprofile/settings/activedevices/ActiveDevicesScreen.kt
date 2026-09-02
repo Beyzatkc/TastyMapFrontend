@@ -34,6 +34,15 @@ import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import org.beem.tastymap.core.util.ToastManager
 import org.beem.tastymap.ui.theme.LocalCustomColors
+import org.jetbrains.compose.resources.StringResource
+import org.jetbrains.compose.resources.stringResource
+import tastymap.composeapp.generated.resources.Res
+import tastymap.composeapp.generated.resources.active_devices_back_cd
+import tastymap.composeapp.generated.resources.active_devices_last_seen
+import tastymap.composeapp.generated.resources.active_devices_retry
+import tastymap.composeapp.generated.resources.active_devices_retry_cd
+import tastymap.composeapp.generated.resources.active_devices_title
+
 
 class ActiveDevicesScreen : Screen {
 
@@ -62,7 +71,7 @@ class ActiveDevicesScreen : Screen {
                 TopAppBar(
                     title = {
                         Text(
-                            text = "Aktif Cihazlar",
+                            text = stringResource(Res.string.active_devices_title),
                             style = MaterialTheme.typography.titleMedium.copy(
                                 color = customColors.textPrimary,
                                 fontWeight = FontWeight.Bold
@@ -73,7 +82,7 @@ class ActiveDevicesScreen : Screen {
                         IconButton(onClick = { navigator.pop() }) {
                             Icon(
                                 imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                contentDescription = "Geri",
+                                contentDescription = stringResource(Res.string.active_devices_back_cd),
                                 tint = customColors.textPrimary
                             )
                         }
@@ -144,13 +153,13 @@ class ActiveDevicesScreen : Screen {
                                             Row(verticalAlignment = Alignment.CenterVertically) {
                                                 Icon(
                                                     imageVector = Icons.Default.Refresh,
-                                                    contentDescription = "Yeniden Dene",
+                                                    contentDescription =stringResource(Res.string.active_devices_retry_cd),
                                                     modifier = Modifier.size(24.dp),
                                                     tint = customColors.textPrimary
                                                 )
                                                 Spacer(modifier = Modifier.width(8.dp))
                                                 Text(
-                                                    text = "Yeniden Dene",
+                                                    text = stringResource(Res.string.active_devices_retry),
                                                     style = MaterialTheme.typography.titleSmall.copy(
                                                         fontWeight = FontWeight.Bold,
                                                         color = customColors.textPrimary
@@ -225,7 +234,10 @@ class ActiveDevicesScreen : Screen {
                                                 }
 
                                                 Text(
-                                                    text = device.formattedLastSeen,
+                                                    text = stringResource(
+                                                        Res.string.active_devices_last_seen,
+                                                        device.formattedLastSeen
+                                                    ),
                                                     style = MaterialTheme.typography.labelSmall,
                                                     color = customColors.textTertiary
                                                 )

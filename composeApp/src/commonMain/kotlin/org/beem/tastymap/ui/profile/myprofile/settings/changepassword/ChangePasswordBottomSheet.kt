@@ -1,4 +1,4 @@
-package org.beem.tastymap.ui.profile.myprofile.settings
+package org.beem.tastymap.ui.profile.myprofile.settings.changepassword
 
 import TastyButton
 import androidx.compose.animation.AnimatedVisibility
@@ -36,6 +36,13 @@ import org.beem.tastymap.ui.auth.common.PasswordStrength
 import org.beem.tastymap.ui.components.PasswordStrengthIndicator
 import org.beem.tastymap.ui.components.TastyTextField
 import org.beem.tastymap.ui.theme.LocalCustomColors
+import org.jetbrains.compose.resources.stringResource
+import tastymap.composeapp.generated.resources.Res
+import tastymap.composeapp.generated.resources.change_password_current
+import tastymap.composeapp.generated.resources.change_password_new
+import tastymap.composeapp.generated.resources.change_password_new_again
+import tastymap.composeapp.generated.resources.change_password_submit_btn
+import tastymap.composeapp.generated.resources.change_password_title
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -81,7 +88,7 @@ fun ChangePasswordBottomSheet(
         ) {
 
             Text(
-                text = "Şifre Değiştir",
+                text = stringResource(Res.string.change_password_title),
                 style = MaterialTheme.typography.titleMedium.copy(
                     fontWeight = FontWeight.Bold,
                     color = customColors.textPrimary
@@ -99,7 +106,7 @@ fun ChangePasswordBottomSheet(
                     oldPassword = it
                     onClearError()
                 },
-                label = "Mevcut Şifre",
+                label = stringResource(Res.string.change_password_current),
                 error = oldPasswordError,
                 leadingIcon = {
                     Icon(
@@ -120,7 +127,7 @@ fun ChangePasswordBottomSheet(
                     newPassword = it
                     onClearError()
                 },
-                label = "Yeni Şifre",
+                label = stringResource(Res.string.change_password_new),
                 error = newPasswordError,
                 leadingIcon = {
                     Icon(
@@ -152,7 +159,7 @@ fun ChangePasswordBottomSheet(
                     againNew = it
                     onClearError()
                 },
-                label = "Yeni Şifre (Tekrar)",
+                label = stringResource(Res.string.change_password_new_again),
                 error = againNewPasswordError,
                 leadingIcon = {
                     Icon(
@@ -190,7 +197,7 @@ fun ChangePasswordBottomSheet(
             Spacer(modifier = Modifier.height(24.dp))
 
             TastyButton(
-                text = "Şifreyi Güncelle",
+                text = stringResource(Res.string.change_password_submit_btn),
                 onClick = {
                     onSubmitClick(oldPassword, newPassword, againNew)
                 },

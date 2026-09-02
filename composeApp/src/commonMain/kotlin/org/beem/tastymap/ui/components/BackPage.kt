@@ -16,6 +16,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import org.beem.tastymap.ui.theme.LocalCustomColors
+import org.jetbrains.compose.resources.stringResource
+import tastymap.composeapp.generated.resources.Res
+import tastymap.composeapp.generated.resources.back_page_content_description
 
 @Composable
 fun BackPage(
@@ -35,7 +38,7 @@ fun BackPage(
         ) {
             Icon(
                 imageVector = Icons.Default.ArrowBack,
-                contentDescription = "Geri",
+                contentDescription = stringResource(Res.string.back_page_content_description),
                 tint = colors.textPrimary
             )
         }

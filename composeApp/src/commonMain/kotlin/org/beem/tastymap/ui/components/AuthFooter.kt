@@ -16,6 +16,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import org.beem.tastymap.ui.theme.LocalCustomColors
+import org.jetbrains.compose.resources.stringResource
+import tastymap.composeapp.generated.resources.Res
+import tastymap.composeapp.generated.resources.auth_footer_contact
+import tastymap.composeapp.generated.resources.auth_footer_copyright
+import tastymap.composeapp.generated.resources.auth_footer_help
+import tastymap.composeapp.generated.resources.auth_footer_privacy
+import tastymap.composeapp.generated.resources.auth_footer_terms
 
 @Composable
 fun AuthFooter(
@@ -38,7 +45,7 @@ fun AuthFooter(
         Spacer(Modifier.height(15.dp))
 
         Text(
-            text = "© 2026 TastyMap",
+            text = stringResource(Res.string.auth_footer_copyright),
             modifier = Modifier.fillMaxWidth(),
             textAlign = TextAlign.Center,
             style = MaterialTheme.typography.bodySmall,
@@ -51,7 +58,7 @@ fun AuthFooter(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = "Gizlilik",
+                text = stringResource(Res.string.auth_footer_privacy),
                 style = MaterialTheme.typography.bodySmall,
                 color = colors.textSecondary,
                 modifier = Modifier.clickable {
@@ -59,7 +66,7 @@ fun AuthFooter(
                 }
             )
             Text(
-                text = "Kullanım Koşulları",
+                text = stringResource(Res.string.auth_footer_terms),
                 style = MaterialTheme.typography.bodySmall,
                 color = colors.textSecondary,
                 modifier = Modifier.clickable {
@@ -67,7 +74,7 @@ fun AuthFooter(
                 }
             )
             Text(
-                text = "İletişim",
+                text = stringResource(Res.string.auth_footer_contact),
                 style = MaterialTheme.typography.bodySmall,
                 color = colors.textSecondary,
                 modifier = Modifier.clickable {
@@ -75,7 +82,7 @@ fun AuthFooter(
                 }
             )
             Text(
-                text = "Yardım",
+                text = stringResource(Res.string.auth_footer_help),
                 style = MaterialTheme.typography.bodySmall,
                 color = colors.textSecondary,
                 modifier = Modifier.clickable {

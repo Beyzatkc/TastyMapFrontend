@@ -67,6 +67,27 @@ import org.beem.tastymap.ui.profile.health.OnBoardingScreen
 import org.beem.tastymap.ui.profile.myprofile.MyProfileScreen
 import org.beem.tastymap.ui.theme.CustomColors
 import org.beem.tastymap.ui.theme.LocalCustomColors
+import org.jetbrains.compose.resources.getString
+import org.jetbrains.compose.resources.stringResource
+import tastymap.composeapp.generated.resources.Res
+import tastymap.composeapp.generated.resources.auth_app_subtitle
+import tastymap.composeapp.generated.resources.auth_resend_prompt
+import tastymap.composeapp.generated.resources.auth_resend_timer
+import tastymap.composeapp.generated.resources.auth_tab_login
+import tastymap.composeapp.generated.resources.auth_tab_register
+import tastymap.composeapp.generated.resources.login_btn_forgot_password
+import tastymap.composeapp.generated.resources.login_btn_submit
+import tastymap.composeapp.generated.resources.login_email_unverified
+import tastymap.composeapp.generated.resources.login_field_password
+import tastymap.composeapp.generated.resources.login_field_username
+import tastymap.composeapp.generated.resources.register_btn_back
+import tastymap.composeapp.generated.resources.register_btn_next
+import tastymap.composeapp.generated.resources.register_btn_submit
+import tastymap.composeapp.generated.resources.register_field_email
+import tastymap.composeapp.generated.resources.register_field_name
+import tastymap.composeapp.generated.resources.register_field_password
+import tastymap.composeapp.generated.resources.register_field_surname
+import tastymap.composeapp.generated.resources.register_field_username
 import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.sin
@@ -208,8 +229,8 @@ fun AuthTabBar(
             .padding(4.dp)
     ) {
         Row(modifier = Modifier.fillMaxSize()) {
-            TabButton("Giriş", isLoginTab, Modifier.weight(1f), activeTabColor, activeTextColor, inactiveTextColor, onLoginClick)
-            TabButton("Kayıt", !isLoginTab, Modifier.weight(1f), activeTabColor, activeTextColor, inactiveTextColor, onRegisterClick)
+            TabButton(stringResource(Res.string.auth_tab_login), isLoginTab, Modifier.weight(1f), activeTabColor, activeTextColor, inactiveTextColor, onLoginClick)
+            TabButton(stringResource(Res.string.auth_tab_register), !isLoginTab, Modifier.weight(1f), activeTabColor, activeTextColor, inactiveTextColor, onRegisterClick)
         }
     }
 }
@@ -224,7 +245,7 @@ fun HeaderTitles(textColor: Color) {
             )
         )
         Text(
-            text = "Lezzeti Keşfet",
+            text = stringResource(Res.string.auth_app_subtitle) ,
             style = MaterialTheme.typography.titleMedium.copy(
                 color = textColor.copy(alpha = 0.6f)
             )
@@ -263,7 +284,11 @@ fun AuthEffectHandler(
 
     LaunchedEffect(screenModel.uiMessage) {
         screenModel.uiMessage.collect { message ->
-            ToastManager.show(message)
+            val text = when (message) {
+                is LogRegScreenModel.UiMessage.Dynamic -> message.message
+                is LogRegScreenModel.UiMessage.Resource -> getString(message.res)
+            }
+            ToastManager.show(text)
         }
     }
 }
@@ -450,7 +475,7 @@ fun LoginForm(
         TastyTextField(
             value = state.loginUsername,
             onValueChange = { vm.onLoginEvent(LoginEvent.UsernameChanged(it)) },
-            label = "Kullanıcı adı",
+            label = stringResource(Res.string.login_field_username),
             leadingIcon = {
                 Icon(
                     imageVector = Icons.Default.Person,
@@ -458,13 +483,13 @@ fun LoginForm(
                 )
             },
             isPassword = false,
-            error = state.loginUsernameError
+            error = state.loginUsernameError?.let { stringResource(it) }
         )
 
         TastyTextField(
             value = state.loginPassword,
             onValueChange = { vm.onLoginEvent(LoginEvent.PasswordChanged(it)) },
-            label = "Şifre",
+            label = stringResource(Res.string.login_field_password),
             leadingIcon = {
                 Icon(
                     imageVector = Icons.Default.Password,
@@ -472,13 +497,13 @@ fun LoginForm(
                 )
             },
             isPassword = true,
-            error = state.logPasswordError
+            error = state.logPasswordError?.let { stringResource(it) }
         )
 
         Spacer(modifier = Modifier.height(5.dp))
 
         TastyButton(
-            text = "Giriş Yap",
+            text = stringResource(Res.string.login_btn_submit),
             isLoading = state.isLoading,
             onClick = { vm.login() },
             isPrimary = true,
@@ -495,7 +520,7 @@ fun LoginForm(
         )
 
         TastyButton(
-            text = "Şifreni mi unuttun",
+            text = stringResource(Res.string.login_btn_forgot_password),
             onClick = { navigator.push(ForgotScreen()) },
             isPrimary = false,
             backcolor = Color.Transparent,
@@ -526,7 +551,7 @@ fun ResendSection(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
-                text = "E-postanız (${state.unverifiedEmail}) henüz doğrulanmamış.",
+                text = stringResource(Res.string.login_email_unverified, state.unverifiedEmail),
                 color = colors.error,
                 style = MaterialTheme.typography.bodyMedium
             )
@@ -544,9 +569,9 @@ fun ResendSection(
             ) {
                 Text(
                     text = if (isButtonEnabled) {
-                        "E-posta gelmedi mi? Tekrar gönder"
+                        stringResource(Res.string.auth_resend_prompt)
                     } else {
-                        "Tekrar gönder: ${timeLeft}s"
+                        stringResource(Res.string.auth_resend_timer, timeLeft)
                     },
                     color = if (isButtonEnabled) colors.navy else colors.textSecondary,
                     style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.SemiBold)
@@ -594,46 +619,46 @@ fun RegisterForm(color: CustomColors, vm: LogRegScreenModel, state: RegisterUiSt
                 TastyTextField(
                     value = state.regName,
                     onValueChange = { vm.onRegisterEvent(RegisterEvent.NameChanged(it)) },
-                    label = "Ad",
+                    label = stringResource(Res.string.register_field_name),
                     leadingIcon = {
                         Icon(
                             imageVector = Icons.Default.Person,
                             contentDescription = null
                         )
                     },
-                    error = state.regnameError
+                    error = state.regNameError?.let { stringResource(it) }
                 )
 
                 TastyTextField(
                     value = state.regSurname,
                     onValueChange = { vm.onRegisterEvent(RegisterEvent.SurnameChanged(it)) },
-                    label = "Soyad",
+                    label = stringResource(Res.string.register_field_surname),
                     leadingIcon = {
                         Icon(
                             imageVector = Icons.Default.Person,
                             contentDescription = null
                         )
                     },
-                    error = state.regSurnameError
+                    error = state.regSurnameError?.let { stringResource(it) }
                 )
 
                 TastyTextField(
                     value = state.regUsername,
                     onValueChange = { vm.onRegisterEvent(RegisterEvent.UsernameChanged(it)) },
-                    label = "Kullanıcı Adı",
+                    label = stringResource(Res.string.register_field_username),
                     leadingIcon = {
                         Icon(
                             imageVector = Icons.Default.Person,
                             contentDescription = null
                         )
                     },
-                    error = state.regusernameError
+                    error = state.regUsernameError?.let { stringResource(it) }
                 )
 
                 Spacer(modifier = Modifier.height(8.dp))
 
                 TastyButton(
-                    text = "Devam Et",
+                    text = stringResource(Res.string.register_btn_next),
                     onClick = { vm.nextRegisterStep() },
                     isPrimary = true,
                     backcolor = color.navy,
@@ -644,18 +669,18 @@ fun RegisterForm(color: CustomColors, vm: LogRegScreenModel, state: RegisterUiSt
                 TastyTextField(
                     value = state.regEmail,
                     onValueChange = { vm.onRegisterEvent(RegisterEvent.EmailChanged(it)) },
-                    label = "Email",
+                    label = stringResource(Res.string.register_field_email),
                     leadingIcon = { Icon(Icons.Default.Email, null) },
-                    error = state.regEmailError
+                    error = state.regEmailError?.let { stringResource(it) }
                 )
 
                 TastyTextField(
                     value = state.regPassword,
                     onValueChange = { vm.onRegisterEvent(RegisterEvent.PasswordChanged(it)) },
-                    label = "Şifre",
+                    label = stringResource(Res.string.register_field_password),
                     leadingIcon = { Icon(Icons.Default.Password, null) },
                     isPassword = true,
-                    error = state.regPasswordError
+                    error = state.regPasswordError?.let { stringResource(it) }
                 )
 
                 AnimatedVisibility(
@@ -672,7 +697,7 @@ fun RegisterForm(color: CustomColors, vm: LogRegScreenModel, state: RegisterUiSt
                 Spacer(modifier = Modifier.height(5.dp))
 
                 TastyButton(
-                    text = "Kayıt Ol",
+                    text = stringResource(Res.string.register_btn_submit),
                     isLoading = state.isLoading,
                     onClick = { vm.register() },
                     isPrimary = true,
@@ -682,7 +707,7 @@ fun RegisterForm(color: CustomColors, vm: LogRegScreenModel, state: RegisterUiSt
                 )
 
                 TastyButton(
-                    text = "Geri Dön",
+                    text = stringResource(Res.string.register_btn_back),
                     onClick = { vm.previousRegisterStep() },
                     isPrimary = false,
                     backcolor = Color.Transparent,

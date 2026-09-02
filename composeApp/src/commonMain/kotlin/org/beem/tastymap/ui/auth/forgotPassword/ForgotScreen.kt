@@ -29,7 +29,19 @@ import org.beem.tastymap.ui.components.AuthFooter
 import org.beem.tastymap.ui.components.BackPage
 import org.beem.tastymap.ui.components.TastyTextField
 import org.beem.tastymap.ui.theme.LocalCustomColors
+import org.jetbrains.compose.resources.getString
+import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.koinInject
+import tastymap.composeapp.generated.resources.Res
+import tastymap.composeapp.generated.resources.forgot_btn_back_to_login
+import tastymap.composeapp.generated.resources.forgot_btn_submit
+import tastymap.composeapp.generated.resources.forgot_field_email_or_username
+import tastymap.composeapp.generated.resources.forgot_header
+import tastymap.composeapp.generated.resources.forgot_info_registered_only
+import tastymap.composeapp.generated.resources.forgot_info_spam_check
+import tastymap.composeapp.generated.resources.forgot_info_validity
+import tastymap.composeapp.generated.resources.forgot_subtitle
+import tastymap.composeapp.generated.resources.forgot_title
 
 class ForgotScreen : Screen {
     @Composable
@@ -62,9 +74,13 @@ class ForgotScreen : Screen {
             }
         }
 
-        LaunchedEffect(screenModel.uiMessage) {
+        LaunchedEffect(Unit) {
             screenModel.uiMessage.collect { message ->
-                ToastManager.show(message)
+                val text = when (message) {
+                    is ForgotScreenModel.UiMessage.Dynamic -> message.message
+                    is ForgotScreenModel.UiMessage.Resource -> getString(message.res)
+                }
+                ToastManager.show(text)
             }
         }
 
@@ -79,7 +95,7 @@ class ForgotScreen : Screen {
                     .verticalScroll(rememberScrollState())
                     .navigationBarsPadding()
             ) {
-                BackPage("Hesabını Bul", {
+                BackPage(stringResource(Res.string.forgot_header), {
                     screenModel.onBackClickForgot()
                     navigator.pop()
                 })
@@ -118,7 +134,7 @@ class ForgotScreen : Screen {
                         Spacer(modifier = Modifier.height(24.dp))
 
                         Text(
-                            text = "Şifrenizi mi Unuttunuz?",
+                            text = stringResource(Res.string.forgot_title),
                             style = MaterialTheme.typography.headlineSmall,
                             fontWeight = FontWeight.Bold,
                             color = colors.textPrimary,
@@ -128,7 +144,7 @@ class ForgotScreen : Screen {
                         Spacer(modifier = Modifier.height(12.dp))
 
                         Text(
-                            text = "Hesabınıza bağlı e-posta adresinizi veya kullanıcı adınızı girin. Size şifre sıfırlama bağlantısı göndereceğiz.",
+                            text = stringResource(Res.string.forgot_subtitle),
                             textAlign = TextAlign.Center,
                             style = MaterialTheme.typography.bodyMedium,
                             color = colors.textSecondary
@@ -141,17 +157,17 @@ class ForgotScreen : Screen {
                             onValueChange = {
                                 screenModel.onEmailEvent(EmailEvent.EmailChanged(it))
                             },
-                            label = "Email veya Kullanıcı Adı",
+                            label = stringResource(Res.string.forgot_field_email_or_username),
                             leadingIcon = {
                                 Icon(Icons.Default.Email, null)
                             },
-                            error = state.pasEmailError
+                            error = state.pasEmailError?.let { stringResource(it) }
                         )
 
                         Spacer(modifier = Modifier.height(24.dp))
 
                         TastyButton(
-                            text = "Şifreyi Sıfırla",
+                            text = stringResource(Res.string.forgot_btn_submit),
                             onClick = { screenModel.forgotPassword(state.pasEmail) },
                             isLoading = state.isLoading,
                             enabled = state.pasEmail.isNotBlank(),
@@ -169,7 +185,7 @@ class ForgotScreen : Screen {
                             }
                         ) {
                             Text(
-                                text = "Giriş ekranına geri dön",
+                                text = stringResource(Res.string.forgot_btn_back_to_login),
                                 color = colors.navy,
                                 style = MaterialTheme.typography.labelLarge
                             )
@@ -189,19 +205,19 @@ class ForgotScreen : Screen {
                                 verticalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
                                 Text(
-                                    text = "Şifre sıfırlama bağlantısı yalnızca kayıtlı e-posta adreslerine gönderilir.",
+                                    text = stringResource(Res.string.forgot_info_registered_only),
                                     style = MaterialTheme.typography.bodySmall,
                                     color = colors.textSecondary
                                 )
 
                                 Text(
-                                    text = "Gönderilen doğrulama bağlantısının geçerlilik süresi 10 dakikadır.",
+                                    text = stringResource(Res.string.forgot_info_validity),
                                     style = MaterialTheme.typography.bodySmall,
                                     color = colors.textSecondary
                                 )
 
                                 Text(
-                                    text = "E-posta kutunuzda göremiyorsanız Spam klasörünü kontrol etmeyi unutmayın.",
+                                    text = stringResource(Res.string.forgot_info_spam_check),
                                     style = MaterialTheme.typography.bodySmall,
                                     color = colors.textSecondary
                                 )

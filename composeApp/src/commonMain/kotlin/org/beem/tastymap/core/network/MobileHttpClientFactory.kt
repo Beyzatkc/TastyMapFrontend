@@ -9,6 +9,7 @@ import io.ktor.client.plugins.auth.providers.*
 import io.ktor.client.request.*
 import io.ktor.http.*
 import org.beem.tastymap.core.auth.AuthEventBus
+import org.beem.tastymap.core.local.SettingsManager
 import org.beem.tastymap.core.local.TokenManager
 import org.beem.tastymap.core.local.UserManager
 import org.beem.tastymap.core.provider.HttpClientFactory
@@ -17,12 +18,13 @@ import org.beem.tastymap.data.model.auth.RefreshTokenResponseDTO
 
 class MobileHttpClientFactory(
     private val tokenManager: TokenManager,
-    private val authEventBus: AuthEventBus
+    private val authEventBus: AuthEventBus,
+    private val settingsManager: SettingsManager
 ) : HttpClientFactory {
 
     override fun createAuthClient(noAuthClient: HttpClient): HttpClient {
         return HttpClient {
-            commonConfig()
+            commonConfig(settingsManager)
 
 
             install(Auth) {

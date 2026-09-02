@@ -1,5 +1,24 @@
 package org.beem.tastymap.ui.auth.common
 
+import org.jetbrains.compose.resources.StringResource
+import tastymap.composeapp.generated.resources.Res
+import tastymap.composeapp.generated.resources.validation_email_empty
+import tastymap.composeapp.generated.resources.validation_email_invalid
+import tastymap.composeapp.generated.resources.validation_name_empty
+import tastymap.composeapp.generated.resources.validation_name_invalid
+import tastymap.composeapp.generated.resources.validation_name_length
+import tastymap.composeapp.generated.resources.validation_password_digit
+import tastymap.composeapp.generated.resources.validation_password_lowercase
+import tastymap.composeapp.generated.resources.validation_password_min_length
+import tastymap.composeapp.generated.resources.validation_password_special_char
+import tastymap.composeapp.generated.resources.validation_password_uppercase
+import tastymap.composeapp.generated.resources.validation_surname_empty
+import tastymap.composeapp.generated.resources.validation_surname_invalid
+import tastymap.composeapp.generated.resources.validation_surname_length
+import tastymap.composeapp.generated.resources.validation_username_empty
+import tastymap.composeapp.generated.resources.validation_username_invalid
+import tastymap.composeapp.generated.resources.validation_username_length
+
 object CheckValidator {
     private val USERNAME_PATTERN = Regex("^[a-zA-Z0-9._]+$")
     private val NAME_PATTERN = Regex("^[a-zA-ZçÇğĞıİöÖşŞüÜ ]+$")
@@ -8,11 +27,12 @@ object CheckValidator {
 
     fun validateEmail(email: String): ValidationResult {
         return when {
-            email.isBlank() -> ValidationResult.Invalid("Email boş olamaz")
-            !EMAIL_PATTERN.matches(email) -> ValidationResult.Invalid("Geçerli bir email girin")
+            email.isBlank() -> ValidationResult.Invalid(Res.string.validation_email_empty)
+            !EMAIL_PATTERN.matches(email) -> ValidationResult.Invalid(Res.string.validation_email_invalid)
             else -> ValidationResult.Valid
         }
     }
+
     fun validatePassword(password: String): ValidationResult {
         val hasUppercase = password.any { it.isUpperCase() }
         val hasLowercase = password.any { it.isLowerCase() }
@@ -20,49 +40,52 @@ object CheckValidator {
         val hasSpecialChar = password.contains(Regex("[@#\$!%^&*()_+\\-=\\[\\]{};':\"\\\\|,.<>\\/?]"))
 
         return when {
-            password.length < 8 -> ValidationResult.Invalid("Parola en az 8 karakter olmalı")
-            !hasUppercase -> ValidationResult.Invalid("En az bir büyük harf içermeli")
-            !hasLowercase -> ValidationResult.Invalid("En az bir küçük harf içermeli")
-            !hasDigit -> ValidationResult.Invalid("En az bir rakam içermeli")
-            !hasSpecialChar -> ValidationResult.Invalid("En az bir özel karakter içermeli (@, #, !, vb.)")
-            else -> ValidationResult.Valid
-        }
-    }
-    fun validateName(name:String): ValidationResult{
-        return when{
-            name.isBlank() -> ValidationResult.Invalid("Ad boş olamaz")
-            name.length !in 2..50 -> ValidationResult.Invalid("Ad 2–50 karakter arasında olmalıdır")
-            !NAME_PATTERN.matches(name) -> ValidationResult.Invalid("Ad sadece harf ve boşluk içerebilir")
-            else -> ValidationResult.Valid
-        }
-    }
-    fun validateSurname(surname:String) : ValidationResult{
-        return when{
-            surname.isBlank() -> ValidationResult.Invalid("Soyad boş olamaz")
-            surname.length !in 2..50 -> ValidationResult.Invalid("Ad 2–50 karakter arasında olmalıdır")
-            !SURNAME_PATTERN.matches(surname) -> ValidationResult.Invalid("Soyad sadece harf içerebilir")
-            else -> ValidationResult.Valid
-        }
-    }
-    fun validateUsername(username: String): ValidationResult {
-        return when {
-            username.isBlank() -> ValidationResult.Invalid("Kullanıcı adı boş olamaz")
-            username.length !in 3..20 -> ValidationResult.Invalid("Kullanıcı adı 3–20 karakter arasında olmalıdır")
-            !USERNAME_PATTERN.matches(username) -> ValidationResult.Invalid("Kullanıcı adı sadece harf, rakam, nokta ve alt çizgi içerebilir")
+            password.length < 8 -> ValidationResult.Invalid(Res.string.validation_password_min_length)
+            !hasUppercase -> ValidationResult.Invalid(Res.string.validation_password_uppercase)
+            !hasLowercase -> ValidationResult.Invalid(Res.string.validation_password_lowercase)
+            !hasDigit -> ValidationResult.Invalid(Res.string.validation_password_digit)
+            !hasSpecialChar -> ValidationResult.Invalid(Res.string.validation_password_special_char)
             else -> ValidationResult.Valid
         }
     }
 
-    fun validateRequiredField(value: String, errorMessage: String): ValidationResult {
+    fun validateName(name: String): ValidationResult {
+        return when {
+            name.isBlank() -> ValidationResult.Invalid(Res.string.validation_name_empty)
+            name.length !in 2..50 -> ValidationResult.Invalid(Res.string.validation_name_length)
+            !NAME_PATTERN.matches(name) -> ValidationResult.Invalid(Res.string.validation_name_invalid)
+            else -> ValidationResult.Valid
+        }
+    }
+
+    fun validateSurname(surname: String): ValidationResult {
+        return when {
+            surname.isBlank() -> ValidationResult.Invalid(Res.string.validation_surname_empty)
+            surname.length !in 2..50 -> ValidationResult.Invalid(Res.string.validation_surname_length)
+            !SURNAME_PATTERN.matches(surname) -> ValidationResult.Invalid(Res.string.validation_surname_invalid)
+            else -> ValidationResult.Valid
+        }
+    }
+
+    fun validateUsername(username: String): ValidationResult {
+        return when {
+            username.isBlank() -> ValidationResult.Invalid(Res.string.validation_username_empty)
+            username.length !in 3..20 -> ValidationResult.Invalid(Res.string.validation_username_length)
+            !USERNAME_PATTERN.matches(username) -> ValidationResult.Invalid(Res.string.validation_username_invalid)
+            else -> ValidationResult.Valid
+        }
+    }
+
+    fun validateRequiredField(value: String, errorRes: StringResource): ValidationResult {
         return if (value.isBlank()) {
-            ValidationResult.Invalid(errorMessage)
+            ValidationResult.Invalid(errorRes)
         } else {
             ValidationResult.Valid
         }
     }
-
 }
+
 sealed class ValidationResult {
     object Valid : ValidationResult()
-    data class Invalid(val message: String) : ValidationResult()
+    data class Invalid(val messageRes: StringResource) : ValidationResult()
 }

@@ -41,6 +41,21 @@ import org.beem.tastymap.ui.components.TastyTextField
 import org.beem.tastymap.ui.profile.myprofile.MyProfileScreenModel
 import org.beem.tastymap.ui.theme.LocalCustomColors
 import org.beem.tastymap.ui.theme.TastyTheme
+import org.jetbrains.compose.resources.getString
+import org.jetbrains.compose.resources.stringResource
+import tastymap.composeapp.generated.resources.Res
+import tastymap.composeapp.generated.resources.edit_profile_back_cd
+import tastymap.composeapp.generated.resources.edit_profile_biography
+import tastymap.composeapp.generated.resources.edit_profile_change_photo_cd
+import tastymap.composeapp.generated.resources.edit_profile_info_note
+import tastymap.composeapp.generated.resources.edit_profile_name
+import tastymap.composeapp.generated.resources.edit_profile_photo_cd
+import tastymap.composeapp.generated.resources.edit_profile_save
+import tastymap.composeapp.generated.resources.edit_profile_section_personal
+import tastymap.composeapp.generated.resources.edit_profile_selected_photo_cd
+import tastymap.composeapp.generated.resources.edit_profile_surname
+import tastymap.composeapp.generated.resources.edit_profile_title
+import tastymap.composeapp.generated.resources.edit_profile_username
 
 class EditProfileScreen : Screen {
 
@@ -50,12 +65,15 @@ class EditProfileScreen : Screen {
         val uiState by screenModel.myProfileState.collectAsState()
         val navigator = LocalNavigator.currentOrThrow
 
-        LaunchedEffect(uiState.successMessage) {
-            if (uiState.successMessage != null) {
-                ToastManager.show(uiState.successMessage.toString())
+
+        LaunchedEffect(uiState.successMessageRes) {
+           uiState.successMessageRes?.let { res ->
+                ToastManager.show(getString(res))
                 screenModel.clearMessagesEdit()
                 navigator.pop()
             }
+
+
         }
 
         LaunchedEffect(uiState.errorMessage) {
@@ -68,9 +86,9 @@ class EditProfileScreen : Screen {
         EditProfileContent(
             userProfile = uiState.profile,
             isLoading = uiState.isActionLoading,
-            usernameError = uiState.usernameError,
-            nameError = uiState.nameError,
-            surnameError = uiState.surnameError,
+            usernameError = uiState.usernameError?.let { stringResource(it) },
+            nameError = uiState.nameError?.let { stringResource(it) },
+            surnameError = uiState.surnameError?.let { stringResource(it) },
             onBackClick = { navigator.pop() },
             onSaveClick = { username, name, surname, biography, platformFile ->
                 screenModel.updateProfile(
@@ -123,7 +141,7 @@ fun EditProfileContent(
             TopAppBar(
                 title = {
                     Text(
-                        text = "Profili Düzenle",
+                        text = stringResource(Res.string.edit_profile_title),
                         style = MaterialTheme.typography.titleMedium.copy(
                             color = customColors.textPrimary,
                             fontWeight = FontWeight.Bold
@@ -134,7 +152,7 @@ fun EditProfileContent(
                     IconButton(onClick = onBackClick) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Geri",
+                            contentDescription = stringResource(Res.string.edit_profile_back_cd),
                             tint = customColors.textPrimary
                         )
                     }
@@ -154,7 +172,7 @@ fun EditProfileContent(
                             )
                         } else {
                             Text(
-                                text = "Kaydet",
+                                text = stringResource(Res.string.edit_profile_save),
                                 style = MaterialTheme.typography.titleSmall.copy(
                                     color = customColors.gourmetOrange,
                                     fontWeight = FontWeight.Bold
@@ -193,7 +211,7 @@ fun EditProfileContent(
                                 selectedImageBytes != null -> {
                                     AsyncImage(
                                         model = selectedImageBytes,
-                                        contentDescription = "Seçilen Profil Fotoğrafı",
+                                        contentDescription = stringResource(Res.string.edit_profile_selected_photo_cd),
                                         modifier = Modifier.fillMaxSize(),
                                         contentScale = ContentScale.Crop
                                     )
@@ -201,7 +219,7 @@ fun EditProfileContent(
                                 !userProfile?.profilePhoto.isNullOrEmpty() -> {
                                     AsyncImage(
                                         model = userProfile?.profilePhoto,
-                                        contentDescription = "Profil Fotoğrafı",
+                                        contentDescription = stringResource(Res.string.edit_profile_photo_cd),
                                         modifier = Modifier.fillMaxSize(),
                                         contentScale = ContentScale.Crop
                                     )
@@ -230,7 +248,7 @@ fun EditProfileContent(
                         ) {
                             Icon(
                                 imageVector = Icons.Default.CameraAlt,
-                                contentDescription = "Fotoğraf Değiştir",
+                                contentDescription = stringResource(Res.string.edit_profile_change_photo_cd),
                                 tint = customColors.surface,
                                 modifier = Modifier.size(20.dp)
                             )
@@ -246,7 +264,7 @@ fun EditProfileContent(
                 ) {
                     SectionHeader(
                         icon = Icons.Default.Person,
-                        title = "Kişisel Bilgiler"
+                        title = stringResource(Res.string.edit_profile_section_personal)
                     )
                     Card(
                         colors = CardDefaults.cardColors(containerColor = customColors.surface),
@@ -260,7 +278,7 @@ fun EditProfileContent(
                             TastyTextField(
                                 value = username,
                                 onValueChange = { username = it },
-                                label = "Kullanıcı Adı",
+                                label = stringResource(Res.string.edit_profile_username),
                                 error = usernameError
                             )
 
@@ -271,7 +289,7 @@ fun EditProfileContent(
                                 TastyTextField(
                                     value = name,
                                     onValueChange = { name = it },
-                                    label = "Ad",
+                                    label = stringResource(Res.string.edit_profile_name),
                                     error = nameError,
                                     modifier = Modifier.weight(1f)
                                 )
@@ -279,7 +297,7 @@ fun EditProfileContent(
                                 TastyTextField(
                                     value = surname,
                                     onValueChange = { surname = it },
-                                    label = "Soyad",
+                                    label = stringResource(Res.string.edit_profile_surname),
                                     error = surnameError,
                                     modifier = Modifier.weight(1f)
                                 )
@@ -296,7 +314,7 @@ fun EditProfileContent(
                 ) {
                     SectionHeader(
                         icon = Icons.Default.ShortText,
-                        title = "Hakkımda"
+                        title = stringResource(Res.string.edit_profile_biography)
                     )
 
                     Card(
@@ -311,7 +329,7 @@ fun EditProfileContent(
                             TastyTextField(
                                 value = biography,
                                 onValueChange = { if (it.length <= 200) biography = it },
-                                label = "Biyografi",
+                                label = stringResource(Res.string.edit_profile_biography),
                                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done)
                             )
                             Text(
@@ -346,7 +364,7 @@ fun EditProfileContent(
                             modifier = Modifier.size(18.dp)
                         )
                         Text(
-                            text = "Kullanıcı adınız ve biyografiniz diğer TastyMap gurmeleri tarafından görülebilir.",
+                            text = stringResource(Res.string.edit_profile_info_note),
                             style = MaterialTheme.typography.bodySmall.copy(
                                 color = customColors.textSecondary
                             )

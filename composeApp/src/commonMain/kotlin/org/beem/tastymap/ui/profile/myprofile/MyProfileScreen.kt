@@ -36,6 +36,22 @@ import org.beem.tastymap.core.util.ToastManager
 import org.beem.tastymap.ui.profile.myprofile.editprofile.EditProfileScreen
 import org.beem.tastymap.ui.profile.myprofile.settings.SettingsScreen
 import org.beem.tastymap.ui.theme.LocalCustomColors
+import org.jetbrains.compose.resources.getString
+import org.jetbrains.compose.resources.stringResource
+import tastymap.composeapp.generated.resources.Res
+import tastymap.composeapp.generated.resources.my_profile_default_bio
+import tastymap.composeapp.generated.resources.my_profile_default_name
+import tastymap.composeapp.generated.resources.my_profile_default_photo_cd
+import tastymap.composeapp.generated.resources.my_profile_edit_button
+import tastymap.composeapp.generated.resources.my_profile_map_empty
+import tastymap.composeapp.generated.resources.my_profile_metric_following
+import tastymap.composeapp.generated.resources.my_profile_metric_posts
+import tastymap.composeapp.generated.resources.my_profile_metric_subscribers
+import tastymap.composeapp.generated.resources.my_profile_photo_cd
+import tastymap.composeapp.generated.resources.my_profile_posts_empty
+import tastymap.composeapp.generated.resources.my_profile_settings_cd
+import tastymap.composeapp.generated.resources.my_profile_tab_map
+import tastymap.composeapp.generated.resources.my_profile_tab_posts
 
 class MyProfileScreen : Screen {
 
@@ -54,8 +70,11 @@ class MyProfileScreen : Screen {
             screenModel.getMyProfile()
         }
 
-        LaunchedEffect(state.successMessage, state.errorMessage) {
-            state.successMessage?.let { screenModel.clearMessagesProfile() }
+        LaunchedEffect(state.successMessageRes, state.errorMessage) {
+            state.successMessageRes?.let { res ->
+                ToastManager.show(getString(res))
+                screenModel.clearMessagesProfile()
+            }
             state.errorMessage?.let { message ->
                 ToastManager.show(message)
                 screenModel.clearMessagesProfile()
@@ -75,7 +94,7 @@ class MyProfileScreen : Screen {
                         IconButton(onClick = { navigator.push(SettingsScreen()) }) {
                             Icon(
                                 imageVector = Icons.Default.Menu,
-                                contentDescription = "Ayarlar",
+                                contentDescription = stringResource(Res.string.my_profile_settings_cd),
                                 tint = Color.White
                             )
                         }
@@ -145,7 +164,7 @@ class MyProfileScreen : Screen {
                                                 if (!state.profile?.profilePhoto.isNullOrBlank()) {
                                                     AsyncImage(
                                                         model = state.profile?.profilePhoto,
-                                                        contentDescription = "Profil Fotoğrafı",
+                                                        contentDescription = stringResource(Res.string.my_profile_photo_cd),
                                                         modifier = Modifier
                                                             .fillMaxSize()
                                                             .clip(CircleShape),
@@ -154,7 +173,7 @@ class MyProfileScreen : Screen {
                                                 } else {
                                                     Icon(
                                                         imageVector = Icons.Default.Person,
-                                                        contentDescription = "Varsayılan Profil",
+                                                        contentDescription = stringResource(Res.string.my_profile_default_photo_cd),
                                                         tint = customColors.placeHolderIcon,
                                                         modifier = Modifier.size(48.dp)
                                                     )
@@ -182,7 +201,7 @@ class MyProfileScreen : Screen {
                                         Spacer(modifier = Modifier.height(12.dp))
 
                                         Text(
-                                            text = state.profile?.name ?: "Benim Adım",
+                                            text = state.profile?.name ?: stringResource(Res.string.my_profile_default_name),
                                             style = MaterialTheme.typography.bodyLarge.copy(
                                                 fontSize = 18.sp,
                                                 color = Color.White,
@@ -193,7 +212,7 @@ class MyProfileScreen : Screen {
                                         Spacer(modifier = Modifier.height(4.dp))
 
                                         Text(
-                                            text = state.profile?.biography ?: "Henüz bir biyografi eklemediniz.",
+                                            text = state.profile?.biography ?: stringResource(Res.string.my_profile_default_bio),
                                             style = MaterialTheme.typography.bodyMedium.copy(
                                                 color = Color.White.copy(alpha = 0.8f),
                                                 textAlign = TextAlign.Center
@@ -204,7 +223,7 @@ class MyProfileScreen : Screen {
                                         Spacer(modifier = Modifier.height(20.dp))
 
                                         TastyButton(
-                                            text = "Profili Düzenle",
+                                            text = stringResource(Res.string.my_profile_edit_button),
                                             onClick = { navigator.push(EditProfileScreen())},
                                             modifier = Modifier.fillMaxWidth(),
                                             isPrimary = true,
@@ -232,19 +251,19 @@ class MyProfileScreen : Screen {
                                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                                 ) {
                                     MetricCard(
-                                        title = "Paylaşımım",
+                                        title = stringResource(Res.string.my_profile_metric_posts),
                                         value = (state.profile?.postCount ?: 0).toString(),
                                         modifier = Modifier.weight(1f),
                                         cardColor = customColors.surfaceVariant
                                     )
                                     MetricCard(
-                                        title = "Takipçim",
+                                        title = stringResource(Res.string.my_profile_metric_subscribers),
                                         value = (state.profile?.subscriberCount ?: 0).toString(),
                                         modifier = Modifier.weight(1f),
                                         cardColor = customColors.surfaceVariant
                                     )
                                     MetricCard(
-                                        title = "Takibim",
+                                        title = stringResource(Res.string.my_profile_metric_following),
                                         value = (state.profile?.subscribedCount ?: 0).toString(),
                                         modifier = Modifier.weight(1f),
                                         cardColor = customColors.surfaceVariant
@@ -269,7 +288,7 @@ class MyProfileScreen : Screen {
                                 ) {
                                     Row(modifier = Modifier.padding(4.dp)) {
                                         TabButton(
-                                            text = "Paylaşımlarım",
+                                            text = stringResource(Res.string.my_profile_tab_posts),
                                             icon = Icons.Default.GridOn,
                                             isSelected = selectedTab == 0,
                                             onClick = { selectedTab = 0 },
@@ -278,7 +297,7 @@ class MyProfileScreen : Screen {
                                             accentColor = customColors.gourmetOrange
                                         )
                                         TabButton(
-                                            text = "Haritam",
+                                            text = stringResource(Res.string.my_profile_tab_map),
                                             icon = Icons.Default.Map,
                                             isSelected = selectedTab == 1,
                                             onClick = { selectedTab = 1 },
@@ -306,13 +325,13 @@ class MyProfileScreen : Screen {
                                 ) {
                                     if (selectedTab == 0) {
                                         Text(
-                                            text = "Paylaştığınız tüm lezzet incelemeleri burada listelenecek.",
+                                            text = stringResource(Res.string.my_profile_posts_empty),
                                             style = MaterialTheme.typography.bodyMedium.copy(color = customColors.textSecondary),
                                             textAlign = TextAlign.Center
                                         )
                                     } else {
                                         Text(
-                                            text = "Kaydettiğiniz ve işaretlediğiniz kişisel lezzet haritanız.",
+                                            text = stringResource(Res.string.my_profile_map_empty),
                                             style = MaterialTheme.typography.bodyMedium.copy(color = customColors.textSecondary),
                                             textAlign = TextAlign.Center
                                         )

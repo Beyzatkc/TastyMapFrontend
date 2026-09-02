@@ -23,6 +23,10 @@ import org.beem.tastymap.ui.profile.health.stepScreens.EatTypeStep
 import org.beem.tastymap.ui.profile.health.stepScreens.SummaryStep
 import org.beem.tastymap.ui.profile.myprofile.MyProfileScreen
 import org.beem.tastymap.ui.theme.LocalCustomColors
+import org.jetbrains.compose.resources.stringResource
+import tastymap.composeapp.generated.resources.Res
+import tastymap.composeapp.generated.resources.health_wizard_back_cd
+import tastymap.composeapp.generated.resources.health_wizard_step_indicator
 
 class HealthWizardScreen : Screen {
 
@@ -72,7 +76,7 @@ class HealthWizardScreen : Screen {
                     ) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Geri Dön",
+                            contentDescription = stringResource(Res.string.health_wizard_back_cd),
                             tint = customColors.textPrimary
                         )
                     }
@@ -88,7 +92,7 @@ class HealthWizardScreen : Screen {
                     )
 
                     Text(
-                        text = "Adım ${state.currentStep + 1} / ${state.totalSteps}",
+                        text = stringResource(Res.string.health_wizard_step_indicator, state.currentStep + 1, state.totalSteps),
                         style = MaterialTheme.typography.labelMedium,
                         color = customColors.textSecondary,
                         maxLines = 1

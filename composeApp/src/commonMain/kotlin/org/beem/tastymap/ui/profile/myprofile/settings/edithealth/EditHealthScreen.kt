@@ -1,5 +1,6 @@
 package org.beem.tastymap.ui.profile.myprofile.settings.edithealth
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -30,9 +31,28 @@ import cafe.adriel.voyager.navigator.currentOrThrow
 import org.beem.tastymap.core.util.ToastManager
 import org.beem.tastymap.data.model.health.AllergyInfo
 import org.beem.tastymap.data.model.health.HealthEnum
+import org.beem.tastymap.ui.profile.health.AllergyUiModel
 import org.beem.tastymap.ui.profile.health.HealthScreenModel
 import org.beem.tastymap.ui.profile.health.HealthUiState
 import org.beem.tastymap.ui.theme.LocalCustomColors
+import org.jetbrains.compose.resources.stringResource
+import tastymap.composeapp.generated.resources.Res
+import tastymap.composeapp.generated.resources.edit_health_allergens_desc
+import tastymap.composeapp.generated.resources.edit_health_back_cd
+import tastymap.composeapp.generated.resources.edit_health_diabetes_desc
+import tastymap.composeapp.generated.resources.edit_health_diabetes_title
+import tastymap.composeapp.generated.resources.edit_health_diet_normal_desc
+import tastymap.composeapp.generated.resources.edit_health_diet_normal_title
+import tastymap.composeapp.generated.resources.edit_health_diet_vegan_desc
+import tastymap.composeapp.generated.resources.edit_health_diet_vegan_title
+import tastymap.composeapp.generated.resources.edit_health_diet_vegetarian_desc
+import tastymap.composeapp.generated.resources.edit_health_diet_vegetarian_title
+import tastymap.composeapp.generated.resources.edit_health_save
+import tastymap.composeapp.generated.resources.edit_health_section_allergens
+import tastymap.composeapp.generated.resources.edit_health_section_diet
+import tastymap.composeapp.generated.resources.edit_health_section_health_status
+import tastymap.composeapp.generated.resources.edit_health_success_toast
+import tastymap.composeapp.generated.resources.edit_health_title
 
 class EditHealthScreen : Screen {
 
@@ -49,9 +69,11 @@ class EditHealthScreen : Screen {
                 ToastManager.show(message)
             }
         }
+        val successMessage = stringResource(Res.string.edit_health_success_toast)
+
         LaunchedEffect(uiState.isSuccess) {
             if (uiState.isSuccess) {
-                ToastManager.show("Beslenme tercihleriniz güncellendi.")
+                ToastManager.show(successMessage)
                 screenModel.resetSuccessState()
                 navigator.pop()
             }
@@ -86,7 +108,7 @@ fun EditHealthContent(
             TopAppBar(
                 title = {
                     Text(
-                        text = "Beslenme & Alerjenler",
+                        text = stringResource(Res.string.edit_health_title),
                         style = MaterialTheme.typography.titleMedium.copy(
                             color = customColors.textPrimary,
                             fontWeight = FontWeight.Bold
@@ -97,7 +119,7 @@ fun EditHealthContent(
                     IconButton(onClick = onBackClick) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Geri",
+                            contentDescription = stringResource(Res.string.edit_health_back_cd),
                             tint = customColors.textPrimary
                         )
                     }
@@ -115,7 +137,7 @@ fun EditHealthContent(
                             )
                         } else {
                             Text(
-                                text = "Kaydet",
+                                text = stringResource(Res.string.edit_health_save),
                                 style = MaterialTheme.typography.titleSmall.copy(
                                     color = customColors.gourmetOrange,
                                     fontWeight = FontWeight.Bold
@@ -150,14 +172,14 @@ fun EditHealthContent(
                 item {
                     SectionHeader(
                         icon = Icons.Default.HealthAndSafety,
-                        title = "Sağlık Durumu",
+                        title = stringResource(Res.string.edit_health_section_health_status),
                         iconTint = customColors.navy
                     )
                     Card(
                         colors = CardDefaults.cardColors(containerColor = customColors.surface),
                         shape = RoundedCornerShape(16.dp),
                         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
-                        border = androidx.compose.foundation.BorderStroke(1.dp, customColors.borderLight)
+                        border = BorderStroke(1.dp, customColors.borderLight)
                     ) {
                         Row(
                             modifier = Modifier
@@ -169,7 +191,7 @@ fun EditHealthContent(
                         ) {
                             Column(modifier = Modifier.weight(1f)) {
                                 Text(
-                                    text = "Diyabet / Şeker Hassasiyeti",
+                                    text = stringResource(Res.string.edit_health_diabetes_title),
                                     style = MaterialTheme.typography.bodyMedium.copy(
                                         fontWeight = FontWeight.SemiBold,
                                         color = customColors.textPrimary
@@ -177,7 +199,7 @@ fun EditHealthContent(
                                 )
                                 Spacer(modifier = Modifier.height(4.dp))
                                 Text(
-                                    text = "Yapay zeka tatlı ve şeker içeren önerileri profilinize göre filtrelesin.",
+                                    text = stringResource(Res.string.edit_health_diabetes_desc),
                                     style = MaterialTheme.typography.bodySmall.copy(
                                         color = customColors.textSecondary,
                                         lineHeight = 18.sp
@@ -205,7 +227,7 @@ fun EditHealthContent(
                 item {
                     SectionHeader(
                         icon = Icons.Default.Restaurant,
-                        title = "Beslenme Düzeni",
+                        title = stringResource(Res.string.edit_health_section_diet),
                         iconTint = customColors.navy
                     )
                     Card(
@@ -273,7 +295,7 @@ fun EditHealthContent(
                 item {
                     SectionHeader(
                         icon = Icons.Default.Warning,
-                        title = "Alerjenler & Hassasiyetler",
+                        title = stringResource(Res.string.edit_health_section_allergens),
                         iconTint = customColors.navy
                     )
                     Card(
@@ -287,7 +309,7 @@ fun EditHealthContent(
                             verticalArrangement = Arrangement.spacedBy(12.dp)
                         ) {
                             Text(
-                                text = "Tüketmekten kaçındığınız veya alerjiniz olan gıdaları seçin:",
+                                text = stringResource(Res.string.edit_health_allergens_desc),
                                 style = MaterialTheme.typography.bodySmall.copy(
                                     color = customColors.textSecondary
                                 )
@@ -325,7 +347,7 @@ fun EditHealthContent(
 
 @Composable
 private fun AllergyChip(
-    allergy: AllergyInfo,
+    allergy: AllergyUiModel,
     isSelected: Boolean,
     onToggle: () -> Unit,
     modifier: Modifier = Modifier
@@ -359,7 +381,7 @@ private fun AllergyChip(
                 Spacer(modifier = Modifier.width(6.dp))
             }
             Text(
-                text = allergy.name,
+                text = stringResource(allergy.nameRes),
                 style = MaterialTheme.typography.labelMedium.copy(
                     fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
                     color = textColor
@@ -397,10 +419,14 @@ private fun SectionHeader(
     }
 }
 
+@Composable
 private fun getEatTypeDetails(eatType: HealthEnum): Pair<String, String> {
     return when (eatType) {
-        HealthEnum.NORMAL -> "Standart Beslenme" to "Herhangi bir diyet kısıtlaması uygulamıyorum."
-        HealthEnum.VEGETARIAN -> "Vejetaryen" to "Et ve balık ürünleri tüketmiyorum."
-        HealthEnum.VEGAN -> "Vegan" to "Hayvansal hiçbir gıda tüketmiyorum."
+
+        HealthEnum.NORMAL -> stringResource(Res.string.edit_health_diet_normal_title) to stringResource(Res.string.edit_health_diet_normal_desc)
+        HealthEnum.VEGETARIAN -> stringResource(Res.string.edit_health_diet_vegetarian_title) to stringResource(Res.string.edit_health_diet_vegetarian_desc)
+        HealthEnum.VEGAN -> stringResource(Res.string.edit_health_diet_vegan_title) to stringResource(Res.string.edit_health_diet_vegan_desc)
     }
 }
+
+

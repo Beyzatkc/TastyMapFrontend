@@ -1,4 +1,5 @@
 package org.beem.tastymap.ui.auth.forgotPassword
+
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
 import kotlinx.coroutines.Job
@@ -19,6 +20,11 @@ import org.beem.tastymap.data.repository.UserSecurityRepository
 import org.beem.tastymap.ui.auth.common.AuthLifecycleEvent
 import org.beem.tastymap.ui.auth.common.CheckValidator
 import org.beem.tastymap.ui.auth.common.ValidationResult
+import org.jetbrains.compose.resources.StringResource
+import tastymap.composeapp.generated.resources.Res
+import tastymap.composeapp.generated.resources.change_password_success
+import tastymap.composeapp.generated.resources.pending_email_sent
+import tastymap.composeapp.generated.resources.verify_error_default
 import kotlin.concurrent.atomics.AtomicBoolean
 import kotlin.concurrent.atomics.ExperimentalAtomicApi
 
@@ -28,16 +34,16 @@ class ForgotScreenModel(
     private val deviceInfoProvider: DeviceInfoProvider,
     private val authWebSocketClient: AuthWebSocketClient,
     private val resetSession: PasswordResetSessionManager
-): ScreenModel{
+) : ScreenModel {
+
     private val _navigationState = Channel<PasswordNavEffect>()
     val navigationState = _navigationState.receiveAsFlow()
 
-    private val _uiMessage = Channel<String>()
+    private val _uiMessage = Channel<UiMessage>()
     val uiMessage = _uiMessage.receiveAsFlow()
 
     private val _sendState = MutableStateFlow(PasswordEmailState())
     val sendState = _sendState.asStateFlow()
-
 
     private var lifecycleJob: Job? = null
     private var isLifecycleStopped = false
@@ -45,10 +51,14 @@ class ForgotScreenModel(
     private var webSocketJob: Job? = null
     private val isConnecting = AtomicBoolean(false)
 
+    sealed interface UiMessage {
+        data class Dynamic(val message: String) : UiMessage
+        data class Resource(val res: StringResource, val args: List<Any> = emptyList()) : UiMessage
+    }
+
     enum class PasswordNavEffect {
         OnSuccess
     }
-
 
     fun handleLifecycleEvent(event: AuthLifecycleEvent) {
         println("FORGOT_LOG MODEL EVENT: $event")
@@ -79,19 +89,20 @@ class ForgotScreenModel(
             AuthLifecycleEvent.Stop -> {
                 println("FORGOT_LOG: STOP algılandı. Temizlik yapılıyor.")
                 isLifecycleStopped = true
-                wasBackgrounded = true // <-- SENIOR DOKUNUŞ: Arka plana geçtiğimizi kaydettik
+                wasBackgrounded = true
                 lifecycleJob?.cancel()
                 stopWebSocket()
             }
             AuthLifecycleEvent.Pause -> Unit
         }
     }
+
     private suspend fun isPasswordChanged(userId: Long): Boolean {
         return when (val result = repoSecurity.isPasswordUsed(userId)) {
             is ResultWrapper.Success -> {
                 if (result.data) {
                     clearResetContext()
-                    _uiMessage.send("Şifre değiştirildi")
+                    _uiMessage.send(UiMessage.Resource(Res.string.change_password_success))
                     _navigationState.send(PasswordNavEffect.OnSuccess)
                     true
                 } else {
@@ -99,7 +110,11 @@ class ForgotScreenModel(
                 }
             }
             is ResultWrapper.Error -> {
-                _uiMessage.send(result.message)
+                if (result.message != null) {
+                    _uiMessage.send(UiMessage.Dynamic(result.message))
+                } else {
+                    _uiMessage.send(UiMessage.Resource(Res.string.verify_error_default))
+                }
                 false
             }
         }
@@ -115,7 +130,6 @@ class ForgotScreenModel(
             try {
                 while (isActive && !isLifecycleStopped) {
                     try {
-
                         if (wasBackgrounded) {
                             val context = resetSession.get()
                             if (context != null && isPasswordChanged(context.userId)) {
@@ -130,7 +144,7 @@ class ForgotScreenModel(
                     }
 
                     if (!isActive || isLifecycleStopped) break
-                    delay(5000) // Reconnect delay
+                    delay(5000)
                 }
             } finally {
                 eventJob.cancel()
@@ -138,6 +152,7 @@ class ForgotScreenModel(
             }
         }
     }
+
     private suspend fun collectEvents() {
         authWebSocketClient.events.collect {
             when (it.type) {
@@ -151,8 +166,7 @@ class ForgotScreenModel(
         }
     }
 
-
-    fun stopWebSocket(){
+    fun stopWebSocket() {
         isConnecting.store(false)
         webSocketJob?.cancel()
         webSocketJob = null
@@ -166,10 +180,10 @@ class ForgotScreenModel(
         resetSession.clear()
     }
 
-     fun forgotPassword(identifier: String){
+    fun forgotPassword(identifier: String) {
         if (_sendState.value.isLoading) return
         screenModelScope.launch {
-            if(validateEmail()) {
+            if (validateEmail()) {
                 _sendState.update { it.copy(isLoading = true) }
                 val dto = PasswordRequest(
                     deviceId = deviceInfoProvider.getDeviceId(),
@@ -178,35 +192,43 @@ class ForgotScreenModel(
                 when (val result = repoSecurity.forgotPassword(dto)) {
                     is ResultWrapper.Success -> {
                         resetSession.clear()
-                        resetSession.save(result.data.userId,result.data.deviceId)
-                        _uiMessage.send(result.data.message ?: "E-posta gönderildi.")
+                        resetSession.save(result.data.userId, result.data.deviceId)
+                        if (result.data.message != null) {
+                            _uiMessage.send(UiMessage.Dynamic(result.data.message))
+                        } else {
+                            _uiMessage.send(UiMessage.Resource(Res.string.pending_email_sent))
+                        }
                         startWebSocket(result.data.deviceId)
                     }
 
                     is ResultWrapper.Error -> {
-                        _uiMessage.send(result.message)
+                        if (result.message != null) {
+                            _uiMessage.send(UiMessage.Dynamic(result.message))
+                        } else {
+                            _uiMessage.send(UiMessage.Resource(Res.string.verify_error_default))
+                        }
                     }
-
                 }
                 _sendState.update { it.copy(isLoading = false, pasEmail = "", pasEmailError = null) }
             }
         }
     }
 
-     fun onBackClickForgot(){
+    fun onBackClickForgot() {
         _sendState.update {
             it.copy(
-                pasEmail = " ",
+                pasEmail = "",
                 pasEmailError = null
             )
         }
     }
+
     fun validateEmail(): Boolean {
         val state = _sendState.value
         val eResult = CheckValidator.validateEmail(
-           email = state.pasEmail
+            email = state.pasEmail
         )
-        val eError = (eResult as? ValidationResult.Invalid)?.message
+        val eError = (eResult as? ValidationResult.Invalid)?.messageRes
         _sendState.update {
             it.copy(
                 pasEmailError = eError
@@ -224,15 +246,16 @@ class ForgotScreenModel(
                         pasEmailError = null
                     )
                 }
-
             }
         }
     }
 }
+
 sealed class PasswordEvent {
     data class PasswordChanged(val value: String) : PasswordEvent()
     data class ConfirmPasswordChanged(val password: String) : PasswordEvent()
 }
+
 sealed class EmailEvent {
     data class EmailChanged(val value: String) : EmailEvent()
 }

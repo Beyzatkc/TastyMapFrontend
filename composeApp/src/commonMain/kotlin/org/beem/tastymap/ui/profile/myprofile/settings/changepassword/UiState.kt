@@ -1,11 +1,13 @@
 package org.beem.tastymap.ui.profile.myprofile.settings.changepassword
 
+import org.jetbrains.compose.resources.StringResource
+
 data class ChangePasswordUiState(
     val isLoading: Boolean = false,
-    val successMessage: String? = null,
+    val successMessageRes: StringResource? = null,
     val errorMessage: String? = null,
 
-    val oldPasswordError: String? = null,
-    val newPasswordError: String? = null,
-    val againNewPasswordError: String? = null
+    val oldPasswordError: StringResource? = null,
+    val newPasswordError: StringResource? = null,
+    val againNewPasswordError: StringResource? = null,
 )

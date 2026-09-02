@@ -23,6 +23,12 @@ class SettingsScreenModel(
     val uiState = _uiState.asStateFlow()
     val isDarkMode: StateFlow<Boolean?> = settingsManager.isDarkMode
 
+    val languageCode = settingsManager.languageCode
+
+    fun setLanguage(code: String) {
+        settingsManager.setLanguageCode(code)
+    }
+
     fun toggleDarkMode(enabled: Boolean) {
         settingsManager.setDarkMode(enabled)
     }

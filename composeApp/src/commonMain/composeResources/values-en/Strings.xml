@@ -1,0 +1,386 @@
+<resources>
+    <!-- Other Profile Screen -->
+    <string name="profile_default_title">Gourmet Profile</string>
+    <string name="profile_back_cd">Back</string>
+    <string name="profile_photo_cd">Profile Photo</string>
+    <string name="profile_default_photo_cd">Default Profile</string>
+    <string name="profile_default_name">User</string>
+    <string name="profile_default_bio">No gourmet bio added yet.</string>
+
+    <!-- Action Buttons -->
+    <string name="profile_subscribe">Subscribe</string>
+    <string name="profile_subscribed">Subscribed</string>
+    <string name="profile_share">Share</string>
+
+    <!-- Metrics -->
+    <string name="profile_metric_posts">Posts</string>
+    <string name="profile_metric_subscribers">Subscribers</string>
+    <string name="profile_metric_following">Following</string>
+
+    <!-- Tabs & Content Placeholder -->
+    <string name="profile_tab_posts">Posts</string>
+    <string name="profile_tab_taste_map">Taste Map</string>
+    <string name="profile_posts_empty_placeholder">Gourmet\'s Latest Reviews and Photos</string>
+    <string name="profile_map_empty_placeholder">Places and Pins Pinned by Gourmet (Map View)</string>
+
+    <!-- My Profile -->
+    <string name="my_profile_settings_cd">Settings</string>
+    <string name="my_profile_photo_cd">Profile Photo</string>
+    <string name="my_profile_default_photo_cd">Default Profile</string>
+    <string name="my_profile_default_name">My Name</string>
+    <string name="my_profile_default_bio">You haven\'t added a bio yet.</string>
+    <string name="my_profile_edit_button">Edit Profile</string>
+
+    <!-- Metrics -->
+    <string name="my_profile_metric_posts">My Posts</string>
+    <string name="my_profile_metric_subscribers">Followers</string>
+    <string name="my_profile_metric_following">Following</string>
+
+    <!-- Tabs & Empty Placeholders -->
+    <string name="my_profile_tab_posts">My Posts</string>
+    <string name="my_profile_tab_map">My Map</string>
+    <string name="my_profile_posts_empty">All your shared food reviews will be listed here.</string>
+    <string name="my_profile_map_empty">Your personal food map with saved and pinned places.</string>
+
+    <!-- Settings Screen -->
+    <string name="settings_title">Settings &amp; Activity</string>
+    <string name="settings_back_cd">Back</string>
+
+    <!-- Section 1: Account & Security -->
+    <string name="settings_section_account_security">Account &amp; Security</string>
+    <string name="settings_change_password">Change Password</string>
+    <string name="settings_active_devices">Active Devices</string>
+    <string name="settings_private_account">Private Account</string>
+    <string name="settings_private_account_sub">When your account is private, only your followers can see your content.</string>
+
+    <!-- Section 2: Nutrition & Allergens -->
+    <string name="settings_section_nutrition">Nutrition &amp; Allergens</string>
+    <string name="settings_nutrition_preferences">Nutrition &amp; Allergen Preferences</string>
+    <string name="settings_nutrition_preferences_sub">Manage AI recommendations, diabetes, allergies, and dietary restrictions.</string>
+
+    <!-- Section 3: App Preferences -->
+    <string name="settings_section_app_preferences">App Preferences</string>
+    <string name="settings_notifications">Notification Settings</string>
+    <string name="settings_dark_mode">Dark Mode</string>
+    <string name="settings_language">Language</string>
+    <string name="settings_language_default">English</string>
+
+    <!-- Section 4: Support & About -->
+    <string name="settings_section_support_about">Support &amp; About</string>
+    <string name="settings_privacy_policy">Privacy Policy &amp; Terms of Service</string>
+    <string name="settings_contact_us">Contact Us / Support</string>
+    <string name="settings_app_version">App Version</string>
+    <string name="settings_app_version_code">v1.0.0</string>
+
+    <!-- Section 5: Session & Privacy -->
+    <string name="settings_section_session_privacy">Session &amp; Privacy</string>
+    <string name="settings_logout">Log Out</string>
+    <string name="settings_delete_account">Delete Account</string>
+
+    <!-- Logout Dialog -->
+    <string name="settings_logout_dialog_title">Log Out?</string>
+    <string name="settings_logout_dialog_loading_title">Please Wait</string>
+    <string name="settings_logout_dialog_loading_text">Logging out...</string>
+    <string name="settings_logout_dialog_message">Are you sure you want to log out of your account?</string>
+    <string name="settings_cancel">Cancel</string>
+
+    <!-- Edit Health Screen -->
+    <string name="edit_health_title">Nutrition &amp; Allergens</string>
+    <string name="edit_health_back_cd">Back</string>
+    <string name="edit_health_save">Save</string>
+    <string name="edit_health_success_toast">Your dietary preferences have been updated.</string>
+
+    <!-- Section 1: Health Status -->
+    <string name="edit_health_section_health_status">Health Condition</string>
+    <string name="edit_health_diabetes_title">Diabetes / Sugar Sensitivity</string>
+    <string name="edit_health_diabetes_desc">Let AI filter out sweet and sugary recommendations based on your profile.</string>
+
+    <!-- Section 2: Diet Preference -->
+    <string name="edit_health_section_diet">Dietary Pattern</string>
+    <string name="edit_health_diet_normal_title">Standard Diet</string>
+    <string name="edit_health_diet_normal_desc">I do not follow any specific dietary restrictions.</string>
+    <string name="edit_health_diet_vegetarian_title">Vegetarian</string>
+    <string name="edit_health_diet_vegetarian_desc">I do not consume meat or fish products.</string>
+    <string name="edit_health_diet_vegan_title">Vegan</string>
+    <string name="edit_health_diet_vegan_desc">I do not consume any animal-derived foods.</string>
+
+    <!-- Section 3: Allergens -->
+    <string name="edit_health_section_allergens">Allergens &amp; Intolerances</string>
+    <string name="edit_health_allergens_desc">Select foods you avoid or are allergic to:</string>
+
+    <!-- Change Password Bottom Sheet -->
+    <string name="change_password_title">Change Password</string>
+    <string name="change_password_current">Current Password</string>
+    <string name="change_password_new">New Password</string>
+    <string name="change_password_new_again">Confirm New Password</string>
+    <string name="change_password_submit_btn">Update Password</string>
+
+    <!-- Active Devices Screen -->
+    <string name="active_devices_title">Active Devices</string>
+    <string name="active_devices_back_cd">Back</string>
+    <string name="active_devices_retry">Retry</string>
+    <string name="active_devices_retry_cd">Retry</string>
+
+    <!-- Edit Profile Screen -->
+    <string name="edit_profile_title">Edit Profile</string>
+    <string name="edit_profile_back_cd">Back</string>
+    <string name="edit_profile_save">Save</string>
+    <string name="edit_profile_selected_photo_cd">Selected Profile Photo</string>
+    <string name="edit_profile_photo_cd">Profile Photo</string>
+    <string name="edit_profile_change_photo_cd">Change Photo</string>
+    <string name="edit_profile_section_personal">Personal Information</string>
+    <string name="edit_profile_username">Username</string>
+    <string name="edit_profile_name">First Name</string>
+    <string name="edit_profile_surname">Last Name</string>
+    <string name="edit_profile_section_about">About Me</string>
+    <string name="edit_profile_biography">Bio</string>
+    <string name="edit_profile_info_note">Your username and bio are visible to other TastyMap foodies.</string>
+
+    <!-- OnBoarding Screen -->
+    <string name="onboarding_welcome">WELCOME</string>
+    <string name="onboarding_tagline">Your personal taste assistant</string>
+    <string name="onboarding_subtitle">Our AI wants to get to know you to offer the most accurate restaurant and dietary recommendations.</string>
+
+    <!-- Feature 1: Smart -->
+    <string name="onboarding_feature_smart_title">Smart</string>
+    <string name="onboarding_feature_smart_desc">Learns your\ntastes</string>
+
+    <!-- Feature 2: Healthy -->
+    <string name="onboarding_feature_healthy_title">Healthy</string>
+    <string name="onboarding_feature_healthy_desc">Personalized\nfilters</string>
+
+    <!-- Feature 3: Original -->
+    <string name="onboarding_feature_original_title">Unique</string>
+    <string name="onboarding_feature_original_desc">Restaurant\nsuggestions</string>
+
+    <!-- Actions -->
+    <string name="onboarding_start_btn">Let\'s Start</string>
+    <string name="onboarding_skip_btn">Skip for Now</string>
+
+    <!-- Health Wizard Screen -->
+    <string name="health_wizard_back_cd">Back</string>
+    <string name="health_wizard_step_indicator">Step %1$d of %2$d</string>
+
+    <!-- Health Wizard Summary Step -->
+    <string name="summary_success_badge_cd">Success Badge</string>
+    <string name="summary_title">Your Health Profile is Ready</string>
+    <string name="summary_subtitle">We have analyzed your preferences.\nWe can now offer personalized restaurant and menu suggestions.</string>
+
+    <!-- Card 1: Diabetes -->
+    <string name="summary_diabetes_title">Diabetes Condition</string>
+    <string name="summary_diabetes_yes">I Have Diabetes</string>
+    <string name="summary_diabetes_no">No Diabetes</string>
+
+    <!-- Card 2: Diet Preference -->
+    <string name="summary_diet_title">Dietary Preference</string>
+    <string name="summary_diet_vegan">Vegan</string>
+    <string name="summary_diet_vegetarian">Vegetarian</string>
+    <string name="summary_diet_normal">General / Unrestricted</string>
+    <string name="summary_diet_not_specified">Not Specified</string>
+
+    <!-- Card 3: Allergies -->
+    <string name="summary_allergies_title">Allergies</string>
+    <string name="summary_allergies_none">No Allergies</string>
+
+    <!-- Footer & Actions -->
+    <string name="summary_footer_note">You can change this information anytime from your profile.</string>
+    <string name="summary_start_btn">Let\'s Start</string>
+    <string name="summary_edit_btn">Edit Details</string>
+
+    <!-- Eat Type Step -->
+    <string name="eat_type_title">What is your dietary preference?</string>
+    <string name="eat_type_description">Specify your eating habits so we can offer you a fully personalized taste map.</string>
+    <string name="eat_type_vegetarian">Vegetarian</string>
+    <string name="eat_type_vegan">Vegan</string>
+    <string name="eat_type_normal">General / Unrestricted</string>
+
+    <!-- Diabetes Step -->
+    <string name="diabetes_step_title">What is Your Diabetes Condition?</string>
+    <string name="diabetes_step_description">Help us filter the most suitable flavors for your health and diet plan.</string>
+    <string name="diabetes_step_option_yes">Yes, I have diabetes</string>
+    <string name="diabetes_step_option_no">No, I don\'t have diabetes</string>
+
+    <string name="allergies_step_title">Do you have any allergies?</string>
+    <string name="allergies_step_description">We care about your health. Select any food items you are allergic to so we can offer the safest restaurant and menu suggestions.</string>
+
+    <string name="base_step_next">Next</string>
+    <string name="base_step_back">Back</string>
+
+    <!-- Password Strength Indicator -->
+    <string name="password_strength_label">Password</string>
+    <string name="password_strength_weak">Weak</string>
+    <string name="password_strength_medium">Medium</string>
+    <string name="password_strength_strong">Strong</string>
+
+    <!-- Password Requirements -->
+    <string name="password_req_min_length">8+ characters</string>
+    <string name="password_req_uppercase">Uppercase letter</string>
+    <string name="password_req_digit">Digit</string>
+    <string name="password_req_special_char">Special character</string>
+
+    <!-- Back Page Component -->
+    <string name="back_page_content_description">Back</string>
+
+    <!-- Auth Footer -->
+    <string name="auth_footer_copyright">© 2026 TastyMap</string>
+    <string name="auth_footer_privacy">Privacy</string>
+    <string name="auth_footer_terms">Terms of Service</string>
+    <string name="auth_footer_contact">Contact</string>
+    <string name="auth_footer_help">Help</string>
+
+    <!-- Pending Screen -->
+    <string name="pending_security_title">Security Verification</string>
+    <string name="pending_security_desc">This login attempt requires additional verification to keep your account secure.</string>
+    <string name="pending_email_sent_title">Verification email sent</string>
+    <string name="pending_email_sent_desc">A verification link has been sent to your registered email address. This screen will automatically update once confirmed.</string>
+    <string name="pending_waiting">Waiting for verification...</string>
+    <string name="pending_warning_note">Please do not close this screen. Your login will automatically proceed once approved.</string>
+    <string name="pending_resend_email">Didn\'t receive the email? Resend</string>
+    <string name="pending_resend_timer">Resend in: %1$ds</string>
+
+    <!-- Verify Screen -->
+    <string name="verify_header">Account Verification</string>
+    <string name="verify_loading_title">Verifying Your Account</string>
+    <string name="verify_loading_subtitle">Please wait.</string>
+    <string name="verify_error_title">Something Went Wrong</string>
+    <string name="verify_error_default">An unexpected error occurred. Please try again.</string>
+
+    <!-- Verification Success Screen -->
+    <string name="verification_success_icon_cd">Success</string>
+    <string name="verification_success_title">Email Verified!</string>
+    <string name="verification_success_desc">Your account has been successfully verified. You can close this tab and return to the login screen in the app to sign in.</string>
+
+    <!-- Email Verification Screen -->
+    <string name="email_verify_header">Verification</string>
+    <string name="email_verify_title">Verify Your Email</string>
+    <string name="email_verify_desc">We sent a verification link to %1$s. Please check your inbox.</string>
+    <string name="email_verify_back_to_login">Back to Login</string>
+
+    <!-- Security Card Info -->
+    <string name="email_verify_security_title">Security notice:\n</string>
+    <string name="email_verify_security_desc">The verification link sent is valid for 10 minutes.</string>
+    <string name="email_verify_spam_note">If you cannot find it in your inbox, don\'t forget to check your Spam folder.</string>
+
+    <!-- Resend Section -->
+    <string name="email_verify_resend_prompt">Didn\'t receive the email? Resend</string>
+    <string name="email_verify_resend_timer">Resend in: %1$ds</string>
+
+    <!-- LogReg Screen - Header & Tabs -->
+    <string name="auth_app_title">Tasty Map</string>
+    <string name="auth_app_subtitle">Discover the Flavor</string>
+    <string name="auth_tab_login">Login</string>
+    <string name="auth_tab_register">Register</string>
+
+    <!-- Login Form -->
+    <string name="login_field_username">Username</string>
+    <string name="login_field_password">Password</string>
+    <string name="login_btn_submit">Sign In</string>
+    <string name="login_btn_forgot_password">Forgot password?</string>
+    <string name="login_email_unverified">Your email (%1$s) is not verified yet.</string>
+
+    <!-- Register Form -->
+    <string name="register_field_name">First Name</string>
+    <string name="register_field_surname">Last Name</string>
+    <string name="register_field_username">Username</string>
+    <string name="register_field_email">Email</string>
+    <string name="register_field_password">Password</string>
+    <string name="register_btn_next">Continue</string>
+    <string name="register_btn_submit">Sign Up</string>
+    <string name="register_btn_back">Go Back</string>
+
+    <!-- Common Resend Prompt -->
+    <string name="auth_resend_prompt">Didn\'t receive the email? Resend</string>
+    <string name="auth_resend_timer">Resend in: %1$ds</string>
+
+    <!-- Reset Screen -->
+    <string name="reset_header">Reset Password</string>
+    <string name="reset_title">Forgot Your Password?</string>
+    <string name="reset_field_new_password">New Password</string>
+    <string name="reset_field_confirm_password">Confirm New Password</string>
+    <string name="reset_btn_submit">Change Password</string>
+    <string name="reset_btn_back_to_login">Back to login</string>
+    <string name="reset_info_note">After resetting your password, you can sign in to your account.</string>
+
+    <!-- Forgot Screen -->
+    <string name="forgot_header">Find Your Account</string>
+    <string name="forgot_title">Forgot Your Password?</string>
+    <string name="forgot_subtitle">Enter your registered email address or username. We will send you a password reset link.</string>
+    <string name="forgot_field_email_or_username">Email or Username</string>
+    <string name="forgot_btn_submit">Reset Password</string>
+    <string name="forgot_btn_back_to_login">Back to login</string>
+
+    <!-- Info Card -->
+    <string name="forgot_info_registered_only">The password reset link will only be sent to registered email addresses.</string>
+    <string name="forgot_info_validity">The verification link sent is valid for 10 minutes.</string>
+    <string name="forgot_info_spam_check">If you cannot find it in your inbox, don\'t forget to check your Spam folder.</string>
+
+    <string name="change_success_icon_cd">Success</string>
+    <string name="change_success_title">Password Changed!</string>
+    <string name="change_success_desc">Your password has been successfully changed. You can close this tab and return to the login screen in the app to sign in.</string>
+
+    <!-- Email Validation Messages -->
+    <string name="validation_email_empty">Email cannot be empty</string>
+    <string name="validation_email_invalid">Enter a valid email address</string>
+
+    <!-- Password Validation Messages -->
+    <string name="validation_password_min_length">Password must be at least 8 characters</string>
+    <string name="validation_password_uppercase">Must contain at least one uppercase letter</string>
+    <string name="validation_password_lowercase">Must contain at least one lowercase letter</string>
+    <string name="validation_password_digit">Must contain at least one number</string>
+    <string name="validation_password_special_char">Must contain at least one special character (@, #, !, etc.)</string>
+
+    <!-- Name Validation Messages -->
+    <string name="validation_name_empty">First name cannot be empty</string>
+    <string name="validation_name_length">First name must be between 2 and 50 characters</string>
+    <string name="validation_name_invalid">First name can only contain letters and spaces</string>
+
+    <!-- Surname Validation Messages -->
+    <string name="validation_surname_empty">Last name cannot be empty</string>
+    <string name="validation_surname_length">Last name must be between 2 and 50 characters</string>
+    <string name="validation_surname_invalid">Last name can only contain letters</string>
+
+    <!-- Username Validation Messages -->
+    <string name="validation_username_empty">Username cannot be empty</string>
+    <string name="validation_username_length">Username must be between 3 and 20 characters</string>
+    <string name="validation_username_invalid">Username can only contain letters, numbers, dots, and underscores</string>
+
+    <!-- Splash Screen -->
+    <string name="splash_app_logo_cd">App Logo</string>
+
+    <!-- Allergies -->
+    <string name="allergy_dairy">Dairy Products</string>
+    <string name="allergy_gluten">Gluten</string>
+    <string name="allergy_peanut">Peanuts</string>
+    <string name="allergy_egg">Egg</string>
+    <string name="allergy_fish">Fish</string>
+    <string name="allergy_other">Other</string>
+    <string name="allergy_none">No allergies</string>
+
+    <!-- Error Messages -->
+    <string name="health_error_load_failed">Failed to load health profile: %1$s</string>
+    <string name="health_error_generic">An error occurred, please try again. %1$s</string>
+
+    <!-- Auth Events -->
+    <string name="auth_session_expired">Your session has expired or password was changed, please log in again.</string>
+    <string name="auth_password_changed">You were logged out because your password was changed.</string>
+    <string name="auth_logged_out">Successfully logged out.</string>
+
+    <!-- Profile & Edit Profile Messages -->
+    <string name="edit_profile_success">Profile updated successfully.</string>
+    <string name="edit_profile_photo_upload_error">An error occurred while uploading the photo.</string>
+
+    <!-- Change Password Validation Messages -->
+    <string name="change_password_error_old_empty">Please enter your current password.</string>
+    <string name="change_password_error_again_empty">Please re-enter your new password.</string>
+    <string name="change_password_error_mismatch">New passwords do not match.</string>
+    <string name="change_password_success">Your password has been changed successfully.</string>
+
+    <string name="active_devices_last_seen">Logged in: %1$s</string>
+
+    <string name="pending_email_sent">Email sent.</string>
+    <string name="pending_login_approved">Login approved.</string>
+    <string name="pending_login_rejected">Login request rejected.</string>
+    <string name="pending_login_failed">Login failed.</string>
+
+    <string name="verify_email_sent">A verification link has been sent to your email address.</string>
+</resources>

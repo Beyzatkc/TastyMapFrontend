@@ -50,7 +50,7 @@ val appModule = module {
     single<SettingsManager> { SettingsManagerImpl(get()) }
 
     single<HttpClient>(named("noAuth")) {
-        createNoAuthClient()
+        createNoAuthClient(get())
     }
 
 

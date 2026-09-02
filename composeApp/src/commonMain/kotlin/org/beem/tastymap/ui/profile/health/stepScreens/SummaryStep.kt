@@ -35,7 +35,24 @@ import org.beem.tastymap.data.model.health.HealthEnum
 import org.beem.tastymap.ui.profile.health.HealthUiState
 import org.beem.tastymap.ui.theme.CustomColors
 import org.beem.tastymap.ui.theme.LocalCustomColors
+import org.jetbrains.compose.resources.stringResource
 import tastymap.composeapp.generated.resources.Res
+import tastymap.composeapp.generated.resources.summary_allergies_none
+import tastymap.composeapp.generated.resources.summary_allergies_title
+import tastymap.composeapp.generated.resources.summary_diabetes_no
+import tastymap.composeapp.generated.resources.summary_diabetes_title
+import tastymap.composeapp.generated.resources.summary_diabetes_yes
+import tastymap.composeapp.generated.resources.summary_diet_normal
+import tastymap.composeapp.generated.resources.summary_diet_not_specified
+import tastymap.composeapp.generated.resources.summary_diet_title
+import tastymap.composeapp.generated.resources.summary_diet_vegan
+import tastymap.composeapp.generated.resources.summary_diet_vegetarian
+import tastymap.composeapp.generated.resources.summary_edit_btn
+import tastymap.composeapp.generated.resources.summary_footer_note
+import tastymap.composeapp.generated.resources.summary_start_btn
+import tastymap.composeapp.generated.resources.summary_subtitle
+import tastymap.composeapp.generated.resources.summary_success_badge_cd
+import tastymap.composeapp.generated.resources.summary_title
 
 @Suppress("SuspiciousIndentation")
 @Composable
@@ -69,16 +86,21 @@ fun SummaryStep(
     }
 
     val eatTypeText = when (state.selectedEatType) {
-        HealthEnum.VEGAN -> "Vegan"
-        HealthEnum.VEGETARIAN -> "Vejetaryen"
-        HealthEnum.NORMAL -> "Genel / Kısıtlamasız"
-        null -> "Belirtilmedi"
+        HealthEnum.VEGAN -> stringResource(Res.string.summary_diet_vegan)
+        HealthEnum.VEGETARIAN -> stringResource(Res.string.summary_diet_vegetarian)
+        HealthEnum.NORMAL -> stringResource(Res.string.summary_diet_normal)
+        null -> stringResource(Res.string.summary_diet_not_specified)
     }
 
-    val allergies = state.availableAllergies
+    val selectedAllergiesList = state.availableAllergies
         .filter { state.selectedAllergyIds.contains(it.id) }
-        .joinToString(", ") { it.name }
-        .ifEmpty { "Alerjim Yok" }
+        .map { stringResource(it.nameRes) }
+
+    val allergies = if (selectedAllergiesList.isNotEmpty()) {
+        selectedAllergiesList.joinToString(", ")
+    } else {
+        stringResource(Res.string.summary_allergies_none)
+    }
 
     val headerAlpha by animateFloatAsState(
         targetValue = if (showHeader) 1f else 0f,
@@ -118,14 +140,14 @@ fun SummaryStep(
                         composition = composition,
                         progress = { progress }
                     ),
-                    contentDescription = "Başarı Rozeti",
+                    contentDescription = stringResource(Res.string.summary_success_badge_cd),
                     modifier = Modifier.size(150.dp)
                 )
 
                 Spacer(modifier = Modifier.height(15.dp))
 
                 Text(
-                    text = "Sağlık Profiliniz Hazır",
+                    text = stringResource(Res.string.summary_title),
                     fontSize = 24.sp,
                     fontWeight = FontWeight.Bold,
                     color = customColors.textPrimary
@@ -134,7 +156,7 @@ fun SummaryStep(
                 Spacer(modifier = Modifier.height(10.dp))
 
                 Text(
-                    text = "Tercihlerinizi analiz ettik.\nArtık size özel restoran ve menü önerileri sunabiliriz.",
+                    text = stringResource(Res.string.summary_subtitle),
                     fontSize = 14.sp,
                     color = customColors.textSecondary,
                     textAlign = TextAlign.Center,
@@ -147,8 +169,8 @@ fun SummaryStep(
             AnimatedSummaryCard(
                 visible = visibleCards >= 1,
                 icon = Icons.Rounded.Bloodtype,
-                title = "Diyabet Durumu",
-                value = if (state.hasDiabetes) "Diyabetim Var" else "Diyabetim Yok",
+                title = stringResource(Res.string.summary_diabetes_title),
+                value = if (state.hasDiabetes) stringResource(Res.string.summary_diabetes_yes) else stringResource(Res.string.summary_diabetes_no),
                 customColors = customColors
             )
 
@@ -157,7 +179,7 @@ fun SummaryStep(
             AnimatedSummaryCard(
                 visible = visibleCards >= 2,
                 icon = Icons.Rounded.Restaurant,
-                title = "Beslenme Tercihi",
+                title = stringResource(Res.string.summary_diet_title),
                 value = eatTypeText,
                 customColors = customColors
             )
@@ -167,7 +189,7 @@ fun SummaryStep(
             AnimatedSummaryCard(
                 visible = visibleCards >= 3,
                 icon = Icons.Rounded.HealthAndSafety,
-                title = "Alerjiler",
+                title = stringResource(Res.string.summary_allergies_title),
                 value = allergies,
                 customColors = customColors
             )
@@ -175,7 +197,7 @@ fun SummaryStep(
             Spacer(modifier = Modifier.height(32.dp))
 
             Text(
-                text = "Bu bilgileri profilinizden istediğiniz zaman değiştirebilirsiniz.",
+                text = stringResource(Res.string.summary_footer_note),
                 fontSize = 12.sp,
                 textAlign = TextAlign.Center,
                 color = customColors.textTertiary
@@ -184,7 +206,7 @@ fun SummaryStep(
             Spacer(modifier = Modifier.height(18.dp))
 
             TastyButton(
-                text = "Başlayalım",
+                text = stringResource(Res.string.summary_start_btn),
                 onClick = onNextClick,
                 isPrimary = true,
                 isLoading = state.isLoading,
@@ -196,7 +218,7 @@ fun SummaryStep(
             Spacer(modifier = Modifier.height(12.dp))
 
             TastyButton(
-                text = "Bilgileri Düzenle",
+                text = stringResource(Res.string.summary_edit_btn),
                 onClick = onBackClick,
                 isPrimary = false,
                 enabled = !state.isLoading,

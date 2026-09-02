@@ -6,7 +6,13 @@ import org.beem.tastymap.ui.profile.health.HealthUiState
 import org.beem.tastymap.ui.profile.health.components.BaseStepContainer
 import org.beem.tastymap.ui.profile.health.stepScreens.common.RadioButton
 import org.beem.tastymap.ui.theme.LocalCustomColors
+import org.jetbrains.compose.resources.stringResource
 import tastymap.composeapp.generated.resources.Res
+import tastymap.composeapp.generated.resources.eat_type_description
+import tastymap.composeapp.generated.resources.eat_type_normal
+import tastymap.composeapp.generated.resources.eat_type_title
+import tastymap.composeapp.generated.resources.eat_type_vegan
+import tastymap.composeapp.generated.resources.eat_type_vegetarian
 import tastymap.composeapp.generated.resources.ic_diet_svg
 
 @Composable
@@ -20,14 +26,14 @@ fun EatTypeStep(
 
     BaseStepContainer(
         iconResource = Res.drawable.ic_diet_svg,
-        title = "Beslenme tercihiniz nedir?",
-        description = "Size tamamen özel bir lezzet haritası sunabilmemiz için beslenme alışkanlığınızı belirtin.",
+        title = stringResource(Res.string.eat_type_title),
+        description = stringResource(Res.string.eat_type_description),
         onNextClick = onNextClick,
         onBackClick = onBackClick,
         isNextEnabled = true
     ) {
         RadioButton(
-            text = "Vejetaryen",
+            text = stringResource(Res.string.eat_type_vegetarian),
             selected = state.selectedEatType == HealthEnum.VEGETARIAN,
             customColors = customColors
         ) {
@@ -35,7 +41,7 @@ fun EatTypeStep(
         }
 
         RadioButton(
-            text = "Vegan",
+            text = stringResource(Res.string.eat_type_vegan),
             selected = state.selectedEatType == HealthEnum.VEGAN,
             customColors = customColors
         ) {
@@ -43,7 +49,7 @@ fun EatTypeStep(
         }
 
         RadioButton(
-            text = "Genel / Kısıtlamasız",
+            text = stringResource(Res.string.eat_type_normal),
             selected = state.selectedEatType == HealthEnum.NORMAL,
             customColors = customColors
         ) {

@@ -22,6 +22,10 @@ import androidx.compose.ui.unit.sp
 import org.beem.tastymap.ui.theme.LocalCustomColors
 import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource
+import org.jetbrains.compose.resources.stringResource
+import tastymap.composeapp.generated.resources.Res
+import tastymap.composeapp.generated.resources.base_step_back
+import tastymap.composeapp.generated.resources.base_step_next
 
 @Composable
 fun BaseStepContainer(
@@ -32,8 +36,8 @@ fun BaseStepContainer(
     onBackClick: () -> Unit,
     modifier: Modifier = Modifier,
     isNextEnabled: Boolean = true,
-    nextButtonText: String = "Sonraki",
-    backButtonText: String = "Geri",
+    nextButtonText: String = stringResource(Res.string.base_step_next),
+    backButtonText: String = stringResource(Res.string.base_step_back),
     content: @Composable ColumnScope.() -> Unit
 ) {
     val customColors = LocalCustomColors.current

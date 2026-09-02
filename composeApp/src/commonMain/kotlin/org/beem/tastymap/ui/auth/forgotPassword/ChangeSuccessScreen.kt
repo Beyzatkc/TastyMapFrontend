@@ -25,6 +25,11 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import cafe.adriel.voyager.core.screen.Screen
+import org.jetbrains.compose.resources.stringResource
+import tastymap.composeapp.generated.resources.Res
+import tastymap.composeapp.generated.resources.change_success_desc
+import tastymap.composeapp.generated.resources.change_success_icon_cd
+import tastymap.composeapp.generated.resources.change_success_title
 
 class ChangeSuccessScreen(): Screen {
     @Composable
@@ -45,7 +50,7 @@ class ChangeSuccessScreen(): Screen {
             ) {
                 Icon(
                     imageVector = Icons.Default.CheckCircle,
-                    contentDescription = "Success",
+                    contentDescription = stringResource(Res.string.change_success_icon_cd),
                     modifier = Modifier.Companion.size(64.dp),
                     tint = Color(0xFF4CAF50)
                 )
@@ -53,7 +58,7 @@ class ChangeSuccessScreen(): Screen {
             Spacer(modifier = Modifier.Companion.height(32.dp))
 
             Text(
-                text = "Şifre Değiştirildi.!",
+                text = stringResource(Res.string.change_success_title),
                 style = MaterialTheme.typography.headlineMedium,
                 fontWeight = FontWeight.Companion.ExtraBold,
                 color = Color(0xFF001970),
@@ -63,7 +68,7 @@ class ChangeSuccessScreen(): Screen {
             Spacer(modifier = Modifier.Companion.height(16.dp))
 
             Text(
-                text = "Şifreniz başarıyla değiştirildi. Bu sekmeyi kapatıp uygulamadaki giriş ekranına dönerek oturum açabilirsiniz.",
+                text = stringResource(Res.string.change_success_desc),
                 textAlign = TextAlign.Companion.Center,
                 style = MaterialTheme.typography.bodyLarge,
                 color = Color.Companion.Gray,

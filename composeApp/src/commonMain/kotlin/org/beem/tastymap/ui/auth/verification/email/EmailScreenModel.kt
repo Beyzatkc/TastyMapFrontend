@@ -20,6 +20,10 @@ import org.beem.tastymap.data.repository.UserSecurityRepository
 import org.beem.tastymap.ui.auth.common.AuthLifecycleEvent
 import org.beem.tastymap.ui.auth.common.CountdownTimer
 import org.beem.tastymap.ui.auth.verification.VerificationUiState
+import org.jetbrains.compose.resources.StringResource
+import tastymap.composeapp.generated.resources.Res
+import tastymap.composeapp.generated.resources.verify_email_sent
+import tastymap.composeapp.generated.resources.verify_error_default
 import kotlin.concurrent.atomics.AtomicBoolean
 import kotlin.concurrent.atomics.ExperimentalAtomicApi
 @OptIn(ExperimentalAtomicApi::class)
@@ -38,12 +42,17 @@ class EmailScreenModel(
     private val _navigationState = Channel<EmailNavEffect>()
     val navigationState = _navigationState.receiveAsFlow()
 
-    private val _uiMessage = Channel<String>()
+    private val _uiMessage = Channel<UiMessage>()
 
     val uiMessage = _uiMessage.receiveAsFlow()
 
     private var verificationContext: VerificationContext? = null
 
+
+    sealed interface UiMessage {
+        data class Dynamic(val message: String) : UiMessage
+        data class Resource(val res: StringResource, val args: List<Any> = emptyList()) : UiMessage
+    }
     data class VerificationContext(
         val userId: Long,
         val deviceId: String
@@ -72,10 +81,16 @@ class EmailScreenModel(
             val request =CommonRequest(deviceId = deviceId, email = email)
             when(val result = repository.resendEmail(request)){
                 is ResultWrapper.Success -> {
-                    _uiMessage.send("Emailinize doğrulama bağlantısı gönderilmiştir.")
+                    _uiMessage.send(UiMessage.Resource(Res.string.verify_email_sent))
+
                 }
                 is ResultWrapper.Error -> {
-                    _uiMessage.send(result.message ?: "Bir hata oluştu")
+                    val message = result.message
+                    if (message != null) {
+                        _uiMessage.send(UiMessage.Dynamic(message))
+                    } else {
+                        _uiMessage.send(UiMessage.Resource(Res.string.verify_error_default))
+                    }
                 }
             }
 
@@ -101,7 +116,10 @@ class EmailScreenModel(
 
             when(val result = repository.verifyEmail(token)){
                 is ResultWrapper.Success -> {
-                    _uiMessage.send(result.data["message"] ?: "Başarılı")
+                    val successMsg = result.data["message"]
+                    if (successMsg != null) {
+                        _uiMessage.send(UiMessage.Dynamic(successMsg))
+                    }
                     _verificationState.update {
                         it.copy(
                             isLoading = false,
@@ -140,7 +158,9 @@ class EmailScreenModel(
                 }
             }
             is ResultWrapper.Error -> {
-                _uiMessage.send(result.message)
+                result.message?.let { msg ->
+                    _uiMessage.send(UiMessage.Dynamic(msg))
+                }
                 false
             }
         }

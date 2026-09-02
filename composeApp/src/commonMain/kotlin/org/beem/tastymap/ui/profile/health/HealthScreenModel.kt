@@ -12,6 +12,14 @@ import org.beem.tastymap.data.model.health.AllergyInfo
 import org.beem.tastymap.data.model.health.HealthEnum
 import org.beem.tastymap.data.model.health.HealthRequest
 import org.beem.tastymap.data.repository.HealthRepository
+import tastymap.composeapp.generated.resources.Res
+import tastymap.composeapp.generated.resources.allergy_dairy
+import tastymap.composeapp.generated.resources.allergy_egg
+import tastymap.composeapp.generated.resources.allergy_fish
+import tastymap.composeapp.generated.resources.allergy_gluten
+import tastymap.composeapp.generated.resources.allergy_none
+import tastymap.composeapp.generated.resources.allergy_other
+import tastymap.composeapp.generated.resources.allergy_peanut
 import kotlin.collections.listOf
 
 
@@ -29,16 +37,17 @@ class HealthScreenModel(
 
     init {
         val defaultAllergies = listOf(
-            AllergyInfo(id = 1L, name = "Süt ve Süt Ürünleri"),
-            AllergyInfo(id = 2L, name = "Gluten"),
-            AllergyInfo(id = 3L, name = "Yer Fıstığı"),
-            AllergyInfo(id = 4L, name = "Yumurta"),
-            AllergyInfo(id = 5L, name = "Balık"),
-            AllergyInfo(id = 7L , name = "Diğer"),
-            AllergyInfo(id = 6L, name = "Alerjim yok"),
-
+            AllergyUiModel(id = 1L, nameRes = Res.string.allergy_dairy),
+            AllergyUiModel(id = 2L, nameRes = Res.string.allergy_gluten),
+            AllergyUiModel(id = 3L, nameRes = Res.string.allergy_peanut),
+            AllergyUiModel(id = 4L, nameRes = Res.string.allergy_egg),
+            AllergyUiModel(id = 5L, nameRes = Res.string.allergy_fish),
+            AllergyUiModel(id = 7L, nameRes = Res.string.allergy_other),
+            AllergyUiModel(id = 6L, nameRes = Res.string.allergy_none)
         )
-        _healthState.update { it.copy(availableAllergies = defaultAllergies, selectedAllergyIds = listOf(NO_ALLERGY_ID)) }
+        _healthState.update {
+            it.copy(availableAllergies = defaultAllergies, selectedAllergyIds = listOf(NO_ALLERGY_ID))
+        }
     }
     fun loadUserHealthProfile() {
         screenModelScope.launch {
@@ -69,7 +78,7 @@ class HealthScreenModel(
                 }
                 is ResultWrapper.Error -> {
                     _healthState.update { it.copy(isLoading = false) }
-                    _uiMessage.send("Mevcut bilgiler yüklenemedi: ${result.message}")
+                    _uiMessage.send(result.message)
                 }
             }
         }

@@ -31,6 +31,19 @@ import org.beem.tastymap.ui.profile.health.HealthScreenModel
 import org.beem.tastymap.ui.profile.health.HealthWizardScreen
 import org.beem.tastymap.ui.theme.CustomColors
 import org.beem.tastymap.ui.theme.LocalCustomColors
+import org.jetbrains.compose.resources.stringResource
+import tastymap.composeapp.generated.resources.Res
+import tastymap.composeapp.generated.resources.onboarding_feature_healthy_desc
+import tastymap.composeapp.generated.resources.onboarding_feature_healthy_title
+import tastymap.composeapp.generated.resources.onboarding_feature_original_desc
+import tastymap.composeapp.generated.resources.onboarding_feature_original_title
+import tastymap.composeapp.generated.resources.onboarding_feature_smart_desc
+import tastymap.composeapp.generated.resources.onboarding_feature_smart_title
+import tastymap.composeapp.generated.resources.onboarding_skip_btn
+import tastymap.composeapp.generated.resources.onboarding_start_btn
+import tastymap.composeapp.generated.resources.onboarding_subtitle
+import tastymap.composeapp.generated.resources.onboarding_tagline
+import tastymap.composeapp.generated.resources.onboarding_welcome
 
 class OnBoardingScreen : Screen {
 
@@ -83,7 +96,7 @@ class OnBoardingScreen : Screen {
                         Spacer(modifier = Modifier.height(16.dp))
 
                         Text(
-                            text = "Yapay zekamız size en doğru restoran ve beslenme önerilerini sunabilmek için sizi tanımak istiyor.",
+                            text = stringResource(Res.string.onboarding_subtitle),
                             fontSize = 15.sp,
                             lineHeight = 22.sp,
                             textAlign = TextAlign.Center,
@@ -114,7 +127,7 @@ fun WelcomeLogo(customColors: CustomColors) {
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
-            text = "HOŞ GELDİNİZ",
+            text = stringResource(Res.string.onboarding_welcome),
             color = customColors.textTertiary,
             fontSize = 13.sp,
             fontWeight = FontWeight.Bold,
@@ -176,7 +189,7 @@ fun WelcomeLogo(customColors: CustomColors) {
                 Spacer(modifier = Modifier.width(8.dp))
 
                 Text(
-                    text = "Kişisel lezzet asistanınız",
+                    text = stringResource(Res.string.onboarding_tagline),
                     color = customColors.textPrimary,
                     fontSize = 13.sp,
                     fontWeight = FontWeight.Bold
@@ -219,22 +232,22 @@ fun WelcomeCardContent(
                 FeatureColumn(
                     customColors = customColors,
                     icon = Icons.Rounded.Psychology,
-                    title = "Akıllı",
-                    description = "Zevklerinizi\nöğrenir",
+                    title = stringResource(Res.string.onboarding_feature_smart_title),
+                    description =stringResource(Res.string.onboarding_feature_smart_desc),
                     modifier = Modifier.weight(1f)
                 )
                 FeatureColumn(
                     customColors = customColors,
                     icon = Icons.Rounded.HealthAndSafety,
-                    title = "Sağlıklı",
-                    description = "Size özel\nfiltreler",
+                    title = stringResource(Res.string.onboarding_feature_healthy_title),
+                    description = stringResource(Res.string.onboarding_feature_healthy_desc),
                     modifier = Modifier.weight(1f)
                 )
                 FeatureColumn(
                     customColors = customColors,
                     icon = Icons.Rounded.Restaurant,
-                    title = "Özgün",
-                    description = "Restoran\nönerileri",
+                    title = stringResource(Res.string.onboarding_feature_original_title),
+                    description = stringResource(Res.string.onboarding_feature_original_desc),
                     modifier = Modifier.weight(1f)
                 )
             }
@@ -242,7 +255,7 @@ fun WelcomeCardContent(
             Spacer(modifier = Modifier.height(36.dp))
 
             TastyButton(
-                text = "Başlayalım",
+                text = stringResource(Res.string.onboarding_start_btn),
                 onClick = { navigator.push(HealthWizardScreen()) },
                 isPrimary = true,
                 backcolor = customColors.navy,
@@ -253,7 +266,7 @@ fun WelcomeCardContent(
             Spacer(modifier = Modifier.height(12.dp))
 
             TastyButton(
-                text = "Şimdilik Atla",
+                text = stringResource(Res.string.onboarding_skip_btn),
                 onClick = screenModel::skipHealthWizard,
                 isPrimary = false,
                 backcolor = Color.Transparent,

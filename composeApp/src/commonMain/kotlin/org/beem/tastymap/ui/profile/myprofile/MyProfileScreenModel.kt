@@ -13,6 +13,8 @@ import org.beem.tastymap.data.model.profile.UpdateProfile
 import org.beem.tastymap.data.repository.profile.MyProfileRepository
 import org.beem.tastymap.ui.auth.common.CheckValidator
 import org.beem.tastymap.ui.auth.common.ValidationResult
+import tastymap.composeapp.generated.resources.Res
+import tastymap.composeapp.generated.resources.edit_profile_success
 
 class MyProfileScreenModel(
     private val repo: MyProfileRepository
@@ -59,7 +61,6 @@ class MyProfileScreenModel(
         }
     }
 
-
     fun updateProfile(
         inputUsername: String,
         inputName: String,
@@ -80,22 +81,25 @@ class MyProfileScreenModel(
             changedSurname ?: currentProfile.surname
         )
 
-        if (!isValid) {
-            println("EditProfileDebug: HATA - Validasyondan geçemedi, güncelleme durduruldu.")
-            return
-        }
+        if (!isValid) return
 
         if (changedUsername == null && changedName == null && changedSurname == null &&
             changedBiography == null && selectedFile == null
         ) {
             _myProfileState.update {
-                it.copy(successMessage = "Profil başarıyla güncellendi.")
+                it.copy(successMessageRes = Res.string.edit_profile_success)
             }
             return
         }
 
         screenModelScope.launch {
-            _myProfileState.update { it.copy(isActionLoading = true, errorMessage = null, successMessage = null) }
+            _myProfileState.update {
+                it.copy(
+                    isActionLoading = true,
+                    errorMessage = null,
+                    successMessageRes = null
+                )
+            }
             var uploadedPhotoUrl: String? = null
 
             if (selectedFile != null) {
@@ -107,7 +111,7 @@ class MyProfileScreenModel(
                         _myProfileState.update {
                             it.copy(
                                 isActionLoading = false,
-                                errorMessage = uploadResult.message ?: "Fotoğraf yüklenirken bir hata oluştu."
+                                errorMessage = uploadResult.message
                             )
                         }
                         return@launch
@@ -136,7 +140,7 @@ class MyProfileScreenModel(
                         currentState.copy(
                             isActionLoading = false,
                             profile = updatedProfile,
-                            successMessage = result.data.message ?: "Profil başarıyla güncellendi."
+                            successMessageRes = Res.string.edit_profile_success
                         )
                     }
                 }
@@ -151,21 +155,20 @@ class MyProfileScreenModel(
             }
         }
     }
-
     fun validateUpdateState(username: String, name: String, surname: String): Boolean {
         val uResult = CheckValidator.validateUsername(username.trim())
         val nResult = CheckValidator.validateName(name.trim().replace("\\s+".toRegex(), " "))
         val sResult = CheckValidator.validateSurname(surname.replace("\\s+".toRegex(), " "))
 
-        val usernameError = (uResult as? ValidationResult.Invalid)?.message
-        val nameError = (nResult as? ValidationResult.Invalid)?.message
-        val surnameError = (sResult as? ValidationResult.Invalid)?.message
+        val usernameError = (uResult as? ValidationResult.Invalid)?.messageRes
+        val nameError = (nResult as? ValidationResult.Invalid)?.messageRes
+        val surnameError = (sResult as? ValidationResult.Invalid)?.messageRes
 
         _myProfileState.update {
             it.copy(
                 usernameError = usernameError,
-                surnameError = surnameError,
-                nameError = nameError
+                nameError = nameError,
+                surnameError = surnameError
             )
         }
 
@@ -175,14 +178,14 @@ class MyProfileScreenModel(
     }
 
     fun clearMessagesProfile() {
-        _myProfileState.update { it.copy(errorMessage = null, successMessage = null) }
+        _myProfileState.update { it.copy(errorMessage = null, successMessageRes = null) }
     }
 
     fun clearMessagesEdit() {
         _myProfileState.update {
             it.copy(
                 errorMessage = null,
-                successMessage = null,
+                successMessageRes = null,
                 usernameError = null,
                 nameError = null,
                 surnameError = null

@@ -45,7 +45,15 @@ import org.beem.tastymap.ui.animations.TastyAnimations
 import org.beem.tastymap.ui.components.AuthFooter
 import org.beem.tastymap.ui.components.BackPage
 import org.beem.tastymap.ui.theme.LocalCustomColors
+import org.jetbrains.compose.resources.getString
+import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.koinInject
+import tastymap.composeapp.generated.resources.Res
+import tastymap.composeapp.generated.resources.verify_error_default
+import tastymap.composeapp.generated.resources.verify_error_title
+import tastymap.composeapp.generated.resources.verify_header
+import tastymap.composeapp.generated.resources.verify_loading_subtitle
+import tastymap.composeapp.generated.resources.verify_loading_title
 
 class VerifyScreen(val token: String) : Screen {
 
@@ -76,7 +84,11 @@ class VerifyScreen(val token: String) : Screen {
 
         LaunchedEffect(screenModel.uiMessage) {
             screenModel.uiMessage.collect { message ->
-                ToastManager.show(message)
+                val text = when (message) {
+                    is EmailScreenModel.UiMessage.Dynamic -> message.message
+                    is EmailScreenModel.UiMessage.Resource -> getString(message.res)
+                }
+                ToastManager.show(text)
             }
         }
 
@@ -92,7 +104,7 @@ class VerifyScreen(val token: String) : Screen {
                     .imePadding()
             ) {
                 BackPage(
-                    header = "Hesap Doğrulama",
+                    header = stringResource(Res.string.verify_header),
                     onBackClick = { navigator.pop() }
                 )
 
@@ -128,7 +140,7 @@ class VerifyScreen(val token: String) : Screen {
                                     Spacer(Modifier.height(32.dp))
 
                                     Text(
-                                        text = "Hesabınız Doğrulanıyor",
+                                        text = stringResource(Res.string.verify_loading_title),
                                         style = MaterialTheme.typography.headlineSmall,
                                         color = colors.textPrimary,
                                         fontWeight = FontWeight.Bold,
@@ -138,7 +150,7 @@ class VerifyScreen(val token: String) : Screen {
                                     Spacer(Modifier.height(12.dp))
 
                                     Text(
-                                        text = "Lütfen bekleyiniz.",
+                                        text = stringResource(Res.string.verify_loading_subtitle),
                                         style = MaterialTheme.typography.bodyMedium,
                                         color = colors.textSecondary,
                                         textAlign = TextAlign.Center,
@@ -165,7 +177,7 @@ class VerifyScreen(val token: String) : Screen {
                                     Spacer(Modifier.height(24.dp))
 
                                     Text(
-                                        text = "Bir Sorun Oluştu",
+                                        text = stringResource(Res.string.verify_error_title),
                                         style = MaterialTheme.typography.headlineMedium,
                                         color = colors.error,
                                         fontWeight = FontWeight.ExtraBold,
@@ -175,8 +187,7 @@ class VerifyScreen(val token: String) : Screen {
                                     Spacer(Modifier.height(12.dp))
 
                                     Text(
-                                        text = state.verificationError
-                                            ?: "Beklenmedik bir hata oluştu. Lütfen tekrar deneyiniz.",
+                                        text = state.verificationError ?: stringResource(Res.string.verify_error_default),
                                         style = MaterialTheme.typography.bodyLarge,
                                         color = colors.textSecondary,
                                         textAlign = TextAlign.Center,
