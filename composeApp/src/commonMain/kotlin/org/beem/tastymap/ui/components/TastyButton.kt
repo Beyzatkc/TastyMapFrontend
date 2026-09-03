@@ -13,6 +13,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 
 @Composable
@@ -87,6 +88,7 @@ private fun ButtonContent(text: String, isLoading: Boolean, contentColor: Color)
     } else {
         Text(
             text = text,
+            overflow = TextOverflow.Ellipsis,
             color = contentColor,
             style = MaterialTheme.typography.titleMedium
         )

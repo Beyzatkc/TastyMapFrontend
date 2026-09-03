@@ -1,6 +1,7 @@
 package org.beem.tastymap.data.mapper
 
 import org.beem.tastymap.data.model.profile.ProfileResponse
+import org.beem.tastymap.domain.model.RelationStatus
 import org.beem.tastymap.domain.model.UserProfile
 
 
@@ -18,6 +19,8 @@ fun ProfileResponse.toDomain(userId: Long): UserProfile {
         subscriberCount = subscriberCount,
         subscribedCount = subscribedCount,
         blockedByMe = blockedByMe,
-        blockedMe = blockedMe
+        blockedMe = blockedMe,
+        relationStatus = this.relationStatus ?: RelationStatus.NOT_FOLLOWING,
+        hasPendingIncomingRequest = this.hasPendingIncomingRequest
     )
 }

@@ -1,7 +1,11 @@
 package org.beem.tastymap.data.local
 
 import app.cash.sqldelight.async.coroutines.awaitAsOneOrNull
+import app.cash.sqldelight.coroutines.asFlow
+import app.cash.sqldelight.coroutines.mapToOneOrNull
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 import org.beem.tastymap.domain.model.UserProfile
 import org.beem.tastymap.sqldelight.ProfileEntityQueries
@@ -25,6 +29,29 @@ class ProfileLocalDataSource(private val queries: ProfileEntityQueries) {
             blockedByMe = entity.blockedByMe == 1L,
             blockedMe = entity.blockedMe == 1L
         )
+    }
+    fun getProfileFlow(userId: Long): Flow<UserProfile?> {
+        return queries.getProfileById(userId)
+            .asFlow()
+            .mapToOneOrNull(Dispatchers.Default)
+            .map { entity ->
+                entity?.let {
+                    UserProfile(
+                        userId = it.userId,
+                        username = it.username,
+                        name = it.name,
+                        surname = it.surname,
+                        profilePhoto = it.profilePhoto,
+                        role = it.role,
+                        biography = it.biography,
+                        postCount = it.postCount,
+                        subscriberCount = it.subscriberCount,
+                        subscribedCount = it.subscribedCount,
+                        blockedByMe = it.blockedByMe == 1L,
+                        blockedMe = it.blockedMe == 1L
+                    )
+                }
+            }
     }
 
     suspend fun updatePartialProfile(
@@ -91,6 +118,19 @@ class ProfileLocalDataSource(private val queries: ProfileEntityQueries) {
 
     suspend fun decrementSubscriber(userId: Long) = withContext(Dispatchers.Default) {
         queries.decrementSubscriberCount(
+            updatedAt = Clock.System.now().toEpochMilliseconds(),
+            userId = userId
+        )
+    }
+    suspend fun incrementSubscribed(userId: Long) = withContext(Dispatchers.Default) {
+        queries.incrementSubscribedCount(
+            updatedAt = Clock.System.now().toEpochMilliseconds(),
+            userId = userId
+        )
+    }
+
+    suspend fun decrementSubscribed(userId: Long) = withContext(Dispatchers.Default) {
+        queries.decrementSubscribedCount(
             updatedAt = Clock.System.now().toEpochMilliseconds(),
             userId = userId
         )

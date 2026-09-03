@@ -1,9 +1,14 @@
 package org.beem.tastymap.data.repository.profile
 
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onStart
 import org.beem.tastymap.core.network.ErrorType
 import org.beem.tastymap.core.network.ResultWrapper
+import org.beem.tastymap.core.network.safeApiCall
 import org.beem.tastymap.data.cache.ProfileMemoryCache
 import org.beem.tastymap.data.local.ProfileLocalDataSource
 import org.beem.tastymap.data.mapper.toDomain
@@ -15,30 +20,71 @@ class ProfileRepository(
     private val memoryCache: ProfileMemoryCache,
     private val localDataSource: ProfileLocalDataSource
 ) {
-     fun getProfile(userId: Long): Flow<ResultWrapper<UserProfile>> = flow {
-         val l1Profile = memoryCache.get(userId)
-         val l2Profile = if (l1Profile == null) localDataSource.getProfile(userId) else null
 
-         if (l1Profile != null) {
-             emit(ResultWrapper.Success(l1Profile))
-         }
-         else if (l2Profile != null) {
-             memoryCache.put(userId, l2Profile)
-             emit(ResultWrapper.Success(l2Profile))
-         }
+    /*
+    fun getProfile(userId: Long): Flow<ResultWrapper<UserProfile>> = flow {
+        val l1Profile = memoryCache.get(userId)
+        val l2Profile = if (l1Profile == null) localDataSource.getProfile(userId) else null
+
+        if (l1Profile != null) {
+            emit(ResultWrapper.Success(l1Profile))
+        } else if (l2Profile != null) {
+            memoryCache.put(userId, l2Profile)
+            emit(ResultWrapper.Success(l2Profile))
+        }
+
         try {
-            val remoteDto = dataSource.getUserProfile(userId)
+            val remoteDto = dataSource.
+            getUserProfile(userId)
+
             val freshProfile = remoteDto.toDomain(userId)
 
             memoryCache.put(userId, freshProfile)
             localDataSource.saveProfile(freshProfile)
             emit(ResultWrapper.Success(freshProfile))
         } catch (e: Exception) {
-            if (l1Profile == null && localDataSource.getProfile(userId) == null) {
-                emit(ResultWrapper.Error(e.message ?: "Profil bilgileri yüklenemedi.", ErrorType.SERVER_ERROR))
+            val errorMessage =
+                e.message ?: e.cause?.message ?: "Profil güncellenirken bir hata oluştu."
+
+            if (l1Profile == null && l2Profile == null) {
+                emit(ResultWrapper.Error(errorMessage, ErrorType.SERVER_ERROR))
+            } else {
+                emit(ResultWrapper.Error(errorMessage, ErrorType.UNKNOWN_ERROR))
             }
         }
     }
 
+     */
 
+    fun getMyProfile(userId: Long): Flow<ResultWrapper<UserProfile>> {
+        return localDataSource.getProfileFlow(userId)
+            .map { dbProfile ->
+                if (dbProfile != null) {
+                    // Veritabanında değişim oldukça L1 Memory Cache'i de güncelliyoruz
+                    memoryCache.put(userId, dbProfile)
+                    ResultWrapper.Success(dbProfile)
+                } else {
+                    ResultWrapper.Error("Profil verisi bulunamadı.", ErrorType.EMPTY_RESPONSE)
+                }
+            }
+            .onStart {
+                // L1 önbellekte veri varsa ilk render hızını artırmak için L1'i emit edebiliriz,
+                // ancak arka planda güncel API verisini çekeriz.
+                fetchRemoteProfile(userId)
+            }
+    }
+
+    private suspend fun fetchRemoteProfile(userId: Long) {
+        try {
+            val remoteDto = dataSource.getUserProfile(userId)
+            val freshProfile = remoteDto.toDomain(userId)
+
+            // Veritabanına kaydetmek, getProfileFlow'un otomatik olarak tetiklenip
+            // güncel veriyi yeni bir State/Emit olarak fırlatmasını sağlar.
+            memoryCache.put(userId, freshProfile)
+            localDataSource.saveProfile(freshProfile)
+        } catch (e: Exception) {
+           println("FLOW"+e)
+        }
+    }
 }

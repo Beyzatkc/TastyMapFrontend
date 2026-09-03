@@ -218,7 +218,7 @@ class HealthScreenModel(
                 }
                 is ResultWrapper.Error -> {
                     _healthState.update { it.copy(isLoading = false) }
-                    _uiMessage.send("Bir hata oluştu, lütfen tekrar deneyin."+result.message)
+                    _uiMessage.send(result.message)
                 }
             }
         }

@@ -35,6 +35,8 @@ import coil3.compose.AsyncImage
 import org.beem.tastymap.core.util.ToastManager
 import org.beem.tastymap.ui.profile.myprofile.editprofile.EditProfileScreen
 import org.beem.tastymap.ui.profile.myprofile.settings.SettingsScreen
+import org.beem.tastymap.ui.profile.subscribers.SubscriberListType
+import org.beem.tastymap.ui.profile.subscribers.SubscribersListScreen
 import org.beem.tastymap.ui.theme.LocalCustomColors
 import org.jetbrains.compose.resources.getString
 import org.jetbrains.compose.resources.stringResource
@@ -252,6 +254,8 @@ class MyProfileScreen : Screen {
                                 ) {
                                     MetricCard(
                                         title = stringResource(Res.string.my_profile_metric_posts),
+                                        onClick = {
+                                        },
                                         value = (state.profile?.postCount ?: 0).toString(),
                                         modifier = Modifier.weight(1f),
                                         cardColor = customColors.surfaceVariant
@@ -259,12 +263,32 @@ class MyProfileScreen : Screen {
                                     MetricCard(
                                         title = stringResource(Res.string.my_profile_metric_subscribers),
                                         value = (state.profile?.subscriberCount ?: 0).toString(),
+                                        onClick = {
+                                            state.profile?.userId?.let { userId ->
+                                                navigator.push(
+                                                    SubscribersListScreen(
+                                                        userId = userId,
+                                                        initialTab = SubscriberListType.SUBSCRIBERS
+                                                    )
+                                                )
+                                            }
+                                        },
                                         modifier = Modifier.weight(1f),
                                         cardColor = customColors.surfaceVariant
                                     )
                                     MetricCard(
                                         title = stringResource(Res.string.my_profile_metric_following),
                                         value = (state.profile?.subscribedCount ?: 0).toString(),
+                                        onClick = {
+                                            state.profile?.userId?.let { userId ->
+                                                navigator.push(
+                                                    SubscribersListScreen(
+                                                        userId = userId,
+                                                        initialTab = SubscriberListType.SUBSCRIBES
+                                                    )
+                                                )
+                                            }
+                                        },
                                         modifier = Modifier.weight(1f),
                                         cardColor = customColors.surfaceVariant
                                     )
@@ -350,12 +374,14 @@ class MyProfileScreen : Screen {
 private fun MetricCard(
     title: String,
     value: String,
+    onClick: () -> Unit,
     modifier: Modifier = Modifier,
     cardColor: Color
 ) {
     val customColors = LocalCustomColors.current
 
     Surface(
+        onClick = onClick,
         color = cardColor,
         shape = RoundedCornerShape(14.dp),
         modifier = modifier

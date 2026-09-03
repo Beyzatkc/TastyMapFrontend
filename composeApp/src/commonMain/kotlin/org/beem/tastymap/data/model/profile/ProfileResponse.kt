@@ -2,6 +2,7 @@ package org.beem.tastymap.data.model.profile
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import org.beem.tastymap.domain.model.RelationStatus
 
 @Serializable
 data class ProfileResponse(
@@ -15,7 +16,10 @@ data class ProfileResponse(
     val subscriberCount: Long,
     val subscribedCount: Long,
     val blockedByMe: Boolean = false,
-    val blockedMe: Boolean = false
+    val blockedMe: Boolean = false,
+    val relationStatus: RelationStatus = RelationStatus.NOT_FOLLOWING,
+    val hasPendingIncomingRequest: Boolean = false
+
 )
 
 @Serializable

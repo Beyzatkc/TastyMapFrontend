@@ -72,6 +72,20 @@ SET subscriberCount = MAX(0, subscriberCount - 1),
     updatedAt = ?
 WHERE userId = ?;
 
+-- Takip edilen sayısını artır (Benim için)
+incrementSubscribedCount:
+UPDATE ProfileEntity
+SET subscribedCount = subscribedCount + 1,
+    updatedAt = ?
+WHERE userId = ?;
+
+-- Takip edilen sayısını azalt (Benim için)
+decrementSubscribedCount:
+UPDATE ProfileEntity
+SET subscribedCount = MAX(0, subscribedCount - 1),
+    updatedAt = ?
+WHERE userId = ?;
+
 -- Profil metin bilgilerini (Name, Bio, Photo) güncelle
 updateProfileInfo:
 UPDATE ProfileEntity

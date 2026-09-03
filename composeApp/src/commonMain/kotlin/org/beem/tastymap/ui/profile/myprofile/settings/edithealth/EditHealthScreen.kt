@@ -65,6 +65,7 @@ class EditHealthScreen : Screen {
 
         LaunchedEffect(Unit) {
             screenModel.loadUserHealthProfile()
+
             screenModel.uiMessage.collect { message ->
                 ToastManager.show(message)
             }

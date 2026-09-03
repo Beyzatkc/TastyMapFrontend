@@ -3,6 +3,7 @@ package org.beem.tastymap.ui.profile.myprofile
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
 import io.github.vinceglb.filekit.core.PlatformFile
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.onCompletion
@@ -23,6 +24,52 @@ class MyProfileScreenModel(
     private val _myProfileState = MutableStateFlow(MyProfileUiState())
     val myProfileState = _myProfileState.asStateFlow()
 
+    private var profileJob: Job? = null
+
+
+    fun getMyProfile(isFromPullToRefresh: Boolean = false) {
+        // Eğer pull-to-refresh değilse ve zaten aktif bir dinleme varsa tekrar başlatma
+        if (!isFromPullToRefresh && profileJob?.isActive == true) return
+
+        // Pull-to-refresh yapılıyorsa eski job'ı iptal et
+        profileJob?.cancel()
+
+        profileJob = screenModelScope.launch {
+            _myProfileState.update {
+                if (isFromPullToRefresh) {
+                    it.copy(isRefreshing = true, errorMessage = null)
+                } else {
+                    it.copy(isLoading = it.profile == null, errorMessage = null)
+                }
+            }
+
+            repo.getMyProfile().collect { result ->
+                when (result) {
+                    is ResultWrapper.Success -> {
+                        _myProfileState.update {
+                            it.copy(
+                                isLoading = false,
+                                isRefreshing = false,
+                                profile = result.data,
+                                errorMessage = null
+                            )
+                        }
+                    }
+                    is ResultWrapper.Error -> {
+                        _myProfileState.update {
+                            it.copy(
+                                isLoading = false,
+                                isRefreshing = false,
+                                errorMessage = result.message
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    /*
     fun getMyProfile(isFromPullToRefresh: Boolean = false) {
         screenModelScope.launch {
             _myProfileState.update {
@@ -60,6 +107,8 @@ class MyProfileScreenModel(
                 }
         }
     }
+
+     */
 
     fun updateProfile(
         inputUsername: String,

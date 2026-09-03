@@ -6,11 +6,14 @@
     <string name="profile_default_photo_cd">Varsayılan Profil</string>
     <string name="profile_default_name">Kullanıcı</string>
     <string name="profile_default_bio">Henüz bir lezzet biyografisi eklenmedi.</string>
-
-    <!-- Action Buttons -->
-    <string name="profile_subscribe">Abone Ol</string>
-    <string name="profile_subscribed">Abonesin</string>
+    <string name="profile_subscribe">Takip Et</string>
+    <string name="profile_subscribed">Takip Ediliyorsun</string>
+    <string name="profile_pending">İstek Gönderildi</string>
+    <string name="profile_follow_back">Sen de Takip Et</string>
     <string name="profile_share">Paylaş</string>
+    <string name="profile_blocked_message">Bu profilin içeriği görüntülenemiyor.</string>
+    <string name="profile_posts_empty">Henüz gönderi yok</string>
+    <string name="profile_map_empty">Haritada yer bulunamadı</string>
 
     <!-- Metrics -->
     <string name="profile_metric_posts">Paylaşım</string>
@@ -23,6 +26,7 @@
     <string name="profile_posts_empty_placeholder">Gurmenin Son İncelemeleri ve Fotoğrafları</string>
     <string name="profile_map_empty_placeholder">Gurmenin İşaretlediği Mekanlar ve İğneler (Map View)</string>
 
+    <!-- My Profile -->
     <string name="my_profile_settings_cd">Ayarlar</string>
     <string name="my_profile_photo_cd">Profil Fotoğrafı</string>
     <string name="my_profile_default_photo_cd">Varsayılan Profil</string>
@@ -365,9 +369,11 @@
     <string name="auth_password_changed">Şifreniz değiştirildiği için oturumunuz kapatıldı.</string>
     <string name="auth_logged_out">Başarıyla çıkış yapıldı.</string>
 
+    <!-- Profile & Edit Profile Messages -->
     <string name="edit_profile_success">Profil başarıyla güncellendi.</string>
     <string name="edit_profile_photo_upload_error">Fotoğraf yüklenirken bir hata oluştu.</string>
 
+    <!-- Change Password Validation Messages -->
     <string name="change_password_error_old_empty">Mevcut şifrenizi giriniz.</string>
     <string name="change_password_error_again_empty">Lütfen yeni şifrenizi tekrar giriniz.</string>
     <string name="change_password_error_mismatch">Yeni şifreler birbiriyle eşleşmiyor.</string>
@@ -382,5 +388,15 @@
 
     <string name="verify_email_sent">Emailinize doğrulama bağlantısı gönderilmiştir.</string>
 
+    <string name="profile_incoming_request_message">@%1$s size bir takip isteği gönderdi.</string>
+    <string name="profile_action_accept">Onayla</string>
+    <string name="profile_action_reject">Sil</string>
 
+    <string name="profile_connections_title">Bağlantılar</string>
+    <string name="profile_no_results">Kullanıcı bulunamadı.</string>
+    <string name="profile_empty_list">Henüz kimse yok.</string>
+    <string name="common_search_placeholder">Ara...</string>
+    <string name="profile_action_follow">Takip Et</string>
+    <string name="profile_action_following">Takip</string>
+    <string name="profile_action_requested">İstek gönderildi</string>
 </resources>

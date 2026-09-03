@@ -14,21 +14,25 @@ import org.beem.tastymap.core.provider.HttpClientFactory
 import org.beem.tastymap.data.cache.CacheManager
 import org.beem.tastymap.data.cache.HealthMemoryCache
 import org.beem.tastymap.data.cache.ProfileMemoryCache
+import org.beem.tastymap.data.cache.SubscribeMemoryCache
 import org.beem.tastymap.data.local.ProfileLocalDataSource
 import org.beem.tastymap.data.remote.AuthDataSource
 import org.beem.tastymap.data.remote.AuthWebSocketClient
 import org.beem.tastymap.data.remote.FileRemoteDataSource
 import org.beem.tastymap.data.remote.HealthDataSource
+import org.beem.tastymap.data.remote.SubscribersDataSource
 import org.beem.tastymap.data.remote.UserSecurityDataSource
 import org.beem.tastymap.data.remote.profile.MyProfileDataSource
 import org.beem.tastymap.data.remote.profile.ProfileDataSource
 import org.beem.tastymap.data.repository.AuthRepository
 import org.beem.tastymap.data.repository.HealthRepository
+import org.beem.tastymap.data.repository.SubscribersRepository
 import org.beem.tastymap.data.repository.UserSecurityRepository
 import org.beem.tastymap.data.repository.profile.MyProfileRepository
 import org.beem.tastymap.data.repository.profile.ProfileRepository
 import org.beem.tastymap.database.TastyDatabase
 import org.beem.tastymap.domain.auth.ClearSessionUseCase
+import org.beem.tastymap.domain.usecase.ToggleFollowUseCase
 import org.beem.tastymap.ui.auth.forgotPassword.ForgotScreenModel
 import org.beem.tastymap.ui.auth.forgotPassword.PasswordResetSessionManager
 import org.beem.tastymap.ui.auth.forgotPassword.ResetScreenModel
@@ -42,6 +46,7 @@ import org.beem.tastymap.ui.profile.myprofile.settings.SettingsScreenModel
 import org.beem.tastymap.ui.profile.myprofile.settings.activedevices.ActiveDevicesScreenModel
 import org.beem.tastymap.ui.profile.myprofile.settings.changepassword.ChangePasswordScreenModel
 import org.beem.tastymap.ui.profile.otherprofile.ProfileScreenModel
+import org.beem.tastymap.ui.profile.subscribers.SubscribersListScreenModel
 import org.koin.core.qualifier.named
 
 val appModule = module {
@@ -64,7 +69,9 @@ val appModule = module {
     single { get<TastyDatabase>().profileEntityQueries }
     single { ProfileMemoryCache() }
     single { HealthMemoryCache() }
+    single { SubscribeMemoryCache() }
     single { CacheManager(get(), get()) }
+    single { ToggleFollowUseCase(get(),get()) }
 
     single { ProfileLocalDataSource(get()) }
     factory { ClearSessionUseCase(get(), get(), get(), get()) }
@@ -75,9 +82,11 @@ val appModule = module {
     single { ProfileDataSource(get(named("auth"))) }
     single { MyProfileDataSource(get(named("auth"))) }
     single { FileRemoteDataSource(get(named("auth"))) }
+    single { SubscribersDataSource(get(named("auth"))) }
 
     single { AuthRepository(get(), get(), get(), get()) }
     single { UserSecurityRepository(get()) }
+    single { SubscribersRepository(get(),get(),get())}
     single { HealthRepository(get(),get(),get()) }
     single { AuthWebSocketClient(get(named("auth"))) }
     single { PasswordResetSessionManager() }
@@ -91,7 +100,8 @@ val appModule = module {
     factory { ForgotScreenModel(get(), get(), get(), get()) }
     factory { ResetScreenModel(get()) }
     factory { HealthScreenModel(get()) }
-    factory { ProfileScreenModel(get()) }
+    factory { SubscribersListScreenModel(get()) }
+    factory { ProfileScreenModel(get(),get()) }
     single { MyProfileScreenModel(get()) }
     factory { SettingsScreenModel(get(),get(),get()) }
     factory { ActiveDevicesScreenModel(get()) }
