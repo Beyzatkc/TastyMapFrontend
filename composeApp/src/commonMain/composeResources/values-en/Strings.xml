@@ -395,7 +395,4 @@
     <string name="profile_no_results">No users found.</string>
     <string name="profile_empty_list">No users yet.</string>
     <string name="common_search_placeholder">Search...</string>
-    <string name="profile_action_follow">Follow</string>
-    <string name="profile_action_following">Following</string>
-    <string name="profile_action_requested">Requested</string>
 </resources>

@@ -241,4 +241,30 @@ class MyProfileScreenModel(
             )
         }
     }
+
+    fun getAllUsers() {
+        screenModelScope.launch {
+            _myProfileState.update { it.copy(isLoading = true, errorMessage = null) }
+
+            when (val result = repo.getAllUsers()) {
+                is ResultWrapper.Success -> {
+                    _myProfileState.update {
+                        it.copy(
+                            isLoading = false,
+                            DENEME = result.data, // UiState modelinizde "usersList" alanını günceller
+                            errorMessage = null
+                        )
+                    }
+                }
+                is ResultWrapper.Error -> {
+                    _myProfileState.update {
+                        it.copy(
+                            isLoading = false,
+                            errorMessage = result.message
+                        )
+                    }
+                }
+            }
+        }
+    }
 }

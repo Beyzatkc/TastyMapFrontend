@@ -6,20 +6,44 @@ import org.beem.tastymap.domain.model.RelationStatus
 
 @Serializable
 data class ProfileResponse(
+    @SerialName("username")
     val username: String,
-    val name: String,
-    val surname: String,
-    val profile: String? = null,
-    val role: String? = null,
-    val biography: String? = null,
-    val postCount: Long,
-    val subscriberCount: Long,
-    val subscribedCount: Long,
-    val blockedByMe: Boolean = false,
-    val blockedMe: Boolean = false,
-    val relationStatus: RelationStatus = RelationStatus.NOT_FOLLOWING,
-    val hasPendingIncomingRequest: Boolean = false
 
+    @SerialName("name")
+    val name: String,
+
+    @SerialName("surname")
+    val surname: String,
+
+    @SerialName("profile")
+    val profile: String? = null,
+
+    @SerialName("role")
+    val role: String? = null,
+
+    @SerialName("biography")
+    val biography: String? = null,
+
+    @SerialName("postCount")
+    val postCount: Long = 0,
+
+    @SerialName("subscriberCount")
+    val subscriberCount: Long = 0,
+
+    @SerialName("subscribedCount")
+    val subscribedCount: Long = 0,
+
+    @SerialName("blockedByMe")
+    val blockedByMe: Boolean = false,
+
+    @SerialName("blockedMe")
+    val blockedMe: Boolean = false,
+
+    @SerialName("relationStatus")
+    val relationStatus: RelationStatus = RelationStatus.NOT_FOLLOWING,
+
+    @SerialName("hasPendingIncomingRequest")
+    val hasPendingIncomingRequest: Boolean = false
 )
 
 @Serializable

@@ -7,7 +7,7 @@
     <string name="profile_default_name">Kullanıcı</string>
     <string name="profile_default_bio">Henüz bir lezzet biyografisi eklenmedi.</string>
     <string name="profile_subscribe">Takip Et</string>
-    <string name="profile_subscribed">Takip Ediliyorsun</string>
+    <string name="profile_subscribed">Takip</string>
     <string name="profile_pending">İstek Gönderildi</string>
     <string name="profile_follow_back">Sen de Takip Et</string>
     <string name="profile_share">Paylaş</string>
@@ -396,7 +396,4 @@
     <string name="profile_no_results">Kullanıcı bulunamadı.</string>
     <string name="profile_empty_list">Henüz kimse yok.</string>
     <string name="common_search_placeholder">Ara...</string>
-    <string name="profile_action_follow">Takip Et</string>
-    <string name="profile_action_following">Takip</string>
-    <string name="profile_action_requested">İstek gönderildi</string>
 </resources>

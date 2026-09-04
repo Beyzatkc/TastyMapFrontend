@@ -12,6 +12,7 @@ object DeepLinkManager {
     var pendingInitialScreen: Screen? = null
 
 
+    /*
     fun handleLink(url: String) {
         try {
             // 1. ADIM: Fonksiyona URL gerçekten ulaştı mı?
@@ -61,9 +62,11 @@ object DeepLinkManager {
         }
     }
 
+     */
 
 
-/*
+
+
     fun handleLink(url: String) {
         when {
             url.contains("#verify") -> {
@@ -87,7 +90,7 @@ object DeepLinkManager {
         }
     }
 
- */
+ 
 
 
     private fun extractToken(url: String): String? {

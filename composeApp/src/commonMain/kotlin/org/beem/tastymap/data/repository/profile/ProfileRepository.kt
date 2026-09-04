@@ -1,11 +1,14 @@
 package org.beem.tastymap.data.repository.profile
 
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onStart
+import kotlinx.coroutines.launch
 import org.beem.tastymap.core.network.ErrorType
 import org.beem.tastymap.core.network.ResultWrapper
 import org.beem.tastymap.core.network.safeApiCall
@@ -57,20 +60,33 @@ class ProfileRepository(
      */
 
     fun getMyProfile(userId: Long): Flow<ResultWrapper<UserProfile>> {
-        return localDataSource.getProfileFlow(userId)
-            .map { dbProfile ->
-                if (dbProfile != null) {
-                    // Veritabanında değişim oldukça L1 Memory Cache'i de güncelliyoruz
-                    memoryCache.put(userId, dbProfile)
-                    ResultWrapper.Success(dbProfile)
-                } else {
-                    ResultWrapper.Error("Profil verisi bulunamadı.", ErrorType.EMPTY_RESPONSE)
-                }
+        return flow {
+            // 1. Önce L1 Memory Cache kontrol edilir, varsa hemen emit edilir
+            val cachedProfile = memoryCache.get(userId)
+            if (cachedProfile != null) {
+                emit(ResultWrapper.Success(cachedProfile))
             }
+
+            // 2. Ardından DB (LocalDataSource) akışına abone olunur
+            // DB değiştiğinde yeni veri otomatik olarak emit edilecektir
+            emitAll(
+                localDataSource.getProfileFlow(userId)
+                    .map { dbProfile ->
+                        if (dbProfile != null) {
+                            memoryCache.put(userId, dbProfile)
+                            ResultWrapper.Success(dbProfile)
+                        } else {
+                            ResultWrapper.Error("Profil verisi bulunamadı.", ErrorType.EMPTY_RESPONSE)
+                        }
+                    }
+            )
+        }
             .onStart {
                 // L1 önbellekte veri varsa ilk render hızını artırmak için L1'i emit edebiliriz,
                 // ancak arka planda güncel API verisini çekeriz.
-                fetchRemoteProfile(userId)
+                CoroutineScope(Dispatchers.Default).launch {
+                    fetchRemoteProfile(userId)
+                }
             }
     }
 

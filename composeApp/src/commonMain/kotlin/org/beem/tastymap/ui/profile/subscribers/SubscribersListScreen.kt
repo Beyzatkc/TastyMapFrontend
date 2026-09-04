@@ -34,20 +34,22 @@ import cafe.adriel.voyager.navigator.currentOrThrow
 import coil3.compose.AsyncImage
 import org.beem.tastymap.data.model.subscribers.SubscribeResponse
 import org.beem.tastymap.data.model.subscribers.SubscribeStatus
+import org.beem.tastymap.domain.model.RelationStatus
+import org.beem.tastymap.ui.profile.otherprofile.ProfileScreen
 import org.beem.tastymap.ui.theme.LocalCustomColors
 import org.beem.tastymap.ui.theme.TastyTheme
 import org.jetbrains.compose.resources.stringResource
 import tastymap.composeapp.generated.resources.Res
 import tastymap.composeapp.generated.resources.common_search_placeholder
-import tastymap.composeapp.generated.resources.profile_action_follow
-import tastymap.composeapp.generated.resources.profile_action_following
-import tastymap.composeapp.generated.resources.profile_action_requested
-import tastymap.composeapp.generated.resources.profile_back_cd
 import tastymap.composeapp.generated.resources.profile_connections_title
 import tastymap.composeapp.generated.resources.profile_empty_list
+import tastymap.composeapp.generated.resources.profile_follow_back
 import tastymap.composeapp.generated.resources.profile_metric_following
 import tastymap.composeapp.generated.resources.profile_metric_subscribers
 import tastymap.composeapp.generated.resources.profile_no_results
+import tastymap.composeapp.generated.resources.profile_pending
+import tastymap.composeapp.generated.resources.profile_subscribe
+import tastymap.composeapp.generated.resources.profile_subscribed
 import tastymap.composeapp.generated.resources.settings_back_cd
 
 class SubscribersListScreen(
@@ -216,10 +218,14 @@ class SubscribersListScreen(
                                 SubscriberUserItem(
                                     user = user,
                                     onUserClick = {
-                                        // Navigator ile profiline git
+                                        navigator.push(ProfileScreen(userId = user.id))
                                     },
                                     onActionClick = {
-                                        // Takip Et / Kaldır İşlemi
+                                        screenModel.handleFollowAction(
+                                            targetUserId = user.id,
+                                            currentStatus = user.relationStatus?:RelationStatus.NOT_FOLLOWING,
+
+                                        )
                                     }
                                 )
                             }
@@ -293,7 +299,6 @@ private fun SearchBar(
         modifier = modifier.fillMaxWidth()
     )
 }
-
 @Composable
 private fun SubscriberUserItem(
     user: SubscribeResponse,
@@ -302,35 +307,44 @@ private fun SubscriberUserItem(
 ) {
     val customColors = LocalCustomColors.current
 
-    // Butonun dinamik durum ayarları
-    val (buttonText, backColor, textColor, strokeColor, isPrimary) = when {
-        user.relationStatus == SubscribeStatus.ACCEPTED -> {
-            ActionStyle(
-                stringResource(Res.string.profile_action_following),
-                Color.Transparent,
-                customColors.textPrimary,
-                customColors.textSecondary.copy(alpha = 0.4f),
-                false
-            )
-        }
-        user.relationStatus == SubscribeStatus.PENDING -> {
-            ActionStyle(
-                stringResource(Res.string.profile_action_requested),
-                Color.Transparent,
-                customColors.textSecondary,
-                customColors.textSecondary.copy(alpha = 0.3f),
-                false
-            )
-        }
-        else -> {
-            ActionStyle(
-                stringResource(Res.string.profile_action_follow),
-                customColors.gourmetOrange,
-                Color.White,
-                Color.Transparent,
-                true
-            )
-        }
+    val actionStyle: ActionStyle? = when (user.relationStatus) {
+        RelationStatus.FOLLOWING -> ActionStyle(
+            text = stringResource(Res.string.profile_subscribed),
+            backColor = Color.Transparent,
+            textColor = customColors.textPrimary,
+            strokeColor = customColors.textSecondary.copy(alpha = 0.4f),
+            isPrimary = false
+        )
+        RelationStatus.PENDING -> ActionStyle(
+            text = stringResource(Res.string.profile_pending),
+            backColor = Color.Transparent,
+            textColor = customColors.textSecondary,
+            strokeColor = customColors.textSecondary.copy(alpha = 0.3f),
+            isPrimary = false
+        )
+        RelationStatus.FOLLOW_BACK -> ActionStyle(
+            text = stringResource(Res.string.profile_follow_back),
+            backColor = customColors.gourmetOrange,
+            textColor = Color.White,
+            strokeColor = Color.Transparent,
+            isPrimary = true
+        )
+        RelationStatus.NOT_FOLLOWING -> ActionStyle(
+            text = stringResource(Res.string.profile_subscribe),
+            backColor = customColors.gourmetOrange,
+            textColor = Color.White,
+            strokeColor = Color.Transparent,
+            isPrimary = true
+        )
+        null -> ActionStyle(
+                text = stringResource(Res.string.profile_subscribe),
+                backColor = customColors.gourmetOrange,
+                textColor = Color.White,
+                strokeColor = Color.Transparent,
+                isPrimary = true
+        )
+        RelationStatus.SELF -> null
+
     }
 
     Row(
@@ -378,18 +392,19 @@ private fun SubscriberUserItem(
             )
         }
 
-        TastyButton(
-            text = buttonText,
-            onClick = onActionClick,
-            modifier = Modifier.width(130.dp),
-            isPrimary = isPrimary,
-            backcolor = backColor,
-            textcolor = textColor,
-            strokecolor = strokeColor
-        )
+        actionStyle?.let { style ->
+            TastyButton(
+                text = style.text,
+                onClick = onActionClick,
+                modifier = Modifier.width(130.dp),
+                isPrimary = style.isPrimary,
+                backcolor = style.backColor,
+                textcolor = style.textColor,
+                strokecolor = style.strokeColor
+            )
+        }
     }
 }
-
 private data class ActionStyle(
     val text: String,
     val backColor: Color,
@@ -397,81 +412,3 @@ private data class ActionStyle(
     val strokeColor: Color,
     val isPrimary: Boolean
 )
-@Preview(showBackground = true, name = "Açık Tema - Takipçiler Örneği")
-@Composable
-private fun SubscriberUserItemPreviewLight() {
-    TastyTheme(useDarkTheme = false) {
-        Surface(color = LocalCustomColors.current.background) {
-            Column {
-                // Takipçi sekmesi (Kaldır butonu)
-                SubscriberUserItem(
-                    user = SubscribeResponse(
-                        id = 1,
-                        username = "ahmet_yilmaz",
-                        profile = null,
-                        relationStatus = SubscribeStatus.ACCEPTED
-                    ),
-                    onUserClick = {},
-                    onActionClick = {}
-                )
-
-                HorizontalDivider(color = LocalCustomColors.current.surfaceVariant)
-
-                // Takip Edilenler sekmesi - Takip Ediliyor durumu
-                SubscriberUserItem(
-                    user = SubscribeResponse(
-                        id = 2,
-                        username = "mehmet_kaya",
-                        profile = null,
-                        relationStatus = SubscribeStatus.ACCEPTED
-                    ),
-                    onUserClick = {},
-                    onActionClick = {}
-                )
-                HorizontalDivider(color = LocalCustomColors.current.surfaceVariant)
-
-                // Takip Edilenler sekmesi - Takip Ediliyor durumu
-                SubscriberUserItem(
-                    user = SubscribeResponse(
-                        id = 2,
-                        username = "emrullah_kaya",
-                        profile = null,
-                        relationStatus = SubscribeStatus.PENDING
-                    ),
-                    onUserClick = {},
-                    onActionClick = {}
-                )
-
-                HorizontalDivider(color = LocalCustomColors.current.surfaceVariant)
-
-                // Takip Et durumu
-                SubscriberUserItem(
-                    user = SubscribeResponse(
-                        id = 3,
-                        username = "ayse_demir",
-                        profile = null,
-                        relationStatus = null
-                    ),
-                    onUserClick = {},
-                    onActionClick = {}
-                )
-            }
-        }
-    }
-}
-
-@Preview(showBackground = true, name = "Arama Çubuğu Örneği")
-@Composable
-private fun SearchBarPreview() {
-    TastyTheme {
-        Surface(color = LocalCustomColors.current.background) {
-            Box(modifier = Modifier.padding(16.dp)) {
-                SearchBar(
-                    query = "Arama metni",
-                    onQueryChange = {}
-                )
-            }
-        }
-    }
-}
-

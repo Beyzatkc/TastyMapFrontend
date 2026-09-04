@@ -100,7 +100,7 @@ val appModule = module {
     factory { ForgotScreenModel(get(), get(), get(), get()) }
     factory { ResetScreenModel(get()) }
     factory { HealthScreenModel(get()) }
-    factory { SubscribersListScreenModel(get()) }
+    factory { SubscribersListScreenModel(get(),get()) }
     factory { ProfileScreenModel(get(),get()) }
     single { MyProfileScreenModel(get()) }
     factory { SettingsScreenModel(get(),get(),get()) }

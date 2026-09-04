@@ -7,29 +7,14 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
+import org.beem.tastymap.domain.model.RelationStatus
 import org.beem.tastymap.domain.model.UserProfile
 import org.beem.tastymap.sqldelight.ProfileEntityQueries
 import kotlin.time.Clock
 
 class ProfileLocalDataSource(private val queries: ProfileEntityQueries) {
 
-    suspend fun getProfile(userId: Long): UserProfile? = withContext(Dispatchers.Default) {
-        val entity = queries.getProfileById(userId).awaitAsOneOrNull() ?: return@withContext null
-        UserProfile(
-            userId = entity.userId,
-            username = entity.username,
-            name = entity.name,
-            surname = entity.surname,
-            profilePhoto = entity.profilePhoto,
-            role = entity.role,
-            biography = entity.biography,
-            postCount = entity.postCount,
-            subscriberCount = entity.subscriberCount,
-            subscribedCount = entity.subscribedCount,
-            blockedByMe = entity.blockedByMe == 1L,
-            blockedMe = entity.blockedMe == 1L
-        )
-    }
+
     fun getProfileFlow(userId: Long): Flow<UserProfile?> {
         return queries.getProfileById(userId)
             .asFlow()
@@ -48,7 +33,14 @@ class ProfileLocalDataSource(private val queries: ProfileEntityQueries) {
                         subscriberCount = it.subscriberCount,
                         subscribedCount = it.subscribedCount,
                         blockedByMe = it.blockedByMe == 1L,
-                        blockedMe = it.blockedMe == 1L
+                        blockedMe = it.blockedMe == 1L,
+                        relationStatus = try {
+                            RelationStatus.valueOf(it.relationStatus)
+                        } catch (e: Exception) {
+                            RelationStatus.NOT_FOLLOWING
+                        },
+                        hasPendingIncomingRequest = it.hasPendingIncomingRequest == 1L
+
                     )
                 }
             }
@@ -85,6 +77,8 @@ class ProfileLocalDataSource(private val queries: ProfileEntityQueries) {
             subscribedCount = profile.subscribedCount,
             blockedByMe = if (profile.blockedByMe) 1L else 0L,
             blockedMe = if (profile.blockedMe) 1L else 0L,
+            relationStatus = profile.relationStatus.name,
+            hasPendingIncomingRequest = if (profile.hasPendingIncomingRequest) 1L else 0L,
             updatedAt = Clock.System.now().toEpochMilliseconds()
         )
 
@@ -124,6 +118,26 @@ class ProfileLocalDataSource(private val queries: ProfileEntityQueries) {
     }
     suspend fun incrementSubscribed(userId: Long) = withContext(Dispatchers.Default) {
         queries.incrementSubscribedCount(
+            updatedAt = Clock.System.now().toEpochMilliseconds(),
+            userId = userId
+        )
+    }
+
+    suspend fun updateRelationStatus(
+        userId: Long,
+        relationStatus: RelationStatus,
+        hasPendingIncomingRequest: Boolean
+    ) = withContext(Dispatchers.Default) {
+        queries.updateRelationStatus(
+            relationStatus = relationStatus.name,
+            hasPendingIncomingRequest = if (hasPendingIncomingRequest) 1L else 0L,
+            updatedAt = Clock.System.now().toEpochMilliseconds(),
+            userId = userId
+        )
+    }
+
+    suspend fun clearPendingRequest(userId: Long) = withContext(Dispatchers.Default) {
+        queries.clearPendingRequest(
             updatedAt = Clock.System.now().toEpochMilliseconds(),
             userId = userId
         )

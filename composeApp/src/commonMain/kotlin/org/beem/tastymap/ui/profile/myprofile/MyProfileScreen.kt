@@ -6,6 +6,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -35,6 +36,7 @@ import coil3.compose.AsyncImage
 import org.beem.tastymap.core.util.ToastManager
 import org.beem.tastymap.ui.profile.myprofile.editprofile.EditProfileScreen
 import org.beem.tastymap.ui.profile.myprofile.settings.SettingsScreen
+import org.beem.tastymap.ui.profile.otherprofile.ProfileScreen
 import org.beem.tastymap.ui.profile.subscribers.SubscriberListType
 import org.beem.tastymap.ui.profile.subscribers.SubscribersListScreen
 import org.beem.tastymap.ui.theme.LocalCustomColors
@@ -83,16 +85,84 @@ class MyProfileScreen : Screen {
             }
         }
 
+        var showTestUserSheet by remember { mutableStateOf(false) }
+
+        if (showTestUserSheet) {
+            ModalBottomSheet(
+                onDismissRequest = { showTestUserSheet = false },
+                containerColor = customColors.background
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp)
+                ) {
+                    Text(
+                        text = "Test: Tüm Kullanıcılar (${state.DENEME.size})",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = customColors.textPrimary,
+                        modifier = Modifier.padding(bottom = 12.dp)
+                    )
+
+                    if (state.isLoading) {
+                        CircularProgressIndicator(
+                            color = customColors.gourmetOrange,
+                            modifier = Modifier.align(Alignment.CenterHorizontally)
+                        )
+                    } else {
+                        LazyColumn(modifier = Modifier.fillMaxHeight(0.6f)) {
+                            items(state.DENEME) { user ->
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clickable {
+                                            showTestUserSheet = false
+                                            navigator.push(ProfileScreen(userId = user.id))
+                                        }
+                                        .padding(vertical = 12.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Column {
+                                        Text(
+                                            text = "@${user.username}",
+                                            fontWeight = FontWeight.Bold,
+                                            color = customColors.textPrimary
+                                        )
+                                        Text(
+                                            text = "ID: ${user.id} | ${user.name ?: ""} ${user.surname ?: ""}",
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = customColors.textSecondary
+                                        )
+                                    }
+                                }
+                                HorizontalDivider(color = customColors.surfaceVariant)
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        // --- GECICI TEST ALANI BİTİŞİ ---
+
         Scaffold(
             topBar = {
                 TopAppBar(
                     title = {
                         Text(
-                            text = "@"+ state.profile?.username,
+                            text = "@" + state.profile?.username,
                             style = MaterialTheme.typography.titleMedium.copy(color = Color.White)
                         )
                     },
                     actions = {
+                        // --- GECICI TEST BUTONU ---
+                        TextButton(onClick = {
+                            screenModel.getAllUsers()
+                            showTestUserSheet = true
+                        }) {
+                            Text("TEST USERS", color = customColors.gourmetOrange, fontWeight = FontWeight.Bold)
+                        }
+                        // --------------------------
+
                         IconButton(onClick = { navigator.push(SettingsScreen()) }) {
                             Icon(
                                 imageVector = Icons.Default.Menu,

@@ -8,9 +8,12 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import org.beem.tastymap.core.network.ResultWrapper
 import org.beem.tastymap.data.repository.SubscribersRepository
+import org.beem.tastymap.domain.model.RelationStatus
+import org.beem.tastymap.domain.usecase.ToggleFollowUseCase
 
 class SubscribersListScreenModel(
     private val subscribersRepository: SubscribersRepository,
+    private val toggleFollowUseCase: ToggleFollowUseCase,
 ) : ScreenModel {
 
     private val _uiState = MutableStateFlow(SubscribersListUiState())
@@ -97,4 +100,33 @@ class SubscribersListScreenModel(
             }
         }
     }
+
+    fun handleFollowAction(targetUserId: Long, currentStatus: RelationStatus) {
+        screenModelScope.launch {
+            val action = ToggleFollowUseCase.Action.ToggleFollow(currentStatus)
+
+            when (val result = toggleFollowUseCase(targetUserId, action)) {
+                is ResultWrapper.Success -> {
+                    val newRelationStatus = result.data.relationStatus
+
+                    _uiState.update { currentState ->
+                        val updatedItems = currentState.items.map { item ->
+                            if (item.id == targetUserId) {
+                                item.copy(relationStatus = newRelationStatus)
+                            } else {
+                                item
+                            }
+                        }
+                        currentState.copy(items = updatedItems)
+                    }
+                }
+                is ResultWrapper.Error -> {
+                    _uiState.update {
+                        it.copy(errorMessage = result.message)
+                    }
+                }
+            }
+        }
+    }
+
 }

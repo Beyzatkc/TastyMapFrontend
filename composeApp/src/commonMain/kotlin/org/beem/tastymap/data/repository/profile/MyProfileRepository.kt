@@ -1,11 +1,15 @@
 package org.beem.tastymap.data.repository.profile
 
 import io.github.vinceglb.filekit.core.PlatformFile
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onStart
+import kotlinx.coroutines.launch
 import org.beem.tastymap.core.local.UserManager
 import org.beem.tastymap.core.network.ErrorType
 import org.beem.tastymap.core.network.ResultWrapper
@@ -72,36 +76,63 @@ class MyProfileRepository(
      */
     fun getMyProfile(): Flow<ResultWrapper<UserProfile>> {
         val myUserId = userManager.getUserId()
-            ?: return flowOf(ResultWrapper.Error("Kullanıcı oturumu bulunamadı.", ErrorType.UNAUTHORIZED))
+        if (myUserId == null) {
+            println("PROFILE_FLOW: Kullanıcı oturumu bulunamadı (myUserId = null)")
+            return flowOf(ResultWrapper.Error("Kullanıcı oturumu bulunamadı.", ErrorType.UNAUTHORIZED))
+        }
 
-        return localDataSource.getProfileFlow(myUserId)
-            .map { dbProfile ->
-                if (dbProfile != null) {
-                    // Veritabanında değişim oldukça L1 Memory Cache'i de güncelliyoruz
-                    memoryCache.put(myUserId, dbProfile)
-                    ResultWrapper.Success(dbProfile)
-                } else {
-                    ResultWrapper.Error("Profil verisi bulunamadı.", ErrorType.EMPTY_RESPONSE)
-                }
+        println("PROFILE_FLOW: getMyProfile() çağrıldı. UserId: $myUserId")
+
+        return flow {
+            // 1. L1 Memory Cache Kontrolü
+            val cachedProfile = memoryCache.get(myUserId)
+            if (cachedProfile != null) {
+                println("PROFILE_FLOW [L1 - Memory Cache]: Veri bulundu ve EMIT edildi -> $cachedProfile")
+                emit(ResultWrapper.Success(cachedProfile))
+            } else {
+                println("PROFILE_FLOW [L1 - Memory Cache]: Veri bulunamadı (Cache MISS)")
             }
+
+            // 2. L2 Database (Room/Local) Akışına Abone Olunması
+            println("PROFILE_FLOW [L2 - DB]: LocalDataSource akışına (getProfileFlow) abone olunuyor...")
+            emitAll(
+                localDataSource.getProfileFlow(myUserId)
+                    .map { dbProfile ->
+                        if (dbProfile != null) {
+                            println("PROFILE_FLOW [L2 - DB]: Veritabanından yeni veri geldi ve L1 Cache güncellendi -> $dbProfile")
+                            memoryCache.put(myUserId, dbProfile)
+                            ResultWrapper.Success(dbProfile)
+                        } else {
+                            println("PROFILE_FLOW [L2 - DB]: Veritabanında profil bulunamadı (EMPTY_RESPONSE)")
+                            ResultWrapper.Error("Profil verisi bulunamadı.", ErrorType.EMPTY_RESPONSE)
+                        }
+                    }
+            )
+        }
             .onStart {
-                // L1 önbellekte veri varsa ilk render hızını artırmak için L1'i emit edebiliriz,
-                // ancak arka planda güncel API verisini çekeriz.
-                fetchRemoteProfile(myUserId)
+                // 3. Arka Plan Network İsteğinin Başlatılması
+                println("PROFILE_FLOW [Network]: Akış başladı (onStart), uzaktan veri çekme başlatılıyor...")
+                CoroutineScope(Dispatchers.Default).launch {
+                    fetchRemoteProfile(myUserId)
+                }
             }
     }
 
     private suspend fun fetchRemoteProfile(myUserId: Long) {
         try {
+            println("PROFILE_FLOW [Network]: API isteği gönderiliyor (dataSource.getUserProfile())...")
             val remoteDto = dataSource.getUserProfile()
+            println("PROFILE_FLOW [Network]: API isteği başarılı -> $remoteDto")
+
             val freshProfile = remoteDto.toDomain(myUserId)
 
-            // Veritabanına kaydetmek, getProfileFlow'un otomatik olarak tetiklenip
-            // güncel veriyi yeni bir State/Emit olarak fırlatmasını sağlar.
+            println("PROFILE_FLOW [Network]: Yeni profil L1 Cache ve L2 DB'ye yazılıyor...")
             memoryCache.put(myUserId, freshProfile)
             localDataSource.saveProfile(freshProfile)
-        } catch (_: Exception) {
-            // Hata durumunda veritabanındaki (offline/mevcut) veri Flow üzerinden aktarılmaya devam eder.
+            println("PROFILE_FLOW [Network]: L2 DB kaydı tamamlandı. DB tetiklenip yeni veriyi fırlatmalı.")
+
+        } catch (e: Exception) {
+            println("PROFILE_FLOW [Network HATA]: Uzak sunucudan veri çekilirken hata oluştu ->" + e.message)
         }
     }
 
@@ -171,6 +202,12 @@ class MyProfileRepository(
             safeApiCall { dataSource.logout(deviceId) }
         } finally {
             clearSessionUseCase()
+        }
+    }
+
+    suspend fun getAllUsers(): ResultWrapper<List<UserResponse>> {
+        return safeApiCall {
+            dataSource.getAllUsers()
         }
     }
 

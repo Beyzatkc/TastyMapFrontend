@@ -23,10 +23,11 @@ class WebUserManager(): UserManager {
         this.currentUserSession = null
     }
 
+
     override fun updateProfileSession(
         username: String?,
-        name: String,
-        surname: String,
+        name: String?,
+        surname: String?,
         profilePhoto: String?,
         biography: String?
     ) {

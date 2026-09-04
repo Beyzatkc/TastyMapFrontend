@@ -70,46 +70,7 @@ class ProfileScreenModel(
             }
         }
     }
-    /*
-    fun getProfile(userId: Long,isFromPullToRefresh: Boolean = false) {
-        screenModelScope.launch {
-            _profileState.update {
-                if (isFromPullToRefresh) {
-                    it.copy(isRefreshing = true, errorMessage = null)
-                } else {
-                    it.copy(isLoading = it.profile == null, errorMessage = null)
-                }
-            }
 
-            repo.getProfile(userId)
-                .onCompletion {
-                    _profileState.update { it.copy(isRefreshing = false, isLoading = false) }
-                }
-                .collect { result ->
-                when (result) {
-                    is ResultWrapper.Success -> {
-                        _profileState.update {
-                            it.copy(
-                                isLoading = false,
-                                profile = result.data,
-                                errorMessage = null
-                            )
-                        }
-                    }
-                    is ResultWrapper.Error -> {
-                        _profileState.update {
-                            it.copy(
-                                isLoading = false,
-                                errorMessage = result.message
-                            )
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-     */
     fun handleFollowAction(targetUserId: Long, currentStatus: RelationStatus) {
         executeAction(
             targetUserId = targetUserId,
@@ -125,8 +86,6 @@ class ProfileScreenModel(
     }
 
     fun rejectRequest(requesterId: Long) {
-
-        // BURDA MANUEL OLARAK GETPROFILE DIYEBLIRIZ
         executeAction(
             targetUserId = requesterId,
             action = ToggleFollowUseCase.Action.RejectRequest
@@ -139,8 +98,19 @@ class ProfileScreenModel(
 
             when (val result = toggleFollowUseCase(targetUserId, action)) {
                 is ResultWrapper.Success -> {
-                    _profileState.update { it.copy(isActionLoading = false, ) }
+                    val actionResult = result.data
+
+                    _profileState.update { currentState ->
+                        currentState.copy(
+                            isActionLoading = false,
+                            profile = currentState.profile?.copy(
+                                relationStatus = actionResult.relationStatus,
+                                hasPendingIncomingRequest = actionResult.hasPendingIncomingRequest,
+                            )
+                        )
+                    }
                 }
+
                 is ResultWrapper.Error -> {
                     _profileState.update {
                         it.copy(

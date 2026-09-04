@@ -1,5 +1,6 @@
 package org.beem.tastymap.ui.profile.myprofile
 
+import org.beem.tastymap.data.model.auth.UserResponse
 import org.beem.tastymap.data.model.profile.ActiveDeviceDTO
 import org.beem.tastymap.data.model.profile.ActiveDevicesResponse
 import org.beem.tastymap.domain.model.UserProfile
@@ -9,6 +10,7 @@ data class MyProfileUiState(
     val isLoading: Boolean = false,
     val isRefreshing: Boolean = false,
     val profile: UserProfile? = null,
+    val DENEME: List<UserResponse> = emptyList(),
     val errorMessage: String? = null,
     val isActionLoading: Boolean = false,
     val successMessageRes: StringResource? = null,

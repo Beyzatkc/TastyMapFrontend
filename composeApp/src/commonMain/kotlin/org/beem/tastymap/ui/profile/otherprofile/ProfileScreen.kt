@@ -15,6 +15,7 @@ import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Map
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.*
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults
@@ -35,6 +36,8 @@ import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import coil3.compose.AsyncImage
 import org.beem.tastymap.domain.model.RelationStatus
+import org.beem.tastymap.ui.profile.subscribers.SubscriberListType
+import org.beem.tastymap.ui.profile.subscribers.SubscribersListScreen
 import org.beem.tastymap.ui.theme.LocalCustomColors
 import org.jetbrains.compose.resources.stringResource
 import tastymap.composeapp.generated.resources.Res
@@ -136,6 +139,7 @@ class ProfileScreen(private val userId: Long) : Screen {
                     }
                 } else {
                     val profile = state.profile
+                    println("PROFILE_UI_DEBUG -> User: ${profile?.username}, hasPending: ${profile?.hasPendingIncomingRequest}, status: ${profile?.relationStatus}")
                     val isBlocked = profile?.blockedByMe == true || profile?.blockedMe == true
 
                     LazyColumn(
@@ -209,7 +213,7 @@ class ProfileScreen(private val userId: Long) : Screen {
                                         Spacer(modifier = Modifier.height(12.dp))
 
                                         Text(
-                                            text = profile?.let { "${it.name} ${it.surname}".trim() }
+                                            text = profile?.name?.trim()
                                                 .takeIf { !it.isNullOrBlank() }
                                                 ?: stringResource(Res.string.profile_default_name),
                                             style = MaterialTheme.typography.bodyLarge.copy(
@@ -237,6 +241,7 @@ class ProfileScreen(private val userId: Long) : Screen {
                                         Spacer(modifier = Modifier.height(20.dp))
 
                                         if (profile?.hasPendingIncomingRequest == true) {
+                                            println("PROFILE_UI_DEBUG -> IncomingRequestCard CİZİLİYOR!")
                                             IncomingRequestCard(
                                                 username = profile.username,
                                                 isLoading = state.isActionLoading,
@@ -248,14 +253,42 @@ class ProfileScreen(private val userId: Long) : Screen {
                                                 }
                                             )
                                         }
-                                        ProfileActionButton(
-                                            relationStatus = profile?.relationStatus ?: RelationStatus.NOT_FOLLOWING,
-                                            isBlocked = isBlocked,
-                                            isLoading = state.isActionLoading,
-                                            onActionClick = { status ->
-                                                screenModel.handleFollowAction(userId, status)
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            // 1. Mevcut Takip Et / Takip Ediliyor Butonu (Esnek Genişlik)
+                                            Box(modifier = Modifier.weight(1f)) {
+                                                ProfileActionButton(
+                                                    relationStatus = profile?.relationStatus ?: RelationStatus.NOT_FOLLOWING,
+                                                    isBlocked = isBlocked,
+                                                    isLoading = state.isActionLoading,
+                                                    onActionClick = { status ->
+                                                        screenModel.handleFollowAction(userId, status)
+                                                    }
+                                                )
                                             }
-                                        )
+
+                                            // 2. Yanındaki Paylaş Butonu
+                                            if (!isBlocked && profile?.relationStatus != RelationStatus.SELF) {
+                                                IconButton(
+                                                    onClick = { /* Profil paylaşma fonksiyonu */ },
+                                                    modifier = Modifier
+                                                        .size(48.dp) // TastyButton yüksekliği ile uyumlu
+                                                        .background(
+                                                            color = Color.White.copy(alpha = 0.15f),
+                                                            shape = RoundedCornerShape(12.dp)
+                                                        )
+                                                ) {
+                                                    Icon(
+                                                        imageVector = Icons.Default.Share, // Android material icons altından Share ikonu
+                                                        contentDescription = "Profili Paylaş",
+                                                        tint = Color.White
+                                                    )
+                                                }
+                                            }
+                                        }
                                     }
                                 }
                             }
@@ -271,6 +304,7 @@ class ProfileScreen(private val userId: Long) : Screen {
                                         .padding(horizontal = 20.dp),
                                     contentAlignment = Alignment.Center
                                 ) {
+                                    val isClickable = profile?.relationStatus == RelationStatus.FOLLOWING
                                     Row(
                                         modifier = Modifier.widthIn(max = 600.dp),
                                         horizontalArrangement = Arrangement.spacedBy(12.dp)
@@ -278,18 +312,43 @@ class ProfileScreen(private val userId: Long) : Screen {
                                         MetricCard(
                                             title = stringResource(Res.string.profile_metric_posts),
                                             value = (profile?.postCount ?: 0).toString(),
+                                            enabled = isClickable,
+                                            onClick = {
+                                            },
                                             modifier = Modifier.weight(1f),
                                             cardColor = customColors.surfaceVariant
                                         )
                                         MetricCard(
                                             title = stringResource(Res.string.profile_metric_subscribers),
                                             value = (profile?.subscriberCount ?: 0).toString(),
+                                            enabled = isClickable,
+                                            onClick = {
+                                                state.profile?.userId?.let { userId ->
+                                                    navigator.push(
+                                                        SubscribersListScreen(
+                                                            userId = userId,
+                                                            initialTab = SubscriberListType.SUBSCRIBERS
+                                                        )
+                                                    )
+                                                }
+                                            },
                                             modifier = Modifier.weight(1f),
                                             cardColor = customColors.surfaceVariant
                                         )
                                         MetricCard(
                                             title = stringResource(Res.string.profile_metric_following),
                                             value = (profile?.subscribedCount ?: 0).toString(),
+                                            enabled = isClickable,
+                                            onClick = {
+                                                state.profile?.userId?.let { userId ->
+                                                    navigator.push(
+                                                        SubscribersListScreen(
+                                                            userId = userId,
+                                                            initialTab = SubscriberListType.SUBSCRIBES
+                                                        )
+                                                    )
+                                                }
+                                            },
                                             modifier = Modifier.weight(1f),
                                             cardColor = customColors.surfaceVariant
                                         )
@@ -399,19 +458,19 @@ private fun ProfileActionButton(
 
     val (buttonText, backColor, textColor, strokeColor) = when (relationStatus) {
         RelationStatus.FOLLOWING -> Tuple4(
-            stringResource(Res.string.profile_subscribed),
-            Color.Transparent,
+            stringResource(Res.string.profile_subscribed),//takıp eıdlıyorsun
+            customColors.surfaceVariant,
             Color.White,
             Color.White.copy(alpha = 0.6f)
         )
         RelationStatus.PENDING -> Tuple4(
             stringResource(Res.string.profile_pending),
-            Color.Transparent,
+            customColors.surfaceVariant,
             Color.White.copy(alpha = 0.8f),
             Color.White.copy(alpha = 0.4f)
         )
         RelationStatus.FOLLOW_BACK -> Tuple4(
-            stringResource(Res.string.profile_follow_back),
+            stringResource(Res.string.profile_follow_back),//sende takıp et
             customColors.gourmetOrange,
             Color.White,
             Color.Transparent
@@ -448,12 +507,16 @@ private data class Tuple4<A, B, C, D>(
 private fun MetricCard(
     title: String,
     value: String,
+    enabled: Boolean = true,
+    onClick: () -> Unit,
     modifier: Modifier = Modifier,
     cardColor: Color
 ) {
     val customColors = LocalCustomColors.current
 
     Surface(
+        onClick = onClick,
+        enabled = enabled,
         color = cardColor,
         shape = RoundedCornerShape(14.dp),
         modifier = modifier

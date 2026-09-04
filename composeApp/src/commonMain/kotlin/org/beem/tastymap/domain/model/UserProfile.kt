@@ -1,4 +1,7 @@
 package org.beem.tastymap.domain.model
+
+import kotlinx.serialization.SerialName
+
 data class UserProfile(
     val userId: Long,
     val username: String,
@@ -17,9 +20,18 @@ data class UserProfile(
 )
 
 enum class RelationStatus {
-    SELF,           // Kendi profilim
-    FOLLOWING,      // Takip ediyorsun
-    PENDING,        // Takip isteği gönderildi, onay bekleniyor
-    FOLLOW_BACK,    // O seni takip ediyor, sen etmiyorsun
-    NOT_FOLLOWING   // Takip ilişkisi yok
+    @SerialName("SELF")
+    SELF,
+
+    @SerialName("FOLLOWING")
+    FOLLOWING,
+
+    @SerialName("PENDING")
+    PENDING,
+
+    @SerialName("FOLLOW_BACK")
+    FOLLOW_BACK,
+
+    @SerialName("NOT_FOLLOWING")
+    NOT_FOLLOWING
 }
