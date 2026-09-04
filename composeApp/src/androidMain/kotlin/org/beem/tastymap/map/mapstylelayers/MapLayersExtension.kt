@@ -31,11 +31,16 @@ fun Style.setupUserLocationLayer(context: Context, iconId: String, iconRes: Int)
 
 fun Style.setupRestaurantLayer(context: Context) {
     val iconSizeDp = 42
+    val selectedPinSizeDp = 54
 
     createMarkerBitmap(context, R.drawable.ic_restaurant_v2, iconSizeDp)?.let { addImage("tm_restaurant", it) }
     createMarkerBitmap(context, R.drawable.ic_marker_bakery, iconSizeDp)?.let { addImage("tm_bakery", it) }
     createMarkerBitmap(context, R.drawable.ic_marker_cafe, iconSizeDp)?.let { addImage("tm_cafe", it) }
     createMarkerBitmap(context, R.drawable.ic_marker_default_v2, iconSizeDp)?.let { addImage("tm_default", it) }
+
+    createMarkerBitmap(context, R.drawable.ic_selected_search_pin, selectedPinSizeDp)?.let {
+        addImage("tm_selected_search_pin", it)
+    }
 
     val source = GeoJsonSource("restaurant-source")
     addSource(source)

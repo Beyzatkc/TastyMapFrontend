@@ -8,10 +8,12 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontFamily
@@ -20,12 +22,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import org.beem.tastymap.core.paging.TastyPagingState
 import org.beem.tastymap.place.model.review.ReviewItem
+import org.beem.tastymap.place.state.RestaurantDetailIntent
 import org.beem.tastymap.ui.detailsheet.components.ReviewItemCard
 import org.beem.tastymap.ui.theme.AppColors
 
 fun LazyListScope.reviewsTabSection(
     pagingState: TastyPagingState<ReviewItem>,
-    fontFamily: FontFamily
+    fontFamily: FontFamily,
+    onIntent: (RestaurantDetailIntent) -> Unit
 ) {
     // 1. Değerlendirmeler Başlığı & Sayaç
     item {
@@ -77,11 +81,15 @@ fun LazyListScope.reviewsTabSection(
             }
         }
     } else {
-        // 3. Yorum Listesi
-        items(
+        itemsIndexed(
             items = pagingState.items,
-            key = { it.id }
-        ) { review ->
+            key = { _, review -> review.id }
+        ) { index, review ->
+            if (index >= pagingState.items.size - 2 && !pagingState.isLoading && !pagingState.isEndReached) {
+                LaunchedEffect(pagingState.items.size) {
+                    onIntent(RestaurantDetailIntent.LoadNextReviews)
+                }
+            }
             ReviewItemCard(review = review)
         }
     }

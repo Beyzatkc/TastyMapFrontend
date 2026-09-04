@@ -60,6 +60,7 @@ class MapScreenModel(
     private var lastSearchedLng: Double = 0.0
     private var currentCameraLat: Double = 0.0
     private var currentCameraLng: Double = 0.0
+    private var currentCameraZoom: Double = 0.0
     private var isSearching = false
 
     private val _activeRoute = MutableStateFlow<ActiveRouteState>(ActiveRouteState.Idle)
@@ -114,15 +115,14 @@ class MapScreenModel(
 
     fun onCenterMapClicked(){
         screenModelScope.launch {
-            lastEmittedLocation?.let { safeLocation ->
+            screenModelScope.launch {
+                val targetLoc = lastEmittedLocation ?: userLocation.value
+                val targetZoom = if (currentCameraZoom >= 14.0) null else 15f
+
                 _event.emit(MapEvent.CenterOn(
-                    lat = safeLocation.latitude,
-                    lng = safeLocation.longitude
-                ))
-            } ?: run{
-                _event.emit(MapEvent.CenterOn(
-                    lat = userLocation.value.latitude,
-                    lng = userLocation.value.longitude
+                    lat = targetLoc.latitude,
+                    lng = targetLoc.longitude,
+                    zoom = targetZoom
                 ))
             }
         }
@@ -161,6 +161,7 @@ class MapScreenModel(
     fun onCameraIdle(lat: Double, lng: Double, zoom: Double) {
         currentCameraLat = lat
         currentCameraLng = lng
+        currentCameraZoom = zoom
 
         if (_activeRoute.value is ActiveRouteState.Active || isSearching) return
 
@@ -194,8 +195,13 @@ class MapScreenModel(
         screenModelScope.launch{
             _event.emit(MapEvent.CenterOn(
                 lat = updatedRestaurant.latitude,
-                lng = updatedRestaurant.longitude,
-                zoom = 17f
+                lng = updatedRestaurant.longitude
+            ))
+
+            _event.emit(MapEvent.ShowSelectedPin(
+                placeId = updatedRestaurant.id,
+                lat = updatedRestaurant.latitude,
+                lng = updatedRestaurant.longitude
             ))
 
             _event.emit(MapEvent.OpenRestaurantDetails(updatedRestaurant))

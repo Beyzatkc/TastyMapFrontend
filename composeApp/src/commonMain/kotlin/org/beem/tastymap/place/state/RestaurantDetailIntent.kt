@@ -28,4 +28,6 @@ sealed interface RestaurantDetailIntent {
 
 
     data object StartDirections : RestaurantDetailIntent
+
+    data object LoadNextReviews : RestaurantDetailIntent
 }

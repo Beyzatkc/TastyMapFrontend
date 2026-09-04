@@ -159,7 +159,12 @@ class RestaurantDetailScreenModel(
                 }
             }
 
-            else -> {}
+            RestaurantDetailIntent.LoadNextReviews -> {
+                loadMoreReviews()
+            }
+            RestaurantDetailIntent.StartDirections -> {
+
+            }
         }
     }
 

@@ -11,7 +11,8 @@ import org.koin.compose.koinInject
 actual fun TastyDetailSheet(
     restaurant: Restaurant,
     onDirectionsClick: () -> Unit,
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit,
+    collapseToPeekTrigger: Int
 ) {
     val detailScreenModel: RestaurantDetailScreenModel = koinInject()
     val pagingState by detailScreenModel.reviewsPagingState.collectAsState()
@@ -26,6 +27,7 @@ actual fun TastyDetailSheet(
         restaurant = restaurant,
         detailsUiState = detailsUiState,
         pagingState = pagingState,
+        collapseToPeekTrigger = collapseToPeekTrigger,
         onIntent = { intent ->
             if (intent is RestaurantDetailIntent.DismissMainSheet) {
                 detailScreenModel.handleIntent(intent)

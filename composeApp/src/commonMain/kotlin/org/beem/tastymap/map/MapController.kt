@@ -3,7 +3,7 @@ package org.beem.tastymap.map
 import org.beem.tastymap.data.model.Restaurant
 
 interface MapController {
-    fun animateTo(lat: Double, lng: Double, zoom: Float = 15f)
+    fun animateTo(lat: Double, lng: Double, zoom: Float?)
     fun addMarker(lat: Double, lng: Double, title: String)
     fun userMarker(lat: Double, lng: Double, title: String, bearing: Float)
     fun updateMapData(geoJson: String)
@@ -19,6 +19,10 @@ interface MapController {
 
     fun setOnCameraIdleListener(onCameraIdle: (centerLat: Double, centerLng: Double, zoom: Double) -> Unit)
 
-    fun showSearchPin(lat: Double, lng: Double)
-    fun clearSearchPin()
+    fun showSelectedPin(placeId: String, lat: Double, lng: Double)
+    fun clearSelectedPin()
+
+    fun setOnZoomChangedListener(onZoomChanged: () -> Unit)
+
+    fun setOnMapClickListener(onMapClick: () -> Unit)
 }

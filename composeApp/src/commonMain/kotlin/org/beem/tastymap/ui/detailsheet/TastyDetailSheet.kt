@@ -7,5 +7,6 @@ import org.beem.tastymap.data.model.Restaurant
 expect fun TastyDetailSheet(
     restaurant: Restaurant,
     onDirectionsClick: () -> Unit,
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit,
+    collapseToPeekTrigger: Int
 )

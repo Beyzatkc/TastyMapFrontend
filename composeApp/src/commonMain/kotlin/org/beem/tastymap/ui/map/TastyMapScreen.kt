@@ -50,6 +50,8 @@ class TastyMapScreen : Screen {
 
         var showSearchThisArea by remember { mutableStateOf(false) }
 
+        var collapseSheetTrigger by remember { mutableStateOf(0) }
+
         val isSearchingActive = searchUiState.query.isNotEmpty() || searchUiState.isDropdownVisible
 
         val localFocusManager = LocalFocusManager.current
@@ -65,7 +67,11 @@ class TastyMapScreen : Screen {
 
                         if (venue.lat != null && venue.lng != null) {
                             mapState.centerOn(venue.lat, venue.lng, zoom = 16f)
-                            mapState.showSearchPin(venue.lat, venue.lng)
+                            mapState.showSelectedPin(
+                                placeId = venue.placeId,
+                                lat = venue.lat,
+                                lng = venue.lng
+                            )
                         }
 
                         activeRestaurant = venue.toRestaurant()
@@ -76,10 +82,24 @@ class TastyMapScreen : Screen {
 
 
         DisposableEffect(mapState) {
+
+            mapState.onZoomChangedCallback = {
+                if (activeRestaurant != null) {
+                    collapseSheetTrigger++
+                }
+            }
+
+            mapState.onMapClickCallback = {
+                if (activeRestaurant != null) {
+                    collapseSheetTrigger++
+                }
+            }
+
             mapState.onCameraIdleCallback = { lat, lng, zoom ->
                 mapScreenModel.onCameraIdle(lat, lng, zoom)
             }
             onDispose {
+                mapState.onZoomChangedCallback = null
                 mapState.onCameraIdleCallback = null
             }
         }
@@ -115,6 +135,12 @@ class TastyMapScreen : Screen {
                     }
                     is MapEvent.ToggleSearchThisAreaButton -> {
                         showSearchThisArea = event.visible
+                    }
+                    is MapEvent.ShowSelectedPin -> {
+                        mapState.showSelectedPin(event.placeId, event.lat, event.lng)
+                    }
+                    is MapEvent.ClearSelectedPin -> {
+                        mapState.clearSelectedPin()
                     }
                 }
             }
@@ -184,8 +210,9 @@ class TastyMapScreen : Screen {
                         onDismiss = {
                             activeRestaurant = null
                             mapState.clearSelectedRestaurant()
-                            mapState.clearSearchPin()
+                            mapState.clearSelectedPin()
                         },
+                        collapseToPeekTrigger = collapseSheetTrigger,
                         onDirectionsClick = {
                             val placeId = restaurant.id
                             val targetLat = restaurant.latitude
@@ -193,6 +220,7 @@ class TastyMapScreen : Screen {
 
                             activeRestaurant = null // Sheet'i kapat
                             mapState.clearSelectedRestaurant()
+                            mapState.clearSelectedPin()
 
                             // Rotayı başlat
                             mapScreenModel.fetchDirections(

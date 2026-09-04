@@ -6,7 +6,7 @@ sealed class MapEvent{
     data class CenterOn(
         val lat: Double,
         val lng: Double,
-        val zoom: Float = 15f
+        val zoom: Float? = null
     ) : MapEvent()
     data class UserMarker(
         val lat: Double,
@@ -33,4 +33,7 @@ sealed class MapEvent{
     data object ClearRoute : MapEvent()
 
     data class ToggleSearchThisAreaButton(val visible: Boolean) : MapEvent()
+
+    data class ShowSelectedPin(val placeId: String, val lat: Double, val lng: Double) : MapEvent()
+    data object ClearSelectedPin : MapEvent()
 }

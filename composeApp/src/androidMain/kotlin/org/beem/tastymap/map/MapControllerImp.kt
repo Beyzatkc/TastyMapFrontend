@@ -22,7 +22,6 @@ import org.maplibre.android.style.layers.Property
 import org.maplibre.android.style.layers.PropertyFactory
 import org.maplibre.android.style.layers.SymbolLayer
 import org.maplibre.geojson.LineString
-import java.lang.System.setProperties
 
 class MapControllerImp(
     private val map: MapView,
@@ -40,16 +39,16 @@ class MapControllerImp(
 
     val SOURCE_ID = "user-location-source"
     val LAYER_ID = "user-location-layer"
-    val ICON_ID = "user-navigation-icon"
 
-    private val SEARCH_PIN_SOURCE_ID = "tastymap-search-pin-source"
-    private val SEARCH_PIN_OUTER_LAYER_ID = "tastymap-search-pin-outer-layer"
-    private val SEARCH_PIN_INNER_LAYER_ID = "tastymap-search-pin-inner-layer"
+    private val SELECTED_PIN_SOURCE_ID = "tastymap-selected-pin-source"
+    private val SELECTED_PIN_LAYER_ID = "tastymap-selected-pin-layer"
 
     private var animator: ValueAnimator? = null
     private var lastLat = 0.0
     private var lastLng = 0.0
     private var lastBearing = 0f
+
+    private var lastZoomLevel: Double? = null
 
     override fun updateMapData(geoJson: String) {
         println("TastyMap -> updateMapData çağrıldı. Gelen GeoJSON boyutu: ${geoJson.length}")
@@ -105,14 +104,16 @@ class MapControllerImp(
         }
     }
 
+    override fun animateTo(lat: Double, lng: Double, zoom: Float?) {
+        map.getMapAsync { mapLibreMap ->
+            val targetZoom = zoom?.toDouble() ?: mapLibreMap.cameraPosition.zoom
 
-    override fun animateTo(lat: Double, lng: Double, zoom: Float) {
-        val pos = CameraPosition.Builder()
-            .target(LatLng(lat, lng))
-            .zoom(zoom.toDouble())
-            .build()
-        map.getMapAsync{
-            it.animateCamera(CameraUpdateFactory.newCameraPosition(pos), 1000)
+            val pos = CameraPosition.Builder()
+                .target(LatLng(lat, lng))
+                .zoom(targetZoom)
+                .build()
+
+            mapLibreMap.animateCamera(CameraUpdateFactory.newCameraPosition(pos), 1000)
         }
     }
 
@@ -303,67 +304,106 @@ class MapControllerImp(
         }
     }
 
-    override fun showSearchPin(lat: Double, lng: Double) {
+    override fun showSelectedPin(placeId: String, lat: Double, lng: Double) {
         map.post {
             try {
+                val restaurantLayer = style.getLayerAs<SymbolLayer>(RESTAURANT_LAYER_ID)
+
+                restaurantLayer?.setFilter(Expression.literal(true))
+
+                if (restaurantLayer != null && placeId.isNotBlank()) {
+                    // id != placeId olanlar görünür kalsın, aranan mekan GONE olsun
+                    restaurantLayer.setFilter(
+                        Expression.neq(Expression.get("id"), Expression.literal(placeId))
+                    )
+                }
+
+                // 2. Özel Vurgu / Odak Pinini Oluştur veya Koordinatını Güncelle
                 val point = Point.fromLngLat(lng, lat)
                 val featureCollection = FeatureCollection.fromFeature(Feature.fromGeometry(point))
-                val source = style.getSourceAs<GeoJsonSource>(SEARCH_PIN_SOURCE_ID)
+                val source = style.getSourceAs<GeoJsonSource>(SELECTED_PIN_SOURCE_ID)
 
                 if (source != null) {
-                    // Kaynak zaten varsa sadece koordinatı güncelle
                     source.setGeoJson(featureCollection)
                 } else {
-                    // İlk defa çağrılıyorsa Source ve Katmanları kur
-                    style.addSource(GeoJsonSource(SEARCH_PIN_SOURCE_ID, featureCollection))
+                    style.addSource(GeoJsonSource(SELECTED_PIN_SOURCE_ID, featureCollection))
 
-                    // 1. Dış Beyaz Kontur Halkası
-                    val outerLayer = org.maplibre.android.style.layers.CircleLayer(
-                        SEARCH_PIN_OUTER_LAYER_ID,
-                        SEARCH_PIN_SOURCE_ID
-                    ).apply {
+                    val pinLayer = SymbolLayer(SELECTED_PIN_LAYER_ID, SELECTED_PIN_SOURCE_ID).apply {
                         setProperties(
-                            PropertyFactory.circleColor(Color.White.toArgb()),
-                            PropertyFactory.circleRadius(13f),
-                            PropertyFactory.circleOpacity(1.0f)
+                            PropertyFactory.iconImage("tm_selected_search_pin"),
+
+                            PropertyFactory.iconAnchor(Property.ICON_ANCHOR_BOTTOM),
+                            PropertyFactory.iconAllowOverlap(true),
+                            PropertyFactory.iconIgnorePlacement(true)
                         )
                     }
+                    val restaurantLayer = style.getLayer(RESTAURANT_LAYER_ID)
 
-                    // 2. İç Turuncu Gurme Pin Halkası
-                    val innerLayer = org.maplibre.android.style.layers.CircleLayer(
-                        SEARCH_PIN_INNER_LAYER_ID,
-                        SEARCH_PIN_SOURCE_ID
-                    ).apply {
-                        setProperties(
-                            PropertyFactory.circleColor(AppColors.GourmetOrange.toArgb()),
-                            PropertyFactory.circleRadius(9f),
-                            PropertyFactory.circleOpacity(1.0f)
-                        )
-                    }
-
-                    // Kullanıcı lokasyon layer'ının hemen altına ekle (varsa), yoksa en üste
-                    val topLayer = if (style.getLayer(LAYER_ID) != null) LAYER_ID else null
-                    if (topLayer != null) {
-                        style.addLayerBelow(outerLayer, topLayer)
-                        style.addLayerBelow(innerLayer, topLayer)
+                    if (restaurantLayer != null) {
+                        style.addLayerAbove(pinLayer, RESTAURANT_LAYER_ID)
                     } else {
-                        style.addLayer(outerLayer)
-                        style.addLayer(innerLayer)
+                        style.addLayer(pinLayer)
                     }
                 }
             } catch (e: Exception) {
                 println("TastyMap HATA -> Search Pin basılırken hata: ${e.message}")
+                e.printStackTrace()
             }
         }
     }
 
-    override fun clearSearchPin() {
+    override fun clearSelectedPin() {
         map.post {
             try {
-                val source = style.getSourceAs<GeoJsonSource>(SEARCH_PIN_SOURCE_ID)
+                // 1. Gizlenen orijinal mekan ikonunu geri getir (Filtreyi sıfırla)
+                val restaurantLayer = style.getLayerAs<SymbolLayer>(RESTAURANT_LAYER_ID)
+                restaurantLayer?.setFilter(Expression.literal(true))
+
+                // 2. Geçici arama pinini temizle
+                val source = style.getSourceAs<GeoJsonSource>(SELECTED_PIN_SOURCE_ID)
                 source?.setGeoJson(FeatureCollection.fromFeatures(arrayOf()))
             } catch (e: Exception) {
                 println("TastyMap HATA -> Search Pin temizlenirken hata: ${e.message}")
+            }
+        }
+    }
+
+    override fun setOnZoomChangedListener(onZoomChanged: () -> Unit) {
+        map.getMapAsync { mapLibreMap ->
+            mapLibreMap.addOnCameraMoveListener {
+                val currentZoom = mapLibreMap.cameraPosition.zoom
+                val prevZoom = lastZoomLevel
+
+                // İlk açılışta referans zoom değerini ata
+                if (prevZoom == null) {
+                    lastZoomLevel = currentZoom
+                    return@addOnCameraMoveListener
+                }
+
+                // Eğer zoom seviyesinde fark varsa (hassasiyet eşiği: 0.05)
+                if (kotlin.math.abs(currentZoom - prevZoom) > 0.05) {
+                    lastZoomLevel = currentZoom
+                    onZoomChanged()
+                }
+            }
+
+            // Harita durduğunda referans değeri güncelle
+            mapLibreMap.addOnCameraIdleListener {
+                lastZoomLevel = mapLibreMap.cameraPosition.zoom
+            }
+        }
+    }
+
+    override fun setOnMapClickListener(onMapClick: () -> Unit) {
+        map.getMapAsync { mapLibreMap ->
+            mapLibreMap.addOnMapClickListener { point ->
+                val screenPoint = mapLibreMap.projection.toScreenLocation(point)
+                val features = mapLibreMap.queryRenderedFeatures(screenPoint, RESTAURANT_LAYER_ID)
+
+                if (features.isEmpty()) {
+                    onMapClick()
+                }
+                false
             }
         }
     }

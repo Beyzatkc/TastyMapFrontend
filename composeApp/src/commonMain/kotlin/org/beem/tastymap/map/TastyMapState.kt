@@ -16,6 +16,8 @@ class TastyMapState {
             _controller.value = value
             setupMarkerClickListener()
             setupCameraIdleListener()
+            setupZoomListener()
+            setupMapClickListener()
         }
 
     var onCameraIdleCallback: ((lat: Double, lng: Double, zoom: Double) -> Unit)? = null
@@ -23,8 +25,12 @@ class TastyMapState {
     var selectedRestaurant by mutableStateOf<Restaurant?>(null)
         private set
 
+    var onZoomChangedCallback: (() -> Unit)? = null
 
-    fun centerOn(lat: Double, lng: Double, zoom: Float = 15f){
+    var onMapClickCallback: (() -> Unit)? = null
+
+
+    fun centerOn(lat: Double, lng: Double, zoom: Float?){
         controller?.animateTo(lat, lng, zoom)
     }
     fun userMarker(lat: Double, lng: Double, title: String, bearing: Float){
@@ -72,12 +78,24 @@ class TastyMapState {
         controller?.clearRoute()
     }
 
-    fun showSearchPin(lat: Double, lng: Double) {
-        controller?.showSearchPin(lat, lng)
+    fun showSelectedPin(placeId: String, lat: Double, lng: Double) {
+        controller?.showSelectedPin(placeId, lat, lng)
     }
 
-    fun clearSearchPin() {
-        controller?.clearSearchPin()
+    fun clearSelectedPin() {
+        controller?.clearSelectedPin()
+    }
+
+    fun setupZoomListener() {
+        controller?.setOnZoomChangedListener {
+            onZoomChangedCallback?.invoke()
+        }
+    }
+
+    fun setupMapClickListener() {
+        controller?.setOnMapClickListener {
+            onMapClickCallback?.invoke()
+        }
     }
 }
 
