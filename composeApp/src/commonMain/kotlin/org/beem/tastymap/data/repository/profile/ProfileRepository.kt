@@ -90,17 +90,16 @@ class ProfileRepository(
             }
     }
 
-    private suspend fun fetchRemoteProfile(userId: Long) {
+    suspend fun fetchRemoteProfile(userId: Long) {
         try {
             val remoteDto = dataSource.getUserProfile(userId)
             val freshProfile = remoteDto.toDomain(userId)
 
-            // Veritabanına kaydetmek, getProfileFlow'un otomatik olarak tetiklenip
-            // güncel veriyi yeni bir State/Emit olarak fırlatmasını sağlar.
             memoryCache.put(userId, freshProfile)
             localDataSource.saveProfile(freshProfile)
         } catch (e: Exception) {
-           println("FLOW"+e)
+            println("FLOW"+e)
+            throw e // Gerekirse UI'da hata göstermek için hatayı fırlatabilirsin
         }
     }
 }

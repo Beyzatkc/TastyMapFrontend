@@ -115,7 +115,7 @@ class ProfileScreen(private val userId: Long) : Screen {
             PullToRefreshBox(
                 state = pullToRefreshState,
                 isRefreshing = state.isRefreshing,
-                onRefresh = { screenModel.getProfile(userId, true) },
+                onRefresh = { screenModel.refreshProfile(userId) },
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(innerPadding)
@@ -458,16 +458,16 @@ private fun ProfileActionButton(
 
     val (buttonText, backColor, textColor, strokeColor) = when (relationStatus) {
         RelationStatus.FOLLOWING -> Tuple4(
-            stringResource(Res.string.profile_subscribed),//takıp eıdlıyorsun
-            customColors.surfaceVariant,
-            Color.White,
-            Color.White.copy(alpha = 0.6f)
+            stringResource(Res.string.profile_subscribed),
+            Color.White.copy(alpha = 0.18f), // Belirgin yarısaydam beyaz dolgu
+            Color.White,                     // Net beyaz yazı
+            Color.White.copy(alpha = 0.7f)   // Daha belirgin ve net kenarlık
         )
         RelationStatus.PENDING -> Tuple4(
             stringResource(Res.string.profile_pending),
-            customColors.surfaceVariant,
-            Color.White.copy(alpha = 0.8f),
-            Color.White.copy(alpha = 0.4f)
+            Color.White.copy(alpha = 0.08f), // FOLLOWING'e göre daha hafif, tatlı bir dolgu
+            Color.White.copy(alpha = 0.85f), // Bekleme hissi veren hafif mat beyaz yazı
+            Color.White.copy(alpha = 0.5f)   // Belirgin, ince kenarlık
         )
         RelationStatus.FOLLOW_BACK -> Tuple4(
             stringResource(Res.string.profile_follow_back),//sende takıp et

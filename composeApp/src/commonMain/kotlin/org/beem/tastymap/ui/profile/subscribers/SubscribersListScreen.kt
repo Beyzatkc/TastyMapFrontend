@@ -1,6 +1,10 @@
 package org.beem.tastymap.ui.profile.subscribers
 
 import TastyButton
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -13,6 +17,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
@@ -25,21 +30,21 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.koin.koinScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import coil3.compose.AsyncImage
+import org.beem.tastymap.core.util.ToastManager
 import org.beem.tastymap.data.model.subscribers.SubscribeResponse
-import org.beem.tastymap.data.model.subscribers.SubscribeStatus
 import org.beem.tastymap.domain.model.RelationStatus
 import org.beem.tastymap.ui.profile.otherprofile.ProfileScreen
 import org.beem.tastymap.ui.theme.LocalCustomColors
-import org.beem.tastymap.ui.theme.TastyTheme
 import org.jetbrains.compose.resources.stringResource
 import tastymap.composeapp.generated.resources.Res
+import tastymap.composeapp.generated.resources.active_devices_retry
+import tastymap.composeapp.generated.resources.active_devices_retry_cd
 import tastymap.composeapp.generated.resources.common_search_placeholder
 import tastymap.composeapp.generated.resources.profile_connections_title
 import tastymap.composeapp.generated.resources.profile_empty_list
@@ -72,6 +77,12 @@ class SubscribersListScreen(
 
         LaunchedEffect(userId, selectedTab) {
             screenModel.loadInitialData(userId, selectedTab)
+        }
+
+        LaunchedEffect(uiState.errorMessage) {
+            uiState.errorMessage?.let { message ->
+                ToastManager.show(message)
+            }
         }
 
         val shouldLoadMore = remember {
@@ -125,34 +136,41 @@ class SubscribersListScreen(
                         )
                     )
 
-                    TabRow(
-                        selectedTabIndex = selectedTab.ordinal,
-                        containerColor = customColors.background,
-                        contentColor = customColors.gourmetOrange,
-                        divider = {}
+                    // TabRow'u geniş ekranlarda ortalamak için sınırlıyoruz
+                    Box(
+                        modifier = Modifier.fillMaxWidth(),
+                        contentAlignment = Alignment.Center
                     ) {
-                        Tab(
-                            selected = selectedTab == SubscriberListType.SUBSCRIBERS,
-                            onClick = { selectedTab = SubscriberListType.SUBSCRIBERS },
-                            text = {
-                                Text(
-                                    text = stringResource(Res.string.profile_metric_subscribers),
-                                    color = if (selectedTab == SubscriberListType.SUBSCRIBERS) customColors.navy else customColors.textSecondary,
-                                    fontWeight = FontWeight.Bold
-                                )
-                            }
-                        )
-                        Tab(
-                            selected = selectedTab == SubscriberListType.SUBSCRIBES,
-                            onClick = { selectedTab = SubscriberListType.SUBSCRIBES },
-                            text = {
-                                Text(
-                                    text = stringResource(Res.string.profile_metric_following),
-                                    color = if (selectedTab == SubscriberListType.SUBSCRIBES) customColors.navy else customColors.textSecondary,
-                                    fontWeight = FontWeight.Bold
-                                )
-                            }
-                        )
+                        TabRow(
+                            selectedTabIndex = selectedTab.ordinal,
+                            containerColor = customColors.background,
+                            contentColor = customColors.navy,
+                            divider = {},
+                            modifier = Modifier.widthIn(max = 1500.dp)
+                        ) {
+                            Tab(
+                                selected = selectedTab == SubscriberListType.SUBSCRIBERS,
+                                onClick = { selectedTab = SubscriberListType.SUBSCRIBERS },
+                                text = {
+                                    Text(
+                                        text = stringResource(Res.string.profile_metric_subscribers),
+                                        color = if (selectedTab == SubscriberListType.SUBSCRIBERS) customColors.navy else customColors.textSecondary,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                }
+                            )
+                            Tab(
+                                selected = selectedTab == SubscriberListType.SUBSCRIBES,
+                                onClick = { selectedTab = SubscriberListType.SUBSCRIBES },
+                                text = {
+                                    Text(
+                                        text = stringResource(Res.string.profile_metric_following),
+                                        color = if (selectedTab == SubscriberListType.SUBSCRIBES) customColors.navy else customColors.textSecondary,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                }
+                            )
+                        }
                     }
                 }
             }
@@ -161,13 +179,22 @@ class SubscribersListScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(innerPadding)
-                    .background(customColors.background)
+                    .background(customColors.background),
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                SearchBar(
-                    query = searchQuery,
-                    onQueryChange = { searchQuery = it },
-                    modifier = Modifier.padding(16.dp)
-                )
+                // Arama Çubuğunu geniş ekranlarda ortalama
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    SearchBar(
+                        query = searchQuery,
+                        onQueryChange = { searchQuery = it },
+                        modifier = Modifier.widthIn(max = 1500.dp)
+                    )
+                }
 
                 PullToRefreshBox(
                     state = pullToRefreshState,
@@ -184,64 +211,131 @@ class SubscribersListScreen(
                         )
                     }
                 ) {
-                    if (uiState.isLoading && uiState.items.isEmpty()) {
-                        Box(
-                            modifier = Modifier.fillMaxSize(),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            CircularProgressIndicator(color = customColors.gourmetOrange)
-                        }
-                    } else if (filteredList.isEmpty()) {
-                        Box(
-                            modifier = Modifier.fillMaxSize(),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(
-                                text = if (searchQuery.isNotBlank()) {
-                                    stringResource(Res.string.profile_no_results)
-                                } else {
-                                    stringResource(Res.string.profile_empty_list)
-                                },
-                                style = MaterialTheme.typography.bodyMedium.copy(color = customColors.textSecondary)
-                            )
-                        }
-                    } else {
-                        LazyColumn(
-                            state = listState,
-                            modifier = Modifier.fillMaxSize(),
-                            contentPadding = PaddingValues(bottom = 16.dp)
-                        ) {
-                            items(
-                                items = filteredList,
-                                key = { it.id }
-                            ) { user ->
-                                SubscriberUserItem(
-                                    user = user,
-                                    onUserClick = {
-                                        navigator.push(ProfileScreen(userId = user.id))
-                                    },
-                                    onActionClick = {
-                                        screenModel.handleFollowAction(
-                                            targetUserId = user.id,
-                                            currentStatus = user.relationStatus?:RelationStatus.NOT_FOLLOWING,
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.TopCenter
+                    ) {
+                        val isError = !uiState.errorMessage.isNullOrBlank()
+                        val isEmpty = uiState.items.isEmpty()
 
-                                        )
-                                    }
-                                )
+                        when {
+                            // 1. İlk yükleme durumu
+                            uiState.isLoading && isEmpty && !isError -> {
+                                Box(
+                                    modifier = Modifier.fillMaxSize(),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    CircularProgressIndicator(color = customColors.gourmetOrange)
+                                }
                             }
 
-                            if (uiState.isLoadingMore) {
-                                item {
-                                    Box(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .padding(16.dp),
-                                        contentAlignment = Alignment.Center
-                                    ) {
-                                        CircularProgressIndicator(
-                                            modifier = Modifier.size(24.dp),
-                                            color = customColors.gourmetOrange
+                            // 2. İnternet/Ağ Hatası durumu
+                            isError && isEmpty -> {
+                                Box(
+                                    modifier = Modifier.fillMaxSize(),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    FilledTonalButton(
+                                        onClick = { screenModel.loadInitialData(userId, selectedTab) },
+                                        enabled = !uiState.isLoading,
+                                        modifier = Modifier.height(48.dp),
+                                        colors = ButtonDefaults.filledTonalButtonColors(
+                                            containerColor = customColors.surfaceVariant,
+                                            contentColor = customColors.textPrimary
                                         )
+                                    ) {
+                                        AnimatedContent(
+                                            targetState = uiState.isLoading,
+                                            transitionSpec = { fadeIn() togetherWith fadeOut() },
+                                            label = "ButtonLoadingTransition"
+                                        ) { loading ->
+                                            if (loading) {
+                                                CircularProgressIndicator(
+                                                    modifier = Modifier.size(24.dp),
+                                                    strokeWidth = 2.5.dp,
+                                                    color = customColors.textPrimary
+                                                )
+                                            } else {
+                                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                                    Icon(
+                                                        imageVector = Icons.Default.Refresh,
+                                                        contentDescription = stringResource(Res.string.active_devices_retry_cd),
+                                                        modifier = Modifier.size(24.dp),
+                                                        tint = customColors.textPrimary
+                                                    )
+                                                    Spacer(modifier = Modifier.width(8.dp))
+                                                    Text(
+                                                        text = stringResource(Res.string.active_devices_retry),
+                                                        style = MaterialTheme.typography.titleSmall.copy(
+                                                            fontWeight = FontWeight.Bold,
+                                                            color = customColors.textPrimary
+                                                        )
+                                                    )
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+
+                            // 3. Veri hatasız çekildi ancak içerik gerçekten boş
+                            filteredList.isEmpty() -> {
+                                Box(
+                                    modifier = Modifier.fillMaxSize(),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text(
+                                        text = if (searchQuery.isNotBlank()) {
+                                            stringResource(Res.string.profile_no_results)
+                                        } else {
+                                            stringResource(Res.string.profile_empty_list)
+                                        },
+                                        style = MaterialTheme.typography.bodyMedium.copy(color = customColors.textSecondary)
+                                    )
+                                }
+                            }
+
+                            // 4. Veri başarıyla yüklendiğinde gösterilecek liste (Sınırlı genişlik)
+                            else -> {
+                                LazyColumn(
+                                    state = listState,
+                                    modifier = Modifier
+                                        .widthIn(max = 1500.dp)
+                                        .fillMaxSize(),
+                                    contentPadding = PaddingValues(bottom = 16.dp)
+                                ) {
+                                    items(
+                                        items = filteredList,
+                                        key = { it.id }
+                                    ) { user ->
+                                        SubscriberUserItem(
+                                            user = user,
+                                            onUserClick = {
+                                                navigator.push(ProfileScreen(userId = user.id))
+                                            },
+                                            onActionClick = {
+                                                screenModel.handleFollowAction(
+                                                    targetUserId = user.id,
+                                                    currentStatus = user.relationStatus ?: RelationStatus.NOT_FOLLOWING,
+                                                )
+                                            }
+                                        )
+                                    }
+
+                                    if (uiState.isLoadingMore) {
+                                        item {
+                                            Box(
+                                                modifier = Modifier
+                                                    .fillMaxWidth()
+                                                    .padding(16.dp),
+                                                contentAlignment = Alignment.Center
+                                            ) {
+                                                CircularProgressIndicator(
+                                                    modifier = Modifier.size(24.dp),
+                                                    color = customColors.gourmetOrange
+                                                )
+                                            }
+                                        }
                                     }
                                 }
                             }
@@ -299,6 +393,7 @@ private fun SearchBar(
         modifier = modifier.fillMaxWidth()
     )
 }
+
 @Composable
 private fun SubscriberUserItem(
     user: SubscribeResponse,
@@ -337,14 +432,13 @@ private fun SubscriberUserItem(
             isPrimary = true
         )
         null -> ActionStyle(
-                text = stringResource(Res.string.profile_subscribe),
-                backColor = customColors.gourmetOrange,
-                textColor = Color.White,
-                strokeColor = Color.Transparent,
-                isPrimary = true
+            text = stringResource(Res.string.profile_subscribe),
+            backColor = customColors.gourmetOrange,
+            textColor = Color.White,
+            strokeColor = Color.Transparent,
+            isPrimary = true
         )
         RelationStatus.SELF -> null
-
     }
 
     Row(
@@ -405,6 +499,7 @@ private fun SubscriberUserItem(
         }
     }
 }
+
 private data class ActionStyle(
     val text: String,
     val backColor: Color,

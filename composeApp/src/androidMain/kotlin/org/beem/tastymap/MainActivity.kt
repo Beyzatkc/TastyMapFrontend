@@ -42,12 +42,30 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun processDeepLink(intent: Intent?) {
+        // 1. Önce normal web linki (URI) ile mi gelindi ona bakalım
         val dataUri = intent?.data
-        Log.d("DEEPLINK_DEBUG", "Gelen Raw Intent Data: $dataUri")
+        if (dataUri != null) {
+            Log.d("DEEPLINK_DEBUG", "Gelen Raw Intent Data: $dataUri")
+            DeepLinkManager.handleLink(dataUri.toString())
+            return // İşlem bitti, çık
+        }
 
-        dataUri?.toString()?.let { url ->
-            Log.d("DEEPLINK_DEBUG", "Yönlendirilen URL: $url")
-            DeepLinkManager.handleLink(url)
+        // 2. FCM Bildirimine tıklanarak mı gelindi? (Extras kontrolü)
+        val extras = intent?.extras
+        if (extras != null) {
+            val type = extras.getString("type")
+            val userId = extras.getString("userId") // Takip bildirimi için backend'den yolladığımız id
+
+            Log.d("FCM_DEBUG", "Bildirime Tıklandı - Type: $type, UserId: $userId")
+
+            when (type) {
+                "FOLLOW_REQUEST", "NEW_FOLLOWER" -> {
+                    if (userId != null) {
+                        val profileLink = "https://coleman-nonethic-marinda.ngrok-free.dev/profile/$userId"
+                        DeepLinkManager.handleLink(profileLink)
+                    }
+                }
+            }
         }
     }
 }

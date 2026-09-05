@@ -29,20 +29,12 @@ class ProfileScreenModel(
     private var profileJob: Job? = null
 
 
-    fun getProfile(userId: Long ,isFromPullToRefresh: Boolean = false) {
-        // Eğer pull-to-refresh değilse ve zaten aktif bir dinleme varsa tekrar başlatma
-        if (!isFromPullToRefresh && profileJob?.isActive == true) return
-
-        // Pull-to-refresh yapılıyorsa eski job'ı iptal et
-        profileJob?.cancel()
+    fun getProfile(userId: Long) {
+        if (profileJob?.isActive == true) return
 
         profileJob = screenModelScope.launch {
             _profileState.update {
-                if (isFromPullToRefresh) {
-                    it.copy(isRefreshing = true, errorMessage = null)
-                } else {
-                    it.copy(isLoading = it.profile == null, errorMessage = null)
-                }
+                it.copy(isLoading = it.profile == null, errorMessage = null)
             }
 
             repo.getMyProfile(userId).collect { result ->
@@ -51,7 +43,6 @@ class ProfileScreenModel(
                         _profileState.update {
                             it.copy(
                                 isLoading = false,
-                                isRefreshing = false,
                                 profile = result.data,
                                 errorMessage = null
                             )
@@ -61,11 +52,26 @@ class ProfileScreenModel(
                         _profileState.update {
                             it.copy(
                                 isLoading = false,
-                                isRefreshing = false,
                                 errorMessage = result.message
                             )
                         }
                     }
+                }
+            }
+        }
+    }
+
+    fun refreshProfile(userId: Long) {
+        screenModelScope.launch {
+            _profileState.update { it.copy(isRefreshing = true, errorMessage = null) }
+
+            try {
+                repo.fetchRemoteProfile(userId)
+                _profileState.update { it.copy(isRefreshing = false) }
+
+            } catch (e: Exception) {
+                _profileState.update {
+                    it.copy(isRefreshing = false, errorMessage = e.message ?: "Yenilenirken bir hata oluştu")
                 }
             }
         }

@@ -4,6 +4,7 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.receiveAsFlow
 import org.beem.tastymap.ui.auth.forgotPassword.ResetScreen
 import org.beem.tastymap.ui.auth.verification.email.VerifyScreen
+import org.beem.tastymap.ui.profile.otherprofile.ProfileScreen
 
 object DeepLinkManager {
     private val _navigationEvents = Channel<Screen>(Channel.BUFFERED)
@@ -12,10 +13,9 @@ object DeepLinkManager {
     var pendingInitialScreen: Screen? = null
 
 
-    /*
+
     fun handleLink(url: String) {
         try {
-            // 1. ADIM: Fonksiyona URL gerçekten ulaştı mı?
             println("DEEPLINK_MGR: Gelen Ham URL -> $url")
 
             val parts = url.split("?")
@@ -25,22 +25,15 @@ object DeepLinkManager {
             println("DEEPLINK_MGR: BasePath -> $basePath")
             println("DEEPLINK_MGR: QueryString -> $queryString")
 
-            val token = queryString
-                ?.split("&")
-                ?.map { it.split("=") }
-                ?.firstOrNull { it.size >= 2 && it[0] == "token" }
-                ?.getOrNull(1)
+            // ⚠️ Global token kontrolü kaldırıldı! Artık her link kendi içinde ayrıştırılıyor.
 
-            println("DEEPLINK_MGR: Ayrıştırılan Token -> $token")
-
-            if (token.isNullOrEmpty()) {
-                println("DEEPLINK_MGR: HATA - Token bulunamadı veya boş!")
-                return
-            }
-
-            // Katı 'endsWith' yerine daha esnek olan 'contains' kontrolü
             when {
                 basePath.contains("/auth/verify") -> {
+                    val token = extractToken(url)
+                    if (token.isNullOrEmpty()) {
+                        println("DEEPLINK_MGR: HATA - Verify için Token bulunamadı!")
+                        return
+                    }
                     val screen = VerifyScreen(token)
                     pendingInitialScreen = screen
                     val result = _navigationEvents.trySend(screen)
@@ -48,11 +41,34 @@ object DeepLinkManager {
                 }
 
                 basePath.contains("/auth/resetPassword/validate") -> {
+                    val token = extractToken(url)
+                    if (token.isNullOrEmpty()) {
+                        println("DEEPLINK_MGR: HATA - Reset için Token bulunamadı!")
+                        return
+                    }
                     val screen = ResetScreen(token)
                     pendingInitialScreen = screen
                     val result = _navigationEvents.trySend(screen)
                     println("DEEPLINK_MGR: ResetScreen Event Gönderildi mi? -> ${result.isSuccess}")
                 }
+
+                basePath.contains("/profile/") -> {
+                    // Profil linkleri için path parametresini güvenle çekiyoruz
+                    val userIdStr = extractPathParameter(url, "/profile/")
+                    val userId = userIdStr?.toLongOrNull()
+
+                    println("DEEPLINK_MGR: Profil ID yakalandı -> $userId")
+
+                    if (userId != null) {
+                        val screen = ProfileScreen(userId = userId)
+                        pendingInitialScreen = screen
+                        val result = _navigationEvents.trySend(screen)
+                        println("DEEPLINK_MGR: ProfileScreen Event Gönderildi mi? -> ${result.isSuccess}")
+                    } else {
+                        println("DEEPLINK_MGR: HATA - Geçersiz Profil ID!")
+                    }
+                }
+
                 else -> {
                     println("DEEPLINK_MGR: HATA - Path eşleşmedi! BasePath: $basePath")
                 }
@@ -61,12 +77,7 @@ object DeepLinkManager {
             println("DEEPLINK_MGR: Error parsing url: $url -> ${e.message}")
         }
     }
-
-     */
-
-
-
-
+/*
     fun handleLink(url: String) {
         when {
             url.contains("#verify") -> {
@@ -87,11 +98,31 @@ object DeepLinkManager {
                     _navigationEvents.trySend(screen)
                 }
             }
+            url.contains("/profile/") -> {
+                println("DEEPLINK_MGR: Profil yönlendirmesi yakalandı")
+                val userIdStr = extractPathParameter(url, "/profile/")
+
+                // userId Long olarak bekliyorsan toLongOrNull kullanıyoruz
+                val userId = userIdStr?.toLongOrNull()
+
+                if (userId != null) {
+                    val screen = ProfileScreen(userId = userId)
+                    _navigationEvents.trySend(screen)
+                }
+            }
         }
     }
 
- 
+ */
 
+
+    private fun extractPathParameter(url: String, pathPrefix: String): String? {
+
+        return url.substringAfter(pathPrefix, "")
+            .substringBefore("?")
+            .substringBefore("/")
+            .takeIf { it.isNotEmpty() }
+    }
 
     private fun extractToken(url: String): String? {
         val queryString = url.substringAfter("?", "")

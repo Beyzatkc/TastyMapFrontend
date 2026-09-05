@@ -42,9 +42,7 @@ class SubscribersListScreenModel(
         fetchPage(userId,page = currentState.currentPage + 1, isRefresh = false)
     }
 
-    /**
-     * Pull-to-Refresh tetiklendiğinde veriyi yeniler
-     */
+
     fun refresh(userId: Long) {
         if (_uiState.value.isRefreshing) return
 
@@ -56,10 +54,10 @@ class SubscribersListScreenModel(
         screenModelScope.launch {
             val result = when (currentListType) {
                 SubscriberListType.SUBSCRIBERS -> {
-                    subscribersRepository.getUserSubscribers(userId = userId, page = page, size = pageSize)
+                    subscribersRepository.getUserSubscribers(userId = userId, page = page, size = pageSize,forceFetch = isRefresh)
                 }
                 SubscriberListType.SUBSCRIBES -> {
-                    subscribersRepository.getUserSubscribes(userId = userId, page = page, size = pageSize)
+                    subscribersRepository.getUserSubscribes(userId = userId, page = page, size = pageSize,forceFetch = isRefresh)
                 }
             }
 

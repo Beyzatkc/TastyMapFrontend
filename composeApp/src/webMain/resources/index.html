@@ -47,9 +47,24 @@
     }
 
     // Ön plan mesaj dinleyicisi
+   // Ön plan mesaj dinleyicisi
     onMessage(messaging, (payload) => {
         console.log("Mesaj geldi (Ön planda): ", payload);
-        alert("Yeni bildirim: " + payload.data.title);
+
+        const notification = payload.notification || {};
+        const data = payload.data || {};
+
+        const title = notification.title || data.title || "TastyMap";
+        const body = notification.body || data.body || "Yeni bildirim var";
+
+        // alert() yerine gerçek bir tarayıcı bildirimi (Notification) gösterelim:
+        if (Notification.permission === "granted") {
+            new Notification(title, {
+                body: body,
+                icon: "/favicon.ico",
+                data: payload.data
+            });
+        }
     });
 
     window.getFcmTokenJs = async function(vapidKey) {

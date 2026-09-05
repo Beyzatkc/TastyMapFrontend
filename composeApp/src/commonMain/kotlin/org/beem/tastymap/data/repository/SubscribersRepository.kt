@@ -139,11 +139,14 @@ class SubscribersRepository(
     suspend fun getUserSubscribes(
         userId: Long,
         page: Int = 0,
-        size: Int = 10
+        size: Int = 10,
+        forceFetch: Boolean = false
     ): ResultWrapper<PageResponse<SubscribeResponse>> {
-        val cached = memoryCache.get(userId, TYPE_SUBSCRIBES, page)
-        if (cached != null) {
-            return ResultWrapper.Success(cached)
+        if (!forceFetch) {
+            val cached = memoryCache.get(userId, TYPE_SUBSCRIBES, page)
+            if (cached != null) {
+                return ResultWrapper.Success(cached)
+            }
         }
 
         val result = safeApiCall {
@@ -160,11 +163,14 @@ class SubscribersRepository(
     suspend fun getUserSubscribers(
         userId: Long,
         page: Int = 0,
-        size: Int = 10
+        size: Int = 10,
+        forceFetch: Boolean = false
     ): ResultWrapper<PageResponse<SubscribeResponse>> {
-        val cached = memoryCache.get(userId, TYPE_SUBSCRIBERS, page)
-        if (cached != null) {
-            return ResultWrapper.Success(cached)
+        if (!forceFetch) {
+            val cached = memoryCache.get(userId, TYPE_SUBSCRIBERS, page)
+            if (cached != null) {
+                return ResultWrapper.Success(cached)
+            }
         }
 
         val result = safeApiCall {
@@ -180,8 +186,11 @@ class SubscribersRepository(
 
     suspend fun getPendingRequests(
         page: Int = 0,
-        size: Int = 10
+        size: Int = 10,
+        forceFetch: Boolean = false
     ): ResultWrapper<PageResponse<SubscribeResponse>> {
+
+
         return safeApiCall {
             dataSource.getPendingRequests(page, size)
         }

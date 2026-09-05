@@ -180,7 +180,7 @@ class MyProfileScreen : Screen {
             PullToRefreshBox(
                 state = pullToRefreshState,
                 isRefreshing = state.isRefreshing,
-                onRefresh = { screenModel.getMyProfile(true) },
+                onRefresh = { screenModel.refreshProfile() },
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(innerPadding)

@@ -113,26 +113,28 @@ class MyProfileRepository(
                 // 3. Arka Plan Network İsteğinin Başlatılması
                 println("PROFILE_FLOW [Network]: Akış başladı (onStart), uzaktan veri çekme başlatılıyor...")
                 CoroutineScope(Dispatchers.Default).launch {
-                    fetchRemoteProfile(myUserId)
+                    fetchRemoteProfile()
                 }
             }
     }
 
-    private suspend fun fetchRemoteProfile(myUserId: Long) {
-        try {
-            println("PROFILE_FLOW [Network]: API isteği gönderiliyor (dataSource.getUserProfile())...")
-            val remoteDto = dataSource.getUserProfile()
-            println("PROFILE_FLOW [Network]: API isteği başarılı -> $remoteDto")
+     suspend fun fetchRemoteProfile() {
 
+         val myUserId = userManager.getUserId()
+         if (myUserId == null) {
+             println("PROFILE_FLOW: Kullanıcı oturumu bulunamadı (myUserId = null)")
+             return
+         }
+        try {
+            val remoteDto = dataSource.getUserProfile()
             val freshProfile = remoteDto.toDomain(myUserId)
 
-            println("PROFILE_FLOW [Network]: Yeni profil L1 Cache ve L2 DB'ye yazılıyor...")
             memoryCache.put(myUserId, freshProfile)
             localDataSource.saveProfile(freshProfile)
-            println("PROFILE_FLOW [Network]: L2 DB kaydı tamamlandı. DB tetiklenip yeni veriyi fırlatmalı.")
 
         } catch (e: Exception) {
             println("PROFILE_FLOW [Network HATA]: Uzak sunucudan veri çekilirken hata oluştu ->" + e.message)
+            throw e
         }
     }
 
