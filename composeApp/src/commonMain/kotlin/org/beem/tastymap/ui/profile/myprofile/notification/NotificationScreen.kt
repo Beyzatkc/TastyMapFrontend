@@ -41,7 +41,7 @@ import org.beem.tastymap.domain.model.RelationStatus
 import org.beem.tastymap.ui.profile.otherprofile.ProfileScreen
 import org.beem.tastymap.ui.theme.LocalCustomColors
 
-class NotificationsScreen() : Screen {
+class NotificationScreen() : Screen {
 
     @OptIn(ExperimentalMaterial3Api::class)
     @Composable
