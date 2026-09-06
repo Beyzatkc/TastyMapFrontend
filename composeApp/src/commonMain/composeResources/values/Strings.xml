@@ -28,6 +28,7 @@
 
     <!-- My Profile -->
     <string name="my_profile_settings_cd">Ayarlar</string>
+    <string name="my_profile_notification_cd">Bildirimler</string>
     <string name="my_profile_photo_cd">Profil Fotoğrafı</string>
     <string name="my_profile_default_photo_cd">Varsayılan Profil</string>
     <string name="my_profile_default_name">Benim Adım</string>

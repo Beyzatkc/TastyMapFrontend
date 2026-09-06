@@ -13,6 +13,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.GridOn
 import androidx.compose.material.icons.filled.Map
 import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.*
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
@@ -35,6 +36,7 @@ import cafe.adriel.voyager.navigator.currentOrThrow
 import coil3.compose.AsyncImage
 import org.beem.tastymap.core.util.ToastManager
 import org.beem.tastymap.ui.profile.myprofile.editprofile.EditProfileScreen
+import org.beem.tastymap.ui.profile.myprofile.notification.NotificationScreen
 import org.beem.tastymap.ui.profile.myprofile.settings.SettingsScreen
 import org.beem.tastymap.ui.profile.otherprofile.ProfileScreen
 import org.beem.tastymap.ui.profile.subscribers.SubscriberListType
@@ -51,6 +53,7 @@ import tastymap.composeapp.generated.resources.my_profile_map_empty
 import tastymap.composeapp.generated.resources.my_profile_metric_following
 import tastymap.composeapp.generated.resources.my_profile_metric_posts
 import tastymap.composeapp.generated.resources.my_profile_metric_subscribers
+import tastymap.composeapp.generated.resources.my_profile_notification_cd
 import tastymap.composeapp.generated.resources.my_profile_photo_cd
 import tastymap.composeapp.generated.resources.my_profile_posts_empty
 import tastymap.composeapp.generated.resources.my_profile_settings_cd
@@ -162,6 +165,13 @@ class MyProfileScreen : Screen {
                             Text("TEST USERS", color = customColors.gourmetOrange, fontWeight = FontWeight.Bold)
                         }
                         // --------------------------
+                        IconButton(onClick = { navigator.push(NotificationScreen()) }) {
+                            Icon(
+                                imageVector = Icons.Default.Notifications,
+                                contentDescription = stringResource(Res.string.my_profile_notification_cd),
+                                tint = Color.White
+                            )
+                        }
 
                         IconButton(onClick = { navigator.push(SettingsScreen()) }) {
                             Icon(

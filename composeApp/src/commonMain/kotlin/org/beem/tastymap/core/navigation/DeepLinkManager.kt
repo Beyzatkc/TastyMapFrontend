@@ -107,6 +107,7 @@ object DeepLinkManager {
 
                 if (userId != null) {
                     val screen = ProfileScreen(userId = userId)
+                     pendingInitialScreen = screen
                     _navigationEvents.trySend(screen)
                 }
             }

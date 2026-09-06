@@ -28,6 +28,7 @@
 
     <!-- My Profile -->
     <string name="my_profile_settings_cd">Settings</string>
+    <string name="my_profile_notification_cd">Notifications</string>
     <string name="my_profile_photo_cd">Profile Photo</string>
     <string name="my_profile_default_photo_cd">Default Profile</string>
     <string name="my_profile_default_name">My Name</string>
