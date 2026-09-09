@@ -22,3 +22,7 @@ data class SubscribeActionResult(
     val relationStatus: RelationStatus,
     val hasPendingIncomingRequest: Boolean,
 )
+@Serializable
+data class HasUnreadResponse(
+    val hasUnread: Boolean
+)

@@ -11,7 +11,7 @@ import org.beem.tastymap.core.navigation.DeepLinkManager
 import org.beem.tastymap.data.model.auth.AuthStatus
 
 class SplashScreenModel(
-    private val authRepository: AuthRepository
+    private val authRepository: AuthRepository,
 ) : ScreenModel {
 
     private val _effect = MutableStateFlow<SplashEffect?>(null)

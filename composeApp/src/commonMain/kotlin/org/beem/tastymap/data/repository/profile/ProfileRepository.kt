@@ -4,6 +4,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emitAll
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
@@ -71,13 +72,11 @@ class ProfileRepository(
             // DB değiştiğinde yeni veri otomatik olarak emit edilecektir
             emitAll(
                 localDataSource.getProfileFlow(userId)
+                    .filterNotNull() // <--- NULL (boş) veriyi filtrelerez. Ekrana hata fırlatmayı engeller!
                     .map { dbProfile ->
-                        if (dbProfile != null) {
-                            memoryCache.put(userId, dbProfile)
-                            ResultWrapper.Success(dbProfile)
-                        } else {
-                            ResultWrapper.Error("Profil verisi bulunamadı.", ErrorType.EMPTY_RESPONSE)
-                        }
+                        println("PROFILE_FLOW [L2 - DB]: Veritabanından yeni veri geldi ve L1 Cache güncellendi -> $dbProfile")
+                        memoryCache.put(userId, dbProfile)
+                        ResultWrapper.Success(dbProfile)
                     }
             )
         }

@@ -34,38 +34,45 @@
     const messaging = getMessaging(app);
 
     // Servis Worker Kaydı
-    if ('serviceWorker' in navigator) {
+   if ('serviceWorker' in navigator) {
         navigator.serviceWorker.register('/firebase-messaging-sw.js')
-  .then(async (reg) => {
-      console.log('SW Kayıtlı:', reg.scope);
+        .then(async (reg) => {
+            console.log('SW Kayıtlı:', reg.scope);
+            await reg.update();
+            await reg.active?.postMessage?.({ type: "INIT" });
+        })
+        .catch(console.error);
 
-      // 🔥 KRİTİK: SW'yi hemen aktive et
-      await reg.update();
-        await reg.active?.postMessage?.({ type: "INIT" });
-  })
-  .catch(console.error);
+        // 🔥 KRİTİK: Arka plandaki Service Worker'dan gelen mesajı yakala ve Kotlin tarafına ilet
+       navigator.serviceWorker.addEventListener('message', (event) => {
+    console.log("WEB_DEBUG: Service Worker'dan mesaj yakalandı: ", event.data);
+    if (event.data && event.data.type === 'NOTIFICATION_RECEIVED') {
+        console.log("WEB_DEBUG: Kotlin için window.dispatchEvent tetikleniyor (Arka plan)!");
+        window.dispatchEvent(new Event("onNotificationReceived"));
+    }
+});
     }
 
     // Ön plan mesaj dinleyicisi
    // Ön plan mesaj dinleyicisi
-    onMessage(messaging, (payload) => {
-        console.log("Mesaj geldi (Ön planda): ", payload);
+   onMessage(messaging, (payload) => {
+    console.log("WEB_DEBUG: Mesaj geldi (Ön planda): ", payload);
 
-        const notification = payload.notification || {};
-        const data = payload.data || {};
+    const data = payload.data || {};
+    const title = data.title || "TastyMap";
+    const body = data.body || "Yeni bildirim var";
 
-        const title = notification.title || data.title || "TastyMap";
-        const body = notification.body || data.body || "Yeni bildirim var";
+    if (Notification.permission === "granted") {
+        new Notification(title, {
+            body: body,
+            icon: "/favicon.ico",
+            data: data
+        });
+    }
 
-        // alert() yerine gerçek bir tarayıcı bildirimi (Notification) gösterelim:
-        if (Notification.permission === "granted") {
-            new Notification(title, {
-                body: body,
-                icon: "/favicon.ico",
-                data: payload.data
-            });
-        }
-    });
+    console.log("WEB_DEBUG: Kotlin için window.dispatchEvent tetikleniyor (Ön plan)!");
+    window.dispatchEvent(new Event("onNotificationReceived"));
+});
 
     window.getFcmTokenJs = async function(vapidKey) {
         try {

@@ -1,5 +1,4 @@
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -39,9 +38,7 @@ fun TastyButton(
     if (isPrimary) {
         Button(
             onClick = handleOnClick,
-            modifier = modifier
-                .fillMaxWidth()
-                .height(50.dp),
+            modifier = modifier.height(45.dp), // fillMaxWidth() kaldırıldı, yükseklik bildirim kartları için 40dp'ye çekildi
             enabled = enabled && !isLoading,
             shape = buttonShape,
             colors = ButtonDefaults.buttonColors(
@@ -56,9 +53,7 @@ fun TastyButton(
     } else {
         OutlinedButton(
             onClick = handleOnClick,
-            modifier = modifier
-                .fillMaxWidth()
-                .height(50.dp),
+            modifier = modifier.height(45.dp), // fillMaxWidth() kaldırıldı
             enabled = enabled && !isLoading,
             shape = buttonShape,
             border = BorderStroke(
@@ -81,7 +76,7 @@ fun TastyButton(
 private fun ButtonContent(text: String, isLoading: Boolean, contentColor: Color) {
     if (isLoading) {
         CircularProgressIndicator(
-            modifier = Modifier.size(24.dp),
+            modifier = Modifier.size(20.dp),
             color = contentColor,
             strokeWidth = 2.dp
         )
@@ -90,7 +85,7 @@ private fun ButtonContent(text: String, isLoading: Boolean, contentColor: Color)
             text = text,
             overflow = TextOverflow.Ellipsis,
             color = contentColor,
-            style = MaterialTheme.typography.titleMedium
+            style = MaterialTheme.typography.titleSmall
         )
     }
 }

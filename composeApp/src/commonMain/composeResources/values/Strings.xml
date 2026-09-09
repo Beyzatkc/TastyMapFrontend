@@ -291,7 +291,7 @@
     <string name="register_field_password">Şifre</string>
     <string name="register_btn_next">Devam Et</string>
     <string name="register_btn_submit">Kayıt Ol</string>
-    <string name="register_btn_back">Giriş Ekranına Dön</string>
+    <string name="register_btn_back">Geri Dön</string>
 
     <!-- Common Resend Prompt -->
     <string name="auth_resend_prompt">E-posta gelmedi mi? Tekrar gönder</string>
@@ -397,4 +397,15 @@
     <string name="profile_no_results">Kullanıcı bulunamadı.</string>
     <string name="profile_empty_list">Henüz kimse yok.</string>
     <string name="common_search_placeholder">Ara...</string>
+
+    <!-- Notification Screen -->
+    <string name="notification_title">Bildirimler</string>
+    <string name="notification_empty">Henüz hiç bildirimin yok.</string>
+    <string name="notification_retry">Tekrar Dene</string>
+    <string name="notification_action_rejected">Reddedildi</string>
+    <string name="notification_msg_follow_request">seni takip etmek istiyor.</string>
+    <string name="notification_msg_follow_accepted">takip isteğini kabul etti.</string>
+    <string name="notification_msg_new_follower">seni takip etmeye başladı.</string>
+    <string name="notification_msg_post_like">bir gönderini beğendi.</string>
+    <string name="notification_msg_comment">gönderine yorum yaptı.</string>
 </resources>

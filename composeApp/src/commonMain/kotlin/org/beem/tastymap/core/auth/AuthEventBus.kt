@@ -1,19 +1,22 @@
 package org.beem.tastymap.core.auth
 
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.receiveAsFlow
 
 class AuthEventBus {
-    private val _events = MutableSharedFlow<AuthEvent>(extraBufferCapacity = 1)
-    val events = _events.asSharedFlow()
+    private val _events = Channel<AuthEvent>(Channel.BUFFERED)
+    val events = _events.receiveAsFlow()
 
     fun emit(event: AuthEvent) {
-        _events.tryEmit(event)
+        _events.trySend(event)
     }
 
     fun emitUnauthenticated() {
-        _events.tryEmit(AuthEvent.OnSessionExpired)
+        _events.trySend(AuthEvent.OnSessionExpired)
     }
+
 
     sealed interface AuthEvent {
         data object OnSessionExpired : AuthEvent

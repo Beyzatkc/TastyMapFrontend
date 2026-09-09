@@ -11,6 +11,10 @@ class SocialNotificationsRepository(
     private val dataSource: SocialNotificationDataSource,
     private val memoryCache: NotificationsMemoryCache
 ) {
+
+    fun getCachedNotifications(page: Int = 0): PageResponse<SocialNotificationsResponse>? {
+        return memoryCache.get(page)
+    }
     suspend fun getNotifications(
         page: Int = 0,
         size: Int = 10,
@@ -32,10 +36,19 @@ class SocialNotificationsRepository(
         }
         return result
     }
+
     suspend fun markAsRead(
     ): ResultWrapper<Unit>{
         return safeApiCall {
             dataSource.markAsRead()
         }
+    }
+    suspend fun checkHasUnread(): ResultWrapper<Boolean> {
+        return safeApiCall {
+            dataSource.checkHasUnread()
+        }
+    }
+    fun clearCache() {
+        memoryCache.clear()
     }
 }

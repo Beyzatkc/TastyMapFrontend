@@ -40,8 +40,26 @@ import org.beem.tastymap.data.model.socialnotifications.SocialNotificationsRespo
 import org.beem.tastymap.domain.model.RelationStatus
 import org.beem.tastymap.ui.profile.otherprofile.ProfileScreen
 import org.beem.tastymap.ui.theme.LocalCustomColors
+import org.jetbrains.compose.resources.stringResource
+import tastymap.composeapp.generated.resources.Res
+import tastymap.composeapp.generated.resources.notification_action_rejected
+import tastymap.composeapp.generated.resources.notification_empty
+import tastymap.composeapp.generated.resources.notification_msg_comment
+import tastymap.composeapp.generated.resources.notification_msg_follow_accepted
+import tastymap.composeapp.generated.resources.notification_msg_follow_request
+import tastymap.composeapp.generated.resources.notification_msg_new_follower
+import tastymap.composeapp.generated.resources.notification_msg_post_like
+import tastymap.composeapp.generated.resources.notification_retry
+import tastymap.composeapp.generated.resources.notification_title
+import tastymap.composeapp.generated.resources.profile_action_accept
+import tastymap.composeapp.generated.resources.profile_action_reject
+import tastymap.composeapp.generated.resources.profile_back_cd
+import tastymap.composeapp.generated.resources.profile_follow_back
+import tastymap.composeapp.generated.resources.profile_pending
+import tastymap.composeapp.generated.resources.profile_subscribe
+import tastymap.composeapp.generated.resources.profile_subscribed
 
-class NotificationScreen() : Screen {
+class NotificationScreen : Screen {
 
     @OptIn(ExperimentalMaterial3Api::class)
     @Composable
@@ -65,7 +83,6 @@ class NotificationScreen() : Screen {
             }
         }
 
-        // Pagination Trigger
         val shouldLoadMore = remember {
             derivedStateOf {
                 val totalItems = listState.layoutInfo.totalItemsCount
@@ -87,14 +104,14 @@ class NotificationScreen() : Screen {
                         IconButton(onClick = { navigator.pop() }) {
                             Icon(
                                 imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                contentDescription = "Geri",
+                                contentDescription = stringResource(Res.string.profile_back_cd),
                                 tint = customColors.textPrimary
                             )
                         }
                     },
                     title = {
                         Text(
-                            text = "Bildirimler",
+                            text = stringResource(Res.string.notification_title),
                             style = MaterialTheme.typography.titleMedium.copy(
                                 color = customColors.textPrimary,
                                 fontWeight = FontWeight.Bold
@@ -137,14 +154,12 @@ class NotificationScreen() : Screen {
                         val isEmpty = uiState.items.isEmpty()
 
                         when {
-                            // 1. İlk Yükleme
                             uiState.isLoading && isEmpty && !isError -> {
                                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                                     CircularProgressIndicator(color = customColors.gourmetOrange)
                                 }
                             }
 
-                            // 2. Hata ve Liste Boşsa (Tekrar Dene)
                             isError && isEmpty -> {
                                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                                     FilledTonalButton(
@@ -163,13 +178,18 @@ class NotificationScreen() : Screen {
                                         ) { loading ->
                                             if (loading) {
                                                 CircularProgressIndicator(
-                                                    modifier = Modifier.size(24.dp), strokeWidth = 2.5.dp, color = customColors.textPrimary
+                                                    modifier = Modifier.size(24.dp),
+                                                    strokeWidth = 2.5.dp,
+                                                    color = customColors.textPrimary
                                                 )
                                             } else {
                                                 Row(verticalAlignment = Alignment.CenterVertically) {
                                                     Icon(Icons.Default.Refresh, contentDescription = null, modifier = Modifier.size(24.dp))
                                                     Spacer(modifier = Modifier.width(8.dp))
-                                                    Text("Tekrar Dene", fontWeight = FontWeight.Bold)
+                                                    Text(
+                                                        text = stringResource(Res.string.notification_retry),
+                                                        fontWeight = FontWeight.Bold
+                                                    )
                                                 }
                                             }
                                         }
@@ -179,7 +199,10 @@ class NotificationScreen() : Screen {
 
                             isEmpty -> {
                                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                                    Text("Henüz hiç bildirimin yok.", color = customColors.textSecondary)
+                                    Text(
+                                        text = stringResource(Res.string.notification_empty),
+                                        color = customColors.textSecondary
+                                    )
                                 }
                             }
 
@@ -239,14 +262,13 @@ private fun NotificationItem(
 ) {
     val customColors = LocalCustomColors.current
 
-    // Okunmamış bildirimlere hafif bir arkaplan rengi veriyoruz
     val itemBackgroundColor = if (notification.isRead) {
         Color.Transparent
     } else {
         customColors.surfaceVariant.copy(alpha = 0.4f)
     }
 
-    val notificationMessage = getNotificationMessage(notification.type)
+    val notificationMessage = getNotificationMessage(notification.type, notification.actionStatus)
 
     Row(
         modifier = Modifier
@@ -256,7 +278,7 @@ private fun NotificationItem(
             .padding(horizontal = 16.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // --- Profil Fotoğrafı ---
+        // Profil Fotoğrafı
         Box(
             modifier = Modifier
                 .size(50.dp)
@@ -283,10 +305,10 @@ private fun NotificationItem(
 
         Spacer(modifier = Modifier.width(12.dp))
 
-        // --- Bildirim Metni ---
+        // Kullanıcı Adı ve Mesaj
         Column(modifier = Modifier.weight(1f)) {
             Text(
-                text = notification.actor.username,
+                text = "@"+notification.actor.username,
                 style = MaterialTheme.typography.bodyMedium.copy(
                     fontWeight = FontWeight.Bold,
                     color = customColors.textPrimary
@@ -298,27 +320,31 @@ private fun NotificationItem(
                     color = customColors.textSecondary
                 )
             )
+        }
 
-            // Eğer PENDING (Bekleyen İstek) durumundaysa Butonları Alt Satırda Göster
-            if (notification.actionStatus == NotificationActionStatus.PENDING) {
-                Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.width(12.dp))
+
+        // Sağ Taraf Aksiyon Alanı
+        when (notification.actionStatus) {
+            NotificationActionStatus.PENDING -> {
                 Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.wrapContentWidth()
                 ) {
                     TastyButton(
-                        text = "Onayla",
+                        text = stringResource(Res.string.profile_action_accept),
                         onClick = onAccept,
-                        modifier = Modifier.weight(1f),
+                        modifier = Modifier.widthIn(min = 80.dp, max = 130.dp),
                         isPrimary = true,
                         backcolor = customColors.gourmetOrange,
                         textcolor = Color.White,
                         strokecolor = Color.Transparent
                     )
                     TastyButton(
-                        text = "Sil",
+                        text = stringResource(Res.string.profile_action_reject),
                         onClick = onReject,
-                        modifier = Modifier.weight(1f),
+                        modifier = Modifier.widthIn(min = 60.dp, max = 130.dp),
                         isPrimary = false,
                         backcolor = customColors.surfaceVariant,
                         textcolor = customColors.textPrimary,
@@ -326,14 +352,7 @@ private fun NotificationItem(
                     )
                 }
             }
-        }
-
-        Spacer(modifier = Modifier.width(8.dp))
-
-        // --- Sağ Taraftaki Dinamik Buton veya Metin ---
-        when (notification.actionStatus) {
             NotificationActionStatus.ACCEPTED -> {
-                // İstek onaylandıysa RelationStatus'a göre dinamik takip butonu
                 notification.actor.relationStatus?.let { relationStatus ->
                     val style = getActionStyleForRelation(relationStatus, customColors)
 
@@ -341,7 +360,7 @@ private fun NotificationItem(
                         TastyButton(
                             text = style.text,
                             onClick = { onToggleFollow(relationStatus) },
-                            modifier = Modifier.width(110.dp),
+                            modifier = Modifier.widthIn(min = 100.dp, max = 150.dp),
                             isPrimary = style.isPrimary,
                             backcolor = style.backColor,
                             textcolor = style.textColor,
@@ -352,30 +371,26 @@ private fun NotificationItem(
             }
             NotificationActionStatus.REJECTED -> {
                 Text(
-                    text = "Reddedildi",
+                    text = stringResource(Res.string.notification_action_rejected),
                     style = MaterialTheme.typography.labelSmall.copy(color = customColors.textSecondary)
                 )
             }
-            NotificationActionStatus.PENDING -> {
-                // Butonları zaten metnin altına (Column içine) çizdik. Burası boş kalabilir.
-            }
-            NotificationActionStatus.NONE -> {
-                // Beğeni/Yorum gibi etkileşimsiz bildirimler. Gerekirse gönderi fotoğrafı (TargetDTO) çizilebilir.
-            }
+            NotificationActionStatus.NONE -> {}
         }
     }
 }
 
-// --- Yardımcı Fonksiyonlar ---
-
 @Composable
-private fun getNotificationMessage(type: SocialNotificationType): String {
+private fun getNotificationMessage(type: SocialNotificationType, actionStatus: NotificationActionStatus): String {
+        if (type == SocialNotificationType.FOLLOW_REQUEST && actionStatus == NotificationActionStatus.ACCEPTED) {
+            return stringResource(Res.string.notification_msg_new_follower)
+        }
     return when (type) {
-        SocialNotificationType.FOLLOW_REQUEST -> "seni takip etmek istiyor."
-        SocialNotificationType.FOLLOW_ACCEPTED -> "takip isteğini kabul etti."
-        SocialNotificationType.NEW_FOLLOWER -> "seni takip etmeye başladı."
-        SocialNotificationType.POST_LIKE -> "bir gönderini beğendi."
-        SocialNotificationType.COMMENT -> "gönderine yorum yaptı."
+        SocialNotificationType.FOLLOW_REQUEST -> stringResource(Res.string.notification_msg_follow_request)
+        SocialNotificationType.FOLLOW_ACCEPTED -> stringResource(Res.string.notification_msg_follow_accepted)
+        SocialNotificationType.NEW_FOLLOWER -> stringResource(Res.string.notification_msg_new_follower)
+        SocialNotificationType.POST_LIKE -> stringResource(Res.string.notification_msg_post_like)
+        SocialNotificationType.COMMENT -> stringResource(Res.string.notification_msg_comment)
     }
 }
 
@@ -386,28 +401,28 @@ private fun getActionStyleForRelation(
 ): ActionStyle? {
     return when (relationStatus) {
         RelationStatus.FOLLOWING -> ActionStyle(
-            text = "Takip Ediliyor",
+            text = stringResource(Res.string.profile_subscribed),
             backColor = Color.Transparent,
             textColor = customColors.textPrimary,
             strokeColor = customColors.textSecondary.copy(alpha = 0.4f),
             isPrimary = false
         )
         RelationStatus.PENDING -> ActionStyle(
-            text = "İstek Gitti",
+            text = stringResource(Res.string.profile_pending),
             backColor = Color.Transparent,
             textColor = customColors.textSecondary,
             strokeColor = customColors.textSecondary.copy(alpha = 0.3f),
             isPrimary = false
         )
         RelationStatus.FOLLOW_BACK -> ActionStyle(
-            text = "Sende Takip Et",
+            text = stringResource(Res.string.profile_follow_back),
             backColor = customColors.gourmetOrange,
             textColor = Color.White,
             strokeColor = Color.Transparent,
             isPrimary = true
         )
         RelationStatus.NOT_FOLLOWING -> ActionStyle(
-            text = "Takip Et",
+            text = stringResource(Res.string.profile_subscribe),
             backColor = customColors.gourmetOrange,
             textColor = Color.White,
             strokeColor = Color.Transparent,

@@ -396,4 +396,15 @@
     <string name="profile_no_results">No users found.</string>
     <string name="profile_empty_list">No users yet.</string>
     <string name="common_search_placeholder">Search...</string>
+
+    <!-- Notification Screen (English) -->
+    <string name="notification_title">Notifications</string>
+    <string name="notification_empty">You have no notifications yet.</string>
+    <string name="notification_retry">Retry</string>
+    <string name="notification_action_rejected">Declined</string>
+    <string name="notification_msg_follow_request">wants to follow you.</string>
+    <string name="notification_msg_follow_accepted">accepted your follow request.</string>
+    <string name="notification_msg_new_follower">started following you.</string>
+    <string name="notification_msg_post_like">liked your post.</string>
+    <string name="notification_msg_comment">commented on your post.</string>
 </resources>

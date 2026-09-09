@@ -207,6 +207,7 @@ fun SummaryStep(
 
             TastyButton(
                 text = stringResource(Res.string.summary_start_btn),
+                modifier = Modifier.fillMaxWidth(),
                 onClick = onNextClick,
                 isPrimary = true,
                 isLoading = state.isLoading,
@@ -220,6 +221,7 @@ fun SummaryStep(
             TastyButton(
                 text = stringResource(Res.string.summary_edit_btn),
                 onClick = onBackClick,
+                modifier = Modifier.fillMaxWidth(),
                 isPrimary = false,
                 enabled = !state.isLoading,
                 backcolor = Color.Transparent,

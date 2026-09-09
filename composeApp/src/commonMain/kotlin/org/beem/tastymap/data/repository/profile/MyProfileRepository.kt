@@ -5,6 +5,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emitAll
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
@@ -97,15 +98,11 @@ class MyProfileRepository(
             println("PROFILE_FLOW [L2 - DB]: LocalDataSource akışına (getProfileFlow) abone olunuyor...")
             emitAll(
                 localDataSource.getProfileFlow(myUserId)
+                    .filterNotNull() // <--- NULL (boş) veriyi filtrelerez. Ekrana hata fırlatmayı engeller!
                     .map { dbProfile ->
-                        if (dbProfile != null) {
-                            println("PROFILE_FLOW [L2 - DB]: Veritabanından yeni veri geldi ve L1 Cache güncellendi -> $dbProfile")
-                            memoryCache.put(myUserId, dbProfile)
-                            ResultWrapper.Success(dbProfile)
-                        } else {
-                            println("PROFILE_FLOW [L2 - DB]: Veritabanında profil bulunamadı (EMPTY_RESPONSE)")
-                            ResultWrapper.Error("Profil verisi bulunamadı.", ErrorType.EMPTY_RESPONSE)
-                        }
+                        println("PROFILE_FLOW [L2 - DB]: Veritabanından yeni veri geldi ve L1 Cache güncellendi -> $dbProfile")
+                        memoryCache.put(myUserId, dbProfile)
+                        ResultWrapper.Success(dbProfile)
                     }
             )
         }

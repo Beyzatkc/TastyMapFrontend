@@ -504,6 +504,7 @@ fun LoginForm(
 
         TastyButton(
             text = stringResource(Res.string.login_btn_submit),
+            modifier = Modifier.fillMaxWidth(),
             isLoading = state.isLoading,
             onClick = { vm.login() },
             isPrimary = true,
@@ -511,6 +512,7 @@ fun LoginForm(
             textcolor = colors.surface,
             strokecolor = Color.Transparent
         )
+        Spacer(modifier = Modifier.height(3.dp))
 
         ResendSection(
             onResendClick = { vm.resendVerificationEmail() },
@@ -522,10 +524,11 @@ fun LoginForm(
         TastyButton(
             text = stringResource(Res.string.login_btn_forgot_password),
             onClick = { navigator.push(ForgotScreen()) },
+            modifier = Modifier.fillMaxWidth(),
             isPrimary = false,
             backcolor = Color.Transparent,
             textcolor = colors.textPrimary,
-            strokecolor = colors.borderLight
+            strokecolor = Color.Transparent
         )
     }
 }
@@ -660,6 +663,7 @@ fun RegisterForm(color: CustomColors, vm: LogRegScreenModel, state: RegisterUiSt
                 TastyButton(
                     text = stringResource(Res.string.register_btn_next),
                     onClick = { vm.nextRegisterStep() },
+                    modifier = Modifier.fillMaxWidth(),
                     isPrimary = true,
                     backcolor = color.navy,
                     textcolor = color.surface,
@@ -699,15 +703,17 @@ fun RegisterForm(color: CustomColors, vm: LogRegScreenModel, state: RegisterUiSt
                 TastyButton(
                     text = stringResource(Res.string.register_btn_submit),
                     isLoading = state.isLoading,
+                    modifier = Modifier.fillMaxWidth(),
                     onClick = { vm.register() },
                     isPrimary = true,
                     backcolor = color.navy,
                     textcolor = color.surface,
                     strokecolor = Color.Transparent
                 )
-
+                Spacer(modifier = Modifier.height(3.dp))
                 TastyButton(
                     text = stringResource(Res.string.register_btn_back),
+                    modifier = Modifier.fillMaxWidth(),
                     onClick = { vm.previousRegisterStep() },
                     isPrimary = false,
                     backcolor = Color.Transparent,

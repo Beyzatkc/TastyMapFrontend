@@ -67,6 +67,7 @@ class MyProfileScreen : Screen {
     override fun Content() {
         val screenModel = koinScreenModel<MyProfileScreenModel>()
         val state by screenModel.myProfileState.collectAsState()
+        val hasUnread by screenModel.hasUnreadBadge.collectAsState()
         val navigator = LocalNavigator.currentOrThrow
 
         val pullToRefreshState = rememberPullToRefreshState()
@@ -165,14 +166,26 @@ class MyProfileScreen : Screen {
                             Text("TEST USERS", color = customColors.gourmetOrange, fontWeight = FontWeight.Bold)
                         }
                         // --------------------------
-                        IconButton(onClick = { navigator.push(NotificationScreen()) }) {
-                            Icon(
-                                imageVector = Icons.Default.Notifications,
-                                contentDescription = stringResource(Res.string.my_profile_notification_cd),
-                                tint = Color.White
-                            )
+                        IconButton(onClick = {
+                            navigator.push(NotificationScreen())
+                        }) {
+                            BadgedBox(
+                                badge = {
+                                    if (hasUnread) {
+                                        Badge(
+                                            containerColor = Color.Red, // Kırmızı nokta rengi
+                                            modifier = Modifier.size(8.dp) // Sadece küçük bir nokta olacaksa
+                                        )
+                                    }
+                                }
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Notifications,
+                                    contentDescription = stringResource(Res.string.my_profile_notification_cd),
+                                    tint = Color.White
+                                )
+                            }
                         }
-
                         IconButton(onClick = { navigator.push(SettingsScreen()) }) {
                             Icon(
                                 imageVector = Icons.Default.Menu,

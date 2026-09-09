@@ -25,12 +25,18 @@ class NotificationScreenModel(
     private val pageSize = 10
 
     fun loadInitialData() {
+        // 1. Yeni bildirim gelmiş olabileceği için önbelleği temizle
+        notificationRepository.clearCache()
 
+        // 2. Yüklenme durumunu başlat ve ilk sayfayı doğrudan ağdan çek (forceFetch = true)
         _uiState.update {
-            SocialNotificationsState(isLoading = true)
+            it.copy(
+                isLoading = true,
+                errorMessage = null
+            )
         }
 
-        fetchPage(page = 0, isRefresh = false)
+        fetchPage(page = 0, isRefresh = true)
     }
 
 
@@ -97,6 +103,7 @@ class NotificationScreenModel(
             notificationRepository.markAsRead()
         }
     }
+
 
     fun acceptRequest(notificationId: Long, requesterId: Long) {
         executeFollowAction(

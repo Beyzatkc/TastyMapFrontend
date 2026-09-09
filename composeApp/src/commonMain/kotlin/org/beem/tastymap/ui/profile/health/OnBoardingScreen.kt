@@ -29,6 +29,7 @@ import cafe.adriel.voyager.navigator.Navigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import org.beem.tastymap.ui.profile.health.HealthScreenModel
 import org.beem.tastymap.ui.profile.health.HealthWizardScreen
+import org.beem.tastymap.ui.profile.myprofile.MyProfileScreen
 import org.beem.tastymap.ui.theme.CustomColors
 import org.beem.tastymap.ui.theme.LocalCustomColors
 import org.jetbrains.compose.resources.stringResource
@@ -51,10 +52,18 @@ class OnBoardingScreen : Screen {
     override fun Content() {
         var showContent by remember { mutableStateOf(false) }
         val screenModel = koinScreenModel<HealthScreenModel>()
+        val state by screenModel.healthState.collectAsState()
         val navigator = LocalNavigator.currentOrThrow
 
         LaunchedEffect(Unit) {
             showContent = true
+        }
+
+        LaunchedEffect(state.isSuccess) {
+            if (state.isSuccess) {
+                screenModel.resetSuccessState()
+                navigator.replace(MyProfileScreen())
+            }
         }
 
         val customColors = LocalCustomColors.current
@@ -257,6 +266,7 @@ fun WelcomeCardContent(
             TastyButton(
                 text = stringResource(Res.string.onboarding_start_btn),
                 onClick = { navigator.push(HealthWizardScreen()) },
+                modifier = Modifier.fillMaxWidth(),
                 isPrimary = true,
                 backcolor = customColors.navy,
                 textcolor = customColors.surface,
@@ -268,6 +278,7 @@ fun WelcomeCardContent(
             TastyButton(
                 text = stringResource(Res.string.onboarding_skip_btn),
                 onClick = screenModel::skipHealthWizard,
+                modifier = Modifier.fillMaxWidth(),
                 isPrimary = false,
                 backcolor = Color.Transparent,
                 textcolor = customColors.textSecondary,
