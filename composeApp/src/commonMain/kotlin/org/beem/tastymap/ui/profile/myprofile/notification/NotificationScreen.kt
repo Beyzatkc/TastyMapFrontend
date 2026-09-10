@@ -318,7 +318,7 @@ private fun NotificationItem(
                     color = customColors.textPrimary
                 )
             )
-            
+
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.fillMaxWidth()
@@ -326,8 +326,6 @@ private fun NotificationItem(
                 // Mesaj Kısmı
                 Text(
                     text = notificationMessage,
-                    maxLines = 1, // Mesajın tek satır kalmasını istersen
-                    overflow = TextOverflow.Ellipsis,
                     modifier = Modifier.weight(1f, fill = false), // Uzun mesajların zamanı itmesini engeller
                     style = MaterialTheme.typography.bodySmall.copy(
                         color = customColors.textSecondary

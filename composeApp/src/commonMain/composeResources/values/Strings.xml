@@ -392,11 +392,16 @@
     <string name="profile_incoming_request_message">@%1$s size bir takip isteği gönderdi.</string>
     <string name="profile_action_accept">Onayla</string>
     <string name="profile_action_reject">Sil</string>
+    <string name="profile_action_remove_follower">Takipçiden çıkar</string>
+    <string name="profile_action_unblock">Engeli kaldır</string>
+    <string name="profile_action_block">Engelle</string>
+    <string name="profile_action_report">Şikayet et</string>
 
     <string name="profile_connections_title">Bağlantılar</string>
     <string name="profile_no_results">Kullanıcı bulunamadı.</string>
     <string name="profile_empty_list">Henüz kimse yok.</string>
     <string name="common_search_placeholder">Ara...</string>
+    <string name="settings_blocked_users">Engellenenler</string>
 
     <!-- Notification Screen -->
     <string name="notification_title">Bildirimler</string>

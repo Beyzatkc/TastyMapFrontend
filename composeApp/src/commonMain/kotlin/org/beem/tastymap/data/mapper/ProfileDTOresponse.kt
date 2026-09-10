@@ -21,6 +21,7 @@ fun ProfileResponse.toDomain(userId: Long): UserProfile {
         blockedByMe = blockedByMe,
         blockedMe = blockedMe,
         relationStatus = this.relationStatus ?: RelationStatus.NOT_FOLLOWING,
-        hasPendingIncomingRequest = this.hasPendingIncomingRequest
+        hasPendingIncomingRequest = this.hasPendingIncomingRequest,
+        isFollower = this.isFollower
     )
 }

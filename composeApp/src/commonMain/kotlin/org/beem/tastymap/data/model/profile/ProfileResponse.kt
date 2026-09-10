@@ -43,7 +43,10 @@ data class ProfileResponse(
     val relationStatus: RelationStatus = RelationStatus.NOT_FOLLOWING,
 
     @SerialName("hasPendingIncomingRequest")
-    val hasPendingIncomingRequest: Boolean = false
+    val hasPendingIncomingRequest: Boolean = false,
+
+    @SerialName("isFollower")
+    val isFollower: Boolean = false
 )
 
 @Serializable

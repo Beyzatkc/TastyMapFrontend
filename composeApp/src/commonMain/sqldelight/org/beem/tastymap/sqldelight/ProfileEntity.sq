@@ -2,7 +2,7 @@ CREATE TABLE ProfileEntity (
     userId INTEGER NOT NULL PRIMARY KEY,
     username TEXT NOT NULL,
     name TEXT NOT NULL,
-    surname Text NOT NULL,
+    surname TEXT NOT NULL,
     profilePhoto TEXT,
     role TEXT,
     biography TEXT,
@@ -13,8 +13,10 @@ CREATE TABLE ProfileEntity (
     blockedMe INTEGER NOT NULL DEFAULT 0,
     relationStatus TEXT NOT NULL DEFAULT 'NOT_FOLLOWING',
     hasPendingIncomingRequest INTEGER NOT NULL DEFAULT 0,
+    isFollower INTEGER NOT NULL DEFAULT 0,
     updatedAt INTEGER NOT NULL
 );
+
 -- Profil Getir
 getProfileById:
 SELECT * FROM ProfileEntity WHERE userId = ?;
@@ -24,8 +26,8 @@ insertOrUpdateProfile:
 INSERT OR REPLACE INTO ProfileEntity(
     userId, username, name, surname, profilePhoto, role, biography,
     postCount, subscriberCount, subscribedCount,
-    blockedByMe, blockedMe, relationStatus, hasPendingIncomingRequest, updatedAt
-) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+    blockedByMe, blockedMe, relationStatus, hasPendingIncomingRequest, isFollower, updatedAt
+) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
 
 updatePartialProfile:
 UPDATE ProfileEntity
@@ -53,6 +55,7 @@ WHERE userId NOT IN (
     ORDER BY updatedAt DESC
     LIMIT 5
 );
+
 updateCounts:
 UPDATE ProfileEntity
 SET subscriberCount = ?,
@@ -74,10 +77,18 @@ SET subscriberCount = MAX(0, subscriberCount - 1),
     updatedAt = ?
 WHERE userId = ?;
 
+-- Takip edilen sayısını azalt (Benim için)
+decrementSubscribedCount:
+UPDATE ProfileEntity
+SET subscribedCount = MAX(0, subscribedCount - 1),
+    updatedAt = ?
+WHERE userId = ?;
+
 updateRelationStatus:
 UPDATE ProfileEntity
 SET relationStatus = ?,
     hasPendingIncomingRequest = ?,
+    isFollower = ?,
     updatedAt = ?
 WHERE userId = ?;
 
@@ -95,18 +106,26 @@ SET subscribedCount = subscribedCount + 1,
     updatedAt = ?
 WHERE userId = ?;
 
--- Takip edilen sayısını azalt (Benim için)
-decrementSubscribedCount:
+blockUserUpdate:
 UPDATE ProfileEntity
-SET subscribedCount = MAX(0, subscribedCount - 1),
-    updatedAt = ?
-WHERE userId = ?;
+SET blockedByMe = 1,
+    subscriberCount = CASE
+        WHEN relationStatus = 'FOLLOWING' THEN MAX(0, subscriberCount - 1)
+        ELSE subscriberCount
+    END,
+    subscribedCount = CASE
+        WHEN isFollower = 1 THEN MAX(0, subscribedCount - 1)
+        ELSE subscribedCount
+    END,
+    relationStatus = 'NOT_FOLLOWING',
+    hasPendingIncomingRequest = 0,
+    isFollower = 0,
+    updatedAt = :updatedAt
+WHERE userId = :userId;
 
--- Profil metin bilgilerini (Name, Bio, Photo) güncelle
-updateProfileInfo:
+-- 2. Engel Kaldırma Durumu: Sadece engel durumunu kaldır (İlişki ve sayılar değişmez)
+unblockUserUpdate:
 UPDATE ProfileEntity
-SET name = ?,
-    biography = ?,
-    profilePhoto = ?,
-    updatedAt = ?
-WHERE userId = ?;
+SET blockedByMe = 0,
+    updatedAt = :updatedAt
+WHERE userId = :userId;

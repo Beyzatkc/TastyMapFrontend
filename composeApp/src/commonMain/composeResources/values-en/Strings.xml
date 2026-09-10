@@ -391,11 +391,16 @@
     <string name="profile_incoming_request_message">@%1$s sent you a follow request.</string>
     <string name="profile_action_accept">Accept</string>
     <string name="profile_action_reject">Remove</string>
+    <string name="profile_action_remove_follower">Remove follower</string>
+    <string name="profile_action_unblock">Unblock</string>
+    <string name="profile_action_block">Block</string>
+    <string name="profile_action_report">Report</string>
 
     <string name="profile_connections_title">Connections</string>
     <string name="profile_no_results">No users found.</string>
     <string name="profile_empty_list">No users yet.</string>
     <string name="common_search_placeholder">Search...</string>
+    <string name="settings_blocked_users">Blocked users</string>
 
     <!-- Notification Screen (English) -->
     <string name="notification_title">Notifications</string>

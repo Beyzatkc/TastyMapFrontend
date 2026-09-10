@@ -21,6 +21,7 @@ data class SubscribeActionResult(
     val targetUserId: Long,
     val relationStatus: RelationStatus,
     val hasPendingIncomingRequest: Boolean,
+    val isFollower: Boolean
 )
 @Serializable
 data class HasUnreadResponse(

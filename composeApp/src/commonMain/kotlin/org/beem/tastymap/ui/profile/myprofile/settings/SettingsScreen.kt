@@ -8,6 +8,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Logout
+import androidx.compose.material.icons.filled.Block
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.DeleteForever
@@ -37,6 +38,7 @@ import cafe.adriel.voyager.navigator.currentOrThrow
 import org.beem.tastymap.core.util.ToastManager
 import org.beem.tastymap.ui.auth.logReg.LogRegScreen
 import org.beem.tastymap.ui.profile.myprofile.settings.activedevices.ActiveDevicesScreen
+import org.beem.tastymap.ui.profile.myprofile.settings.blockedusers.BlockedUsersScreen
 import org.beem.tastymap.ui.profile.myprofile.settings.changepassword.ChangePasswordBottomSheet
 import org.beem.tastymap.ui.profile.myprofile.settings.changepassword.ChangePasswordScreenModel
 import org.beem.tastymap.ui.profile.myprofile.settings.edithealth.EditHealthScreen
@@ -179,6 +181,14 @@ class SettingsScreen : Screen {
                                 title = stringResource(Res.string.settings_active_devices),
                                 onClick = {
                                     navigator.push(ActiveDevicesScreen())
+                                }
+                            )
+                            SettingsDivider()
+                            SettingsOptionItem(
+                                icon = Icons.Default.Block,
+                                title = stringResource(Res.string.settings_blocked_users), // veya "Engellenen Kullanıcılar"
+                                onClick = {
+                                    navigator.push(BlockedUsersScreen()) // Engellenenler listesi ekranına yönlendirme
                                 }
                             )
                             SettingsDivider()

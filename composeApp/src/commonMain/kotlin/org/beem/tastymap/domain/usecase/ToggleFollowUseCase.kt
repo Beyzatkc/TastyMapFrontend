@@ -15,6 +15,7 @@ class ToggleFollowUseCase(
         data class ToggleFollow(val currentStatus: RelationStatus) : Action
         object AcceptRequest : Action
         object RejectRequest : Action
+        object RemoveFollower : Action
     }
 
     suspend operator fun invoke(targetUserId: Long, action: Action): ResultWrapper<SubscribeActionResult> {
@@ -42,6 +43,9 @@ class ToggleFollowUseCase(
 
             is Action.RejectRequest -> {
                 subscribersRepository.rejectSubscribeRequest(requesterId = targetUserId, myUserId = myId)
+            }
+            is Action.RemoveFollower -> {
+                subscribersRepository.unSubscriber(targetUserId = targetUserId, myUserId = myId)
             }
         }
     }

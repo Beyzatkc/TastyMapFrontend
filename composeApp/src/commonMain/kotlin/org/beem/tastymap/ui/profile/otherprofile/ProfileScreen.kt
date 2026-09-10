@@ -43,6 +43,7 @@ import org.jetbrains.compose.resources.stringResource
 import tastymap.composeapp.generated.resources.Res
 import tastymap.composeapp.generated.resources.profile_action_accept
 import tastymap.composeapp.generated.resources.profile_action_reject
+import tastymap.composeapp.generated.resources.profile_action_unblock
 import tastymap.composeapp.generated.resources.profile_back_cd
 import tastymap.composeapp.generated.resources.profile_blocked_message
 import tastymap.composeapp.generated.resources.profile_default_bio
@@ -71,6 +72,8 @@ class ProfileScreen(private val userId: Long) : Screen {
         val state by screenModel.profileState.collectAsState()
         val navigator = LocalNavigator.currentOrThrow
 
+        var showBottomSheet by remember { mutableStateOf(false) }
+
         val pullToRefreshState = rememberPullToRefreshState()
         val customColors = LocalCustomColors.current
         var selectedTab by remember { mutableIntStateOf(0) }
@@ -98,10 +101,12 @@ class ProfileScreen(private val userId: Long) : Screen {
                         )
                     },
                     actions = {
-                        IconButton(onClick = { /* Menü/Engelle İşlemleri */ }) {
+                        IconButton(onClick = {
+                            showBottomSheet = true
+                        }) {
                             Icon(
                                 imageVector = Icons.Default.MoreVert,
-                                contentDescription = null,
+                                contentDescription = "Seçenekler",
                                 tint = Color.White
                             )
                         }
@@ -226,11 +231,8 @@ class ProfileScreen(private val userId: Long) : Screen {
                                         Spacer(modifier = Modifier.height(4.dp))
 
                                         Text(
-                                            text = if (!isBlocked) {
-                                                profile?.biography ?: stringResource(Res.string.profile_default_bio)
-                                            } else {
-                                                ""
-                                            },
+                                            text = profile?.biography ?: stringResource(Res.string.profile_default_bio),
+
                                             style = MaterialTheme.typography.bodyMedium.copy(
                                                 color = Color.White.copy(alpha = 0.8f),
                                                 textAlign = TextAlign.Center
@@ -260,18 +262,32 @@ class ProfileScreen(private val userId: Long) : Screen {
                                         ) {
                                             // 1. Mevcut Takip Et / Takip Ediliyor Butonu (Esnek Genişlik)
                                             Box(modifier = Modifier.weight(1f)) {
-                                                ProfileActionButton(
-                                                    relationStatus = profile?.relationStatus ?: RelationStatus.NOT_FOLLOWING,
-                                                    isBlocked = isBlocked,
-                                                    isLoading = state.isActionLoading,
-                                                    onActionClick = { status ->
-                                                        screenModel.handleFollowAction(userId, status)
-                                                    }
-                                                )
+                                                if (!isBlocked) {
+                                                    ProfileActionButton(
+                                                        relationStatus = profile?.relationStatus
+                                                            ?: RelationStatus.NOT_FOLLOWING,
+                                                        isLoading = state.isActionLoading,
+                                                        onActionClick = { status ->
+                                                            screenModel.handleFollowAction(
+                                                                userId,
+                                                                status
+                                                            )
+                                                        }
+                                                    )
+                                                }else{
+                                                    BlockActionButton(
+                                                        blockedByMe = profile.blockedByMe ?: false,
+                                                        blockedMe = profile.blockedMe ?: false,
+                                                        isLoading = state.isActionLoading,
+                                                        onActionClick = {
+                                                            screenModel.toggleBlockStatus(userId)
+                                                        }
+                                                    )
+                                                }
                                             }
 
                                             // 2. Yanındaki Paylaş Butonu
-                                            if (!isBlocked && profile?.relationStatus != RelationStatus.SELF) {
+                                            if (profile?.relationStatus != RelationStatus.SELF) {
                                                 IconButton(
                                                     onClick = { /* Profil paylaşma fonksiyonu */ },
                                                     modifier = Modifier
@@ -295,69 +311,68 @@ class ProfileScreen(private val userId: Long) : Screen {
                             Spacer(modifier = Modifier.height(16.dp))
                         }
 
+                        item {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 20.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                val isClickable = profile?.relationStatus == RelationStatus.FOLLOWING
+                                Row(
+                                    modifier = Modifier.widthIn(max = 600.dp),
+                                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                                ) {
+                                    MetricCard(
+                                        title = stringResource(Res.string.profile_metric_posts),
+                                        value = (profile?.postCount ?: 0).toString(),
+                                        enabled = isClickable,
+                                        onClick = {
+                                        },
+                                        modifier = Modifier.weight(1f),
+                                        cardColor = customColors.surfaceVariant
+                                    )
+                                    MetricCard(
+                                        title = stringResource(Res.string.profile_metric_subscribers),
+                                        value = (profile?.subscriberCount ?: 0).toString(),
+                                        enabled = isClickable,
+                                        onClick = {
+                                            state.profile?.userId?.let { userId ->
+                                                navigator.push(
+                                                    SubscribersListScreen(
+                                                        userId = userId,
+                                                        initialTab = SubscriberListType.SUBSCRIBERS
+                                                    )
+                                                )
+                                            }
+                                        },
+                                        modifier = Modifier.weight(1f),
+                                        cardColor = customColors.surfaceVariant
+                                    )
+                                    MetricCard(
+                                        title = stringResource(Res.string.profile_metric_following),
+                                        value = (profile?.subscribedCount ?: 0).toString(),
+                                        enabled = isClickable,
+                                        onClick = {
+                                            state.profile?.userId?.let { userId ->
+                                                navigator.push(
+                                                    SubscribersListScreen(
+                                                        userId = userId,
+                                                        initialTab = SubscriberListType.SUBSCRIBES
+                                                    )
+                                                )
+                                            }
+                                        },
+                                        modifier = Modifier.weight(1f),
+                                        cardColor = customColors.surfaceVariant
+                                    )
+                                }
+                            }
+                            Spacer(modifier = Modifier.height(16.dp))
+                        }
+
                         // 2. Metrik Kartlar (Engelli Değilse)
                         if (!isBlocked) {
-                            item {
-                                Box(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(horizontal = 20.dp),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    val isClickable = profile?.relationStatus == RelationStatus.FOLLOWING
-                                    Row(
-                                        modifier = Modifier.widthIn(max = 600.dp),
-                                        horizontalArrangement = Arrangement.spacedBy(12.dp)
-                                    ) {
-                                        MetricCard(
-                                            title = stringResource(Res.string.profile_metric_posts),
-                                            value = (profile?.postCount ?: 0).toString(),
-                                            enabled = isClickable,
-                                            onClick = {
-                                            },
-                                            modifier = Modifier.weight(1f),
-                                            cardColor = customColors.surfaceVariant
-                                        )
-                                        MetricCard(
-                                            title = stringResource(Res.string.profile_metric_subscribers),
-                                            value = (profile?.subscriberCount ?: 0).toString(),
-                                            enabled = isClickable,
-                                            onClick = {
-                                                state.profile?.userId?.let { userId ->
-                                                    navigator.push(
-                                                        SubscribersListScreen(
-                                                            userId = userId,
-                                                            initialTab = SubscriberListType.SUBSCRIBERS
-                                                        )
-                                                    )
-                                                }
-                                            },
-                                            modifier = Modifier.weight(1f),
-                                            cardColor = customColors.surfaceVariant
-                                        )
-                                        MetricCard(
-                                            title = stringResource(Res.string.profile_metric_following),
-                                            value = (profile?.subscribedCount ?: 0).toString(),
-                                            enabled = isClickable,
-                                            onClick = {
-                                                state.profile?.userId?.let { userId ->
-                                                    navigator.push(
-                                                        SubscribersListScreen(
-                                                            userId = userId,
-                                                            initialTab = SubscriberListType.SUBSCRIBES
-                                                        )
-                                                    )
-                                                }
-                                            },
-                                            modifier = Modifier.weight(1f),
-                                            cardColor = customColors.surfaceVariant
-                                        )
-                                    }
-                                }
-                                Spacer(modifier = Modifier.height(16.dp))
-                            }
-
-                            // 3. Sekmeler
                             item {
                                 Box(
                                     modifier = Modifier
@@ -442,19 +457,60 @@ class ProfileScreen(private val userId: Long) : Screen {
                 }
             }
         }
+        if (showBottomSheet && state.profile != null) {
+            val profile = state.profile!!
+            ProfileOptionsBottomSheet(
+                isBlockedByMe = profile.blockedByMe == true,
+                isFollower = profile.isFollower,
+                onDismiss = { showBottomSheet = false },
+                onBlockToggleClick = {
+                    screenModel.toggleBlockStatus(userId)
+                    showBottomSheet = false
+                },
+                onRemoveFollowerClick = {
+                    screenModel.removeFollower(userId)
+                },
+                onReportClick = {
+                    // Şikayet ekranına yönlendirme veya diyalog açma
+                    println("Kullanıcı şikayet edilecek: $userId")
+                }
+            )
+        }
+    }
+}
+
+@Composable
+private fun BlockActionButton(
+    blockedByMe: Boolean,//ben engelleıdm
+    blockedMe: Boolean,// o beni engelledı
+    isLoading: Boolean,
+    onActionClick: () -> Unit
+){
+    val customColors = LocalCustomColors.current
+    if(blockedByMe){
+        TastyButton(
+            text = stringResource(Res.string.profile_action_unblock),//engelı kaldır
+            onClick = { onActionClick() },
+            modifier = Modifier.fillMaxWidth(),
+            isPrimary = true,
+            isLoading = isLoading,
+            backcolor = customColors.red,
+            textcolor = Color.White,
+            strokecolor = Color.Transparent
+        )
+        return
     }
 }
 
 @Composable
 private fun ProfileActionButton(
     relationStatus: RelationStatus,
-    isBlocked: Boolean,
     isLoading: Boolean,
     onActionClick: (RelationStatus) -> Unit
 ) {
     val customColors = LocalCustomColors.current
 
-    if (isBlocked || relationStatus == RelationStatus.SELF) return
+    if (relationStatus == RelationStatus.SELF) return
 
     val (buttonText, backColor, textColor, strokeColor) = when (relationStatus) {
         RelationStatus.FOLLOWING -> Tuple4(

@@ -1,6 +1,5 @@
 package org.beem.tastymap.data.local
 
-import app.cash.sqldelight.async.coroutines.awaitAsOneOrNull
 import app.cash.sqldelight.coroutines.asFlow
 import app.cash.sqldelight.coroutines.mapToOneOrNull
 import kotlinx.coroutines.Dispatchers
@@ -13,7 +12,6 @@ import org.beem.tastymap.sqldelight.ProfileEntityQueries
 import kotlin.time.Clock
 
 class ProfileLocalDataSource(private val queries: ProfileEntityQueries) {
-
 
     fun getProfileFlow(userId: Long): Flow<UserProfile?> {
         return queries.getProfileById(userId)
@@ -39,8 +37,8 @@ class ProfileLocalDataSource(private val queries: ProfileEntityQueries) {
                         } catch (e: Exception) {
                             RelationStatus.NOT_FOLLOWING
                         },
-                        hasPendingIncomingRequest = it.hasPendingIncomingRequest == 1L
-
+                        hasPendingIncomingRequest = it.hasPendingIncomingRequest == 1L,
+                        isFollower = it.isFollower == 1L
                     )
                 }
             }
@@ -63,6 +61,7 @@ class ProfileLocalDataSource(private val queries: ProfileEntityQueries) {
             biography = biography
         )
     }
+
     suspend fun saveProfile(profile: UserProfile) = withContext(Dispatchers.Default) {
         queries.insertOrUpdateProfile(
             userId = profile.userId,
@@ -79,6 +78,7 @@ class ProfileLocalDataSource(private val queries: ProfileEntityQueries) {
             blockedMe = if (profile.blockedMe) 1L else 0L,
             relationStatus = profile.relationStatus.name,
             hasPendingIncomingRequest = if (profile.hasPendingIncomingRequest) 1L else 0L,
+            isFollower = if (profile.isFollower) 1L else 0L,
             updatedAt = Clock.System.now().toEpochMilliseconds()
         )
 
@@ -116,8 +116,29 @@ class ProfileLocalDataSource(private val queries: ProfileEntityQueries) {
             userId = userId
         )
     }
+
+    suspend fun decrementSubscribed(userId: Long) = withContext(Dispatchers.Default) {
+        queries.decrementSubscribedCount(
+            updatedAt = Clock.System.now().toEpochMilliseconds(),
+            userId = userId
+        )
+    }
+
     suspend fun incrementSubscribed(userId: Long) = withContext(Dispatchers.Default) {
         queries.incrementSubscribedCount(
+            updatedAt = Clock.System.now().toEpochMilliseconds(),
+            userId = userId
+        )
+    }
+    suspend fun blockUserInLocal(userId: Long) = withContext(Dispatchers.Default) {
+        queries.blockUserUpdate(
+            updatedAt = Clock.System.now().toEpochMilliseconds(),
+            userId = userId
+        )
+    }
+
+    suspend fun unblockUserInLocal(userId: Long) = withContext(Dispatchers.Default) {
+        queries.unblockUserUpdate(
             updatedAt = Clock.System.now().toEpochMilliseconds(),
             userId = userId
         )
@@ -126,11 +147,13 @@ class ProfileLocalDataSource(private val queries: ProfileEntityQueries) {
     suspend fun updateRelationStatus(
         userId: Long,
         relationStatus: RelationStatus,
-        hasPendingIncomingRequest: Boolean
+        hasPendingIncomingRequest: Boolean,
+        isFollower: Boolean
     ) = withContext(Dispatchers.Default) {
         queries.updateRelationStatus(
             relationStatus = relationStatus.name,
             hasPendingIncomingRequest = if (hasPendingIncomingRequest) 1L else 0L,
+            isFollower = if (isFollower) 1L else 0L,
             updatedAt = Clock.System.now().toEpochMilliseconds(),
             userId = userId
         )
@@ -138,13 +161,6 @@ class ProfileLocalDataSource(private val queries: ProfileEntityQueries) {
 
     suspend fun clearPendingRequest(userId: Long) = withContext(Dispatchers.Default) {
         queries.clearPendingRequest(
-            updatedAt = Clock.System.now().toEpochMilliseconds(),
-            userId = userId
-        )
-    }
-
-    suspend fun decrementSubscribed(userId: Long) = withContext(Dispatchers.Default) {
-        queries.decrementSubscribedCount(
             updatedAt = Clock.System.now().toEpochMilliseconds(),
             userId = userId
         )

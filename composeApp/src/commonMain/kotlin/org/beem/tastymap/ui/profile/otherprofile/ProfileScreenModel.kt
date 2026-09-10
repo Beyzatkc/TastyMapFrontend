@@ -14,6 +14,7 @@ import org.beem.tastymap.data.repository.SubscribersRepository
 import org.beem.tastymap.data.repository.profile.ProfileRepository
 import org.beem.tastymap.domain.model.RelationStatus
 import org.beem.tastymap.domain.model.UserProfile
+import org.beem.tastymap.domain.usecase.ToggleBlockUseCase
 import org.beem.tastymap.domain.usecase.ToggleFollowUseCase
 import org.beem.tastymap.ui.profile.otherprofile.ProfileUiState
 
@@ -21,6 +22,9 @@ import org.beem.tastymap.ui.profile.otherprofile.ProfileUiState
 class ProfileScreenModel(
     private val repo: ProfileRepository,
     private val toggleFollowUseCase: ToggleFollowUseCase,
+    private val toggleBlockUseCase: ToggleBlockUseCase,
+    private val userManager: UserManager
+
 ): ScreenModel {
 
     private val _profileState = MutableStateFlow(ProfileUiState())
@@ -61,6 +65,38 @@ class ProfileScreenModel(
         }
     }
 
+    fun toggleBlockStatus(targetUserId: Long) {
+        val currentProfile = _profileState.value.profile ?: return
+
+        screenModelScope.launch {
+            _profileState.update { it.copy(isActionLoading = true, errorMessage = null) }
+
+            val myUserId = userManager.getUserId() ?: return@launch
+
+            val result = toggleBlockUseCase(
+                targetUserId = targetUserId,
+                myUserId = myUserId,
+                isCurrentlyBlocked = currentProfile.blockedByMe,
+                currentRelationStatus = currentProfile.relationStatus,
+                isFollower = currentProfile.isFollower
+            )
+
+            when (result) {
+                is ResultWrapper.Success -> {
+                    _profileState.update { it.copy(isActionLoading = false) }
+                }
+                is ResultWrapper.Error -> {
+                    _profileState.update {
+                        it.copy(
+                            isActionLoading = false,
+                            errorMessage = result.message
+                        )
+                    }
+                }
+            }
+        }
+    }
+
     fun refreshProfile(userId: Long) {
         screenModelScope.launch {
             _profileState.update { it.copy(isRefreshing = true, errorMessage = null) }
@@ -81,6 +117,13 @@ class ProfileScreenModel(
         executeAction(
             targetUserId = targetUserId,
             action = ToggleFollowUseCase.Action.ToggleFollow(currentStatus)
+        )
+    }
+
+    fun removeFollower(targetUserId: Long) {
+        executeAction(
+            targetUserId = targetUserId,
+            action = ToggleFollowUseCase.Action.RemoveFollower
         )
     }
 
@@ -112,6 +155,7 @@ class ProfileScreenModel(
                             profile = currentState.profile?.copy(
                                 relationStatus = actionResult.relationStatus,
                                 hasPendingIncomingRequest = actionResult.hasPendingIncomingRequest,
+                                isFollower = actionResult.isFollower
                             )
                         )
                     }

@@ -32,7 +32,8 @@ class SubscribersRepository(
             localDataSource.updateRelationStatus(
                 userId = targetUserId,
                 relationStatus = actionResult.relationStatus,
-                hasPendingIncomingRequest = actionResult.hasPendingIncomingRequest
+                hasPendingIncomingRequest = actionResult.hasPendingIncomingRequest,
+                isFollower = actionResult.isFollower
             )
 
             memoryCache.invalidateUserCache(myUserId)
@@ -56,7 +57,8 @@ class SubscribersRepository(
             localDataSource.updateRelationStatus(
                 userId = requesterId,
                 relationStatus = actionResult.relationStatus,
-                hasPendingIncomingRequest = actionResult.hasPendingIncomingRequest
+                hasPendingIncomingRequest = actionResult.hasPendingIncomingRequest,
+                isFollower = actionResult.isFollower
             )
 
             memoryCache.invalidateUserCache(myUserId)
@@ -77,7 +79,8 @@ class SubscribersRepository(
             localDataSource.updateRelationStatus(
                 userId = requesterId,
                 relationStatus = actionResult.relationStatus,
-                hasPendingIncomingRequest = actionResult.hasPendingIncomingRequest
+                hasPendingIncomingRequest = actionResult.hasPendingIncomingRequest,
+                isFollower = actionResult.isFollower
             )
 
             memoryCache.invalidateUserCache(myUserId)
@@ -94,15 +97,14 @@ class SubscribersRepository(
         if (result is ResultWrapper.Success) {
             val actionResult = result.data
 
-            // Eğer önceden PENDING değil de takip ediyorsak sayaçları azaltırız
-            // unSubscribe sonrası relationStatus artık FOLLOWING değilse sayaç düşülür.
             localDataSource.decrementSubscribed(myUserId)
             localDataSource.decrementSubscriber(targetUserId)
 
             localDataSource.updateRelationStatus(
                 userId = targetUserId,
                 relationStatus = actionResult.relationStatus,
-                hasPendingIncomingRequest = actionResult.hasPendingIncomingRequest
+                hasPendingIncomingRequest = actionResult.hasPendingIncomingRequest,
+                isFollower = actionResult.isFollower
             )
 
             memoryCache.invalidateUserCache(myUserId)
@@ -126,7 +128,8 @@ class SubscribersRepository(
             localDataSource.updateRelationStatus(
                 userId = targetUserId,
                 relationStatus = actionResult.relationStatus,
-                hasPendingIncomingRequest = actionResult.hasPendingIncomingRequest
+                hasPendingIncomingRequest = actionResult.hasPendingIncomingRequest,
+                isFollower = actionResult.isFollower
             )
 
             memoryCache.invalidateUserCache(myUserId)
@@ -189,8 +192,6 @@ class SubscribersRepository(
         size: Int = 10,
         forceFetch: Boolean = false
     ): ResultWrapper<PageResponse<SubscribeResponse>> {
-
-
         return safeApiCall {
             dataSource.getPendingRequests(page, size)
         }
