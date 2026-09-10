@@ -13,7 +13,7 @@ object DeepLinkManager {
     var pendingInitialScreen: Screen? = null
 
 
-
+/*
     fun handleLink(url: String) {
         try {
             println("DEEPLINK_MGR: Gelen Ham URL -> $url")
@@ -77,7 +77,9 @@ object DeepLinkManager {
             println("DEEPLINK_MGR: Error parsing url: $url -> ${e.message}")
         }
     }
-/*
+
+ */
+
     fun handleLink(url: String) {
         when {
             url.contains("#verify") -> {
@@ -114,7 +116,7 @@ object DeepLinkManager {
         }
     }
 
- */
+
 
 
     private fun extractPathParameter(url: String, pathPrefix: String): String? {

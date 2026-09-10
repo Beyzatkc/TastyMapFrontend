@@ -27,6 +27,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.koin.koinScreenModel
@@ -34,6 +35,7 @@ import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import coil3.compose.AsyncImage
 import org.beem.tastymap.core.util.ToastManager
+import org.beem.tastymap.core.util.formatToShortRelativeTime
 import org.beem.tastymap.data.model.socialnotifications.NotificationActionStatus
 import org.beem.tastymap.data.model.socialnotifications.SocialNotificationType
 import org.beem.tastymap.data.model.socialnotifications.SocialNotificationsResponse
@@ -268,6 +270,7 @@ private fun NotificationItem(
         customColors.surfaceVariant.copy(alpha = 0.4f)
     }
 
+
     val notificationMessage = getNotificationMessage(notification.type, notification.actionStatus)
 
     Row(
@@ -305,21 +308,42 @@ private fun NotificationItem(
 
         Spacer(modifier = Modifier.width(12.dp))
 
-        // Kullanıcı Adı ve Mesaj
         Column(modifier = Modifier.weight(1f)) {
             Text(
-                text = "@"+notification.actor.username,
+                text = "@" + notification.actor.username,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
                 style = MaterialTheme.typography.bodyMedium.copy(
                     fontWeight = FontWeight.Bold,
                     color = customColors.textPrimary
                 )
             )
-            Text(
-                text = notificationMessage,
-                style = MaterialTheme.typography.bodySmall.copy(
-                    color = customColors.textSecondary
+            
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                // Mesaj Kısmı
+                Text(
+                    text = notificationMessage,
+                    maxLines = 1, // Mesajın tek satır kalmasını istersen
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f, fill = false), // Uzun mesajların zamanı itmesini engeller
+                    style = MaterialTheme.typography.bodySmall.copy(
+                        color = customColors.textSecondary
+                    )
                 )
-            )
+
+                Spacer(modifier = Modifier.width(6.dp)) // Mesaj ile zaman arasındaki boşluk
+
+                Text(
+                    text = "• " + formatToShortRelativeTime(notification.createdAt),
+                    maxLines = 1,
+                    style = MaterialTheme.typography.bodySmall.copy(
+                        color = customColors.textSecondary.copy(alpha = 0.8f)
+                    )
+                )
+            }
         }
 
         Spacer(modifier = Modifier.width(12.dp))
@@ -328,14 +352,14 @@ private fun NotificationItem(
         when (notification.actionStatus) {
             NotificationActionStatus.PENDING -> {
                 Row(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(5.dp),
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier.wrapContentWidth()
                 ) {
                     TastyButton(
                         text = stringResource(Res.string.profile_action_accept),
                         onClick = onAccept,
-                        modifier = Modifier.widthIn(min = 80.dp, max = 130.dp),
+                        modifier = Modifier.widthIn(min = 60.dp, max = 130.dp),
                         isPrimary = true,
                         backcolor = customColors.gourmetOrange,
                         textcolor = Color.White,
@@ -344,7 +368,7 @@ private fun NotificationItem(
                     TastyButton(
                         text = stringResource(Res.string.profile_action_reject),
                         onClick = onReject,
-                        modifier = Modifier.widthIn(min = 60.dp, max = 130.dp),
+                        modifier = Modifier.widthIn(min = 50.dp, max = 130.dp),
                         isPrimary = false,
                         backcolor = customColors.surfaceVariant,
                         textcolor = customColors.textPrimary,

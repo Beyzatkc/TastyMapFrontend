@@ -8,6 +8,7 @@ import app.cash.sqldelight.async.coroutines.await
 import app.cash.sqldelight.db.SqlDriver
 import cafe.adriel.voyager.navigator.Navigator
 import cafe.adriel.voyager.transitions.SlideTransition
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.launch
 import org.beem.tastymap.core.auth.AuthEventBus
 import org.beem.tastymap.core.local.ChangeAppLanguage
@@ -32,7 +33,6 @@ import tastymap.composeapp.generated.resources.auth_session_expired
 fun App() {
     val settingsManager: SettingsManager = koinInject()
     val isDarkModePref by settingsManager.isDarkMode.collectAsState()
-
     val languageCode by settingsManager.languageCode.collectAsState()
 
     val authEventBus: AuthEventBus = koinInject()
@@ -44,26 +44,30 @@ fun App() {
     // Platform bağımlı sistem Locale'ini güncelliyoruz
     ChangeAppLanguage(languageCode)
 
+    // Veritabanı oluşturma işlemi
     LaunchedEffect(Unit) {
-        launch {
-            try {
-                TastyDatabase.Schema.create(sqlDriver).await()
-            } catch (e: Exception) {
-                println("LOG_DB: Şema zaten mevcut veya pas geçildi: ${e.message}")
-            }
+        try {
+            TastyDatabase.Schema.create(sqlDriver).await()
+        } catch (e: Exception) {
+            if (e is CancellationException) throw e
+            println("LOG_DB: Şema zaten mevcut veya pas geçildi: ${e.message}")
         }
     }
 
     TastyTheme(useDarkTheme = useDarkTheme) {
         Navigator(SplashScreen()) { navigator ->
-            LaunchedEffect(Unit) {
+
+            // DeepLink dinleyicisi
+            LaunchedEffect(navigator) {
                 DeepLinkManager.navigationEvents.collect { screen ->
                     if (navigator.lastItem !is SplashScreen) {
                         navigator.replaceAll(screen)
                     }
                 }
             }
-            LaunchedEffect(Unit) {
+
+            // Oturum durum dinleyicisi
+            LaunchedEffect(navigator) {
                 authEventBus.events.collect { event ->
                     clearSessionUseCase()
 
@@ -78,8 +82,7 @@ fun App() {
                 }
             }
 
-            // key(languageCode) Navigator içinde kaldığı için Navigator sıfırlanmaz,
-            // sadece aktif olan SettingsScreen ve alt bileşenleri tam kadro yeni dille baştan çizilir.
+            // Dil değiştiğinde ekran geçiş alanını yeniden çizer
             key(languageCode) {
                 SlideTransition(
                     navigator = navigator,

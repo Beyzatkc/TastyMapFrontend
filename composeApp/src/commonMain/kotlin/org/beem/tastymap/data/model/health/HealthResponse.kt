@@ -15,12 +15,14 @@ enum class HealthEnum {
     VEGAN,
     NORMAL
 }
+
 @Serializable
 data class HealthResponse(
     val hasDiabetes: Boolean?,
     val eatType: String?,
     val allergyInfo: List<AllergyInfo>?
 )
+
 @Serializable
 data class AllergyInfo(
     val id: Long,
