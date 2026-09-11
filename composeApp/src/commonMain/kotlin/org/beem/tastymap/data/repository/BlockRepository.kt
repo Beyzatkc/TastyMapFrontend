@@ -3,6 +3,8 @@ package org.beem.tastymap.data.repository
 import org.beem.tastymap.core.network.ResultWrapper
 import org.beem.tastymap.core.network.safeApiCall
 import org.beem.tastymap.data.cache.BlockedMemoryCache
+import org.beem.tastymap.data.cache.NotificationsMemoryCache
+import org.beem.tastymap.data.cache.SubscribeMemoryCache
 import org.beem.tastymap.data.local.ProfileLocalDataSource
 import org.beem.tastymap.data.model.PageResponse
 import org.beem.tastymap.data.model.block.BlockResponse
@@ -12,7 +14,9 @@ import org.beem.tastymap.domain.model.RelationStatus
 class BlockRepository(
     private val dataSource: BlockDataSource,
     private val localDataSource: ProfileLocalDataSource,
-    private val memoryCache: BlockedMemoryCache
+    private val memoryCache: BlockedMemoryCache,
+    private val subscribeMemoryCache: SubscribeMemoryCache,
+    private val notificationsMemoryCache: NotificationsMemoryCache,
 ) {
     suspend fun blockUser(userId: Long,myUserId: Long, currentRelationStatus: RelationStatus, isFollower: Boolean): ResultWrapper<Unit>{
         val result = safeApiCall { dataSource.blockUser(userId) }
@@ -20,13 +24,14 @@ class BlockRepository(
             localDataSource.blockUserInLocal(userId)
 
             if (currentRelationStatus == RelationStatus.FOLLOWING) {
-                localDataSource.decrementSubscribed(myUserId) // Takip ettiğim sayısını -1 yap
+                localDataSource.decrementSubscribed(myUserId)
             }
             if (isFollower) {
-                localDataSource.decrementSubscriber(myUserId) // Takipçi sayımı -1 yap
+                localDataSource.decrementSubscriber(myUserId)
             }
             memoryCache.clear()
-
+            subscribeMemoryCache.clear()
+            notificationsMemoryCache.clear()
         }
         return result
     }

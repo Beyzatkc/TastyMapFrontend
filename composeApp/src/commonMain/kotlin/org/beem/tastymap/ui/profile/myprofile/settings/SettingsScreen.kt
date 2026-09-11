@@ -49,6 +49,7 @@ import tastymap.composeapp.generated.resources.Res
 import tastymap.composeapp.generated.resources.settings_active_devices
 import tastymap.composeapp.generated.resources.settings_app_version
 import tastymap.composeapp.generated.resources.settings_back_cd
+import tastymap.composeapp.generated.resources.settings_blocked_users
 import tastymap.composeapp.generated.resources.settings_cancel
 import tastymap.composeapp.generated.resources.settings_change_password
 import tastymap.composeapp.generated.resources.settings_contact_us

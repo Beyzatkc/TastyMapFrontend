@@ -23,7 +23,6 @@ class ProfileScreenModel(
     private val repo: ProfileRepository,
     private val toggleFollowUseCase: ToggleFollowUseCase,
     private val toggleBlockUseCase: ToggleBlockUseCase,
-    private val userManager: UserManager
 
 ): ScreenModel {
 
@@ -71,11 +70,8 @@ class ProfileScreenModel(
         screenModelScope.launch {
             _profileState.update { it.copy(isActionLoading = true, errorMessage = null) }
 
-            val myUserId = userManager.getUserId() ?: return@launch
-
             val result = toggleBlockUseCase(
                 targetUserId = targetUserId,
-                myUserId = myUserId,
                 isCurrentlyBlocked = currentProfile.blockedByMe,
                 currentRelationStatus = currentProfile.relationStatus,
                 isFollower = currentProfile.isFollower

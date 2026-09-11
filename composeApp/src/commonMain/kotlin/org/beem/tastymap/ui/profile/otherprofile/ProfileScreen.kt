@@ -500,6 +500,22 @@ private fun BlockActionButton(
         )
         return
     }
+    if (blockedMe) {
+        // O beni engellediyse pasif/gri bir buton gösterelim
+        TastyButton(
+            text = "Kullanıcıya Erişilemiyor", // TODO: stringResource(Res.string.profile_unavailable) olarak değiştir
+            onClick = { /* İstersen buraya bir Toast mesajı koyabilirsin: "Bu kullanıcıyla etkileşime geçemezsiniz." */ },
+            modifier = Modifier.fillMaxWidth(),
+            enabled = false,
+            isPrimary = false,
+            isLoading = false,
+            backcolor = customColors.surfaceVariant, // Gri/Silik arka plan
+            textcolor = customColors.navy,  // Silik yazı rengi
+            strokecolor = Color.Transparent
+            // Not: Eğer TastyButton bileşeninde "enabled" adında bir parametren varsa, enabled = false yapman çok daha iyi olur.
+        )
+        return
+    }
 }
 
 @Composable

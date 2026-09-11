@@ -5,6 +5,6 @@ import kotlinx.serialization.Serializable
 data class BlockResponse(
     val userId: Long,
     val username: String? = null,
-    val profilephoto: String,
+    val profilephoto: String? = null,
     val blockedAt: String
 )
