@@ -17,7 +17,9 @@ data class UserProfile(
     val blockedMe: Boolean = false,
     val relationStatus: RelationStatus = RelationStatus.NOT_FOLLOWING,
     val hasPendingIncomingRequest: Boolean = false,
-    val isFollower: Boolean = false
+    val isFollower: Boolean = false,
+    val privateProfile: Boolean = false
+
 )
 
 enum class RelationStatus {

@@ -39,6 +39,11 @@ class MyProfileDataSource(private val client: HttpClient) {
     suspend fun getMe(): UserResponse =
         client.get("api/myProfile/me").body()
 
+    suspend fun updatePrivacyStatus(isPrivate: Boolean){
+        client.patch("api/myProfile/privacy") {
+            parameter("isPrivate", isPrivate)
+        }
+    }
     suspend fun getAllUsers(): List<UserResponse> =
         client.get("api/myProfile/all").body()
 }

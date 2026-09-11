@@ -25,6 +25,10 @@ class SettingsScreenModel(
 
     val languageCode = settingsManager.languageCode
 
+
+    fun setInitialPrivacyStatus(initialStatus: Boolean) {
+        _uiState.update { it.copy(isAccountPrivate = initialStatus) }
+    }
     fun setLanguage(code: String) {
         settingsManager.setLanguageCode(code)
     }
@@ -39,6 +43,30 @@ class SettingsScreenModel(
             val deviceId = deviceInfoProvider.getDeviceId()
             repo.logout(deviceId)
             _uiState.update { it.copy(isActionLoading = false,isLoggedOut = true) }
+        }
+    }
+    fun updatePrivacyStatus(isPrivate: Boolean) {
+        screenModelScope.launch {
+            _uiState.update { it.copy(isPrivacyLoading = true) }
+
+            when (val result = repo.updatePrivacyStatus(isPrivate)) {
+                is ResultWrapper.Success -> {
+                    _uiState.update {
+                        it.copy(
+                            isAccountPrivate = isPrivate,
+                            isPrivacyLoading = false
+                        )
+                    }
+                }
+                is ResultWrapper.Error -> {
+                    _uiState.update {
+                        it.copy(
+                            isPrivacyLoading = false,
+                            errorMessage = result.message
+                        )
+                    }
+                }
+            }
         }
     }
 

@@ -109,9 +109,7 @@ class MyProfileRepository(
             .onStart {
                 // 3. Arka Plan Network İsteğinin Başlatılması
                 println("PROFILE_FLOW [Network]: Akış başladı (onStart), uzaktan veri çekme başlatılıyor...")
-                CoroutineScope(Dispatchers.Default).launch {
                     fetchRemoteProfile()
-                }
             }
     }
 
@@ -124,13 +122,17 @@ class MyProfileRepository(
          }
         try {
             val remoteDto = dataSource.getUserProfile()
+
+            println("ASIL YER [Network HATA]: Uzak sunucudan veri çekilirken hata oluştu ->" + remoteDto.privateProfile)
             val freshProfile = remoteDto.toDomain(myUserId)
 
             memoryCache.put(myUserId, freshProfile)
             localDataSource.saveProfile(freshProfile)
 
         } catch (e: Exception) {
-            println("PROFILE_FLOW [Network HATA]: Uzak sunucudan veri çekilirken hata oluştu ->" + e.message)
+            // e.message bazen null gelebilir; e.toString() ve stack trace hatanın kaynağını kesin gösterir.
+            println("PROFILE_FLOW [Network HATA]: Uzak sunucudan veri çekilirken hata oluştu -> Hata Türü/Mesajı: $e")
+            e.printStackTrace() // Logcat/konsolda hatanın tam hangi satırda oluştuğunu gösterir
             throw e
         }
     }
@@ -194,6 +196,29 @@ class MyProfileRepository(
         return safeApiCall {
             dataSource.getMe()
         }
+    }
+    suspend fun updatePrivacyStatus(isPrivate: Boolean): ResultWrapper<Unit> {
+        val result = safeApiCall {
+            dataSource.updatePrivacyStatus(isPrivate)
+        }
+        if (result is ResultWrapper.Success) {
+            val myUserId = userManager.getUserId()
+            if (myUserId != null) {
+                memoryCache.get(myUserId)?.let { oldProfile ->
+                    memoryCache.put(
+                        myUserId,
+                        oldProfile.copy(privateProfile = isPrivate)
+                    )
+                }
+
+                localDataSource.updatePrivacyStatus(
+                    userId = myUserId,
+                    isPrivate = isPrivate
+                )
+            }
+        }
+
+        return result
     }
 
     suspend fun logout(deviceId: String): ResultWrapper<Unit> {

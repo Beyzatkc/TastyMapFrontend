@@ -14,6 +14,7 @@ CREATE TABLE ProfileEntity (
     relationStatus TEXT NOT NULL DEFAULT 'NOT_FOLLOWING',
     hasPendingIncomingRequest INTEGER NOT NULL DEFAULT 0,
     isFollower INTEGER NOT NULL DEFAULT 0,
+    privateProfile INTEGER NOT NULL DEFAULT 0,
     updatedAt INTEGER NOT NULL
 );
 
@@ -26,8 +27,8 @@ insertOrUpdateProfile:
 INSERT OR REPLACE INTO ProfileEntity(
     userId, username, name, surname, profilePhoto, role, biography,
     postCount, subscriberCount, subscribedCount,
-    blockedByMe, blockedMe, relationStatus, hasPendingIncomingRequest, isFollower, updatedAt
-) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+    blockedByMe, blockedMe, relationStatus, hasPendingIncomingRequest, isFollower,privateProfile, updatedAt
+) VALUES (?, ?, ?, ?, ?, ?, ?,?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
 
 updatePartialProfile:
 UPDATE ProfileEntity
@@ -39,6 +40,11 @@ SET
     biography = COALESCE(:biography, biography)
 WHERE userId = :userId;
 
+updatePrivacyStatus:
+UPDATE ProfileEntity
+SET privateProfile = ?,
+    updatedAt = ?
+WHERE userId = ?;
 -- Profil Önbelleğini Sil (Cache Invalidation)
 deleteProfileById:
 DELETE FROM ProfileEntity WHERE userId = ?;

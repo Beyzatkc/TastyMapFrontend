@@ -38,7 +38,8 @@ class ProfileLocalDataSource(private val queries: ProfileEntityQueries) {
                             RelationStatus.NOT_FOLLOWING
                         },
                         hasPendingIncomingRequest = it.hasPendingIncomingRequest == 1L,
-                        isFollower = it.isFollower == 1L
+                        isFollower = it.isFollower == 1L,
+                        privateProfile = it.privateProfile == 1L
                     )
                 }
             }
@@ -79,6 +80,7 @@ class ProfileLocalDataSource(private val queries: ProfileEntityQueries) {
             relationStatus = profile.relationStatus.name,
             hasPendingIncomingRequest = if (profile.hasPendingIncomingRequest) 1L else 0L,
             isFollower = if (profile.isFollower) 1L else 0L,
+            privateProfile = if (profile.privateProfile) 1L else 0L,
             updatedAt = Clock.System.now().toEpochMilliseconds()
         )
 
@@ -87,6 +89,15 @@ class ProfileLocalDataSource(private val queries: ProfileEntityQueries) {
 
     suspend fun deleteProfile(userId: Long) = withContext(Dispatchers.Default) {
         queries.deleteProfileById(userId)
+    }
+    suspend fun updatePrivacyStatus(userId: Long, isPrivate: Boolean) = withContext(Dispatchers.Default) {
+        val privateProfileValue = if (isPrivate) 1L else 0L
+
+        queries.updatePrivacyStatus(
+            privateProfile = privateProfileValue,
+            updatedAt = Clock.System.now().toEpochMilliseconds(),
+            userId = userId
+        )
     }
 
     suspend fun clearAll() = withContext(Dispatchers.Default) {

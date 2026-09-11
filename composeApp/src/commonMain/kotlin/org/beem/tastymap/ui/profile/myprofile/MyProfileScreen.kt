@@ -186,7 +186,7 @@ class MyProfileScreen : Screen {
                                 )
                             }
                         }
-                        IconButton(onClick = { navigator.push(SettingsScreen()) }) {
+                        IconButton(onClick = { navigator.push(SettingsScreen(state.profile?.privateProfile ?: false)) }) {
                             Icon(
                                 imageVector = Icons.Default.Menu,
                                 contentDescription = stringResource(Res.string.my_profile_settings_cd),

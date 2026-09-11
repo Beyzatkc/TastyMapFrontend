@@ -412,4 +412,24 @@
     <string name="notification_msg_new_follower">started following you.</string>
     <string name="notification_msg_post_like">liked your post.</string>
     <string name="notification_msg_comment">commented on your post.</string>
+
+    <string name="alert_cancel">Cancel</string>
+
+    <!-- Block Dialog -->
+    <string name="dialog_block_title">Block User</string>
+    <string name="dialog_block_message">Are you sure you want to block this user? All follow connections between you will be removed.</string>
+
+    <!-- Unblock Dialog -->
+    <string name="dialog_unblock_title">Unblock User</string>
+    <string name="dialog_unblock_message">Are you sure you want to unblock %1$s?</string>
+
+    <!-- Unfollow Dialog -->
+    <string name="dialog_unfollow_title">Unfollow</string>
+    <string name="dialog_unfollow_message">Are you sure you want to unfollow %1$s?</string>
+    <string name="profile_action_unfollow">Unfollow</string>
+
+    <!-- Remove Follower Dialog -->
+    <string name="dialog_remove_follower_title">Remove Follower</string>
+    <string name="dialog_remove_follower_message">Remove %1$s from your followers?</string>
+    <string name="profile_user_unavailable">User Unavailable</string>
 </resources>

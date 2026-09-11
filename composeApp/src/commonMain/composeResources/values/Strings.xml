@@ -413,4 +413,24 @@
     <string name="notification_msg_new_follower">seni takip etmeye başladı.</string>
     <string name="notification_msg_post_like">bir gönderini beğendi.</string>
     <string name="notification_msg_comment">gönderine yorum yaptı.</string>
+
+    <string name="alert_cancel">İptal</string>
+
+    <!-- Block Dialog -->
+    <string name="dialog_block_title">Engelle</string>
+    <string name="dialog_block_message">@%1$s kullanıcısını engellemek istediğinize emin misiniz? Aranızdaki tüm takip bağları koparılacaktır.</string>
+
+    <!-- Unblock Dialog -->
+    <string name="dialog_unblock_title">Engeli Kaldır</string>
+    <string name="dialog_unblock_message">@%1$s kullanıcısının engelini kaldırmak istediğinize emin misiniz?</string>
+
+    <!-- Unfollow Dialog -->
+    <string name="dialog_unfollow_title">Takipten Çık</string>
+    <string name="dialog_unfollow_message">@%1$s kullanıcısını takipten çıkmak istediğinize emin misiniz?</string>
+    <string name="profile_action_unfollow">Takipten Çık</string>
+
+    <!-- Remove Follower Dialog -->
+    <string name="dialog_remove_follower_title">Takipçiyi Çıkar</string>
+    <string name="dialog_remove_follower_message">@%1$s takipçilerinizden çıkarılsın mı?</string>
+    <string name="profile_user_unavailable">Kullanıcıya Erişilemiyor</string>
 </resources>

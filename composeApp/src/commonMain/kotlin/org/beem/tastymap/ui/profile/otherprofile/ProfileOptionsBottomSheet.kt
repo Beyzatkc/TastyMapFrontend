@@ -53,7 +53,6 @@ fun ProfileOptionsBottomSheet(
     val scope = rememberCoroutineScope()
     val customColors = LocalCustomColors.current
 
-    // BottomSheet'i yumuşakça kapatıp ardından state'i sıfırlayan yardımcı fonksiyon
     fun closeSheet(action: () -> Unit) {
         scope.launch {
             sheetState.hide()
@@ -66,17 +65,14 @@ fun ProfileOptionsBottomSheet(
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = sheetState,
-        containerColor = customColors.placeHolderBack,
-        dragHandle = { BottomSheetDefaults.DragHandle(color = customColors.placeHolderIcon) }
+        containerColor = customColors.surface, // DÜZELTME: placeHolderBack yerine surface kullanıldı
+        dragHandle = { BottomSheetDefaults.DragHandle(color = customColors.textTertiary) } // DÜZELTME: Tutamaç rengi uyumlu hale getirildi
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(bottom = 32.dp, top = 8.dp)
         ) {
-            // 1. Takipten Çık (Biz takip ediyorsak)
-
-           println("FOLLOWER"+ isFollower)
             if (isFollower) {
                 BottomSheetActionRow(
                     icon = Icons.Default.GroupRemove,
@@ -86,7 +82,6 @@ fun ProfileOptionsBottomSheet(
                 )
             }
 
-            // 3. Engelle / Engeli Kaldır
             BottomSheetActionRow(
                 icon = if (isBlockedByMe) Icons.Default.LockOpen else Icons.Default.Block,
                 text = if (isBlockedByMe)
@@ -97,7 +92,6 @@ fun ProfileOptionsBottomSheet(
                 onClick = { closeSheet { onBlockToggleClick() } }
             )
 
-            // 4. Şikayet Et
             BottomSheetActionRow(
                 icon = Icons.Default.Report,
                 text = stringResource(Res.string.profile_action_report),
@@ -107,7 +101,6 @@ fun ProfileOptionsBottomSheet(
         }
     }
 }
-
 @Composable
 private fun BottomSheetActionRow(
     icon: androidx.compose.ui.graphics.vector.ImageVector,

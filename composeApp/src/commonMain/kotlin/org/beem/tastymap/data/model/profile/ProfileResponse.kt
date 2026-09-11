@@ -46,7 +46,11 @@ data class ProfileResponse(
     val hasPendingIncomingRequest: Boolean = false,
 
     @SerialName("isFollower")
-    val isFollower: Boolean = false
+    val isFollower: Boolean = false,
+
+    @SerialName("privateProfile")
+    val privateProfile: Boolean = false
+
 )
 
 @Serializable

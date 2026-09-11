@@ -76,7 +76,8 @@ import tastymap.composeapp.generated.resources.settings_section_support_about
 import tastymap.composeapp.generated.resources.settings_title
 import kotlin.time.Clock
 
-class SettingsScreen : Screen {
+
+class SettingsScreen(val isPrivate: Boolean) : Screen {
 
     @OptIn(ExperimentalMaterial3Api::class)
     @Composable
@@ -99,8 +100,11 @@ class SettingsScreen : Screen {
         var showChangePasswordSheet by remember { mutableStateOf(false) }
         var showLogoutDialog by remember { mutableStateOf(false) }
         var isNotificationsEnabled by remember { mutableStateOf(true) }
-        var mod by remember { mutableStateOf(false) }
-        var isAccountPrivate by remember { mutableStateOf(false) }
+
+
+        LaunchedEffect(Unit) {
+            settingsScreenModel.setInitialPrivacyStatus(isPrivate)
+        }
 
         LaunchedEffect(changePasswordState.successMessageRes) {
             changePasswordState.successMessageRes?.let { res ->
@@ -187,38 +191,41 @@ class SettingsScreen : Screen {
                             SettingsDivider()
                             SettingsOptionItem(
                                 icon = Icons.Default.Block,
-                                title = stringResource(Res.string.settings_blocked_users), // veya "Engellenen Kullanıcılar"
+                                title = stringResource(Res.string.settings_blocked_users),
                                 onClick = {
-                                    navigator.push(BlockedUsersScreen()) // Engellenenler listesi ekranına yönlendirme
+                                    navigator.push(BlockedUsersScreen())
                                 }
                             )
                             SettingsDivider()
+
+                            // GİZLİ HESAP (Tıklama mantığı sadece Switch'te)
                             SettingsOptionItem(
                                 icon = Icons.Default.VisibilityOff,
                                 title = stringResource(Res.string.settings_private_account),
                                 subtitle = stringResource(Res.string.settings_private_account_sub),
                                 trailingContent = {
                                     Switch(
-                                        checked = isAccountPrivate,
-                                        onCheckedChange = null, // Çift tetiklenmeyi önlemek için tıklamayı ana satıra veriyoruz
+                                        checked = settingsState.isAccountPrivate,
+                                        enabled = !settingsState.isPrivacyLoading,
+                                        onCheckedChange = { isChecked ->
+                                            if (!settingsState.isPrivacyLoading) {
+                                                settingsScreenModel.updatePrivacyStatus(isChecked)
+                                            }
+                                        },
                                         colors = SwitchDefaults.colors(
                                             checkedThumbColor = customColors.surface,
                                             checkedTrackColor = customColors.navy,
-
                                             uncheckedThumbColor = customColors.surface,
                                             uncheckedTrackColor = customColors.borderStrong,
                                             uncheckedBorderColor = customColors.borderStrong
                                         )
                                     )
-                                },
-
-                                onClick = {
-                                    isAccountPrivate = !isAccountPrivate
                                 }
                             )
                         }
                     }
                 }
+
                 item {
                     SettingsSectionHeader(title = stringResource(Res.string.settings_section_nutrition))
                     Card(
@@ -232,7 +239,7 @@ class SettingsScreen : Screen {
                                 title = stringResource(Res.string.settings_nutrition_preferences),
                                 subtitle = stringResource(Res.string.settings_nutrition_preferences_sub),
                                 onClick = {
-                                     navigator.push(EditHealthScreen())
+                                    navigator.push(EditHealthScreen())
                                 }
                             )
                         }
@@ -248,26 +255,28 @@ class SettingsScreen : Screen {
                         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
                     ) {
                         Column {
+                            // BİLDİRİMLER (Tıklama mantığı sadece Switch'te)
                             SettingsOptionItem(
                                 icon = Icons.Default.Notifications,
                                 title = stringResource(Res.string.settings_notifications),
                                 trailingContent = {
                                     Switch(
                                         checked = isNotificationsEnabled,
-                                        onCheckedChange = { isNotificationsEnabled = it },
+                                        onCheckedChange = { isChecked ->
+                                            isNotificationsEnabled = isChecked
+                                        },
                                         colors = SwitchDefaults.colors(
                                             checkedThumbColor = customColors.surface,
                                             checkedTrackColor = customColors.navy,
-
                                             uncheckedThumbColor = customColors.surface,
                                             uncheckedTrackColor = customColors.borderStrong,
                                             uncheckedBorderColor = customColors.borderStrong
                                         )
                                     )
-                                },
-                                onClick = { isNotificationsEnabled = !isNotificationsEnabled }
+                                }
                             )
                             SettingsDivider()
+
                             SettingsOptionItem(
                                 icon = Icons.Default.DarkMode,
                                 title = stringResource(Res.string.settings_dark_mode),
@@ -280,15 +289,11 @@ class SettingsScreen : Screen {
                                         colors = SwitchDefaults.colors(
                                             checkedThumbColor = customColors.surface,
                                             checkedTrackColor = customColors.navy,
-
                                             uncheckedThumbColor = customColors.surface,
                                             uncheckedTrackColor = customColors.borderStrong,
                                             uncheckedBorderColor = customColors.borderStrong
                                         )
                                     )
-                                },
-                                onClick = {
-                                    mod = !mod
                                 }
                             )
                             SettingsDivider()
@@ -316,25 +321,20 @@ class SettingsScreen : Screen {
                             SettingsOptionItem(
                                 icon = Icons.Default.Policy,
                                 title = stringResource(Res.string.settings_privacy_policy),
-                                onClick = {
-                                    // Webview veya Tarayıcı Yönlendirmesi
-                                }
+                                onClick = { }
                             )
                             SettingsDivider()
                             SettingsOptionItem(
                                 icon = Icons.Default.HelpOutline,
                                 title = stringResource(Res.string.settings_contact_us),
-                                onClick = {
-                                    // Destek ekranı / e-posta tetikleyici
-                                }
+                                onClick = { }
                             )
                             SettingsDivider()
                             SettingsOptionItem(
                                 icon = Icons.Default.Info,
                                 title = stringResource(Res.string.settings_app_version),
                                 badgeText = "v1.0.0",
-                                showChevron = false,
-                                onClick = {}
+                                showChevron = false
                             )
                         }
                     }
@@ -366,9 +366,7 @@ class SettingsScreen : Screen {
                                 textColor = customColors.error,
                                 iconColor = customColors.error,
                                 showChevron = false,
-                                onClick = {
-                                    // Hesabı Silme Onay Dialog
-                                }
+                                onClick = { }
                             )
                         }
                     }
@@ -393,7 +391,6 @@ class SettingsScreen : Screen {
                     },
                     text = {
                         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                            // Türkçe Seçeneği
                             Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
@@ -419,7 +416,6 @@ class SettingsScreen : Screen {
                                 )
                             }
 
-                            // İngilizce Seçeneği
                             Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
@@ -592,13 +588,13 @@ private fun SettingsDivider() {
 private fun SettingsOptionItem(
     icon: ImageVector,
     title: String,
-    subtitle: String? = null, // Alt açıklama metni parametresi
+    subtitle: String? = null,
     badgeText: String? = null,
     textColor: Color = Color.Unspecified,
     iconColor: Color? = null,
     showChevron: Boolean = true,
     trailingContent: (@Composable () -> Unit)? = null,
-    onClick: () -> Unit
+    onClick: (() -> Unit)? = null // Opsiyonel duruma getirildi
 ) {
     val customColors = LocalCustomColors.current
     val effectiveIconColor = iconColor ?: customColors.textSecondary
@@ -607,7 +603,13 @@ private fun SettingsOptionItem(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { onClick() }
+            .then(
+                if (onClick != null) {
+                    Modifier.clickable { onClick() }
+                } else {
+                    Modifier
+                }
+            )
             .padding(horizontal = 16.dp, vertical = 14.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -619,7 +621,6 @@ private fun SettingsOptionItem(
         )
         Spacer(modifier = Modifier.width(14.dp))
 
-        // Başlık ve Alt Açıklama Alanı
         Column(
             modifier = Modifier.weight(1f)
         ) {
@@ -671,3 +672,4 @@ private fun SettingsOptionItem(
         }
     }
 }
+

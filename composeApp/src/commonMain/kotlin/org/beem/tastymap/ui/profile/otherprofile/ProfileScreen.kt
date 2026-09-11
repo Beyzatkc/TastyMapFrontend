@@ -36,14 +36,27 @@ import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import coil3.compose.AsyncImage
 import org.beem.tastymap.domain.model.RelationStatus
+import org.beem.tastymap.ui.components.DialogConfig
+import org.beem.tastymap.ui.components.TastyConfirmDialog
 import org.beem.tastymap.ui.profile.subscribers.SubscriberListType
 import org.beem.tastymap.ui.profile.subscribers.SubscribersListScreen
 import org.beem.tastymap.ui.theme.LocalCustomColors
 import org.jetbrains.compose.resources.stringResource
 import tastymap.composeapp.generated.resources.Res
+import tastymap.composeapp.generated.resources.dialog_block_message
+import tastymap.composeapp.generated.resources.dialog_block_title
+import tastymap.composeapp.generated.resources.dialog_remove_follower_message
+import tastymap.composeapp.generated.resources.dialog_remove_follower_title
+import tastymap.composeapp.generated.resources.dialog_unblock_message
+import tastymap.composeapp.generated.resources.dialog_unblock_title
+import tastymap.composeapp.generated.resources.dialog_unfollow_message
+import tastymap.composeapp.generated.resources.dialog_unfollow_title
 import tastymap.composeapp.generated.resources.profile_action_accept
+import tastymap.composeapp.generated.resources.profile_action_block
 import tastymap.composeapp.generated.resources.profile_action_reject
+import tastymap.composeapp.generated.resources.profile_action_remove_follower
 import tastymap.composeapp.generated.resources.profile_action_unblock
+import tastymap.composeapp.generated.resources.profile_action_unfollow
 import tastymap.composeapp.generated.resources.profile_back_cd
 import tastymap.composeapp.generated.resources.profile_blocked_message
 import tastymap.composeapp.generated.resources.profile_default_bio
@@ -62,6 +75,7 @@ import tastymap.composeapp.generated.resources.profile_subscribe
 import tastymap.composeapp.generated.resources.profile_subscribed
 import tastymap.composeapp.generated.resources.profile_tab_posts
 import tastymap.composeapp.generated.resources.profile_tab_taste_map
+import tastymap.composeapp.generated.resources.profile_user_unavailable
 
 class ProfileScreen(private val userId: Long) : Screen {
 
@@ -73,10 +87,27 @@ class ProfileScreen(private val userId: Long) : Screen {
         val navigator = LocalNavigator.currentOrThrow
 
         var showBottomSheet by remember { mutableStateOf(false) }
+        var activeDialog by remember { mutableStateOf<DialogConfig?>(null) }
 
         val pullToRefreshState = rememberPullToRefreshState()
         val customColors = LocalCustomColors.current
         var selectedTab by remember { mutableIntStateOf(0) }
+
+        val blockTitle = stringResource(Res.string.dialog_block_title,)
+        val blockMessage = stringResource(Res.string.dialog_block_message,state.profile?.username ?: "")
+        val blockConfirm = stringResource(Res.string.profile_action_block)
+
+        val unblockTitle = stringResource(Res.string.dialog_unblock_title)
+        val unblockMessage = stringResource(Res.string.dialog_unblock_message, state.profile?.username ?: "")
+        val unblockConfirm = stringResource(Res.string.profile_action_unblock)
+
+        val unfollowTitle = stringResource(Res.string.dialog_unfollow_title)
+        val unfollowMessage = stringResource(Res.string.dialog_unfollow_message, state.profile?.username ?: "")
+        val unfollowConfirm = stringResource(Res.string.profile_action_unfollow)
+
+        val removeFollowerTitle = stringResource(Res.string.dialog_remove_follower_title)
+        val removeFollowerMessage = stringResource(Res.string.dialog_remove_follower_message, state.profile?.username ?: "")
+        val removeFollowerConfirm = stringResource(Res.string.profile_action_remove_follower)
 
         LaunchedEffect(userId) {
             screenModel.getProfile(userId)
@@ -260,7 +291,6 @@ class ProfileScreen(private val userId: Long) : Screen {
                                             horizontalArrangement = Arrangement.spacedBy(8.dp),
                                             verticalAlignment = Alignment.CenterVertically
                                         ) {
-                                            // 1. Mevcut Takip Et / Takip Ediliyor Butonu (Esnek Genişlik)
                                             Box(modifier = Modifier.weight(1f)) {
                                                 if (!isBlocked) {
                                                     ProfileActionButton(
@@ -268,10 +298,19 @@ class ProfileScreen(private val userId: Long) : Screen {
                                                             ?: RelationStatus.NOT_FOLLOWING,
                                                         isLoading = state.isActionLoading,
                                                         onActionClick = { status ->
-                                                            screenModel.handleFollowAction(
-                                                                userId,
-                                                                status
-                                                            )
+                                                            if (status == RelationStatus.FOLLOWING) {
+                                                                activeDialog = DialogConfig(
+                                                                    title = unfollowTitle,
+                                                                    message = unfollowMessage,
+                                                                    confirmText = unfollowConfirm,
+                                                                    isDestructive = false,
+                                                                    onConfirm = {
+                                                                        screenModel.handleFollowAction(userId, status)
+                                                                    }
+                                                                )
+                                                            } else {
+                                                                screenModel.handleFollowAction(userId, status)
+                                                            }
                                                         }
                                                     )
                                                 }else{
@@ -280,7 +319,14 @@ class ProfileScreen(private val userId: Long) : Screen {
                                                         blockedMe = profile.blockedMe ?: false,
                                                         isLoading = state.isActionLoading,
                                                         onActionClick = {
-                                                            screenModel.toggleBlockStatus(userId)
+                                                            val isBlockedByMe = profile?.blockedByMe == true
+                                                            activeDialog = DialogConfig(
+                                                                title = if (isBlockedByMe) unblockTitle else blockTitle,
+                                                                message = if (isBlockedByMe) unblockMessage else blockMessage,
+                                                                confirmText = if (isBlockedByMe) unblockConfirm else blockConfirm,
+                                                                isDestructive = !isBlockedByMe,
+                                                                onConfirm = { screenModel.toggleBlockStatus(userId) }
+                                                            )
                                                         }
                                                     )
                                                 }
@@ -456,6 +502,7 @@ class ProfileScreen(private val userId: Long) : Screen {
                     }
                 }
             }
+
         }
         if (showBottomSheet && state.profile != null) {
             val profile = state.profile!!
@@ -464,11 +511,29 @@ class ProfileScreen(private val userId: Long) : Screen {
                 isFollower = profile.isFollower,
                 onDismiss = { showBottomSheet = false },
                 onBlockToggleClick = {
-                    screenModel.toggleBlockStatus(userId)
                     showBottomSheet = false
+                    val isBlockedByMe = profile.blockedByMe == true
+                    activeDialog = DialogConfig(
+                        title = if (isBlockedByMe) unblockTitle else blockTitle,
+                        message = if (isBlockedByMe) unblockMessage else blockMessage,
+                        confirmText = if (isBlockedByMe) unblockConfirm else blockConfirm,
+                        isDestructive = !isBlockedByMe,
+                        onConfirm = {
+                            screenModel.toggleBlockStatus(userId)
+                        }
+                    )
                 },
                 onRemoveFollowerClick = {
-                    screenModel.removeFollower(userId)
+                    showBottomSheet = false
+                    activeDialog = DialogConfig(
+                        title = removeFollowerTitle,
+                        message = removeFollowerMessage,
+                        confirmText = removeFollowerConfirm,
+                        isDestructive = false,
+                        onConfirm = {
+                            screenModel.removeFollower(userId)
+                        }
+                    )
                 },
                 onReportClick = {
                     // Şikayet ekranına yönlendirme veya diyalog açma
@@ -476,7 +541,14 @@ class ProfileScreen(private val userId: Long) : Screen {
                 }
             )
         }
+        activeDialog?.let { config ->
+            TastyConfirmDialog(
+                config = config,
+                onDismiss = { activeDialog = null }
+            )
+        }
     }
+
 }
 
 @Composable
@@ -501,10 +573,9 @@ private fun BlockActionButton(
         return
     }
     if (blockedMe) {
-        // O beni engellediyse pasif/gri bir buton gösterelim
         TastyButton(
-            text = "Kullanıcıya Erişilemiyor", // TODO: stringResource(Res.string.profile_unavailable) olarak değiştir
-            onClick = { /* İstersen buraya bir Toast mesajı koyabilirsin: "Bu kullanıcıyla etkileşime geçemezsiniz." */ },
+            text = stringResource(Res.string.profile_user_unavailable),
+            onClick = {  },
             modifier = Modifier.fillMaxWidth(),
             enabled = false,
             isPrimary = false,
@@ -512,7 +583,6 @@ private fun BlockActionButton(
             backcolor = customColors.surfaceVariant, // Gri/Silik arka plan
             textcolor = customColors.navy,  // Silik yazı rengi
             strokecolor = Color.Transparent
-            // Not: Eğer TastyButton bileşeninde "enabled" adında bir parametren varsa, enabled = false yapman çok daha iyi olur.
         )
         return
     }

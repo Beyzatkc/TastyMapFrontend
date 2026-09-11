@@ -24,6 +24,7 @@ import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.*
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -38,6 +39,8 @@ import cafe.adriel.voyager.navigator.currentOrThrow
 import coil3.compose.AsyncImage
 import org.beem.tastymap.core.util.ToastManager
 import org.beem.tastymap.data.model.block.BlockResponse
+import org.beem.tastymap.ui.components.DialogConfig
+import org.beem.tastymap.ui.components.TastyConfirmDialog
 import org.beem.tastymap.ui.profile.otherprofile.ProfileScreen
 import org.beem.tastymap.ui.theme.LocalCustomColors
 import org.jetbrains.compose.resources.stringResource
@@ -45,6 +48,8 @@ import tastymap.composeapp.generated.resources.Res
 import tastymap.composeapp.generated.resources.active_devices_retry
 import tastymap.composeapp.generated.resources.active_devices_retry_cd
 import tastymap.composeapp.generated.resources.common_search_placeholder
+import tastymap.composeapp.generated.resources.dialog_unblock_message
+import tastymap.composeapp.generated.resources.dialog_unblock_title
 import tastymap.composeapp.generated.resources.profile_action_unblock
 import tastymap.composeapp.generated.resources.profile_empty_list
 import tastymap.composeapp.generated.resources.profile_no_results
@@ -63,7 +68,9 @@ class BlockedUsersScreen() : Screen {
 
         var searchQuery by remember { mutableStateOf("") }
         val pullToRefreshState = rememberPullToRefreshState()
+        var activeDialog by remember { mutableStateOf<DialogConfig?>(null) }
         val listState = rememberLazyListState()
+
 
         LaunchedEffect(Unit) {
             screenModel.loadInitialData()
@@ -255,13 +262,23 @@ class BlockedUsersScreen() : Screen {
                                         items = filteredList,
                                         key = { it.userId }
                                     ) { user ->
+
+                                        val unblockTitle = stringResource(Res.string.dialog_unblock_title)
+                                        val unblockMessage = stringResource(Res.string.dialog_unblock_message, user.username ?: "")
+                                        val unblockConfirm = stringResource(Res.string.profile_action_unblock)
                                         BlockedUserItem(
                                             user = user,
                                             onUserClick = {
                                                 navigator.push(ProfileScreen(userId = user.userId))
                                             },
                                             onUnblockClick = {
-                                                screenModel.unblockUser(targetUserId = user.userId)
+                                                activeDialog = DialogConfig(
+                                                    title = unblockTitle,
+                                                    message = unblockMessage,
+                                                    confirmText = unblockConfirm,
+                                                    isDestructive = false,
+                                                    onConfirm = { screenModel.unblockUser(targetUserId = user.userId) }
+                                                )
                                             }
                                         )
                                     }
@@ -287,6 +304,12 @@ class BlockedUsersScreen() : Screen {
                     }
                 }
             }
+        }
+        activeDialog?.let { config ->
+            TastyConfirmDialog(
+                config = config,
+                onDismiss = { activeDialog = null }
+            )
         }
     }
 }

@@ -83,9 +83,7 @@ class ProfileRepository(
             .onStart {
                 // L1 önbellekte veri varsa ilk render hızını artırmak için L1'i emit edebiliriz,
                 // ancak arka planda güncel API verisini çekeriz.
-                CoroutineScope(Dispatchers.Default).launch {
                     fetchRemoteProfile(userId)
-                }
             }
     }
 
