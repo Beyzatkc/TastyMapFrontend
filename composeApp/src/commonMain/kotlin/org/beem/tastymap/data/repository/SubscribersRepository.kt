@@ -27,6 +27,9 @@ class SubscribersRepository(
             if (actionResult.relationStatus == RelationStatus.FOLLOWING) {
                 localDataSource.incrementSubscribed(myUserId)
                 localDataSource.incrementSubscriber(targetUserId)
+
+                memoryCache.invalidateUserCache(myUserId)
+                memoryCache.invalidateUserCache(targetUserId)
             }
 
             localDataSource.updateRelationStatus(
@@ -35,9 +38,6 @@ class SubscribersRepository(
                 hasPendingIncomingRequest = actionResult.hasPendingIncomingRequest,
                 isFollower = actionResult.isFollower
             )
-
-            memoryCache.invalidateUserCache(myUserId)
-            memoryCache.invalidateUserCache(targetUserId)
         }
 
         return result

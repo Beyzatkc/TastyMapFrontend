@@ -10,6 +10,8 @@ import org.beem.tastymap.core.local.TokenManager
 import org.beem.tastymap.core.local.TokenManagerImpl
 import org.beem.tastymap.core.navigation.MobileVerifyNavigator
 import org.beem.tastymap.core.navigation.VerifyNavigator
+import org.beem.tastymap.core.provider.AppDispatchers
+import org.beem.tastymap.core.provider.DispatcherProvider
 import org.beem.tastymap.core.provider.HttpClientFactory
 import org.beem.tastymap.data.cache.BlockedMemoryCache
 import org.beem.tastymap.data.cache.CacheManager
@@ -63,6 +65,7 @@ val appModule = module {
 
     single<TokenManager> { TokenManagerImpl(get()) }
     single<SettingsManager> { SettingsManagerImpl(get()) }
+    single<DispatcherProvider> { AppDispatchers }
 
     single<HttpClient>(named("noAuth")) {
         createNoAuthClient(get())
@@ -86,7 +89,7 @@ val appModule = module {
     single { ToggleFollowUseCase(get(),get()) }
     single { ToggleBlockUseCase(get(),get()) }
 
-    single { ProfileLocalDataSource(get()) }
+    single { ProfileLocalDataSource(get(),get()) }
     factory { ClearSessionUseCase(get(), get(), get(), get()) }
 
     single { AuthDataSource(get(named("noAuth"))) }
@@ -106,8 +109,8 @@ val appModule = module {
     single { SubscribersRepository(get(),get(),get())}
     single { HealthRepository(get(),get(),get()) }
     single { PasswordResetSessionManager() }
-    single { ProfileRepository(get(), get(), get()) }
-    single { MyProfileRepository(get(), get(), get(), get(), get(),get()) }
+    single { ProfileRepository(get(), get(), get(),get()) }
+    single { MyProfileRepository(get(), get(), get(), get(), get(),get(),get()) }
     single { SocialNotificationsRepository(get(),get()) }
     single { BlockRepository(get(),get(),get(),get(),get()) }
 

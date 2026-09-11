@@ -56,10 +56,6 @@ class MyProfileScreenModel(
         if (profileJob?.isActive == true) return
 
         profileJob = screenModelScope.launch {
-            _myProfileState.update {
-                it.copy(isLoading = it.profile == null, errorMessage = null)
-            }
-
             repo.getMyProfile().collect { result ->
                 when (result) {
                     is ResultWrapper.Success -> {

@@ -2,15 +2,17 @@ package org.beem.tastymap.core.network
 
 import io.ktor.client.call.body
 import io.ktor.client.plugins.ResponseException
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.withContext
 import kotlinx.io.IOException
 import kotlinx.serialization.SerializationException
+import org.beem.tastymap.core.provider.AppDispatchers
 import org.beem.tastymap.data.model.auth.ErrorResponse
 
 suspend fun <T> safeApiCall(
+    dispatcher: CoroutineDispatcher = AppDispatchers.io,
     call: suspend () -> T
-): ResultWrapper<T> = withContext(Dispatchers.Default) {
+): ResultWrapper<T> = withContext(dispatcher) {
     try {
         ResultWrapper.Success(call())
     } catch (e: Exception) {
@@ -32,7 +34,6 @@ suspend fun <T> safeApiCall(
                     null
                 }
 
-                println("Hata %: ${e.message}")
                 val errorMessage = errorResponse?.message
                     ?: errorResponse?.error
                     ?: "Sunucu hatası: ${e.response.status.value}"

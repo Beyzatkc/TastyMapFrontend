@@ -2,19 +2,25 @@ package org.beem.tastymap.data.repository.profile
 
 import io.github.vinceglb.filekit.core.PlatformFile
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.beem.tastymap.core.local.UserManager
 import org.beem.tastymap.core.network.ErrorType
 import org.beem.tastymap.core.network.ResultWrapper
 import org.beem.tastymap.core.network.safeApiCall
+import org.beem.tastymap.core.provider.DispatcherProvider
 import org.beem.tastymap.data.cache.ProfileMemoryCache
 import org.beem.tastymap.data.local.ProfileLocalDataSource
 import org.beem.tastymap.data.mapper.toDomain
@@ -34,123 +40,70 @@ class MyProfileRepository(
     private val localDataSource: ProfileLocalDataSource,
     private val userManager: UserManager,
     private val fileRemoteDataSource: FileRemoteDataSource,
-    private val clearSessionUseCase: ClearSessionUseCase
+    private val clearSessionUseCase: ClearSessionUseCase,
+    private val dispatchers: DispatcherProvider
 ) {
 
-    /*
-    fun getMyProfile(): Flow<ResultWrapper<UserProfile>> = flow {
-        val myUserId = userManager.getUserId()
-        if (myUserId == null) {
-            emit(ResultWrapper.Error("Kullanıcı oturumu bulunamadı.", ErrorType.UNAUTHORIZED))
-            return@flow
-        }
-
-        val l1Profile = memoryCache.get(myUserId)
-        val l2Profile = if (l1Profile == null) localDataSource.getProfile(myUserId) else null
-
-        if (l1Profile != null) {
-            emit(ResultWrapper.Success(l1Profile))
-        } else if (l2Profile != null) {
-            memoryCache.put(myUserId, l2Profile)
-            emit(ResultWrapper.Success(l2Profile))
-        }
-
-        try {
-            val remoteDto = dataSource.getUserProfile()
-
-            val freshProfile = remoteDto.toDomain(myUserId)
-
-            memoryCache.put(myUserId, freshProfile)
-            localDataSource.saveProfile(freshProfile)
-            emit(ResultWrapper.Success(freshProfile))
-        } catch (e: Exception) {
-            val errorMessage = e.message ?: e.cause?.message ?: "Profil güncellenirken bir hata oluştu."
-
-            if (l1Profile == null && l2Profile == null) {
-                emit(ResultWrapper.Error(errorMessage, ErrorType.SERVER_ERROR))
-            } else {
-                emit(ResultWrapper.Error(errorMessage, ErrorType.UNKNOWN_ERROR))
-            }
-        }
-    }
-
-     */
     fun getMyProfile(): Flow<ResultWrapper<UserProfile>> {
-        val myUserId = userManager.getUserId()
-        if (myUserId == null) {
-            println("PROFILE_FLOW: Kullanıcı oturumu bulunamadı (myUserId = null)")
-            return flowOf(ResultWrapper.Error("Kullanıcı oturumu bulunamadı.", ErrorType.UNAUTHORIZED))
-        }
-
-        println("PROFILE_FLOW: getMyProfile() çağrıldı. UserId: $myUserId")
-
         return flow {
-            // 1. L1 Memory Cache Kontrolü
+            val myUserId = userManager.getUserId()
+            if (myUserId == null) {
+                emit(ResultWrapper.Error("Kullanıcı oturumu bulunamadı.", ErrorType.UNAUTHORIZED))
+                return@flow
+            }
             val cachedProfile = memoryCache.get(myUserId)
             if (cachedProfile != null) {
-                println("PROFILE_FLOW [L1 - Memory Cache]: Veri bulundu ve EMIT edildi -> $cachedProfile")
                 emit(ResultWrapper.Success(cachedProfile))
-            } else {
-                println("PROFILE_FLOW [L1 - Memory Cache]: Veri bulunamadı (Cache MISS)")
             }
 
-            // 2. L2 Database (Room/Local) Akışına Abone Olunması
-            println("PROFILE_FLOW [L2 - DB]: LocalDataSource akışına (getProfileFlow) abone olunuyor...")
             emitAll(
                 localDataSource.getProfileFlow(myUserId)
-                    .filterNotNull() // <--- NULL (boş) veriyi filtrelerez. Ekrana hata fırlatmayı engeller!
+                    .filterNotNull()
+                    .distinctUntilChanged()
                     .map { dbProfile ->
-                        println("PROFILE_FLOW [L2 - DB]: Veritabanından yeni veri geldi ve L1 Cache güncellendi -> $dbProfile")
                         memoryCache.put(myUserId, dbProfile)
                         ResultWrapper.Success(dbProfile)
                     }
             )
         }
             .onStart {
-                // 3. Arka Plan Network İsteğinin Başlatılması
-                println("PROFILE_FLOW [Network]: Akış başladı (onStart), uzaktan veri çekme başlatılıyor...")
-                    fetchRemoteProfile()
+                CoroutineScope(currentCoroutineContext()).launch {
+                    try {
+                        fetchRemoteProfile()
+                    } catch (e: Exception) {
+                        println("[ProfileRepo] ERROR: Asenkron Remote Fetch Hatası -> ${e.message}")
+                    }
+                }
             }
+            .flowOn(dispatchers.io)
     }
 
-     suspend fun fetchRemoteProfile() {
+    suspend fun fetchRemoteProfile() = withContext(dispatchers.io) {
+        val myUserId = userManager.getUserId()
 
-         val myUserId = userManager.getUserId()
-         if (myUserId == null) {
-             println("PROFILE_FLOW: Kullanıcı oturumu bulunamadı (myUserId = null)")
-             return
-         }
-        try {
-            val remoteDto = dataSource.getUserProfile()
-
-            println("ASIL YER [Network HATA]: Uzak sunucudan veri çekilirken hata oluştu ->" + remoteDto.privateProfile)
-            val freshProfile = remoteDto.toDomain(myUserId)
-
-            memoryCache.put(myUserId, freshProfile)
-            localDataSource.saveProfile(freshProfile)
-
-        } catch (e: Exception) {
-            // e.message bazen null gelebilir; e.toString() ve stack trace hatanın kaynağını kesin gösterir.
-            println("PROFILE_FLOW [Network HATA]: Uzak sunucudan veri çekilirken hata oluştu -> Hata Türü/Mesajı: $e")
-            e.printStackTrace() // Logcat/konsolda hatanın tam hangi satırda oluştuğunu gösterir
-            throw e
+        if (myUserId == null) {
+            return@withContext
         }
+        val remoteDto = dataSource.getUserProfile()
+        val freshProfile = remoteDto.toDomain(myUserId)
+        memoryCache.put(myUserId, freshProfile)
+
+        localDataSource.saveProfile(freshProfile)
     }
 
 
-    suspend fun getActiveDevices(): ResultWrapper<ActiveDevicesResponse> {
-        return safeApiCall {
-            dataSource.getActiveDevices()
-        }
+    suspend fun getActiveDevices(): ResultWrapper<ActiveDevicesResponse> = withContext(dispatchers.io) {
+        safeApiCall { dataSource.getActiveDevices() }
     }
 
-    suspend fun uploadProfilePhoto(file: PlatformFile): ResultWrapper<String> {
-        return safeApiCall {
+    suspend fun uploadProfilePhoto(file: PlatformFile): ResultWrapper<String> = withContext(dispatchers.io) {
+        safeApiCall {
             val response = fileRemoteDataSource.uploadFile(file)
             response.imageUrl
         }
     }
-    suspend fun updateProfile(request: UpdateProfile): ResultWrapper<MessageResponse> {
+
+    suspend fun updateProfile(request: UpdateProfile): ResultWrapper<MessageResponse> = withContext(dispatchers.io) {
         val result = safeApiCall { dataSource.updateProfile(request) }
 
         if (result is ResultWrapper.Success) {
@@ -176,6 +129,7 @@ class MyProfileRepository(
                         )
                     )
                 }
+
                 localDataSource.updatePartialProfile(
                     userId = myUserId,
                     username = request.username,
@@ -186,18 +140,18 @@ class MyProfileRepository(
                 )
             }
         }
-        return result
-    }
-    suspend fun changePassword(request: ChangePassword): ResultWrapper<MessageResponse> {
-        return safeApiCall { dataSource.changePassword(request) }
+        result
     }
 
-    suspend fun getMe(): ResultWrapper<UserResponse> {
-        return safeApiCall {
-            dataSource.getMe()
-        }
+    suspend fun changePassword(request: ChangePassword): ResultWrapper<MessageResponse> = withContext(dispatchers.io) {
+        safeApiCall { dataSource.changePassword(request) }
     }
-    suspend fun updatePrivacyStatus(isPrivate: Boolean): ResultWrapper<Unit> {
+
+    suspend fun getMe(): ResultWrapper<UserResponse> = withContext(dispatchers.io) {
+        safeApiCall { dataSource.getMe() }
+    }
+
+    suspend fun updatePrivacyStatus(isPrivate: Boolean): ResultWrapper<Unit> = withContext(dispatchers.io) {
         val result = safeApiCall {
             dataSource.updatePrivacyStatus(isPrivate)
         }
@@ -217,23 +171,18 @@ class MyProfileRepository(
                 )
             }
         }
-
-        return result
+        result
     }
 
-    suspend fun logout(deviceId: String): ResultWrapper<Unit> {
-        return try {
+    suspend fun logout(deviceId: String): ResultWrapper<Unit> = withContext(dispatchers.io) {
+        try {
             safeApiCall { dataSource.logout(deviceId) }
         } finally {
             clearSessionUseCase()
         }
     }
 
-    suspend fun getAllUsers(): ResultWrapper<List<UserResponse>> {
-        return safeApiCall {
-            dataSource.getAllUsers()
-        }
+    suspend fun getAllUsers(): ResultWrapper<List<UserResponse>> = withContext(dispatchers.io) {
+        safeApiCall { dataSource.getAllUsers() }
     }
-
-
 }

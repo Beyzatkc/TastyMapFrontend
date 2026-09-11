@@ -2,21 +2,25 @@ package org.beem.tastymap.data.local
 
 import app.cash.sqldelight.coroutines.asFlow
 import app.cash.sqldelight.coroutines.mapToOneOrNull
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
+import org.beem.tastymap.core.provider.DispatcherProvider
 import org.beem.tastymap.domain.model.RelationStatus
 import org.beem.tastymap.domain.model.UserProfile
 import org.beem.tastymap.sqldelight.ProfileEntityQueries
 import kotlin.time.Clock
 
-class ProfileLocalDataSource(private val queries: ProfileEntityQueries) {
+class ProfileLocalDataSource(
+    private val queries: ProfileEntityQueries,
+    private val dispatchers: DispatcherProvider
+) {
 
     fun getProfileFlow(userId: Long): Flow<UserProfile?> {
         return queries.getProfileById(userId)
             .asFlow()
-            .mapToOneOrNull(Dispatchers.Default)
+            .mapToOneOrNull(dispatchers.io)
             .map { entity ->
                 entity?.let {
                     UserProfile(
@@ -43,6 +47,7 @@ class ProfileLocalDataSource(private val queries: ProfileEntityQueries) {
                     )
                 }
             }
+            .flowOn(dispatchers.io)
     }
 
     suspend fun updatePartialProfile(
@@ -52,7 +57,7 @@ class ProfileLocalDataSource(private val queries: ProfileEntityQueries) {
         surname: String?,
         profilePhoto: String?,
         biography: String?
-    ) {
+    ) = withContext(dispatchers.io) {
         queries.updatePartialProfile(
             userId = userId,
             username = username,
@@ -63,7 +68,7 @@ class ProfileLocalDataSource(private val queries: ProfileEntityQueries) {
         )
     }
 
-    suspend fun saveProfile(profile: UserProfile) = withContext(Dispatchers.Default) {
+    suspend fun saveProfile(profile: UserProfile) = withContext(dispatchers.io) {
         queries.insertOrUpdateProfile(
             userId = profile.userId,
             username = profile.username,
@@ -87,24 +92,28 @@ class ProfileLocalDataSource(private val queries: ProfileEntityQueries) {
         queries.trimOldProfiles()
     }
 
-    suspend fun deleteProfile(userId: Long) = withContext(Dispatchers.Default) {
+    suspend fun deleteProfile(userId: Long) = withContext(dispatchers.io) {
         queries.deleteProfileById(userId)
     }
-    suspend fun updatePrivacyStatus(userId: Long, isPrivate: Boolean) = withContext(Dispatchers.Default) {
-        val privateProfileValue = if (isPrivate) 1L else 0L
 
+    suspend fun updatePrivacyStatus(userId: Long, isPrivate: Boolean) = withContext(dispatchers.io) {
         queries.updatePrivacyStatus(
-            privateProfile = privateProfileValue,
+            privateProfile = if (isPrivate) 1L else 0L,
             updatedAt = Clock.System.now().toEpochMilliseconds(),
             userId = userId
         )
     }
 
-    suspend fun clearAll() = withContext(Dispatchers.Default) {
+    suspend fun clearAll() = withContext(dispatchers.io) {
         queries.clearAllProfiles()
     }
 
-    suspend fun updateCounts(userId: Long, subscriberCount: Long, subscribedCount: Long, postCount: Long) = withContext(Dispatchers.Default) {
+    suspend fun updateCounts(
+        userId: Long,
+        subscriberCount: Long,
+        subscribedCount: Long,
+        postCount: Long
+    ) = withContext(dispatchers.io) {
         queries.updateCounts(
             subscriberCount = subscriberCount,
             subscribedCount = subscribedCount,
@@ -114,41 +123,42 @@ class ProfileLocalDataSource(private val queries: ProfileEntityQueries) {
         )
     }
 
-    suspend fun incrementSubscriber(userId: Long) = withContext(Dispatchers.Default) {
+    suspend fun incrementSubscriber(userId: Long) = withContext(dispatchers.io) {
         queries.incrementSubscriberCount(
             updatedAt = Clock.System.now().toEpochMilliseconds(),
             userId = userId
         )
     }
 
-    suspend fun decrementSubscriber(userId: Long) = withContext(Dispatchers.Default) {
+    suspend fun decrementSubscriber(userId: Long) = withContext(dispatchers.io) {
         queries.decrementSubscriberCount(
             updatedAt = Clock.System.now().toEpochMilliseconds(),
             userId = userId
         )
     }
 
-    suspend fun decrementSubscribed(userId: Long) = withContext(Dispatchers.Default) {
+    suspend fun decrementSubscribed(userId: Long) = withContext(dispatchers.io) {
         queries.decrementSubscribedCount(
             updatedAt = Clock.System.now().toEpochMilliseconds(),
             userId = userId
         )
     }
 
-    suspend fun incrementSubscribed(userId: Long) = withContext(Dispatchers.Default) {
+    suspend fun incrementSubscribed(userId: Long) = withContext(dispatchers.io) {
         queries.incrementSubscribedCount(
             updatedAt = Clock.System.now().toEpochMilliseconds(),
             userId = userId
         )
     }
-    suspend fun blockUserInLocal(userId: Long) = withContext(Dispatchers.Default) {
+
+    suspend fun blockUserInLocal(userId: Long) = withContext(dispatchers.io) {
         queries.blockUserUpdate(
             updatedAt = Clock.System.now().toEpochMilliseconds(),
             userId = userId
         )
     }
 
-    suspend fun unblockUserInLocal(userId: Long) = withContext(Dispatchers.Default) {
+    suspend fun unblockUserInLocal(userId: Long) = withContext(dispatchers.io) {
         queries.unblockUserUpdate(
             updatedAt = Clock.System.now().toEpochMilliseconds(),
             userId = userId
@@ -160,7 +170,7 @@ class ProfileLocalDataSource(private val queries: ProfileEntityQueries) {
         relationStatus: RelationStatus,
         hasPendingIncomingRequest: Boolean,
         isFollower: Boolean
-    ) = withContext(Dispatchers.Default) {
+    ) = withContext(dispatchers.io) {
         queries.updateRelationStatus(
             relationStatus = relationStatus.name,
             hasPendingIncomingRequest = if (hasPendingIncomingRequest) 1L else 0L,
@@ -170,7 +180,7 @@ class ProfileLocalDataSource(private val queries: ProfileEntityQueries) {
         )
     }
 
-    suspend fun clearPendingRequest(userId: Long) = withContext(Dispatchers.Default) {
+    suspend fun clearPendingRequest(userId: Long) = withContext(dispatchers.io) {
         queries.clearPendingRequest(
             updatedAt = Clock.System.now().toEpochMilliseconds(),
             userId = userId

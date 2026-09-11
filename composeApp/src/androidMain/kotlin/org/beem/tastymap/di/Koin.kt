@@ -7,6 +7,7 @@ import org.koin.dsl.module
 
 import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKeys
+import androidx.sqlite.db.SupportSQLiteDatabase
 import app.cash.sqldelight.async.coroutines.synchronous
 import app.cash.sqldelight.db.SqlDriver
 import app.cash.sqldelight.driver.android.AndroidSqliteDriver
@@ -24,12 +25,21 @@ import org.beem.tastymap.database.TastyDatabase
 
 val androidModule = module {
     single<SqlDriver> {
+        val schema = TastyDatabase.Schema.synchronous()
+
         AndroidSqliteDriver(
-            schema = TastyDatabase.Schema.synchronous(),
+            schema = schema,
             context = get(),
-            name = "tasty.db"
+            name = "tasty.db",
+            callback = object : AndroidSqliteDriver.Callback(schema) {
+                override fun onConfigure(db: SupportSQLiteDatabase) {
+                    super.onConfigure(db)
+                    db.setForeignKeyConstraintsEnabled(true)
+                }
+            }
         )
     }
+
     single<DeviceInfoProvider> { AndroidDeviceInfoProvider(get()) }
     single<HttpClientFactory> { MobileHttpClientFactory(get(), get(),get()) }
     single<Settings> {

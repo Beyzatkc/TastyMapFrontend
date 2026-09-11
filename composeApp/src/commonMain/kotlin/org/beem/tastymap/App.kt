@@ -44,15 +44,6 @@ fun App() {
     // Platform bağımlı sistem Locale'ini güncelliyoruz
     ChangeAppLanguage(languageCode)
 
-    // Veritabanı oluşturma işlemi
-    LaunchedEffect(Unit) {
-        try {
-            TastyDatabase.Schema.create(sqlDriver).await()
-        } catch (e: Exception) {
-            if (e is CancellationException) throw e
-            println("LOG_DB: Şema zaten mevcut veya pas geçildi: ${e.message}")
-        }
-    }
 
     TastyTheme(useDarkTheme = useDarkTheme) {
         Navigator(SplashScreen()) { navigator ->

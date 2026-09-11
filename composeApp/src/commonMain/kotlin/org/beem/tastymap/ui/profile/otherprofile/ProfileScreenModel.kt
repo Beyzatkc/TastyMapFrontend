@@ -5,18 +5,13 @@ import cafe.adriel.voyager.core.model.screenModelScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import org.beem.tastymap.core.local.UserManager
 import org.beem.tastymap.core.network.ResultWrapper
-import org.beem.tastymap.data.repository.SubscribersRepository
 import org.beem.tastymap.data.repository.profile.ProfileRepository
 import org.beem.tastymap.domain.model.RelationStatus
-import org.beem.tastymap.domain.model.UserProfile
 import org.beem.tastymap.domain.usecase.ToggleBlockUseCase
 import org.beem.tastymap.domain.usecase.ToggleFollowUseCase
-import org.beem.tastymap.ui.profile.otherprofile.ProfileUiState
 
 
 class ProfileScreenModel(
@@ -36,11 +31,7 @@ class ProfileScreenModel(
         if (profileJob?.isActive == true) return
 
         profileJob = screenModelScope.launch {
-            _profileState.update {
-                it.copy(isLoading = it.profile == null, errorMessage = null)
-            }
-
-            repo.getMyProfile(userId).collect { result ->
+            repo.getProfile(userId).collect { result ->
                 when (result) {
                     is ResultWrapper.Success -> {
                         _profileState.update {
