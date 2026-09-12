@@ -98,6 +98,7 @@ kotlin {
             implementation(libs.ktor.client.auth)
 
             implementation(libs.voyager.navigator)
+            implementation(libs.voyager.tab.navigator)
             implementation(libs.voyager.screenmodel)
             implementation(libs.voyager.koin)
             implementation(libs.voyager.transitions)

@@ -37,11 +37,9 @@ fun App() {
 
     val authEventBus: AuthEventBus = koinInject()
     val clearSessionUseCase: ClearSessionUseCase = koinInject()
-    val sqlDriver: SqlDriver = koinInject()
 
     val useDarkTheme = isDarkModePref ?: isSystemInDarkTheme()
 
-    // Platform bağımlı sistem Locale'ini güncelliyoruz
     ChangeAppLanguage(languageCode)
 
 
@@ -73,13 +71,10 @@ fun App() {
                 }
             }
 
-            // Dil değiştiğinde ekran geçiş alanını yeniden çizer
-            key(languageCode) {
-                SlideTransition(
-                    navigator = navigator,
-                    animationSpec = tween(400)
-                )
-            }
+            SlideTransition(
+                navigator = navigator,
+                animationSpec = tween(400)
+            )
         }
         AppToast()
     }

@@ -26,8 +26,14 @@ class SettingsScreenModel(
     val languageCode = settingsManager.languageCode
 
 
+
     fun setInitialPrivacyStatus(initialStatus: Boolean) {
-        _uiState.update { it.copy(isAccountPrivate = initialStatus) }
+        _uiState.update {
+            it.copy(
+                isAccountPrivate = initialStatus,
+                isLoading = false
+            )
+        }
     }
     fun setLanguage(code: String) {
         settingsManager.setLanguageCode(code)

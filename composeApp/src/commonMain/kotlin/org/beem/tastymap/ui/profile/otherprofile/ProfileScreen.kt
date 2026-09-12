@@ -4,6 +4,8 @@ import TastyButton
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
@@ -25,11 +27,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.zIndex
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.koin.koinScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
@@ -85,6 +89,7 @@ class ProfileScreen(private val userId: Long) : Screen {
         val screenModel = koinScreenModel<ProfileScreenModel>()
         val state by screenModel.profileState.collectAsState()
         val navigator = LocalNavigator.currentOrThrow
+        var isPhotoZoomed by remember { mutableStateOf(false) }
 
         var showBottomSheet by remember { mutableStateOf(false) }
         var activeDialog by remember { mutableStateOf<DialogConfig?>(null) }
@@ -206,7 +211,14 @@ class ProfileScreen(private val userId: Long) : Screen {
                                                     .size(92.dp)
                                                     .clip(CircleShape)
                                                     .border(3.dp, customColors.gourmetOrange, CircleShape)
-                                                    .background(customColors.placeHolderBack),
+                                                    .background(customColors.placeHolderBack)
+                                                    .pointerInput(Unit) {
+                                                        detectTapGestures(
+                                                            onLongPress  = {
+                                                                isPhotoZoomed = true
+                                                            }
+                                                        )
+                                                    },
                                                 contentAlignment = Alignment.Center
                                             ) {
                                                 if (!profile?.profilePhoto.isNullOrBlank() && !isBlocked) {
@@ -546,6 +558,35 @@ class ProfileScreen(private val userId: Long) : Screen {
                 config = config,
                 onDismiss = { activeDialog = null }
             )
+        }
+        if (isPhotoZoomed && !state.profile?.profilePhoto.isNullOrBlank()) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color.Black.copy(alpha = 0.85f))
+                    .zIndex(10f)
+                    .clickable(
+                        indication = null,
+                        interactionSource = remember { MutableInteractionSource() }
+                    ) {
+                        isPhotoZoomed = false
+                    },
+                contentAlignment = Alignment.Center
+            ) {
+                AsyncImage(
+                    model = state.profile?.profilePhoto,
+                    contentDescription = null,
+                    modifier = Modifier
+                        .size(280.dp)
+                        .clip(CircleShape)
+                        .border(4.dp, customColors.gourmetOrange, CircleShape)
+                        .clickable(
+                            indication = null,
+                            interactionSource = remember { MutableInteractionSource() }
+                        ) {},
+                    contentScale = ContentScale.Crop
+                )
+            }
         }
     }
 

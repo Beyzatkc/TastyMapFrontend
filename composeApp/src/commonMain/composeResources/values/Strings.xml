@@ -433,4 +433,9 @@
     <string name="dialog_remove_follower_title">Takipçiyi Çıkar</string>
     <string name="dialog_remove_follower_message">@%1$s takipçilerinizden çıkarılsın mı?</string>
     <string name="profile_user_unavailable">Kullanıcıya Erişilemiyor</string>
+
+    <string name="nav_map">Harita</string>
+    <string name="nav_search">Arama</string>
+    <string name="nav_upload">Yükle</string>
+    <string name="nav_profile">Profil</string>
 </resources>

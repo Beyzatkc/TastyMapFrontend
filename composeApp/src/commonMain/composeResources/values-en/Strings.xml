@@ -432,4 +432,11 @@
     <string name="dialog_remove_follower_title">Remove Follower</string>
     <string name="dialog_remove_follower_message">Remove %1$s from your followers?</string>
     <string name="profile_user_unavailable">User Unavailable</string>
+
+
+    <string name="nav_map">Map</string>
+    <string name="nav_search">Search</string>
+    <string name="nav_upload">Upload</string>
+    <string name="nav_profile">Profile</string>
+
 </resources>
