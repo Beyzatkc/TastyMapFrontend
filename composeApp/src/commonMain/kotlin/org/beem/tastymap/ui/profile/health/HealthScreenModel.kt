@@ -46,7 +46,11 @@ class HealthScreenModel(
             AllergyUiModel(id = 6L, nameRes = Res.string.allergy_none)
         )
         _healthState.update {
-            it.copy(availableAllergies = defaultAllergies, selectedAllergyIds = listOf(NO_ALLERGY_ID))
+            it.copy(
+                availableAllergies = defaultAllergies,
+                selectedAllergyIds = emptyList(),
+                isLoading = true ,
+            )
         }
     }
     fun loadUserHealthProfile() {

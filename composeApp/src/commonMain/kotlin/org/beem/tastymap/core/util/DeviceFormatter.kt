@@ -14,7 +14,7 @@ fun String?.parseDeviceName(): String {
         this.contains("Chrome", ignoreCase = true) -> "Chrome"
         this.contains("Firefox", ignoreCase = true) -> "Firefox"
         this.contains("Safari", ignoreCase = true) && !this.contains("Chrome", ignoreCase = true) -> "Safari"
-        else -> "Tarayıcı"
+        else -> null
     }
     val os = when {
         this.contains("Windows NT 10.0", ignoreCase = true) -> "Windows 10/11"
@@ -28,9 +28,11 @@ fun String?.parseDeviceName(): String {
         else -> null
     }
 
-    return if (os != null) {
+    return ((if (os != null && browser!= null) {
         "$os - $browser"
+    }else if(os != null && browser == null){
+        os
     } else {
         browser
-    }
+    }).toString())
 }

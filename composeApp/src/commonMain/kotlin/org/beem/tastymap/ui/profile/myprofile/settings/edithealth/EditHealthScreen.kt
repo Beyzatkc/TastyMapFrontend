@@ -151,7 +151,7 @@ fun EditHealthContent(
             )
         }
     ) { innerPadding ->
-        if (uiState.isLoading && uiState.initialHealthProfile == null) {
+        if (uiState.isLoading) {
             Box(
                 modifier = Modifier
                     .fillMaxSize()
