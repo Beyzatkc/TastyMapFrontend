@@ -1,0 +1,28 @@
+CREATE TABLE SearchHistoryEntity (
+    id INTEGER NOT NULL PRIMARY KEY,
+    username TEXT NOT NULL,
+    name TEXT NOT NULL,
+    profile TEXT,
+    searchedAt INTEGER NOT NULL
+);
+
+-- 1. Son aramaları getir (En yeniden en eskiye sıralı, limit 20)
+getAllRecentSearches:
+SELECT *
+FROM SearchHistoryEntity
+ORDER BY searchedAt DESC
+LIMIT 20;
+
+-- 2. Yeni aranan kullanıcıyı ekle veya zaten varsa güncelle (Tarihi yeniler, en üste çıkarır)
+insertOrReplace:
+INSERT OR REPLACE INTO SearchHistoryEntity(id, username, name, profile, searchedAt)
+VALUES (?, ?, ?, ?, ?);
+
+-- 3. Çarpı (X) butonuna basıldığında geçmişten tekil kullanıcıyı sil
+deleteById:
+DELETE FROM SearchHistoryEntity
+WHERE id = ?;
+
+-- 4. Bütün geçmişi temizle (Sunucudan gelen yeni verilerle senkronize ederken lazım olur)
+clearAll:
+DELETE FROM SearchHistoryEntity;

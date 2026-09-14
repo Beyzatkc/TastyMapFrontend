@@ -7,6 +7,7 @@ class CacheManager(
     private val subscribeMemoryCache: SubscribeMemoryCache,
     private val notificationsMemoryCache: NotificationsMemoryCache,
     private val blockedMemoryCache: BlockedMemoryCache,
+    private val searchMemoryCache: SearchMemoryCache
 ) {
     fun clearAllMemoryCaches() {
         profileMemoryCache.clear()
@@ -14,5 +15,6 @@ class CacheManager(
         subscribeMemoryCache.clear()
         notificationsMemoryCache.clear()
         blockedMemoryCache.clear()
+        searchMemoryCache.clear()
     }
 }

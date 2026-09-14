@@ -18,13 +18,16 @@ import org.beem.tastymap.data.cache.CacheManager
 import org.beem.tastymap.data.cache.HealthMemoryCache
 import org.beem.tastymap.data.cache.NotificationsMemoryCache
 import org.beem.tastymap.data.cache.ProfileMemoryCache
+import org.beem.tastymap.data.cache.SearchMemoryCache
 import org.beem.tastymap.data.cache.SubscribeMemoryCache
 import org.beem.tastymap.data.local.ProfileLocalDataSource
+import org.beem.tastymap.data.local.SearchHistoryLocalDataSource
 import org.beem.tastymap.data.remote.AuthDataSource
 import org.beem.tastymap.data.remote.AuthWebSocketClient
 import org.beem.tastymap.data.remote.BlockDataSource
 import org.beem.tastymap.data.remote.FileRemoteDataSource
 import org.beem.tastymap.data.remote.HealthDataSource
+import org.beem.tastymap.data.remote.SearchUserDataSource
 import org.beem.tastymap.data.remote.SocialNotificationDataSource
 import org.beem.tastymap.data.remote.SubscribersDataSource
 import org.beem.tastymap.data.remote.UserSecurityDataSource
@@ -33,6 +36,7 @@ import org.beem.tastymap.data.remote.profile.ProfileDataSource
 import org.beem.tastymap.data.repository.AuthRepository
 import org.beem.tastymap.data.repository.BlockRepository
 import org.beem.tastymap.data.repository.HealthRepository
+import org.beem.tastymap.data.repository.SearchUserRepository
 import org.beem.tastymap.data.repository.SocialNotificationsRepository
 import org.beem.tastymap.data.repository.SubscribersRepository
 import org.beem.tastymap.data.repository.UserSecurityRepository
@@ -59,6 +63,7 @@ import org.beem.tastymap.ui.profile.myprofile.settings.blockedusers.BlockedScree
 import org.beem.tastymap.ui.profile.myprofile.settings.changepassword.ChangePasswordScreenModel
 import org.beem.tastymap.ui.profile.otherprofile.ProfileScreenModel
 import org.beem.tastymap.ui.profile.subscribers.SubscribersListScreenModel
+import org.beem.tastymap.ui.search.SearchScreenModel
 import org.koin.core.qualifier.named
 
 val appModule = module {
@@ -80,16 +85,19 @@ val appModule = module {
     single { AuthEventBus() }
     single { TastyDatabase(driver = get()) }
     single { get<TastyDatabase>().profileEntityQueries }
+    single { get<TastyDatabase>().searchHistoryEntityQueries }
     single { ProfileMemoryCache() }
     single { HealthMemoryCache() }
     single { SubscribeMemoryCache() }
+    single { SearchMemoryCache() }
     single { NotificationsMemoryCache() }
     single { BlockedMemoryCache() }
-    single { CacheManager(get(), get(),get(),get(),get()) }
+    single { CacheManager(get(), get(),get(),get(),get(),get()) }
     single { ToggleFollowUseCase(get(),get()) }
     single { ToggleBlockUseCase(get(),get()) }
 
     single { ProfileLocalDataSource(get(),get()) }
+    single { SearchHistoryLocalDataSource(get(),get()) }
     factory { ClearSessionUseCase(get(), get(), get(), get()) }
 
     single { AuthDataSource(get(named("noAuth"))) }
@@ -100,6 +108,7 @@ val appModule = module {
     single { FileRemoteDataSource(get(named("auth"))) }
     single { SubscribersDataSource(get(named("auth"))) }
     single { SocialNotificationDataSource(get(named("auth")))}
+    single { SearchUserDataSource(get(named("auth"))) }
     single { BlockDataSource(get(named("auth"))) }
     single { AuthWebSocketClient(get(named("auth"))) }
     single { NotificationBadgeManager() }
@@ -112,6 +121,7 @@ val appModule = module {
     single { ProfileRepository(get(), get(), get(),get()) }
     single { MyProfileRepository(get(), get(), get(), get(), get(),get(),get()) }
     single { SocialNotificationsRepository(get(),get()) }
+    single { SearchUserRepository(get(),get(),get(),get()) }
     single { BlockRepository(get(),get(),get(),get(),get()) }
 
     factory { LogRegScreenModel(get(), get(), get(), get()) }
@@ -127,6 +137,7 @@ val appModule = module {
     factory { SettingsScreenModel(get(),get(),get()) }
     factory { ActiveDevicesScreenModel(get()) }
     factory { ChangePasswordScreenModel(get(),get()) }
+    factory { SearchScreenModel(get()) }
     factory { NotificationScreenModel(get(),get(),get()) }
     factory { BlockedScreenModel(get(),get()) }
 

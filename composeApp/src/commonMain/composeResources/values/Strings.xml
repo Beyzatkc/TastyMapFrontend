@@ -438,4 +438,7 @@
     <string name="nav_search">Arama</string>
     <string name="nav_upload">Yükle</string>
     <string name="nav_profile">Profil</string>
+
+    <string name="search_recent_title">Yakın Zamanda Arananlar</string>
+    <string name="search_remove_from_history">Geçmişten sil</string>
 </resources>

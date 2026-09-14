@@ -49,11 +49,12 @@ class MainScreen : Screen {
             TabNavigator(ProfileTab) {
 
                 Scaffold(
+                    contentWindowInsets = WindowInsets.safeDrawing.only(
+                        WindowInsetsSides.Horizontal + WindowInsetsSides.Top
+                    ),
                     bottomBar = {
-                        // 2. ÖNEMLİ: Eğer görünürlük true ise alt barı çiz, değilse gizle!
                         if (isBottomBarVisible.value) {
                             Column {
-
                                 HorizontalDivider(
                                     thickness = 0.5.dp,
                                     color = customColors.borderLight
@@ -66,7 +67,6 @@ class MainScreen : Screen {
                                     color = customColors.surface,
                                     tonalElevation = 0.dp
                                 ) {
-
                                     Row(
                                         modifier = Modifier
                                             .fillMaxSize()
@@ -74,7 +74,6 @@ class MainScreen : Screen {
                                         verticalAlignment = Alignment.CenterVertically,
                                         horizontalArrangement = Arrangement.SpaceAround
                                     ) {
-
                                         BottomTabItem(
                                             tab = MapTab,
                                             modifier = Modifier.weight(1f)

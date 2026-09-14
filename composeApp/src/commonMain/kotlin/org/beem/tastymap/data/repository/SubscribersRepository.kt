@@ -16,7 +16,6 @@ class SubscribersRepository(
     private val memoryCache: SubscribeMemoryCache
 ) {
 
-    // 1. Takip Et / İstek Gönder
     suspend fun subscribe(targetUserId: Long, myUserId: Long): ResultWrapper<SubscribeActionResult> {
         val result = safeApiCall { dataSource.subscribe(targetUserId) }
 
@@ -43,7 +42,6 @@ class SubscribersRepository(
         return result
     }
 
-    // 2. Gelen İsteği Onayla
     suspend fun acceptSubscribeRequest(requesterId: Long, myUserId: Long): ResultWrapper<SubscribeActionResult> {
         val result = safeApiCall { dataSource.acceptSubscribeRequest(requesterId) }
 
@@ -68,7 +66,6 @@ class SubscribersRepository(
         return result
     }
 
-    // 3. Gelen İsteği Reddet
     suspend fun rejectSubscribeRequest(requesterId: Long, myUserId: Long): ResultWrapper<SubscribeActionResult> {
         val result = safeApiCall { dataSource.rejectSubscribeRequest(requesterId) }
 

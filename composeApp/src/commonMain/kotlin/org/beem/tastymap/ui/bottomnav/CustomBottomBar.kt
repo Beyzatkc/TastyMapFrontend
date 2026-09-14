@@ -15,6 +15,7 @@ import cafe.adriel.voyager.navigator.Navigator
 import cafe.adriel.voyager.navigator.tab.Tab
 import cafe.adriel.voyager.navigator.tab.TabOptions
 import org.beem.tastymap.ui.profile.myprofile.MyProfileScreen
+import org.beem.tastymap.ui.search.SearchScreen
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import tastymap.composeapp.generated.resources.Res
@@ -51,7 +52,15 @@ object SearchTab : Tab {
 
     @Composable
     override fun Content() {
-        // SearchScreen() buraya gelecek
+        Navigator(SearchScreen()) { navigator ->
+            val bottomBarVisibility = LocalBottomBarVisibility.current
+            LaunchedEffect(navigator.lastItem) {
+                val currentScreen = navigator.lastItem
+                val isMyProfile = currentScreen is MyProfileScreen
+                bottomBarVisibility.value = isMyProfile || navigator.items.size == 1
+            }
+            CurrentScreen()
+        }
     }
 }
 

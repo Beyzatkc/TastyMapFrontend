@@ -439,4 +439,7 @@
     <string name="nav_upload">Upload</string>
     <string name="nav_profile">Profile</string>
 
+    <string name="search_recent_title">Recent Searches</string>
+    <string name="search_remove_from_history">Remove from history</string>
+
 </resources>
