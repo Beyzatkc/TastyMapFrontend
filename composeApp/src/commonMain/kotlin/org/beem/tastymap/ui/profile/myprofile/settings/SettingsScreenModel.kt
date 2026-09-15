@@ -7,16 +7,21 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import org.beem.tastymap.core.auth.AuthEventBus
 import org.beem.tastymap.core.local.SettingsManager
 import org.beem.tastymap.core.network.ResultWrapper
 import org.beem.tastymap.core.provider.DeviceInfoProvider
+import org.beem.tastymap.data.model.deleteaccount.DeleteAccountRequest
+import org.beem.tastymap.data.model.deleteaccount.DeleteReason
+import org.beem.tastymap.data.repository.DeleteAccountRepository
 
 import org.beem.tastymap.data.repository.profile.MyProfileRepository
 
 class SettingsScreenModel(
     private val repo: MyProfileRepository,
     private val deviceInfoProvider: DeviceInfoProvider,
-    private val settingsManager: SettingsManager
+    private val settingsManager: SettingsManager,
+    private val authEventBus: AuthEventBus
 ) : ScreenModel {
 
     private val _uiState = MutableStateFlow(SettingsUiState())
@@ -49,6 +54,8 @@ class SettingsScreenModel(
             val deviceId = deviceInfoProvider.getDeviceId()
             repo.logout(deviceId)
             _uiState.update { it.copy(isActionLoading = false,isLoggedOut = true) }
+
+            authEventBus.emit(AuthEventBus.AuthEvent.OnLoggedOut)
         }
     }
     fun updatePrivacyStatus(isPrivate: Boolean) {
@@ -75,6 +82,7 @@ class SettingsScreenModel(
             }
         }
     }
+
 
     fun clearMessages() {
         _uiState.update { it.copy(errorMessage = null) }

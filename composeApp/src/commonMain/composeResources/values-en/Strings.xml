@@ -442,4 +442,47 @@
     <string name="search_recent_title">Recent Searches</string>
     <string name="search_remove_from_history">Remove from history</string>
 
+    <string name="privacy_policy_title">Privacy &amp; Terms of Use</string>
+    <string name="privacy_policy_last_updated">Last Updated: September 14, 2026</string>
+
+    <!-- Section 1 -->
+    <string name="privacy_policy_sec1_title">1. Overview &amp; Terms of Service</string>
+    <string name="privacy_policy_sec1_body">By accessing or using TastyMap, you agree to be bound by this Privacy Policy and Terms of Use. Our services are designed to help users discover culinary spots and receive personalized food recommendations.</string>
+
+    <!-- Section 2 -->
+    <string name="privacy_policy_sec2_title">2. Data Collection &amp; Special Categories</string>
+    <string name="privacy_policy_sec2_body">We collect account details (name, email), location data, usage statistics, and your dietary/allergen preferences. Dietary and allergen information may be categorized as sensitive personal data under GDPR/KVKK and is processed solely with your explicit consent to tailor recommendations.</string>
+
+    <!-- Section 3 -->
+    <string name="privacy_policy_sec3_title">3. Allergen &amp; Health Disclaimer</string>
+    <string name="privacy_policy_sec3_body">Information regarding ingredients, allergens, and venue details provided on TastyMap is for informational purposes only. Venues may change ingredients or cross-contamination may occur. Users with severe allergies or medical conditions must verify ingredients directly with the establishment before consumption. TastyMap assumes no liability for adverse food reactions.</string>
+
+    <!-- Section 4 -->
+    <string name="privacy_policy_sec4_title">4. Data Security &amp; Protection</string>
+    <string name="privacy_policy_sec4_body">Your data is stored using industry-standard SSL/TLS encryption and secure cloud infrastructure. We do not sell or rent your personal data to third parties. Data is shared only with necessary service providers (e.g., map services) or when legally required.</string>
+
+    <!-- Section 5 -->
+    <string name="privacy_policy_sec5_title">5. Your Rights &amp; Contact</string>
+    <string name="privacy_policy_sec5_body">Under GDPR and applicable privacy laws, you have the right to access, rectify, delete, or export your personal data. You may delete your account and associated data anytime via app settings or by contacting our support team.</string>
+
+    <string name="delete_account_success_toast">Your account deletion request has been received.</string>
+    <string name="delete_account_warning_title">You are about to delete your account</string>
+    <string name="delete_account_warning_description">Once requested, your account will be suspended. Logging in within 30 days will cancel the deletion. After 30 days, all your data will be permanently deleted.</string>
+    <string name="delete_account_reason_title">Could you specify your reason for leaving?</string>
+    <string name="delete_account_custom_reason_title-ops">Your feedback (Optional)</string>
+    <string name="delete_account_custom_reason_title-must">Your feedback (Required)</string>
+    <string name="delete_account_custom_reason_placeholder">Let us know your feedback to help improve your experience...</string>
+    <string name="delete_account_password_title">Current Password for Security</string>
+    <string name="delete_account_password_placeholder">Enter your password</string>
+    <string name="delete_account_button">Permanently Delete My Account</string>
+
+    <!-- Delete Reasons -->
+    <string name="delete_reason_not_using">I am no longer using the app</string>
+    <string name="delete_reason_app_is_slow">The app runs too slowly</string>
+    <string name="delete_reason_technical_issues">I am experiencing technical issues</string>
+    <string name="delete_reason_privacy_concerns">I have privacy concerns</string>
+    <string name="delete_reason_poor_recommendations">Place recommendations are unsatisfactory</string>
+    <string name="delete_reason_missing_features">Essential features are missing</string>
+    <string name="delete_reason_difficult_to_use">It is difficult to use</string>
+    <string name="delete_reason_found_an_alternative">I found an alternative</string>
 </resources>

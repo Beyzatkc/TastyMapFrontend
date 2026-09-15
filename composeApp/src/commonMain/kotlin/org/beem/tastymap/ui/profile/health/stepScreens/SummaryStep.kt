@@ -1,6 +1,5 @@
 package org.beem.tastymap.ui.profile.health.stepScreens
 
-import TastyButton
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -32,6 +31,7 @@ import io.github.alexzhirkevich.compottie.rememberLottieComposition
 import io.github.alexzhirkevich.compottie.rememberLottiePainter
 import kotlinx.coroutines.delay
 import org.beem.tastymap.data.model.health.HealthEnum
+import org.beem.tastymap.ui.components.TastyButton
 import org.beem.tastymap.ui.profile.health.HealthUiState
 import org.beem.tastymap.ui.theme.CustomColors
 import org.beem.tastymap.ui.theme.LocalCustomColors

@@ -1,6 +1,5 @@
 package org.beem.tastymap.ui.profile.myprofile.settings.changepassword
 
-import TastyButton
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.shrinkVertically
@@ -34,6 +33,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import org.beem.tastymap.ui.auth.common.PasswordStrength
 import org.beem.tastymap.ui.components.PasswordStrengthIndicator
+import org.beem.tastymap.ui.components.TastyButton
 import org.beem.tastymap.ui.components.TastyTextField
 import org.beem.tastymap.ui.theme.LocalCustomColors
 import org.jetbrains.compose.resources.stringResource

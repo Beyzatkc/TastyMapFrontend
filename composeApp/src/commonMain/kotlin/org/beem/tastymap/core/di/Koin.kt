@@ -25,6 +25,7 @@ import org.beem.tastymap.data.local.SearchHistoryLocalDataSource
 import org.beem.tastymap.data.remote.AuthDataSource
 import org.beem.tastymap.data.remote.AuthWebSocketClient
 import org.beem.tastymap.data.remote.BlockDataSource
+import org.beem.tastymap.data.remote.DeleteAccountDataSource
 import org.beem.tastymap.data.remote.FileRemoteDataSource
 import org.beem.tastymap.data.remote.HealthDataSource
 import org.beem.tastymap.data.remote.SearchUserDataSource
@@ -35,6 +36,7 @@ import org.beem.tastymap.data.remote.profile.MyProfileDataSource
 import org.beem.tastymap.data.remote.profile.ProfileDataSource
 import org.beem.tastymap.data.repository.AuthRepository
 import org.beem.tastymap.data.repository.BlockRepository
+import org.beem.tastymap.data.repository.DeleteAccountRepository
 import org.beem.tastymap.data.repository.HealthRepository
 import org.beem.tastymap.data.repository.SearchUserRepository
 import org.beem.tastymap.data.repository.SocialNotificationsRepository
@@ -61,6 +63,7 @@ import org.beem.tastymap.ui.profile.myprofile.settings.SettingsScreenModel
 import org.beem.tastymap.ui.profile.myprofile.settings.activedevices.ActiveDevicesScreenModel
 import org.beem.tastymap.ui.profile.myprofile.settings.blockedusers.BlockedScreenModel
 import org.beem.tastymap.ui.profile.myprofile.settings.changepassword.ChangePasswordScreenModel
+import org.beem.tastymap.ui.profile.myprofile.settings.deleteaccount.DeleteAccountScreenModel
 import org.beem.tastymap.ui.profile.otherprofile.ProfileScreenModel
 import org.beem.tastymap.ui.profile.subscribers.SubscribersListScreenModel
 import org.beem.tastymap.ui.search.SearchScreenModel
@@ -98,7 +101,7 @@ val appModule = module {
 
     single { ProfileLocalDataSource(get(),get()) }
     single { SearchHistoryLocalDataSource(get(),get()) }
-    factory { ClearSessionUseCase(get(), get(), get(), get()) }
+    factory { ClearSessionUseCase(get(), get(), get(), get(),get()) }
 
     single { AuthDataSource(get(named("noAuth"))) }
     single { UserSecurityDataSource(get(named("noAuth"))) }
@@ -110,6 +113,7 @@ val appModule = module {
     single { SocialNotificationDataSource(get(named("auth")))}
     single { SearchUserDataSource(get(named("auth"))) }
     single { BlockDataSource(get(named("auth"))) }
+    single { DeleteAccountDataSource(get(named("auth"))) }
     single { AuthWebSocketClient(get(named("auth"))) }
     single { NotificationBadgeManager() }
 
@@ -123,6 +127,7 @@ val appModule = module {
     single { SocialNotificationsRepository(get(),get()) }
     single { SearchUserRepository(get(),get(),get(),get()) }
     single { BlockRepository(get(),get(),get(),get(),get()) }
+    single { DeleteAccountRepository(get(),get()) }
 
     factory { LogRegScreenModel(get(), get(), get(), get()) }
     factory { PendingScreenModel(get(), get(), get(), get()) }
@@ -140,6 +145,7 @@ val appModule = module {
     factory { SearchScreenModel(get()) }
     factory { NotificationScreenModel(get(),get(),get()) }
     factory { BlockedScreenModel(get(),get()) }
+    factory { DeleteAccountScreenModel(get()) }
 
     single<VerifyNavigator> { MobileVerifyNavigator() }
 }

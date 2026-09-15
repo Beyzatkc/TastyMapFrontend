@@ -441,4 +441,51 @@
 
     <string name="search_recent_title">Yakın Zamanda Arananlar</string>
     <string name="search_remove_from_history">Geçmişten sil</string>
+
+
+    <string name="privacy_policy_title">Gizlilik &amp; Kullanım Koşulları</string>
+    <string name="privacy_policy_last_updated">Son Güncelleme: 14 Eylül 2026</string>
+
+    <!-- Bölüm 1: Genel Bakış ve Kabul -->
+    <string name="privacy_policy_sec1_title">1. Genel Bakış ve Hizmet Şartları</string>
+    <string name="privacy_policy_sec1_body">TastyMap uygulamasını kullanarak bu Gizlilik Politikası ve Kullanım Koşullarını kabul etmiş sayılırsınız. Hizmetlerimiz, kullanıcılarımızın lezzet noktalarını keşfetmesini ve kişiselleştirilmiş bir yemek deneyimi yaşamasını sağlamak amacıyla sunulmaktadır.</string>
+
+    <!-- Bölüm 2: Veri Toplama ve Özel Nitelikli Veriler -->
+    <string name="privacy_policy_sec2_title">2. Toplanan Veriler ve Alerjen Bilgileri</string>
+    <string name="privacy_policy_sec2_body">Hesap bilgileriniz (ad, e-posta), konum verileriniz, uygulama içi tercihleriniz ile belirttiğiniz beslenme ve alerjen tercihleri işlenmektedir. Alerjen ve sağlık tercihleri KVKK/GDPR kapsamında özel nitelikli veri sayılabileceğinden, yalnızca size uygun öneriler sunmak amacıyla açık rızanız doğrultusunda saklanır.</string>
+
+    <!-- Bölüm 3: Alerjen ve Tıbbi Sorumluluk Reddi (KRİTİK MADDE) -->
+    <string name="privacy_policy_sec3_title">3. Önemli: Alerjen ve Tıbbi Sorumluluk Reddi</string>
+    <string name="privacy_policy_sec3_body">TastyMap üzerinde yer alan restoran, menü, içerik ve alerjen bilgileri yalnızca bilgilendirme amaçlıdır. İşletmeler menü içeriğini değiştirebilir veya çapraz bulaşma riski oluşabilir. Ciddi gıda alerjisi veya tıbbi hassasiyeti olan kullanıcıların, tüketim öncesinde içeriği doğrudan işletme ile doğrulaması kendi sorumluluğundadır. TastyMap gıda reaksiyonlarından sorumlu tutulamaz.</string>
+
+    <!-- Bölüm 4: Veri Güvenliği ve Üçüncü Taraflar -->
+    <string name="privacy_policy_sec4_title">4. Veri Güvenliği ve Saklama</string>
+    <string name="privacy_policy_sec4_body">Verileriniz SSL/TLS şifreleme protokolleri ile korunan güvenli sunucularda saklanır. Kişisel verileriniz izniniz olmadan üçüncü taraflara satılmaz. Yasal zorunluluklar veya analitik/harita hizmet sağlayıcıları dışında veri aktarımı yapılmaz.</string>
+
+    <!-- Bölüm 5: Kullanıcı Hakları ve İletişim -->
+    <string name="privacy_policy_sec5_title">5. Kullanıcı Hakları ve İletişim</string>
+    <string name="privacy_policy_sec5_body">KVKK Madde 11 ve GDPR uyarınca; verilerinize erişme, düzeltme, silme (unutulma hakkı) ve işlenmesine itiraz etme hakkına sahipsiniz. Profil ayarları üzerinden hesabınızı ve verilerinizi dilediğiniz zaman silebilir veya destek ekibimizle iletişime geçebilirsiniz.</string>
+
+
+    <string name="delete_account_success_toast">Hesap silme talebiniz alındı.</string>
+    <string name="delete_account_warning_title">Hesabınızı Silmek Üzeresiniz</string>
+    <string name="delete_account_warning_description">Talebiniz alındıktan sonra hesabınız dondurulacaktır. 30 gün içerisinde tekrar giriş yaparsanız silme işlemi iptal edilir. 30 gün sonunda tüm verileriniz kalıcı olarak silinecektir.</string>
+    <string name="delete_account_reason_title">Ayrılma sebebinizi belirtebilir misiniz?</string>
+    <string name="delete_account_custom_reason_title-ops">Açıklamanız (Opsiyonel)</string>
+    <string name="delete_account_custom_reason_title-must">Açıklamanız (Zorunlu)</string>
+    <string name="delete_account_custom_reason_placeholder">Bize deneyiminizi geliştirmek için görüşlerinizi iletin...</string>
+    <string name="delete_account_password_title">Güvenlik İçin Mevcut Şifreniz</string>
+    <string name="delete_account_password_placeholder">Şifrenizi girin</string>
+    <string name="delete_account_button">Hesabımı Kalıcı Olarak Sil</string>
+
+    <!-- Delete Reasons -->
+    <string name="delete_reason_not_using">Artık uygulamayı kullanmıyorum</string>
+    <string name="delete_reason_app_is_slow">Uygulama çok yavaş çalışıyor</string>
+    <string name="delete_reason_technical_issues">Teknik sorunlar yaşıyorum</string>
+    <string name="delete_reason_privacy_concerns">Gizlilik kaygılarım var</string>
+    <string name="delete_reason_poor_recommendations">Mekan önerilerini yetersiz buluyorum</string>
+    <string name="delete_reason_missing_features">Eksik özellikler var</string>
+    <string name="delete_reason_difficult_to_use">Kullanımı zor geliyor</string>
+    <string name="delete_reason_found_an_alternative">Başka bir alternatif buldum</string>
+    <string name="delete_reason_other">Diğer</string>
 </resources>

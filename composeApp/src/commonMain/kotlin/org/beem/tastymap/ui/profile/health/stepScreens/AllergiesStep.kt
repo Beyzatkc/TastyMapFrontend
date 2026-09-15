@@ -4,7 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
 import org.beem.tastymap.data.model.health.AllergyInfo
 import org.beem.tastymap.ui.profile.health.HealthUiState
-import org.beem.tastymap.ui.profile.health.components.BaseStepContainer
+import org.beem.tastymap.ui.profile.health.stepScreens.common.BaseStepContainer
 import org.beem.tastymap.ui.profile.health.stepScreens.common.CheckboxOption
 import org.beem.tastymap.ui.theme.LocalCustomColors
 import org.beem.tastymap.ui.theme.TastyTheme

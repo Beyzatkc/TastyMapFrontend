@@ -1,6 +1,5 @@
 package org.beem.tastymap.ui.profile.myprofile
 
-import TastyButton
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -39,6 +38,7 @@ import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import coil3.compose.AsyncImage
 import org.beem.tastymap.core.util.ToastManager
+import org.beem.tastymap.ui.components.TastyButton
 import org.beem.tastymap.ui.profile.myprofile.editprofile.EditProfileScreen
 import org.beem.tastymap.ui.profile.myprofile.notification.NotificationScreen
 import org.beem.tastymap.ui.profile.myprofile.settings.SettingsScreen

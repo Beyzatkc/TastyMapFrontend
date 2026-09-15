@@ -4,12 +4,9 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.*
 import androidx.compose.ui.tooling.preview.Preview
-import app.cash.sqldelight.async.coroutines.await
-import app.cash.sqldelight.db.SqlDriver
 import cafe.adriel.voyager.navigator.Navigator
 import cafe.adriel.voyager.transitions.SlideTransition
-import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.launch
+
 import org.beem.tastymap.core.auth.AuthEventBus
 import org.beem.tastymap.core.local.ChangeAppLanguage
 import org.beem.tastymap.core.local.SettingsManager

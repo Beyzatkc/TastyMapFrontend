@@ -1,6 +1,5 @@
 package org.beem.tastymap.ui.profile.subscribers
 
-import TastyButton
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -39,6 +38,7 @@ import coil3.compose.AsyncImage
 import org.beem.tastymap.core.util.ToastManager
 import org.beem.tastymap.data.model.subscribers.SubscribeResponse
 import org.beem.tastymap.domain.model.RelationStatus
+import org.beem.tastymap.ui.components.TastyButton
 import org.beem.tastymap.ui.profile.otherprofile.ProfileScreen
 import org.beem.tastymap.ui.theme.LocalCustomColors
 import org.jetbrains.compose.resources.stringResource

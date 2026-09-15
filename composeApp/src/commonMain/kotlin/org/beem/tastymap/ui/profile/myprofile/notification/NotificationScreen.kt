@@ -1,6 +1,5 @@
 package org.beem.tastymap.ui.profile.myprofile.notification
 
-import TastyButton
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -40,6 +39,7 @@ import org.beem.tastymap.data.model.socialnotifications.NotificationActionStatus
 import org.beem.tastymap.data.model.socialnotifications.SocialNotificationType
 import org.beem.tastymap.data.model.socialnotifications.SocialNotificationsResponse
 import org.beem.tastymap.domain.model.RelationStatus
+import org.beem.tastymap.ui.components.TastyButton
 import org.beem.tastymap.ui.profile.otherprofile.ProfileScreen
 import org.beem.tastymap.ui.theme.LocalCustomColors
 import org.jetbrains.compose.resources.stringResource

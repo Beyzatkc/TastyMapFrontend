@@ -1,6 +1,6 @@
-package org.beem.tastymap.ui.profile.health.components
+package org.beem.tastymap.ui.profile.health.stepScreens.common
 
-import TastyButton
+
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -19,6 +19,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import org.beem.tastymap.ui.components.TastyButton
 import org.beem.tastymap.ui.theme.LocalCustomColors
 import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource

@@ -1,6 +1,5 @@
 package org.beem.tastymap.ui.profile.health
 
-import TastyButton
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.BorderStroke
@@ -27,6 +26,7 @@ import cafe.adriel.voyager.koin.koinScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.Navigator
 import cafe.adriel.voyager.navigator.currentOrThrow
+import org.beem.tastymap.ui.components.TastyButton
 import org.beem.tastymap.ui.profile.health.HealthScreenModel
 import org.beem.tastymap.ui.profile.health.HealthWizardScreen
 import org.beem.tastymap.ui.profile.myprofile.MyProfileScreen

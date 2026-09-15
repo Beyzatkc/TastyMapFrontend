@@ -1,3 +1,4 @@
+package org.beem.tastymap.ui.components
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size

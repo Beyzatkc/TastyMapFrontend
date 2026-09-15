@@ -35,16 +35,21 @@ import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.koin.koinScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
+import org.beem.tastymap.core.auth.AuthEventBus
 import org.beem.tastymap.core.util.ToastManager
 import org.beem.tastymap.ui.auth.logReg.LogRegScreen
 import org.beem.tastymap.ui.profile.myprofile.settings.activedevices.ActiveDevicesScreen
 import org.beem.tastymap.ui.profile.myprofile.settings.blockedusers.BlockedUsersScreen
 import org.beem.tastymap.ui.profile.myprofile.settings.changepassword.ChangePasswordBottomSheet
 import org.beem.tastymap.ui.profile.myprofile.settings.changepassword.ChangePasswordScreenModel
+import org.beem.tastymap.ui.profile.myprofile.settings.deleteaccount.DeleteAccountScreen
 import org.beem.tastymap.ui.profile.myprofile.settings.edithealth.EditHealthScreen
 import org.beem.tastymap.ui.theme.LocalCustomColors
 import org.jetbrains.compose.resources.getString
 import org.jetbrains.compose.resources.stringResource
+import org.koin.compose.koinInject
 import tastymap.composeapp.generated.resources.Res
 import tastymap.composeapp.generated.resources.settings_active_devices
 import tastymap.composeapp.generated.resources.settings_app_version
@@ -88,6 +93,7 @@ class SettingsScreen(val isPrivate: Boolean) : Screen {
         val settingsScreenModel = koinScreenModel<SettingsScreenModel>()
         val settingsState by settingsScreenModel.uiState.collectAsState()
 
+
         val isDarkModePref by settingsScreenModel.isDarkMode.collectAsState()
         val isDarkModeActive = isDarkModePref ?: isSystemInDarkTheme()
 
@@ -115,11 +121,19 @@ class SettingsScreen(val isPrivate: Boolean) : Screen {
                     changePasswordScreenModel.clearMessages()
                 }
             }
-
+/*
             LaunchedEffect(settingsState.isLoggedOut) {
                 if (settingsState.isLoggedOut) {
                     showLogoutDialog = false
                     navigator.replaceAll(LogRegScreen())
+                }
+            }
+
+ */
+
+            LaunchedEffect(settingsState.isLoggedOut) {
+                if (settingsState.isLoggedOut) {
+                    showLogoutDialog = false
                 }
             }
 
@@ -326,7 +340,7 @@ class SettingsScreen(val isPrivate: Boolean) : Screen {
                         }
                     }
 
-                    // 3. Destek & Hakkında
+
                     item {
                         SettingsSectionHeader(title = stringResource(Res.string.settings_section_support_about))
                         Card(
@@ -338,7 +352,9 @@ class SettingsScreen(val isPrivate: Boolean) : Screen {
                                 SettingsOptionItem(
                                     icon = Icons.Default.Policy,
                                     title = stringResource(Res.string.settings_privacy_policy),
-                                    onClick = { }
+                                    onClick = {
+                                        navigator.push(PrivacyPolicyScreen())
+                                    }
                                 )
                                 SettingsDivider()
                                 SettingsOptionItem(
@@ -383,7 +399,9 @@ class SettingsScreen(val isPrivate: Boolean) : Screen {
                                     textColor = customColors.error,
                                     iconColor = customColors.error,
                                     showChevron = false,
-                                    onClick = { }
+                                    onClick = {
+                                        navigator.push(DeleteAccountScreen())
+                                    }
                                 )
                             }
                         }

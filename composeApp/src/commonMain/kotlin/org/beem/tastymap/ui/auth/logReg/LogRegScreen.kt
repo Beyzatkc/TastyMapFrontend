@@ -1,6 +1,5 @@
 package org.beem.tastymap.ui.auth.logReg
 
-import TastyButton
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.SizeTransform
@@ -63,6 +62,7 @@ import org.beem.tastymap.ui.auth.verification.loginPending.PendingScreen
 import org.beem.tastymap.ui.bottomnav.MainScreen
 import org.beem.tastymap.ui.components.AuthFooter
 import org.beem.tastymap.ui.components.PasswordStrengthIndicator
+import org.beem.tastymap.ui.components.TastyButton
 import org.beem.tastymap.ui.components.TastyTextField
 import org.beem.tastymap.ui.profile.health.OnBoardingScreen
 import org.beem.tastymap.ui.profile.myprofile.MyProfileScreen

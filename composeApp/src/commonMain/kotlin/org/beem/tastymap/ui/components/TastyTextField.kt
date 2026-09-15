@@ -36,6 +36,8 @@ fun TastyTextField(
     modifier: Modifier = Modifier,
     isPassword: Boolean = false,
     error: String? = null,
+    singleLine: Boolean = true,
+    maxLines: Int = if (singleLine) 1 else Int.MAX_VALUE,
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
     leadingIcon: @Composable (() -> Unit)? = null
 ) {
@@ -49,6 +51,8 @@ fun TastyTextField(
             label = { Text(label) },
             modifier = Modifier.fillMaxWidth(),
             isError = error != null,
+            singleLine = singleLine,
+            maxLines = maxLines,
             visualTransformation = if (isPassword && !passwordVisible) PasswordVisualTransformation() else VisualTransformation.None,
             keyboardOptions = keyboardOptions,
             leadingIcon = leadingIcon,
@@ -77,7 +81,6 @@ fun TastyTextField(
                 }
             },
             shape = RoundedCornerShape(12.dp),
-            singleLine = true,
             colors = OutlinedTextFieldDefaults.colors(
                 focusedTextColor = customColors.textPrimary,
                 unfocusedTextColor = customColors.textPrimary,
