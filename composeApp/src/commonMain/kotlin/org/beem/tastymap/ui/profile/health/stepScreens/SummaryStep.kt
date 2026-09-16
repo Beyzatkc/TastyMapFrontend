@@ -210,7 +210,8 @@ fun SummaryStep(
                 modifier = Modifier.fillMaxWidth(),
                 onClick = onNextClick,
                 isPrimary = true,
-                isLoading = state.isLoading,
+                isLoading = state.isActionLoading,
+                enabled = !state.isActionLoading,
                 backcolor = customColors.navy,
                 textcolor = customColors.surface,
                 strokecolor = Color.Transparent
@@ -223,7 +224,7 @@ fun SummaryStep(
                 onClick = onBackClick,
                 modifier = Modifier.fillMaxWidth(),
                 isPrimary = false,
-                enabled = !state.isLoading,
+                enabled = !state.isActionLoading,
                 backcolor = Color.Transparent,
                 textcolor = customColors.textPrimary,
                 strokecolor = customColors.borderLight

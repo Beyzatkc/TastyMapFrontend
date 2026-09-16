@@ -48,7 +48,7 @@ fun TastyTextField(
         OutlinedTextField(
             value = value,
             onValueChange = onValueChange,
-            label = { Text(label) },
+            label = { Text(text = label, style = MaterialTheme.typography.bodyMedium) },
             modifier = Modifier.fillMaxWidth(),
             isError = error != null,
             singleLine = singleLine,

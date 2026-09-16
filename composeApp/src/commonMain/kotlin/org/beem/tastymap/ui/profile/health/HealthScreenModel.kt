@@ -48,7 +48,7 @@ class HealthScreenModel(
         _healthState.update {
             it.copy(
                 availableAllergies = defaultAllergies,
-                selectedAllergyIds = emptyList(),
+                selectedAllergyIds = listOf(NO_ALLERGY_ID),
                 isLoading = true ,
             )
         }
@@ -116,22 +116,20 @@ class HealthScreenModel(
     fun toggleAllergy(allergyId: Long) {
         _healthState.update { state ->
             val current = state.selectedAllergyIds.toMutableList()
-            val NONE_ALLERGY_ID = 6L
-            if(allergyId == NONE_ALLERGY_ID){
-                if (current.contains(NONE_ALLERGY_ID)) {
-                    current.clear()
-                } else {
-                    current.clear()
-                    current.add(NONE_ALLERGY_ID)
-                }
-            }else{
-                current.remove(NONE_ALLERGY_ID)
+
+            if (allergyId == NO_ALLERGY_ID) {
+                current.clear()
+                current.add(NO_ALLERGY_ID)
+            } else {
+                current.remove(NO_ALLERGY_ID)
+
                 if (current.contains(allergyId)) {
                     current.remove(allergyId)
-                }else current.add(allergyId)
-
+                } else {
+                    current.add(allergyId)
+                }
                 if (current.isEmpty()) {
-                    current.add(NONE_ALLERGY_ID)
+                    current.add(NO_ALLERGY_ID)
                 }
             }
             state.copy(selectedAllergyIds = current)
@@ -139,9 +137,10 @@ class HealthScreenModel(
     }
     fun saveHealthProfile() {
         val currentState = _healthState.value
-        if(currentState.isLoading)return
+        if (currentState.isActionLoading) return
+
         screenModelScope.launch {
-            _healthState.update { it.copy(isLoading = true, error = null) }
+            _healthState.update { it.copy(isActionLoading = true, error = null) }
             val request = HealthRequest(
                 hasDiabetes = currentState.hasDiabetes,
                 eatType = currentState.selectedEatType,
@@ -149,10 +148,10 @@ class HealthScreenModel(
             )
             when (val result = repo.addHealth(request)) {
                 is ResultWrapper.Success -> {
-                    _healthState.update { it.copy(isLoading = false, isSuccess = true) }
+                    _healthState.update { it.copy(isActionLoading = false, isSuccess = true) }
                 }
                 is ResultWrapper.Error -> {
-                    _healthState.update { it.copy(isLoading = false, error = result.message) }
+                    _healthState.update { it.copy(isActionLoading = false, error = result.message) }
                     _uiMessage.send(result.message)
                 }
             }
@@ -160,14 +159,14 @@ class HealthScreenModel(
     }
     fun updateHealthProfile() {
         val currentState = _healthState.value
-        if (currentState.isLoading) {
-            return
-        }
+        if (currentState.isActionLoading) return
+
         val initial = currentState.initialHealthProfile
 
         val changedDiabetes = if (initial == null || currentState.hasDiabetes != initial.hasDiabetes) {
             currentState.hasDiabetes
         } else null
+
         val initialEatType = initial?.eatType?.let { runCatching { HealthEnum.valueOf(it) }.getOrNull() }
         val changedEatType = if (initial == null || currentState.selectedEatType != initialEatType) {
             currentState.selectedEatType
@@ -193,35 +192,38 @@ class HealthScreenModel(
         )
 
         screenModelScope.launch {
-            _healthState.update { it.copy(isLoading = true, error = null) }
+            _healthState.update { it.copy(isActionLoading = true, error = null) }
 
             when (val result = repo.updateHealth(request)) {
                 is ResultWrapper.Success -> {
-                    _healthState.update { it.copy(isLoading = false, isSuccess = true) }
+                    _healthState.update { it.copy(isActionLoading = false, isSuccess = true) }
                 }
                 is ResultWrapper.Error -> {
-                    _healthState.update { it.copy(isLoading = false, error = result.message) }
+                    _healthState.update { it.copy(isActionLoading = false, error = result.message) }
                     _uiMessage.send(result.message)
                 }
             }
         }
     }
     fun skipHealthWizard() {
+        val currentState = _healthState.value
+        if (currentState.isActionLoading) return
+
         screenModelScope.launch {
-            _healthState.update { it.copy(isLoading = true) }
+            _healthState.update { it.copy(isActionLoading = true) }
 
             val defaultRequest = HealthRequest(
                 hasDiabetes = false,
                 eatType = HealthEnum.NORMAL,
-                allergyIds = listOf(6L)
+                allergyIds = listOf(NO_ALLERGY_ID)
             )
 
             when (val result = repo.addHealth(defaultRequest)) {
                 is ResultWrapper.Success -> {
-                    _healthState.update { it.copy(isLoading = false, isSuccess = true) }
+                    _healthState.update { it.copy(isActionLoading = false, isSuccess = true) }
                 }
                 is ResultWrapper.Error -> {
-                    _healthState.update { it.copy(isLoading = false) }
+                    _healthState.update { it.copy(isActionLoading = false) }
                     _uiMessage.send(result.message)
                 }
             }

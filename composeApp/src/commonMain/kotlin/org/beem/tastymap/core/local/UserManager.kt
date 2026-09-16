@@ -24,4 +24,6 @@ interface UserManager {
         profilePhoto: String?,
         biography: String?
     )
+
+    fun setOnBoardComplete(completed: Boolean)
 }

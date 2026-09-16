@@ -127,7 +127,7 @@ val appModule = module {
     single { SocialNotificationsRepository(get(),get()) }
     single { SearchUserRepository(get(),get(),get(),get()) }
     single { BlockRepository(get(),get(),get(),get(),get()) }
-    single { DeleteAccountRepository(get(),get()) }
+    single { DeleteAccountRepository(get(),get(),get()) }
 
     factory { LogRegScreenModel(get(), get(), get(), get()) }
     factory { PendingScreenModel(get(), get(), get(), get()) }
@@ -139,13 +139,13 @@ val appModule = module {
     factory { SubscribersListScreenModel(get(),get()) }
     factory { ProfileScreenModel(get(),get(),get()) }
     single { MyProfileScreenModel(get(),get(),get()) }
-    factory { SettingsScreenModel(get(),get(),get()) }
+    factory { SettingsScreenModel(get(),get(),get(),get()) }
     factory { ActiveDevicesScreenModel(get()) }
     factory { ChangePasswordScreenModel(get(),get()) }
     factory { SearchScreenModel(get()) }
     factory { NotificationScreenModel(get(),get(),get()) }
     factory { BlockedScreenModel(get(),get()) }
-    factory { DeleteAccountScreenModel(get()) }
+    factory { DeleteAccountScreenModel(get(),get()) }
 
     single<VerifyNavigator> { MobileVerifyNavigator() }
 }

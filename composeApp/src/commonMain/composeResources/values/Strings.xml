@@ -474,7 +474,7 @@
     <string name="delete_account_custom_reason_title-ops">Açıklamanız (Opsiyonel)</string>
     <string name="delete_account_custom_reason_title-must">Açıklamanız (Zorunlu)</string>
     <string name="delete_account_custom_reason_placeholder">Bize deneyiminizi geliştirmek için görüşlerinizi iletin...</string>
-    <string name="delete_account_password_title">Güvenlik İçin Mevcut Şifreniz</string>
+    <string name="delete_account_password_title">Mevcut Şifreniz</string>
     <string name="delete_account_password_placeholder">Şifrenizi girin</string>
     <string name="delete_account_button">Hesabımı Kalıcı Olarak Sil</string>
 
@@ -488,4 +488,11 @@
     <string name="delete_reason_difficult_to_use">Kullanımı zor geliyor</string>
     <string name="delete_reason_found_an_alternative">Başka bir alternatif buldum</string>
     <string name="delete_reason_other">Diğer</string>
+    <string name="delete_account_password_helper">Hesap güvenliğiniz için şifre doğrulaması gereklidir.</string>
+
+    <string name="account_deactivated_title">Hesabınız Donduruldu</string>
+    <string name="account_deactivated_subtitle">Hesap silme talebiniz başarıyla işleme alındı.</string>
+    <string name="account_deactivated_info_title">30 Günlük İptal Süresi</string>
+    <string name="account_deactivated_info_desc">Hesabınız şu andan itibaren dondurulmuştur. 30 gün içerisinde tekrar giriş yaparsanız silme talebiniz otomatik olarak iptal edilir. 30 gün sonunda tüm verileriniz kalıcı olarak silinecektir.</string>
+    <string name="account_deactivated_back_to_login">Giriş Ekranına Dön</string>
 </resources>

@@ -29,7 +29,6 @@ import cafe.adriel.voyager.koin.koinScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import org.beem.tastymap.core.util.ToastManager
-import org.beem.tastymap.data.model.health.AllergyInfo
 import org.beem.tastymap.data.model.health.HealthEnum
 import org.beem.tastymap.ui.profile.health.AllergyUiModel
 import org.beem.tastymap.ui.profile.health.HealthScreenModel
@@ -117,7 +116,10 @@ fun EditHealthContent(
                     )
                 },
                 navigationIcon = {
-                    IconButton(onClick = onBackClick) {
+                    IconButton(
+                        onClick = onBackClick,
+                        enabled = !uiState.isActionLoading
+                    ) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = stringResource(Res.string.edit_health_back_cd),
@@ -127,10 +129,10 @@ fun EditHealthContent(
                 },
                 actions = {
                     TextButton(
-                        enabled = !uiState.isLoading,
+                        enabled = !uiState.isLoading && !uiState.isActionLoading,
                         onClick = onSaveClick
                     ) {
-                        if (uiState.isLoading) {
+                        if (uiState.isActionLoading) {
                             CircularProgressIndicator(
                                 modifier = Modifier.size(18.dp),
                                 color = customColors.gourmetOrange,
@@ -140,7 +142,7 @@ fun EditHealthContent(
                             Text(
                                 text = stringResource(Res.string.edit_health_save),
                                 style = MaterialTheme.typography.titleSmall.copy(
-                                    color = customColors.gourmetOrange,
+                                    color = if (!uiState.isLoading) customColors.gourmetOrange else customColors.textTertiary,
                                     fontWeight = FontWeight.Bold
                                 )
                             )
@@ -185,7 +187,7 @@ fun EditHealthContent(
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .clickable { onDiabetesToggle(!uiState.hasDiabetes) }
+                                .clickable(enabled = !uiState.isActionLoading) { onDiabetesToggle(!uiState.hasDiabetes) }
                                 .padding(16.dp),
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.SpaceBetween
@@ -210,11 +212,11 @@ fun EditHealthContent(
                             Spacer(modifier = Modifier.width(12.dp))
                             Switch(
                                 checked = uiState.hasDiabetes,
+                                enabled = !uiState.isActionLoading,
                                 onCheckedChange = onDiabetesToggle,
                                 colors = SwitchDefaults.colors(
                                     checkedThumbColor = customColors.surface,
                                     checkedTrackColor = customColors.navy,
-
                                     uncheckedThumbColor = customColors.surface,
                                     uncheckedTrackColor = customColors.borderStrong,
                                     uncheckedBorderColor = customColors.borderStrong
@@ -235,7 +237,7 @@ fun EditHealthContent(
                         colors = CardDefaults.cardColors(containerColor = customColors.surface),
                         shape = RoundedCornerShape(16.dp),
                         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
-                        border = androidx.compose.foundation.BorderStroke(1.dp, customColors.borderLight)
+                        border = BorderStroke(1.dp, customColors.borderLight)
                     ) {
                         Column(
                             modifier = Modifier.padding(12.dp),
@@ -258,13 +260,14 @@ fun EditHealthContent(
                                             color = if (isSelected) customColors.gourmetOrange else customColors.borderLight,
                                             shape = RoundedCornerShape(12.dp)
                                         )
-                                        .clickable { onEatTypeSelect(eatType) }
+                                        .clickable(enabled = !uiState.isActionLoading) { onEatTypeSelect(eatType) }
                                         .padding(12.dp),
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
                                     RadioButton(
                                         selected = isSelected,
                                         onClick = null,
+                                        enabled = !uiState.isActionLoading,
                                         colors = RadioButtonDefaults.colors(
                                             selectedColor = customColors.gourmetOrange,
                                             unselectedColor = customColors.textTertiary
@@ -303,7 +306,7 @@ fun EditHealthContent(
                         colors = CardDefaults.cardColors(containerColor = customColors.surface),
                         shape = RoundedCornerShape(16.dp),
                         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
-                        border = androidx.compose.foundation.BorderStroke(1.dp, customColors.borderLight)
+                        border = BorderStroke(1.dp, customColors.borderLight)
                     ) {
                         Column(
                             modifier = Modifier.padding(16.dp),
@@ -323,11 +326,11 @@ fun EditHealthContent(
                                         horizontalArrangement = Arrangement.spacedBy(10.dp)
                                     ) {
                                         for (allergy in rowAllergies) {
-                                            val isSelected =
-                                                uiState.selectedAllergyIds.contains(allergy.id)
+                                            val isSelected = uiState.selectedAllergyIds.contains(allergy.id)
                                             AllergyChip(
                                                 allergy = allergy,
                                                 isSelected = isSelected,
+                                                isEnabled = !uiState.isActionLoading,
                                                 onToggle = { onAllergyToggle(allergy.id) },
                                                 modifier = Modifier.weight(1f)
                                             )
@@ -350,21 +353,22 @@ fun EditHealthContent(
 private fun AllergyChip(
     allergy: AllergyUiModel,
     isSelected: Boolean,
+    isEnabled: Boolean,
     onToggle: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val customColors = LocalCustomColors.current
 
     val bgColor = if (isSelected) customColors.gourmetOrange.copy(alpha = 0.10f) else customColors.surfaceVariant
-    val textColor  = customColors.textPrimary
+    val textColor = customColors.textPrimary
     val strokeColor = if (isSelected) customColors.gourmetOrange else Color.Transparent
 
     Surface(
         modifier = modifier
             .clip(CircleShape)
-            .clickable { onToggle() },
+            .clickable(enabled = isEnabled) { onToggle() },
         color = bgColor,
-        border = if (isSelected) androidx.compose.foundation.BorderStroke(1.dp, strokeColor) else null,
+        border = if (isSelected) BorderStroke(1.dp, strokeColor) else null,
         shape = CircleShape
     ) {
         Row(
@@ -423,11 +427,8 @@ private fun SectionHeader(
 @Composable
 private fun getEatTypeDetails(eatType: HealthEnum): Pair<String, String> {
     return when (eatType) {
-
         HealthEnum.NORMAL -> stringResource(Res.string.edit_health_diet_normal_title) to stringResource(Res.string.edit_health_diet_normal_desc)
         HealthEnum.VEGETARIAN -> stringResource(Res.string.edit_health_diet_vegetarian_title) to stringResource(Res.string.edit_health_diet_vegetarian_desc)
         HealthEnum.VEGAN -> stringResource(Res.string.edit_health_diet_vegan_title) to stringResource(Res.string.edit_health_diet_vegan_desc)
     }
 }
-
-

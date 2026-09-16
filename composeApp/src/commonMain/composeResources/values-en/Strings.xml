@@ -472,7 +472,7 @@
     <string name="delete_account_custom_reason_title-ops">Your feedback (Optional)</string>
     <string name="delete_account_custom_reason_title-must">Your feedback (Required)</string>
     <string name="delete_account_custom_reason_placeholder">Let us know your feedback to help improve your experience...</string>
-    <string name="delete_account_password_title">Current Password for Security</string>
+    <string name="delete_account_password_title">Current Password</string>
     <string name="delete_account_password_placeholder">Enter your password</string>
     <string name="delete_account_button">Permanently Delete My Account</string>
 
@@ -485,4 +485,11 @@
     <string name="delete_reason_missing_features">Essential features are missing</string>
     <string name="delete_reason_difficult_to_use">It is difficult to use</string>
     <string name="delete_reason_found_an_alternative">I found an alternative</string>
+    <string name="delete_account_password_helper">Password verification is required for your account security.</string>
+
+    <string name="account_deactivated_title">Account Deactivated</string>
+    <string name="account_deactivated_subtitle">Your account deletion request has been processed.</string>
+    <string name="account_deactivated_info_title">30-Day Grace Period</string>
+    <string name="account_deactivated_info_desc">Your account is now frozen. If you log back in within 30 days, your deletion request will be canceled. After 30 days, all your data will be permanently deleted.</string>
+    <string name="account_deactivated_back_to_login">Return to Login</string>
 </resources>

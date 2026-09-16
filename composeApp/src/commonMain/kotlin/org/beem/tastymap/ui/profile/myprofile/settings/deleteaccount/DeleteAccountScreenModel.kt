@@ -7,6 +7,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import org.beem.tastymap.core.auth.AuthEventBus
+import org.beem.tastymap.core.network.ErrorType
 import org.beem.tastymap.core.network.ResultWrapper
 import org.beem.tastymap.data.model.deleteaccount.DeleteAccountRequest
 import org.beem.tastymap.data.model.deleteaccount.DeleteReason
@@ -26,7 +27,12 @@ class DeleteAccountScreenModel(
         customReason: String? = null
     ) {
         screenModelScope.launch {
-            _uiState.update { it.copy(isDeleteLoading = true, errorMessage = null) }
+            _uiState.update {
+                it.copy(
+                    isDeleteLoading = true,
+                    passwordError = null,
+                )
+            }
 
             val request = DeleteAccountRequest(
                 password = password,
@@ -45,18 +51,34 @@ class DeleteAccountScreenModel(
                     authEventBus.emit(AuthEventBus.AuthEvent.OnLoggedOut)
                 }
                 is ResultWrapper.Error -> {
-                    _uiState.update {
-                        it.copy(
-                            isDeleteLoading = false,
-                            errorMessage = result.message
-                        )
+                    if (result.isPasswordError()) {
+                        _uiState.update {
+                            it.copy(
+                                isDeleteLoading = false,
+                                passwordError = result.message
+                            )
+                        }
+                    } else {
+                        _uiState.update {
+                            it.copy(
+                                isDeleteLoading = false,
+                                errorMessage = result.message
+                            )
+                        }
                     }
                 }
             }
         }
     }
+    fun ResultWrapper.Error.isPasswordError(): Boolean {
+        val msg = this.message?.lowercase() ?: return false
+        return msg.contains("şifre") || msg.contains("password")
+    }
 
     fun clearMessages() {
         _uiState.update { it.copy(errorMessage = null) }
+    }
+    fun clearPasswordError() {
+        _uiState.update { it.copy(passwordError = null) }
     }
 }

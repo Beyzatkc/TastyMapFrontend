@@ -26,6 +26,7 @@ import cafe.adriel.voyager.koin.koinScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.Navigator
 import cafe.adriel.voyager.navigator.currentOrThrow
+import org.beem.tastymap.core.util.ToastManager
 import org.beem.tastymap.ui.components.TastyButton
 import org.beem.tastymap.ui.profile.health.HealthScreenModel
 import org.beem.tastymap.ui.profile.health.HealthWizardScreen
@@ -61,8 +62,13 @@ class OnBoardingScreen : Screen {
 
         LaunchedEffect(state.isSuccess) {
             if (state.isSuccess) {
-                screenModel.resetSuccessState()
                 navigator.replace(MyProfileScreen())
+                screenModel.resetSuccessState()
+            }
+        }
+        LaunchedEffect(screenModel.uiMessage) {
+            screenModel.uiMessage.collect { message ->
+                ToastManager.show(message)
             }
         }
 
@@ -119,7 +125,8 @@ class OnBoardingScreen : Screen {
                     WelcomeCardContent(
                         customColors = customColors,
                         navigator = navigator,
-                        screenModel = screenModel
+                        screenModel = screenModel,
+                        isLoading = state.isActionLoading
                     )
 
                     Spacer(modifier = Modifier.height(32.dp))
@@ -212,7 +219,8 @@ fun WelcomeLogo(customColors: CustomColors) {
 fun WelcomeCardContent(
     customColors: CustomColors,
     navigator: Navigator,
-    screenModel: HealthScreenModel
+    screenModel: HealthScreenModel,
+    isLoading: Boolean
 ) {
     Card(
         modifier = Modifier
@@ -268,6 +276,7 @@ fun WelcomeCardContent(
                 onClick = { navigator.push(HealthWizardScreen()) },
                 modifier = Modifier.fillMaxWidth(),
                 isPrimary = true,
+                enabled = !isLoading,
                 backcolor = customColors.navy,
                 textcolor = customColors.surface,
                 strokecolor = Color.Transparent
@@ -280,6 +289,8 @@ fun WelcomeCardContent(
                 onClick = screenModel::skipHealthWizard,
                 modifier = Modifier.fillMaxWidth(),
                 isPrimary = false,
+                isLoading = isLoading,
+                enabled = !isLoading,
                 backcolor = Color.Transparent,
                 textcolor = customColors.textSecondary,
                 strokecolor = customColors.borderLight

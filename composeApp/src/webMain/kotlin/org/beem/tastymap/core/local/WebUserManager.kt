@@ -1,5 +1,6 @@
 package org.beem.tastymap.core.local
 
+
 class WebUserManager(): UserManager {
     private var currentUserSession: UserSession? = null
 
@@ -37,6 +38,12 @@ class WebUserManager(): UserManager {
             surname = surname,
             profile = profilePhoto ?: currentUserSession?.profile,
             biography = biography ?: currentUserSession?.biography
+        )
+    }
+
+    override fun setOnBoardComplete(completed: Boolean) {
+        currentUserSession = currentUserSession?.copy(
+            onBoardComplete = completed
         )
     }
 }

@@ -114,7 +114,6 @@ class DeleteAccountScreen : Screen {
                     .padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(20.dp)
             ) {
-                // 1. Uyarı Bilgilendirme Kartı
                 Card(
                     colors = CardDefaults.cardColors(
                         containerColor = customColors.error.copy(alpha = 0.08f)
@@ -139,7 +138,7 @@ class DeleteAccountScreen : Screen {
                             tint = customColors.error,
                             modifier = Modifier.size(24.dp)
                         )
-                        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                        Column {
                             Text(
                                 text = stringResource(Res.string.delete_account_warning_title),
                                 style = MaterialTheme.typography.titleSmall.copy(
@@ -157,7 +156,7 @@ class DeleteAccountScreen : Screen {
                 }
 
                 // 2. Silme Sebebi Seçimi Section
-                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                Column {
                     Text(
                         text = stringResource(Res.string.delete_account_reason_title),
                         style = MaterialTheme.typography.titleSmall.copy(
@@ -221,24 +220,39 @@ class DeleteAccountScreen : Screen {
                 )
 
                 // 4. Şifre Doğrulama Alanı (TastyTextField)
-                TastyTextField(
-                    value = passwordText,
-                    onValueChange = { passwordText = it },
-                    label = stringResource(Res.string.delete_account_password_title),
-                    isPassword = true,
-                    keyboardOptions = KeyboardOptions(
-                        keyboardType = KeyboardType.Password,
-                        imeAction = ImeAction.Done
-                    ),
-                    leadingIcon = {
-                        Icon(
-                            imageVector = Icons.Default.Lock,
-                            contentDescription = null,
-                            tint = customColors.textSecondary
-                        )
-                    },
-                    modifier = Modifier.fillMaxWidth()
-                )
+                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    TastyTextField(
+                        value = passwordText,
+                        onValueChange = { newValue ->
+                            passwordText = newValue
+                            if (uiState.passwordError != null) {
+                                deleteScreenModel.clearPasswordError()
+                            }
+                        },
+                        label = stringResource(Res.string.delete_account_password_title),
+                        isPassword = true,
+                        error = uiState.passwordError,
+                        keyboardOptions = KeyboardOptions(
+                            keyboardType = KeyboardType.Password,
+                            imeAction = ImeAction.Done
+                        ),
+                        leadingIcon = {
+                            Icon(
+                                imageVector = Icons.Default.Lock,
+                                contentDescription = null,
+                                tint = customColors.textSecondary
+                            )
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+
+                    Text(
+                        text = stringResource(Res.string.delete_account_password_helper),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = customColors.textTertiary,
+                        modifier = Modifier.padding(start = 8.dp)
+                    )
+                }
 
                 Spacer(modifier = Modifier.height(8.dp))
 

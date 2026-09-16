@@ -63,5 +63,9 @@ class MobileUserManager(private val settings: Settings): UserManager{
         biography?.let { settings[KEY_BIOGRAPHY] = it }
     }
 
+    override fun setOnBoardComplete(completed: Boolean) {
+        settings[KEY_ON_BOARD_COMPLETE] = completed
+    }
+
 
 }

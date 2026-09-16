@@ -18,6 +18,7 @@ class HealthRepository(
     suspend fun addHealth(request: HealthRequest): ResultWrapper<HealthResponse> {
         val result = safeApiCall { dataSource.addHealth(request) }
         if (result is ResultWrapper.Success) {
+            userManager.setOnBoardComplete(true)
             val myUserId = userManager.getUserId()
             if (myUserId != null) {
                 memoryCache.put(myUserId, result.data)
