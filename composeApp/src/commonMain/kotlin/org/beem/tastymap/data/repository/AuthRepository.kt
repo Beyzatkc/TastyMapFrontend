@@ -3,6 +3,7 @@ package org.beem.tastymap.data.repository
 import org.beem.tastymap.core.local.TokenManager
 import org.beem.tastymap.core.local.UserManager
 import org.beem.tastymap.core.local.UserSession
+import org.beem.tastymap.core.network.AuthHttpClientManager
 import org.beem.tastymap.core.network.ResultWrapper
 import org.beem.tastymap.core.network.safeApiCall
 import org.beem.tastymap.core.provider.AuthValidator
@@ -21,7 +22,8 @@ class AuthRepository(
     private val dataSource: AuthDataSource,
     private val tokenManager: TokenManager,
     private val userManager: UserManager,
-    private val authValidator: AuthValidator
+    private val authValidator: AuthValidator,
+    private val authHttpClientManager: AuthHttpClientManager
 ) {
     suspend fun register(request: RegisterRequest): ResultWrapper<UserResponse> {
         return safeApiCall {
@@ -45,6 +47,7 @@ class AuthRepository(
                     response.userResponseDTO?.role, response.userResponseDTO?.date, response.userResponseDTO?.biography,response.userResponseDTO?.onboardingCompleted)
 
                 userManager.saveUser(user)
+                authHttpClientManager.recreateClient()
             }
             response
         }

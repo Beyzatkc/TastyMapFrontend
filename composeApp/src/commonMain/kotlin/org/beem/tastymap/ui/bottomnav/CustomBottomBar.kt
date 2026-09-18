@@ -15,6 +15,7 @@ import cafe.adriel.voyager.navigator.Navigator
 import cafe.adriel.voyager.navigator.tab.Tab
 import cafe.adriel.voyager.navigator.tab.TabOptions
 import org.beem.tastymap.ui.profile.myprofile.MyProfileScreen
+import org.beem.tastymap.ui.profile.myprofile.settings.deleteaccount.AccountDeactivatedScreen
 import org.beem.tastymap.ui.search.SearchScreen
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
@@ -97,9 +98,12 @@ object ProfileTab : Tab {
 
             // SİHİRLİ DOKUNUŞ: Sayfa her değiştiğinde bu blok tetiklenir
             LaunchedEffect(navigator.lastItem) {
-                // Eğer sayfa geçmişinde (stack) sadece 1 sayfa varsa (yani ana Profildeysek) alt barı göster (true).
-                // Eğer 1'den fazlaysa (Ayarlar, Cihazlar vb. derinlere indiysek) alt barı gizle (false).
-                bottomBarVisibility.value = navigator.items.size == 1
+                val currentScreen = navigator.lastItem
+                if (currentScreen is AccountDeactivatedScreen) {
+                    bottomBarVisibility.value = false
+                } else {
+                    bottomBarVisibility.value = navigator.items.size == 1
+                }
             }
 
             CurrentScreen()

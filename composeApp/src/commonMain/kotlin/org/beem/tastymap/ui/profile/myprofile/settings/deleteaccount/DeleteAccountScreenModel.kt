@@ -48,7 +48,6 @@ class DeleteAccountScreenModel(
                             isSuccess = true
                         )
                     }
-                    authEventBus.emit(AuthEventBus.AuthEvent.OnLoggedOut)
                 }
                 is ResultWrapper.Error -> {
                     if (result.isPasswordError()) {
@@ -75,6 +74,9 @@ class DeleteAccountScreenModel(
         return msg.contains("şifre") || msg.contains("password")
     }
 
+    fun backToLogin(){
+        authEventBus.emit(AuthEventBus.AuthEvent.DeleteAccount)
+    }
     fun clearMessages() {
         _uiState.update { it.copy(errorMessage = null) }
     }

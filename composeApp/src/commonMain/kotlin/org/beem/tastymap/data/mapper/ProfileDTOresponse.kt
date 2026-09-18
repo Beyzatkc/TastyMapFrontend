@@ -5,10 +5,10 @@ import org.beem.tastymap.domain.model.RelationStatus
 import org.beem.tastymap.domain.model.UserProfile
 
 
-fun ProfileResponse.toDomain(userId: Long): UserProfile {
+fun ProfileResponse.toDomain(userId: Long?): UserProfile {
 
     return UserProfile(
-        userId = userId,
+        userId = userId !!,
         username = username,
         name = name,
         surname = surname,

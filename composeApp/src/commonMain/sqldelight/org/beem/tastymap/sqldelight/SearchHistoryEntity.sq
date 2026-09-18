@@ -3,7 +3,7 @@ CREATE TABLE SearchHistoryEntity (
     username TEXT NOT NULL,
     name TEXT NOT NULL,
     profile TEXT,
-    searchedAt INTEGER NOT NULL
+    searchedAt TEXT NOT NULL
 );
 
 -- 1. Son aramaları getir (En yeniden en eskiye sıralı, limit 20)

@@ -7,7 +7,7 @@ import org.beem.tastymap.domain.model.UserProfile
 import org.jetbrains.compose.resources.StringResource
 
 data class MyProfileUiState(
-    val isLoading: Boolean = false,
+    val isLoading: Boolean = true,
     val isRefreshing: Boolean = false,
     val profile: UserProfile? = null,
     val DENEME: List<UserResponse> = emptyList(),

@@ -53,177 +53,43 @@ class MyProfileScreenModel(
     }
 
     fun getMyProfile() {
-        if (profileJob?.isActive == true) return
+        profileJob?.cancel()
 
         profileJob = screenModelScope.launch {
-            repo.getMyProfile().collect { result ->
-                when (result) {
-                    is ResultWrapper.Success -> {
-                        _myProfileState.update {
-                            it.copy(
-                                isLoading = false,
-                                profile = result.data,
-                                errorMessage = null
-                            )
-                        }
-                    }
-                    is ResultWrapper.Error -> {
-                        _myProfileState.update {
-                            it.copy(
-                                isLoading = false,
-                                errorMessage = result.message
-                            )
-                        }
-                    }
-                }
-            }
-        }
-    }
 
-    fun refreshProfile() {
-        screenModelScope.launch {
-            _myProfileState.update { it.copy(isRefreshing = true, errorMessage = null) }
+            repo.getMyProfile().collect { profile ->
 
-            try {
-                repo.fetchRemoteProfile()
-                _myProfileState.update { it.copy(isRefreshing = false) }
-
-            } catch (e: Exception) {
                 _myProfileState.update {
-                    it.copy(isRefreshing = false, errorMessage = e.message ?: "Yenilenirken bir hata oluştu")
+                    it.copy(
+                        profile = profile,
+                        isLoading = false,
+                        errorMessage = null
+                    )
                 }
             }
         }
     }
 
-    /*
-    fun getMyProfile(isFromPullToRefresh: Boolean = false) {
+    fun fetchRemoteProfile(){
         screenModelScope.launch {
-            _myProfileState.update {
-                if (isFromPullToRefresh) {
-                    it.copy(isRefreshing = true, errorMessage = null)
-                } else {
-                    it.copy(isLoading = it.profile == null, errorMessage = null)
-                }
-            }
+            when (val result = repo.refreshMyProfile()) {
 
-            repo.getMyProfile()
-                .onCompletion {
-                    _myProfileState.update { it.copy(isRefreshing = false, isLoading = false) }
-                }
-                .collect { result ->
-                    when (result) {
-                        is ResultWrapper.Success -> {
-                            _myProfileState.update {
-                                it.copy(
-                                    isLoading = false,
-                                    profile = result.data,
-                                    errorMessage = null
-                                )
-                            }
-                        }
-                        is ResultWrapper.Error -> {
-                            _myProfileState.update {
-                                it.copy(
-                                    isLoading = false,
-                                    errorMessage = result.message
-                                )
-                            }
-                        }
-                    }
-                }
-        }
-    }
-
-     */
-
-    fun updateProfile(
-        inputUsername: String,
-        inputName: String,
-        inputSurname: String,
-        inputBiography: String?,
-        selectedFile: PlatformFile? = null
-    ) {
-        val currentProfile = _myProfileState.value.profile ?: return
-
-        val changedUsername = if (inputUsername.trim() != currentProfile.username) inputUsername.trim() else null
-        val changedName = if (inputName.trim() != currentProfile.name) inputName.trim() else null
-        val changedSurname = if (inputSurname.trim() != currentProfile.surname) inputSurname.trim() else null
-        val changedBiography = if (inputBiography?.trim() != currentProfile.biography) inputBiography?.trim() else null
-
-        val isValid = validateUpdateState(
-            changedUsername ?: currentProfile.username,
-            changedName ?: currentProfile.name,
-            changedSurname ?: currentProfile.surname
-        )
-
-        if (!isValid) return
-
-        if (changedUsername == null && changedName == null && changedSurname == null &&
-            changedBiography == null && selectedFile == null
-        ) {
-            _myProfileState.update {
-                it.copy(successMessageRes = Res.string.edit_profile_success)
-            }
-            return
-        }
-
-        screenModelScope.launch {
-            _myProfileState.update {
-                it.copy(
-                    isActionLoading = true,
-                    errorMessage = null,
-                    successMessageRes = null
-                )
-            }
-            var uploadedPhotoUrl: String? = null
-
-            if (selectedFile != null) {
-                when (val uploadResult = repo.uploadProfilePhoto(selectedFile)) {
-                    is ResultWrapper.Success -> {
-                        uploadedPhotoUrl = uploadResult.data
-                    }
-                    is ResultWrapper.Error -> {
-                        _myProfileState.update {
-                            it.copy(
-                                isActionLoading = false,
-                                errorMessage = uploadResult.message
-                            )
-                        }
-                        return@launch
-                    }
-                }
-            }
-
-            val patchRequest = UpdateProfile(
-                username = changedUsername,
-                name = changedName,
-                surname = changedSurname,
-                biography = changedBiography,
-                profilePhoto = uploadedPhotoUrl
-            )
-
-            when (val result = repo.updateProfile(patchRequest)) {
                 is ResultWrapper.Success -> {
-                    _myProfileState.update { currentState ->
-                        val updatedProfile = currentState.profile?.copy(
-                            username = patchRequest.username ?: currentState.profile.username,
-                            name = patchRequest.name ?: currentState.profile.name,
-                            surname = patchRequest.surname ?: currentState.profile.surname,
-                            profilePhoto = patchRequest.profilePhoto ?: currentState.profile.profilePhoto,
-                            biography = patchRequest.biography ?: currentState.profile.biography
-                        )
-                        currentState.copy(
-                            isActionLoading = false,
-                            profile = updatedProfile,
-                            successMessageRes = Res.string.edit_profile_success
+                    _myProfileState.update {
+                        it.copy(
+                            isRefreshing = false,
+                            isLoading = false,
+                            profile = result.data,
+                            errorMessage = null
                         )
                     }
                 }
+
                 is ResultWrapper.Error -> {
                     _myProfileState.update {
                         it.copy(
-                            isActionLoading = false,
+                            isLoading = false,
+                            isRefreshing = false,
                             errorMessage = result.message
                         )
                     }
@@ -231,43 +97,44 @@ class MyProfileScreenModel(
             }
         }
     }
-    fun validateUpdateState(username: String, name: String, surname: String): Boolean {
-        val uResult = CheckValidator.validateUsername(username.trim())
-        val nResult = CheckValidator.validateName(name.trim().replace("\\s+".toRegex(), " "))
-        val sResult = CheckValidator.validateSurname(surname.replace("\\s+".toRegex(), " "))
 
-        val usernameError = (uResult as? ValidationResult.Invalid)?.messageRes
-        val nameError = (nResult as? ValidationResult.Invalid)?.messageRes
-        val surnameError = (sResult as? ValidationResult.Invalid)?.messageRes
+    fun refreshMyProfile() {
+        if (_myProfileState.value.isRefreshing) return
 
-        _myProfileState.update {
-            it.copy(
-                usernameError = usernameError,
-                nameError = nameError,
-                surnameError = surnameError
-            )
+        screenModelScope.launch {
+
+            _myProfileState.update {
+                it.copy(isRefreshing = true)
+            }
+
+            when (val result = repo.refreshMyProfile()) {
+
+                is ResultWrapper.Success -> {
+                    _myProfileState.update {
+                        it.copy(
+                            isRefreshing = false,
+                            profile = result.data,
+                            errorMessage = null
+                        )
+                    }
+                }
+
+                is ResultWrapper.Error -> {
+                    _myProfileState.update {
+                        it.copy(
+                            isRefreshing = false,
+                            errorMessage = result.message
+                        )
+                    }
+                }
+            }
         }
-
-        return uResult is ValidationResult.Valid &&
-                nResult is ValidationResult.Valid &&
-                sResult is ValidationResult.Valid
     }
 
     fun clearMessagesProfile() {
         _myProfileState.update { it.copy(errorMessage = null, successMessageRes = null) }
     }
 
-    fun clearMessagesEdit() {
-        _myProfileState.update {
-            it.copy(
-                errorMessage = null,
-                successMessageRes = null,
-                usernameError = null,
-                nameError = null,
-                surnameError = null
-            )
-        }
-    }
 
     fun getAllUsers() {
         screenModelScope.launch {

@@ -56,6 +56,7 @@ class DeleteAccountScreen : Screen {
         LaunchedEffect(uiState.isSuccess) {
             if (uiState.isSuccess) {
                 ToastManager.show(successMessage)
+                navigator.replaceAll(AccountDeactivatedScreen())
             }
         }
 
@@ -156,7 +157,7 @@ class DeleteAccountScreen : Screen {
                 }
 
                 // 2. Silme Sebebi Seçimi Section
-                Column {
+                Column (verticalArrangement = Arrangement.spacedBy(8.dp)){
                     Text(
                         text = stringResource(Res.string.delete_account_reason_title),
                         style = MaterialTheme.typography.titleSmall.copy(

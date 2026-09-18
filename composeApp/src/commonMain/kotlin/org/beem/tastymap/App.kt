@@ -21,6 +21,7 @@ import org.beem.tastymap.ui.theme.TastyTheme
 import org.jetbrains.compose.resources.getString
 import org.koin.compose.koinInject
 import tastymap.composeapp.generated.resources.Res
+import tastymap.composeapp.generated.resources.account_deactivated_subtitle
 import tastymap.composeapp.generated.resources.auth_logged_out
 import tastymap.composeapp.generated.resources.auth_password_changed
 import tastymap.composeapp.generated.resources.auth_session_expired
@@ -61,9 +62,12 @@ fun App() {
                         is AuthEventBus.AuthEvent.OnSessionExpired -> getString(Res.string.auth_session_expired)
                         is AuthEventBus.AuthEvent.OnPasswordChanged -> getString(Res.string.auth_password_changed)
                         is AuthEventBus.AuthEvent.OnLoggedOut -> getString(Res.string.auth_logged_out)
+                        is AuthEventBus.AuthEvent.DeleteAccount -> null
                     }
 
-                    ToastManager.show(message)
+                    message?.let {
+                        ToastManager.show(it)
+                    }
                     navigator.replaceAll(LogRegScreen())
                 }
             }

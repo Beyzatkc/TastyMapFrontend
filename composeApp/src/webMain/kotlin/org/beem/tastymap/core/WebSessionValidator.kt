@@ -18,8 +18,9 @@ class WebSessionValidator(
 ) : AuthValidator {
 
     override suspend fun getAuthStatus(): AuthStatus {
-        val userId = userManager.getUserId()
-        val isOnboardingCompleted = userManager.getOnBoardComplete()
+        val session = userManager.userSession.value
+        val userId = session?.userId
+        val isOnboardingCompleted = session?.onBoardComplete
 
         if (userId != null && isOnboardingCompleted == true) {
             return AuthStatus.AUTHENTICATED

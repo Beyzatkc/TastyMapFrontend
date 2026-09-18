@@ -18,7 +18,7 @@ class SearchUserRepository(
 ) {
 
     fun isMe(userId: Long): Boolean {
-        return userId == userManager.getUserId()
+        return userId == userManager.userSession.value?.userId
     }
     fun getRecentSearchesFlow(): Flow<List<UserSearchResponse>> {
         return localDataSource.getRecentSearchesFlow()

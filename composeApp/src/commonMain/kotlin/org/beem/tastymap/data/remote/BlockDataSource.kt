@@ -6,10 +6,13 @@ import io.ktor.client.request.delete
 import io.ktor.client.request.get
 import io.ktor.client.request.parameter
 import io.ktor.client.request.post
+import org.beem.tastymap.core.network.AuthHttpClientManager
 import org.beem.tastymap.data.model.PageResponse
 import org.beem.tastymap.data.model.block.BlockResponse
 
-class BlockDataSource(private val client: HttpClient) {
+class BlockDataSource(private val authHttpClientManager: AuthHttpClientManager) {
+    private val client: HttpClient
+        get() = authHttpClientManager.getClient()
 
     suspend fun blockUser(userId: Long){
         return client.post("api/block/$userId").body()

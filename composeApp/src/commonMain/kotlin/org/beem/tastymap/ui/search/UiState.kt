@@ -6,7 +6,7 @@ data class SearchUiState(
     val query: String = "",
     val searchResults: List<UserSearchResponse> = emptyList(),
     val historyResults: List<UserSearchResponse> = emptyList(),
-    val isLoading: Boolean = false,
+    val isLoading: Boolean = true,
     val isRefreshing: Boolean = false,
     val isLoadingMore: Boolean = false,
     val currentPage: Int = 0,

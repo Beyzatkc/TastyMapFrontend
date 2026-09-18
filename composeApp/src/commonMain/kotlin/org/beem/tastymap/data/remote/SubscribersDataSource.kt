@@ -6,11 +6,14 @@ import io.ktor.client.request.delete
 import io.ktor.client.request.get
 import io.ktor.client.request.parameter
 import io.ktor.client.request.post
+import org.beem.tastymap.core.network.AuthHttpClientManager
 import org.beem.tastymap.data.model.PageResponse
 import org.beem.tastymap.data.model.subscribers.SubscribeActionResult
 import org.beem.tastymap.data.model.subscribers.SubscribeResponse
 
-class SubscribersDataSource(private val client: HttpClient) {
+class SubscribersDataSource(private val authHttpClientManager: AuthHttpClientManager) {
+    private val client: HttpClient
+        get() = authHttpClientManager.getClient()
 
     suspend fun subscribe(userId: Long): SubscribeActionResult {
         return client.post("api/subscribe/$userId").body()

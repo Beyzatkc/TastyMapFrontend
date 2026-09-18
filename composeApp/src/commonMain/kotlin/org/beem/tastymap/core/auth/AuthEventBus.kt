@@ -22,5 +22,6 @@ class AuthEventBus {
         data object OnSessionExpired : AuthEvent
         data object OnPasswordChanged : AuthEvent
         data object OnLoggedOut : AuthEvent
+        data object DeleteAccount : AuthEvent
     }
 }

@@ -19,7 +19,7 @@ class HealthRepository(
         val result = safeApiCall { dataSource.addHealth(request) }
         if (result is ResultWrapper.Success) {
             userManager.setOnBoardComplete(true)
-            val myUserId = userManager.getUserId()
+            val myUserId = userManager.userSession.value?.userId
             if (myUserId != null) {
                 memoryCache.put(myUserId, result.data)
             }
@@ -29,7 +29,7 @@ class HealthRepository(
     suspend fun updateHealth(request: HealthRequest): ResultWrapper<HealthResponse> {
         val result = safeApiCall { dataSource.updateHealth(request) }
         if (result is ResultWrapper.Success) {
-            val myUserId = userManager.getUserId()
+            val myUserId = userManager.userSession.value?.userId
             if (myUserId != null) {
                 memoryCache.put(myUserId, result.data)
             }
@@ -37,7 +37,7 @@ class HealthRepository(
         return result
     }
     suspend fun getHealth(): ResultWrapper<HealthResponse> {
-        val myUserId = userManager.getUserId()
+        val myUserId = userManager.userSession.value?.userId
             ?: return ResultWrapper.Error(
                 message = "Kullanıcı oturumu bulunamadı.",
                 type = ErrorType.UNAUTHORIZED

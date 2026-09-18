@@ -7,9 +7,12 @@ import io.ktor.client.request.forms.formData
 import io.ktor.client.request.forms.submitFormWithBinaryData
 import io.ktor.http.Headers
 import io.ktor.http.HttpHeaders
+import org.beem.tastymap.core.network.AuthHttpClientManager
 import org.beem.tastymap.data.model.file.FileUploadResponse
 
-class FileRemoteDataSource(private val client: HttpClient) {
+class FileRemoteDataSource(private val authHttpClientManager: AuthHttpClientManager) {
+    private val client: HttpClient
+        get() = authHttpClientManager.getClient()
 
     suspend fun uploadFile(file: PlatformFile): FileUploadResponse {
         val bytes = file.readBytes()

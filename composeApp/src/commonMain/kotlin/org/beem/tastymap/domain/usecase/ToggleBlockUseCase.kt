@@ -17,7 +17,7 @@ class ToggleBlockUseCase(
         currentRelationStatus: RelationStatus = RelationStatus.NOT_FOLLOWING,
         isFollower: Boolean = false
     ): ResultWrapper<Unit> {
-        val myUserId = userManager.getUserId()
+        val myUserId = userManager.userSession.value?.userId
             ?: return ResultWrapper.Error("Kullanıcı oturumu bulunamadı.", ErrorType.UNAUTHORIZED)
 
         return if (isCurrentlyBlocked) {

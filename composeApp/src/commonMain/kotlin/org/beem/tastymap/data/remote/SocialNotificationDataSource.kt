@@ -5,11 +5,14 @@ import io.ktor.client.call.body
 import io.ktor.client.request.get
 import io.ktor.client.request.parameter
 import io.ktor.client.request.put
+import org.beem.tastymap.core.network.AuthHttpClientManager
 import org.beem.tastymap.data.model.PageResponse
 import org.beem.tastymap.data.model.socialnotifications.SocialNotificationsResponse
 import org.beem.tastymap.data.model.subscribers.HasUnreadResponse
 
-class SocialNotificationDataSource(private val client: HttpClient) {
+class SocialNotificationDataSource(private val authHttpClientManager: AuthHttpClientManager) {
+    private val client: HttpClient
+        get() = authHttpClientManager.getClient()
 
     suspend fun getNotifications(
         page: Int = 0,

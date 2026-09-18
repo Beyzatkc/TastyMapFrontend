@@ -190,7 +190,7 @@ class SearchScreen : Screen {
                         }
                     }
 
-                    isEmpty -> {
+                    isEmpty && !uiState.isLoading -> {
                         Box(
                             modifier = Modifier.fillMaxSize(),
                             contentAlignment = Alignment.Center

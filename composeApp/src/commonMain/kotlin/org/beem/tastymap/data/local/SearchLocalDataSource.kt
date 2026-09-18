@@ -25,7 +25,8 @@ class SearchHistoryLocalDataSource(
                         id = entity.id,
                         username = entity.username,
                         name = entity.name,
-                        profile = entity.profile
+                        profile = entity.profile,
+                        searchedAt = entity.searchedAt
                     )
                 }
             }
@@ -37,7 +38,8 @@ class SearchHistoryLocalDataSource(
                 id = entity.id,
                 username = entity.username,
                 name = entity.name,
-                profile = entity.profile
+                profile = entity.profile,
+                searchedAt = entity.searchedAt
             )
         }
     }
@@ -45,18 +47,18 @@ class SearchHistoryLocalDataSource(
     suspend fun replaceAll(users: List<UserSearchResponse>) = withContext(dispatchers.io) {
         queries.transaction {
             queries.clearAll()
-            val now = Clock.System.now().toEpochMilliseconds()
             users.forEach { user ->
                 queries.insertOrReplace(
                     id = user.id,
                     username = user.username,
                     name = user.name,
                     profile = user.profile,
-                    searchedAt = now
+                    searchedAt = user.searchedAt ?: ""
                 )
             }
         }
     }
+
 
     suspend fun saveSearch(user: UserSearchResponse) = withContext(dispatchers.io) {
         queries.insertOrReplace(
@@ -64,7 +66,7 @@ class SearchHistoryLocalDataSource(
             username = user.username,
             name = user.name,
             profile = user.profile,
-            searchedAt = Clock.System.now().toEpochMilliseconds()
+            searchedAt = Clock.System.now().toString()
         )
     }
 

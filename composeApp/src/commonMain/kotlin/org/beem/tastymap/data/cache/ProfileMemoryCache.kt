@@ -27,11 +27,13 @@ class ProfileMemoryCache {
         return entry.data
     }
 
-    fun put(userId: Long, profile: UserProfile) {
-        cache[userId] = CacheEntry(
-            data = profile,
-            createdAt = TimeSource.Monotonic.markNow()
-        )
+    fun put(userId: Long?, profile: UserProfile) {
+        if(userId != null) {
+            cache[userId] = CacheEntry(
+                data = profile,
+                createdAt = TimeSource.Monotonic.markNow()
+            )
+        }
     }
 
     fun invalidate(userId: Long) {

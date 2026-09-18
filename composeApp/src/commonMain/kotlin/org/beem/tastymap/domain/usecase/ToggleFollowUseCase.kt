@@ -19,7 +19,7 @@ class ToggleFollowUseCase(
     }
 
     suspend operator fun invoke(targetUserId: Long, action: Action): ResultWrapper<SubscribeActionResult> {
-        val myId = userManager.getUserId()
+        val myId = userManager.userSession.value?.userId
             ?: return ResultWrapper.Error("Kullanıcı oturumu bulunamadı.", ErrorType.UNAUTHORIZED)
 
         return when (action) {

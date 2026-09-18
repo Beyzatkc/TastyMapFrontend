@@ -17,6 +17,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import cafe.adriel.voyager.core.screen.Screen
+import cafe.adriel.voyager.koin.koinScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import org.beem.tastymap.ui.auth.logReg.LogRegScreen
@@ -30,8 +31,7 @@ class AccountDeactivatedScreen : Screen {
     @Composable
     override fun Content() {
         val customColors = LocalCustomColors.current
-        val navigator = LocalNavigator.currentOrThrow
-
+        val deleteScreenModel = koinScreenModel<DeleteAccountScreenModel>()
         Scaffold(
             containerColor = customColors.background
         ) { innerPadding ->
@@ -136,8 +136,7 @@ class AccountDeactivatedScreen : Screen {
                 TastyButton(
                     text = stringResource(Res.string.account_deactivated_back_to_login),
                     onClick = {
-                        // Kullanıcı oturumu kapandığı için Voyager ekran geçmişini tamamen temizleyip Login ekranına atar
-                        navigator.replaceAll(LogRegScreen())
+                        deleteScreenModel.backToLogin()
                     },
                     backcolor = customColors.navy,
                     textcolor = customColors.surface,

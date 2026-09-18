@@ -41,6 +41,32 @@ class SubscribersRepository(
 
         return result
     }
+    // 4. Takipten Çık / Gönderilen İsteği İptal Et
+    suspend fun unSubscribe(targetUserId: Long, myUserId: Long): ResultWrapper<SubscribeActionResult> {
+        val result = safeApiCall { dataSource.unSubscribe(targetUserId) }
+
+        if (result is ResultWrapper.Success) {
+            val actionResult = result.data
+
+            if (actionResult.relationStatus == RelationStatus.FOLLOW_BACK ) {
+                localDataSource.decrementSubscribed(myUserId)
+                localDataSource.decrementSubscriber(targetUserId)
+
+                memoryCache.invalidateUserCache(myUserId)
+                memoryCache.invalidateUserCache(targetUserId)
+            }
+
+            localDataSource.updateRelationStatus(
+                userId = targetUserId,
+                relationStatus = actionResult.relationStatus,
+                hasPendingIncomingRequest = actionResult.hasPendingIncomingRequest,
+                isFollower = actionResult.isFollower
+            )
+
+        }
+
+        return result
+    }
 
     suspend fun acceptSubscribeRequest(requesterId: Long, myUserId: Long): ResultWrapper<SubscribeActionResult> {
         val result = safeApiCall { dataSource.acceptSubscribeRequest(requesterId) }
@@ -87,29 +113,6 @@ class SubscribersRepository(
         return result
     }
 
-    // 4. Takipten Çık / Gönderilen İsteği İptal Et
-    suspend fun unSubscribe(targetUserId: Long, myUserId: Long): ResultWrapper<SubscribeActionResult> {
-        val result = safeApiCall { dataSource.unSubscribe(targetUserId) }
-
-        if (result is ResultWrapper.Success) {
-            val actionResult = result.data
-
-            localDataSource.decrementSubscribed(myUserId)
-            localDataSource.decrementSubscriber(targetUserId)
-
-            localDataSource.updateRelationStatus(
-                userId = targetUserId,
-                relationStatus = actionResult.relationStatus,
-                hasPendingIncomingRequest = actionResult.hasPendingIncomingRequest,
-                isFollower = actionResult.isFollower
-            )
-
-            memoryCache.invalidateUserCache(myUserId)
-            memoryCache.invalidateUserCache(targetUserId)
-        }
-
-        return result
-    }
 
     // 5. Takipçiyi Çıkar
     suspend fun unSubscriber(targetUserId: Long, myUserId: Long): ResultWrapper<SubscribeActionResult> {

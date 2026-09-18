@@ -2,6 +2,7 @@ package org.beem.tastymap.domain.auth
 
 import org.beem.tastymap.core.local.TokenManager
 import org.beem.tastymap.core.local.UserManager
+import org.beem.tastymap.core.network.AuthHttpClientManager
 import org.beem.tastymap.data.cache.CacheManager
 import org.beem.tastymap.data.cache.ProfileMemoryCache
 import org.beem.tastymap.data.local.ProfileLocalDataSource
@@ -12,9 +13,11 @@ class ClearSessionUseCase(
     private val userManager: UserManager,
     private val cacheManager: CacheManager,
     private val localDataSource: ProfileLocalDataSource,
-    private val localDataSourceHealth: SearchHistoryLocalDataSource
+    private val localDataSourceHealth: SearchHistoryLocalDataSource,
+    private val authHttpClientManager: AuthHttpClientManager
 ) {
     suspend operator fun invoke() {
+        authHttpClientManager.close()
         tokenManager.clear()
         userManager.clear()
         cacheManager.clearAllMemoryCaches()

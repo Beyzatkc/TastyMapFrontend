@@ -6,10 +6,13 @@ import io.ktor.client.request.delete
 import io.ktor.client.request.get
 import io.ktor.client.request.parameter
 import io.ktor.client.request.post
+import org.beem.tastymap.core.network.AuthHttpClientManager
 import org.beem.tastymap.data.model.PageResponse
 import org.beem.tastymap.data.model.search.UserSearchResponse
 
-class SearchUserDataSource(private val client: HttpClient) {
+class SearchUserDataSource(private val authHttpClientManager: AuthHttpClientManager) {
+    private val client: HttpClient
+        get() = authHttpClientManager.getClient()
 
     suspend fun getSearchUsers(keyword: String, page: Int = 0, size: Int = 20): List<UserSearchResponse> {
         return client.get("api/search/users") {

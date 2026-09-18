@@ -28,7 +28,6 @@ class SearchScreenModel(
 
 
     init {
-        _uiState.update { it.copy(isLoading = true) }
         observeHistory()
         fetchRemoteHistorySync()
     }
@@ -50,6 +49,11 @@ class SearchScreenModel(
     private fun fetchRemoteHistorySync() {
         screenModelScope.launch {
             val result = searchUserRepository.getHistorySearchUsers()
+            if (result is ResultWrapper.Success) {
+                _uiState.update {
+                    it.copy(errorMessage =null, isLoading = false)
+                }
+            }
             if (result is ResultWrapper.Error) {
                 _uiState.update {
                     it.copy(errorMessage = result.message)

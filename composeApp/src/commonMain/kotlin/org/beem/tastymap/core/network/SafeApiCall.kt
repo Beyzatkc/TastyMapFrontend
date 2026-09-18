@@ -54,6 +54,7 @@ suspend fun <T> safeApiCall(
             }
 
             else -> {
+                println("Beklenmeyen hata detayı: ${ e.message}")
                 ResultWrapper.Error("Beklenmeyen bir hata oluştu.", ErrorType.UNKNOWN_ERROR)
             }
         }
