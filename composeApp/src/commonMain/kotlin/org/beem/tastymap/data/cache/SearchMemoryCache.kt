@@ -1,39 +1,46 @@
 package org.beem.tastymap.data.cache
 
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import org.beem.tastymap.data.model.PageResponse
 import org.beem.tastymap.data.model.search.UserSearchResponse
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.minutes
 import kotlin.time.TimeMark
 import kotlin.time.TimeSource
-import kotlin.time.Duration.Companion.minutes
 
-class SearchMemoryCache {
+class SearchMemoryCache(
+    private val defaultTtl: Duration = 5.minutes
+) {
     private data class CacheKey(val keyword: String, val page: Int)
 
     private val searchCache = mutableMapOf<CacheKey, SearchCacheEntry>()
+    private val mutex = Mutex()
+
     private data class SearchCacheEntry(
         val data: List<UserSearchResponse>,
         val createdAt: TimeMark
     )
 
-    // Geçmiş sonuçları için (PageResponse döner)
     private var historyCache: HistoryCacheEntry? = null
     private data class HistoryCacheEntry(
         val data: PageResponse<UserSearchResponse>,
         val createdAt: TimeMark
     )
 
-    fun getSearch(keyword: String, page: Int): List<UserSearchResponse>? {
-        val key = CacheKey(keyword, page)
-        val entry = searchCache[key] ?: return null
 
-        if (entry.createdAt.elapsedNow() > 5.minutes) {
+    suspend fun getSearch(keyword: String, page: Int): List<UserSearchResponse>? = mutex.withLock {
+        val key = CacheKey(keyword, page)
+        val entry = searchCache[key] ?: return@withLock null
+
+        if (entry.createdAt.elapsedNow() > defaultTtl) {
             searchCache.remove(key)
-            return null
+            return@withLock null
         }
-        return entry.data
+        return@withLock entry.data
     }
 
-    fun putSearch(keyword: String, page: Int, response: List<UserSearchResponse>) {
+    suspend fun putSearch(keyword: String, page: Int, response: List<UserSearchResponse>) = mutex.withLock {
         val key = CacheKey(keyword, page)
         searchCache[key] = SearchCacheEntry(
             data = response,
@@ -41,23 +48,31 @@ class SearchMemoryCache {
         )
     }
 
-    fun getHistory(): PageResponse<UserSearchResponse>? {
-        val entry = historyCache ?: return null
-        return entry.data
+    // --- ARAMA GEÇMİŞİ (HISTORY) ---
+
+    suspend fun getHistory(): PageResponse<UserSearchResponse>? = mutex.withLock {
+        val entry = historyCache ?: return@withLock null
+
+        // History tarafına da TTL kontrolü eklendi
+        if (entry.createdAt.elapsedNow() > defaultTtl) {
+            historyCache = null
+            return@withLock null
+        }
+        return@withLock entry.data
     }
 
-    fun putHistory(response: PageResponse<UserSearchResponse>) {
+    suspend fun putHistory(response: PageResponse<UserSearchResponse>) = mutex.withLock {
         historyCache = HistoryCacheEntry(
             data = response,
             createdAt = TimeSource.Monotonic.markNow()
         )
     }
 
-    fun clearHistory() {
+    suspend fun clearHistory() = mutex.withLock {
         historyCache = null
     }
 
-    fun clear() {
+    suspend fun clear() = mutex.withLock {
         searchCache.clear()
         historyCache = null
     }

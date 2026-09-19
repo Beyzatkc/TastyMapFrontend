@@ -492,4 +492,18 @@
     <string name="account_deactivated_info_title">30-Day Grace Period</string>
     <string name="account_deactivated_info_desc">Your account is now frozen. If you log back in within 30 days, your deletion request will be canceled. After 30 days, all your data will be permanently deleted.</string>
     <string name="account_deactivated_back_to_login">Return to Login</string>
+
+    <string name="visit_history_title">My Visit History</string>
+    <string name="visit_history_empty">You don\'t have any visit history yet.</string>
+
+    <!-- Visit Item -->
+    <string name="visit_item_category_unspecified">Category Not Specified</string>
+    <string name="visit_item_rating_desc">Rating</string>
+    <string name="visit_item_delete_desc">Delete Visit</string>
+
+    <!-- Delete Dialog -->
+    <string name="dialog_delete_visit_message">Are you sure you want to delete your visit to %1$s from your history?</string>
+
+    <string name="settings_section_activity">Activity &amp; History</string>
+    <string name="settings_visit_history_sub">Manage places you have visited</string>
 </resources>

@@ -18,6 +18,7 @@ import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.Place
 import androidx.compose.material.icons.filled.Policy
 import androidx.compose.material.icons.filled.Restaurant
 import androidx.compose.material.icons.filled.Tune
@@ -46,6 +47,7 @@ import org.beem.tastymap.ui.profile.myprofile.settings.changepassword.ChangePass
 import org.beem.tastymap.ui.profile.myprofile.settings.changepassword.ChangePasswordScreenModel
 import org.beem.tastymap.ui.profile.myprofile.settings.deleteaccount.DeleteAccountScreen
 import org.beem.tastymap.ui.profile.myprofile.settings.edithealth.EditHealthScreen
+import org.beem.tastymap.ui.profile.myprofile.visit.VisitScreen
 import org.beem.tastymap.ui.theme.LocalCustomColors
 import org.jetbrains.compose.resources.getString
 import org.jetbrains.compose.resources.stringResource
@@ -74,11 +76,14 @@ import tastymap.composeapp.generated.resources.settings_privacy_policy
 import tastymap.composeapp.generated.resources.settings_private_account
 import tastymap.composeapp.generated.resources.settings_private_account_sub
 import tastymap.composeapp.generated.resources.settings_section_account_security
+import tastymap.composeapp.generated.resources.settings_section_activity
 import tastymap.composeapp.generated.resources.settings_section_app_preferences
 import tastymap.composeapp.generated.resources.settings_section_nutrition
 import tastymap.composeapp.generated.resources.settings_section_session_privacy
 import tastymap.composeapp.generated.resources.settings_section_support_about
 import tastymap.composeapp.generated.resources.settings_title
+import tastymap.composeapp.generated.resources.settings_visit_history_sub
+import tastymap.composeapp.generated.resources.visit_history_title
 import kotlin.time.Clock
 
 
@@ -251,6 +256,25 @@ class SettingsScreen(val isPrivate: Boolean) : Screen {
                                                 uncheckedBorderColor = customColors.borderStrong
                                             )
                                         )
+                                    }
+                                )
+                            }
+                        }
+                    }
+                    item {
+                        SettingsSectionHeader(title = stringResource(Res.string.settings_section_activity))
+                        Card(
+                            colors = CardDefaults.cardColors(containerColor = customColors.surface),
+                            shape = RoundedCornerShape(16.dp),
+                            elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+                        ) {
+                            Column {
+                                SettingsOptionItem(
+                                    icon = Icons.Default.Place,
+                                    title = stringResource(Res.string.visit_history_title),
+                                    subtitle = stringResource(Res.string.settings_visit_history_sub),
+                                    onClick = {
+                                        navigator.push(VisitScreen())
                                     }
                                 )
                             }

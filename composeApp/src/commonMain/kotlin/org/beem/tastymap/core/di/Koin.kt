@@ -17,6 +17,7 @@ import org.beem.tastymap.core.provider.HttpClientFactory
 import org.beem.tastymap.data.cache.*
 import org.beem.tastymap.data.local.ProfileLocalDataSource
 import org.beem.tastymap.data.local.SearchHistoryLocalDataSource
+import org.beem.tastymap.data.local.VisitLocalDataSource
 import org.beem.tastymap.data.remote.*
 import org.beem.tastymap.data.remote.profile.MyProfileDataSource
 import org.beem.tastymap.data.remote.profile.ProfileDataSource
@@ -44,6 +45,7 @@ import org.beem.tastymap.ui.profile.myprofile.settings.activedevices.ActiveDevic
 import org.beem.tastymap.ui.profile.myprofile.settings.blockedusers.BlockedScreenModel
 import org.beem.tastymap.ui.profile.myprofile.settings.changepassword.ChangePasswordScreenModel
 import org.beem.tastymap.ui.profile.myprofile.settings.deleteaccount.DeleteAccountScreenModel
+import org.beem.tastymap.ui.profile.myprofile.visit.VisitScreenModel
 import org.beem.tastymap.ui.profile.otherprofile.ProfileScreenModel
 import org.beem.tastymap.ui.profile.subscribers.SubscribersListScreenModel
 import org.beem.tastymap.ui.search.SearchScreenModel
@@ -70,6 +72,7 @@ val appModule = module {
     single { TastyDatabase(driver = get()) }
     single { get<TastyDatabase>().profileEntityQueries }
     single { get<TastyDatabase>().searchHistoryEntityQueries }
+    single { get<TastyDatabase>().visitEntityQueries }
 
     // Caches
     single { ProfileMemoryCache() }
@@ -78,7 +81,8 @@ val appModule = module {
     single { SearchMemoryCache() }
     single { NotificationsMemoryCache() }
     single { BlockedMemoryCache() }
-    single { CacheManager(get(), get(), get(), get(), get(), get()) }
+    single { VisitMemoryCache() }
+    single { CacheManager(get(), get(), get(), get(), get(), get(),get()) }
 
     single { ToggleFollowUseCase(get(), get()) }
     single { ToggleBlockUseCase(get(), get()) }
@@ -87,6 +91,7 @@ val appModule = module {
 
     single { ProfileLocalDataSource(get(), get()) }
     single { SearchHistoryLocalDataSource(get(), get()) }
+    single { VisitLocalDataSource(get(), get()) }
 
 
     single { AuthDataSource(get(named("noAuth"))) }
@@ -103,6 +108,7 @@ val appModule = module {
     single { BlockDataSource(get()) }
     single { DeleteAccountDataSource(get()) }
     single { AuthWebSocketClient(get()) }
+    single { VisitDataSource(get()) }
 
     single { NotificationBadgeManager() }
 
@@ -117,6 +123,7 @@ val appModule = module {
     single { SearchUserRepository(get(), get(), get(), get()) }
     single { BlockRepository(get(), get(), get(), get(), get()) }
     single { DeleteAccountRepository(get(), get(), get()) }
+    single { VisitRepository(get(), get(), get()) }
 
     factory { LogRegScreenModel(get(), get(), get(), get()) }
     factory { PendingScreenModel(get(), get(), get(), get()) }
@@ -126,6 +133,7 @@ val appModule = module {
     factory { ResetScreenModel(get()) }
     factory { HealthScreenModel(get()) }
     factory { SubscribersListScreenModel(get(), get()) }
+    factory { VisitScreenModel(get()) }
     factory { (userId: Long) ->
         ProfileScreenModel(
             userId = userId,

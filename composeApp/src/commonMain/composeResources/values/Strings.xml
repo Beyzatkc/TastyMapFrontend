@@ -495,4 +495,19 @@
     <string name="account_deactivated_info_title">30 Günlük İptal Süresi</string>
     <string name="account_deactivated_info_desc">Hesabınız şu andan itibaren dondurulmuştur. 30 gün içerisinde tekrar giriş yaparsanız silme talebiniz otomatik olarak iptal edilir. 30 gün sonunda tüm verileriniz kalıcı olarak silinecektir.</string>
     <string name="account_deactivated_back_to_login">Giriş Ekranına Dön</string>
+
+    <string name="visit_history_title">Ziyaret Geçmişim</string>
+    <string name="visit_history_empty">Henüz bir ziyaret geçmişiniz bulunmuyor.</string>
+
+    <!-- Visit Item -->
+    <string name="visit_item_category_unspecified">Kategori Belirtilmemiş</string>
+    <string name="visit_item_rating_desc">Puan</string>
+    <string name="visit_item_delete_desc">Ziyareti Sil</string>
+
+    <!-- Delete Dialog -->
+    <string name="dialog_delete_visit_message">%1$s ziyaretinizi geçmişten silmek istediğinize emin misiniz?</string>
+
+
+    <string name="settings_section_activity">Aktivite &amp; Geçmiş</string>
+    <string name="settings_visit_history_sub">Gittiğiniz mekanları yönetin ve görüntüleyin</string>
 </resources>

@@ -25,18 +25,18 @@ class NotificationScreenModel(
     private val pageSize = 10
 
     fun loadInitialData() {
-        // 1. Yeni bildirim gelmiş olabileceği için önbelleği temizle
-        notificationRepository.clearCache()
+        screenModelScope.launch {
+            notificationRepository.clearCache()
 
-        // 2. Yüklenme durumunu başlat ve ilk sayfayı doğrudan ağdan çek (forceFetch = true)
-        _uiState.update {
-            it.copy(
-                isLoading = true,
-                errorMessage = null
-            )
+            _uiState.update {
+                it.copy(
+                    isLoading = true,
+                    errorMessage = null
+                )
+            }
+
+            fetchPage(page = 0, isRefresh = true)
         }
-
-        fetchPage(page = 0, isRefresh = true)
     }
 
 

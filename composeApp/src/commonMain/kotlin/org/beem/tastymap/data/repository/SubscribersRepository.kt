@@ -15,7 +15,6 @@ class SubscribersRepository(
     private val localDataSource: ProfileLocalDataSource,
     private val memoryCache: SubscribeMemoryCache
 ) {
-
     suspend fun subscribe(targetUserId: Long, myUserId: Long): ResultWrapper<SubscribeActionResult> {
         val result = safeApiCall { dataSource.subscribe(targetUserId) }
 

@@ -12,7 +12,7 @@ class SocialNotificationsRepository(
     private val memoryCache: NotificationsMemoryCache
 ) {
 
-    fun getCachedNotifications(page: Int = 0): PageResponse<SocialNotificationsResponse>? {
+    suspend fun getCachedNotifications(page: Int = 0): PageResponse<SocialNotificationsResponse>? {
         return memoryCache.get(page)
     }
     suspend fun getNotifications(
@@ -48,7 +48,7 @@ class SocialNotificationsRepository(
             dataSource.checkHasUnread()
         }
     }
-    fun clearCache() {
+    suspend fun clearCache() {
         memoryCache.clear()
     }
 }

@@ -76,7 +76,7 @@ class SearchScreen : Screen {
             derivedStateOf {
                 val totalItems = listState.layoutInfo.totalItemsCount
                 val lastVisibleItem = listState.layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: 0
-                totalItems > 0 && lastVisibleItem >= totalItems - 2
+                !uiState.isLoading && totalItems > 0 && lastVisibleItem >= totalItems - 2
             }
         }
 

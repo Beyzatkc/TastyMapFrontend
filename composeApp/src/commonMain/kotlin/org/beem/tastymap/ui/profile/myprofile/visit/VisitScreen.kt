@@ -1,4 +1,4 @@
-package org.beem.tastymap.ui.profile.myprofile.settings.blockedusers
+package org.beem.tastymap.ui.profile.myprofile.visit
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.fadeIn
@@ -14,67 +14,58 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Place
 import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.*
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.*
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.koin.koinScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
-import coil3.compose.AsyncImage
 import org.beem.tastymap.core.util.ToastManager
-import org.beem.tastymap.data.model.block.BlockResponse
+import org.beem.tastymap.core.util.formatToRelativeDateTime
+import org.beem.tastymap.data.model.visit.VisitResponse
 import org.beem.tastymap.ui.components.DialogConfig
-import org.beem.tastymap.ui.components.TastyButton
 import org.beem.tastymap.ui.components.TastyConfirmDialog
-import org.beem.tastymap.ui.profile.otherprofile.ProfileScreen
 import org.beem.tastymap.ui.theme.LocalCustomColors
 import org.jetbrains.compose.resources.stringResource
 import tastymap.composeapp.generated.resources.Res
 import tastymap.composeapp.generated.resources.active_devices_retry
-import tastymap.composeapp.generated.resources.active_devices_retry_cd
-import tastymap.composeapp.generated.resources.common_search_placeholder
-import tastymap.composeapp.generated.resources.dialog_unblock_message
-import tastymap.composeapp.generated.resources.dialog_unblock_title
-import tastymap.composeapp.generated.resources.profile_action_unblock
-import tastymap.composeapp.generated.resources.profile_empty_list
-import tastymap.composeapp.generated.resources.profile_no_results
-import tastymap.composeapp.generated.resources.settings_back_cd
-import tastymap.composeapp.generated.resources.settings_blocked_users
+import tastymap.composeapp.generated.resources.dialog_block_message
+import tastymap.composeapp.generated.resources.dialog_block_title
+import tastymap.composeapp.generated.resources.dialog_delete_visit_message
+import tastymap.composeapp.generated.resources.profile_back_cd
+import tastymap.composeapp.generated.resources.visit_history_empty
+import tastymap.composeapp.generated.resources.visit_history_title
+import tastymap.composeapp.generated.resources.visit_item_category_unspecified
+import tastymap.composeapp.generated.resources.visit_item_delete_desc
+import tastymap.composeapp.generated.resources.visit_item_rating_desc
 
-class BlockedUsersScreen() : Screen {
+class VisitScreen : Screen {
 
     @OptIn(ExperimentalMaterial3Api::class)
     @Composable
     override fun Content() {
-        val screenModel = koinScreenModel<BlockedScreenModel>()
-        val uiState by screenModel.uiState.collectAsState()
+        val screenModel = koinScreenModel<VisitScreenModel>()
+        val uiState by screenModel.state.collectAsState()
         val navigator = LocalNavigator.currentOrThrow
         val customColors = LocalCustomColors.current
 
-        var searchQuery by remember { mutableStateOf("") }
         val pullToRefreshState = rememberPullToRefreshState()
         var activeDialog by remember { mutableStateOf<DialogConfig?>(null) }
         val listState = rememberLazyListState()
-
-
-        LaunchedEffect(Unit) {
-            screenModel.loadInitialData()
-        }
 
         LaunchedEffect(uiState.errorMessage) {
             uiState.errorMessage?.let { message ->
@@ -87,22 +78,13 @@ class BlockedUsersScreen() : Screen {
                 val totalItems = listState.layoutInfo.totalItemsCount
                 val lastVisibleItem = listState.layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: 0
                 !uiState.isLoading && totalItems > 0 && lastVisibleItem >= totalItems - 2
+
             }
         }
 
         LaunchedEffect(shouldLoadMore.value) {
             if (shouldLoadMore.value) {
-                screenModel.loadNextPage()
-            }
-        }
-
-        val filteredList = remember(uiState.items, searchQuery) {
-            if (searchQuery.isBlank()) {
-                uiState.items
-            } else {
-                uiState.items.filter {
-                    it.username?.contains(searchQuery, ignoreCase = true) ?: false
-                }
+                screenModel.loadMore()
             }
         }
 
@@ -113,14 +95,14 @@ class BlockedUsersScreen() : Screen {
                         IconButton(onClick = { navigator.pop() }) {
                             Icon(
                                 imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                contentDescription = stringResource(Res.string.settings_back_cd),
+                                contentDescription = stringResource(Res.string.profile_back_cd),
                                 tint = customColors.textPrimary
                             )
                         }
                     },
                     title = {
                         Text(
-                            text = stringResource(Res.string.settings_blocked_users),
+                            text = stringResource(Res.string.visit_history_title),
                             style = MaterialTheme.typography.titleMedium.copy(
                                 color = customColors.textPrimary,
                                 fontWeight = FontWeight.Bold
@@ -140,23 +122,11 @@ class BlockedUsersScreen() : Screen {
                     .background(customColors.background),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    SearchBar(
-                        query = searchQuery,
-                        onQueryChange = { searchQuery = it },
-                        modifier = Modifier.widthIn(max = 1500.dp)
-                    )
-                }
 
                 PullToRefreshBox(
                     state = pullToRefreshState,
                     isRefreshing = uiState.isRefreshing,
-                    onRefresh = { screenModel.refresh() },
+                    onRefresh = { screenModel.syncWithServer(isPullToRefresh = true) },
                     modifier = Modifier.fillMaxSize(),
                     indicator = {
                         PullToRefreshDefaults.Indicator(
@@ -176,7 +146,6 @@ class BlockedUsersScreen() : Screen {
                         val isEmpty = uiState.items.isEmpty()
 
                         when {
-                            // 1. İlk yükleme durumu
                             uiState.isLoading && isEmpty && !isError -> {
                                 Box(
                                     modifier = Modifier.fillMaxSize(),
@@ -192,7 +161,7 @@ class BlockedUsersScreen() : Screen {
                                     contentAlignment = Alignment.Center
                                 ) {
                                     FilledTonalButton(
-                                        onClick = { screenModel.loadInitialData() },
+                                        onClick = { screenModel.syncWithServer(isPullToRefresh = false) },
                                         enabled = !uiState.isLoading,
                                         modifier = Modifier.height(48.dp),
                                         colors = ButtonDefaults.filledTonalButtonColors(
@@ -215,7 +184,7 @@ class BlockedUsersScreen() : Screen {
                                                 Row(verticalAlignment = Alignment.CenterVertically) {
                                                     Icon(
                                                         imageVector = Icons.Default.Refresh,
-                                                        contentDescription = stringResource(Res.string.active_devices_retry_cd),
+                                                        contentDescription = stringResource(Res.string.active_devices_retry),
                                                         modifier = Modifier.size(24.dp),
                                                         tint = customColors.textPrimary
                                                     )
@@ -234,17 +203,13 @@ class BlockedUsersScreen() : Screen {
                                 }
                             }
 
-                            filteredList.isEmpty() -> {
+                            isEmpty -> {
                                 Box(
                                     modifier = Modifier.fillMaxSize(),
                                     contentAlignment = Alignment.Center
                                 ) {
                                     Text(
-                                        text = if (searchQuery.isNotBlank()) {
-                                            stringResource(Res.string.profile_no_results)
-                                        } else {
-                                            stringResource(Res.string.profile_empty_list)
-                                        },
+                                        text = stringResource(Res.string.visit_history_empty),
                                         style = MaterialTheme.typography.bodyMedium.copy(color = customColors.textSecondary)
                                     )
                                 }
@@ -256,33 +221,33 @@ class BlockedUsersScreen() : Screen {
                                     modifier = Modifier
                                         .widthIn(max = 1500.dp)
                                         .fillMaxSize(),
-                                    contentPadding = PaddingValues(bottom = 16.dp)
+                                    contentPadding = PaddingValues(bottom = 16.dp, top = 8.dp)
                                 ) {
                                     items(
-                                        items = filteredList,
-                                        key = { it.userId }
-                                    ) { user ->
-
-                                        val unblockTitle = stringResource(Res.string.dialog_unblock_title)
-                                        val unblockMessage = stringResource(Res.string.dialog_unblock_message, user.username ?: "")
-                                        val unblockConfirm = stringResource(Res.string.profile_action_unblock)
-                                        BlockedUserItem(
-                                            user = user,
-                                            onUserClick = {
-                                                navigator.push(ProfileScreen(userId = user.userId))
+                                        items = uiState.items,
+                                        key = { it.visitId }
+                                    ) { visit ->
+                                        val deleteTitle = stringResource(Res.string.visit_item_delete_desc)
+                                        val deleteMessage = stringResource(Res.string.dialog_delete_visit_message,visit.placeName ?: "")
+                                        VisitItemCard(
+                                            visit = visit,
+                                            onItemClick = {
+                                                // İsteğe bağlı: Mekan detayına git
+                                                // navigator.push(PlaceDetailScreen(placeId = visit.placeId))
                                             },
-                                            onUnblockClick = {
+                                            onDeleteClick = {
                                                 activeDialog = DialogConfig(
-                                                    title = unblockTitle,
-                                                    message = unblockMessage,
-                                                    confirmText = unblockConfirm,
-                                                    isDestructive = false,
-                                                    onConfirm = { screenModel.unblockUser(targetUserId = user.userId) }
+                                                    title = deleteTitle,
+                                                    message = deleteMessage,
+                                                    confirmText = "Sil",
+                                                    isDestructive = true,
+                                                    onConfirm = { screenModel.deleteVisit(visit.visitId) }
                                                 )
                                             }
                                         )
                                     }
 
+                                    // Sayfalama Loading Göstergesi (Listenin en altında)
                                     if (uiState.isLoadingMore) {
                                         item {
                                             Box(
@@ -305,6 +270,7 @@ class BlockedUsersScreen() : Screen {
                 }
             }
         }
+
         activeDialog?.let { config ->
             TastyConfirmDialog(
                 config = config,
@@ -315,116 +281,149 @@ class BlockedUsersScreen() : Screen {
 }
 
 @Composable
-private fun SearchBar(
-    query: String,
-    onQueryChange: (String) -> Unit,
-    modifier: Modifier = Modifier
+private fun VisitItemCard(
+    visit: VisitResponse,
+    onItemClick: () -> Unit,
+    onDeleteClick: () -> Unit
 ) {
     val customColors = LocalCustomColors.current
 
-    TextField(
-        value = query,
-        onValueChange = onQueryChange,
-        placeholder = {
-            Text(
-                text = stringResource(Res.string.common_search_placeholder),
-                style = MaterialTheme.typography.bodyMedium.copy(color = customColors.textSecondary)
-            )
-        },
-        leadingIcon = {
-            Icon(
-                imageVector = Icons.Default.Search,
-                contentDescription = null,
-                tint = customColors.textSecondary
-            )
-        },
-        trailingIcon = {
-            if (query.isNotEmpty()) {
-                IconButton(onClick = { onQueryChange("") }) {
-                    Icon(
-                        imageVector = Icons.Default.Close,
-                        contentDescription = null,
-                        tint = customColors.textSecondary
+    val locationText = listOfNotNull(
+        visit.neighbourhood?.takeIf { it.isNotBlank() },
+        visit.district?.takeIf { it.isNotBlank() },
+        visit.city?.takeIf { it.isNotBlank() }
+    ).joinToString(", ")
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 10.dp, vertical = 3.dp)
+            .clickable { onItemClick() },
+        colors = CardDefaults.cardColors(containerColor = customColors.surfaceVariant.copy(alpha = 0.4f)),
+        shape = RoundedCornerShape(16.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // Sol Taraf: Modern Mekan İkonu
+            Box(
+                modifier = Modifier
+                    .size(30.dp)
+                    .clip(CircleShape)
+                    .background(customColors.gourmetOrange.copy(alpha = 0.15f)),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Place,
+                    contentDescription = null,
+                    tint = customColors.gourmetOrange,
+                    modifier = Modifier.size(20.dp)
+                )
+            }
+
+            Spacer(modifier = Modifier.width(16.dp))
+
+            // Orta Kısım: Mekan Bilgileri
+            Column(modifier = Modifier.weight(1f)) {
+                // 1. Satır: Mekan Adı ve Puan
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = visit.placeName,
+                        style = MaterialTheme.typography.titleMedium.copy(
+                            fontWeight = FontWeight.Bold,
+                            color = customColors.textPrimary
+                        ),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.weight(1f)
+                    )
+
+                    // Puan 0'dan büyükse göster
+                    if (visit.averagePoint > 0.0) {
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier
+                                .background(customColors.gourmetOrange.copy(alpha = 0.1f), RoundedCornerShape(8.dp))
+                                .padding(horizontal = 6.dp, vertical = 2.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Star,
+                                contentDescription = stringResource(Res.string.visit_item_rating_desc),
+                                tint = customColors.gourmetOrange,
+                                modifier = Modifier.size(14.dp)
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(
+                                text = visit.averagePoint.toString(),
+                                style = MaterialTheme.typography.labelMedium.copy(
+                                    fontWeight = FontWeight.Bold,
+                                    color = customColors.gourmetOrange
+                                )
+                            )
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(4.dp))
+
+                if (locationText.isNotEmpty()) {
+                    Text(
+                        text = locationText,
+                        style = MaterialTheme.typography.bodySmall.copy(
+                            color = customColors.textSecondary
+                        ),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                    Spacer(modifier = Modifier.height(6.dp))
+                }
+
+                // 3. Satır: Kategori ve Tarih
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = visit.categories ?: stringResource(Res.string.visit_item_category_unspecified),
+                        style = MaterialTheme.typography.labelSmall.copy(
+                            color = customColors.textSecondary.copy(alpha = 0.8f)
+                        ),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.weight(1f)
+                    )
+
+                    Text(
+                        text = formatToRelativeDateTime(visit.createdAt),
+                        style = MaterialTheme.typography.labelSmall.copy(
+                            color = customColors.textSecondary.copy(alpha = 0.6f)
+                        )
                     )
                 }
             }
-        },
-        singleLine = true,
-        shape = RoundedCornerShape(12.dp),
-        colors = TextFieldDefaults.colors(
-            focusedContainerColor = customColors.surfaceVariant,
-            unfocusedContainerColor = customColors.surfaceVariant,
-            focusedIndicatorColor = Color.Transparent,
-            unfocusedIndicatorColor = Color.Transparent
-        ),
-        modifier = modifier.fillMaxWidth()
-    )
-}
 
-@Composable
-private fun BlockedUserItem(
-    user: BlockResponse,
-    onUserClick: () -> Unit,
-    onUnblockClick: () -> Unit
-) {
-    val customColors = LocalCustomColors.current
+            Spacer(modifier = Modifier.width(12.dp))
 
-    val username = user.username ?: "Bilinmeyen Kullanıcı"
-    val profileImage =user.profilephoto
-
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable { onUserClick() }
-            .padding(horizontal = 16.dp, vertical = 10.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Box(
-            modifier = Modifier
-                .size(50.dp)
-                .clip(CircleShape)
-                .background(customColors.surfaceVariant),
-            contentAlignment = Alignment.Center
-        ) {
-            if (!profileImage.isNullOrBlank()) {
-                AsyncImage(
-                    model = profileImage,
-                    contentDescription = null,
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .clip(CircleShape),
-                    contentScale = ContentScale.Crop
-                )
-            } else {
+            IconButton(
+                onClick = onDeleteClick,
+                modifier = Modifier.size(36.dp)
+            ) {
                 Icon(
-                    imageVector = Icons.Default.Person,
-                    contentDescription = null,
-                    tint = customColors.placeHolderIcon,
-                    modifier = Modifier.size(28.dp)
+                    imageVector = Icons.Default.Delete,
+                    contentDescription =stringResource(Res.string.visit_item_delete_desc),
+                    tint = customColors.textSecondary.copy(alpha = 0.5f)
                 )
             }
         }
-
-        Spacer(modifier = Modifier.width(12.dp))
-
-        Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = username,
-                style = MaterialTheme.typography.bodyMedium.copy(
-                    fontWeight = FontWeight.Bold,
-                    color = customColors.textPrimary
-                )
-            )
-        }
-
-        TastyButton(
-            text = stringResource(Res.string.profile_action_unblock),
-            onClick = onUnblockClick,
-            modifier = Modifier.width(130.dp),
-            isPrimary = false,
-            backcolor = Color.Transparent,
-            textcolor = customColors.textPrimary,
-            strokecolor = customColors.textSecondary.copy(alpha = 0.4f)
-        )
     }
 }
