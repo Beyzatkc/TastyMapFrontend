@@ -36,6 +36,9 @@ import org.beem.tastymap.ui.splash.SplashScreenModel
 import org.beem.tastymap.ui.auth.verification.email.EmailScreenModel
 import org.beem.tastymap.ui.auth.verification.loginPending.PendingScreenModel
 import org.beem.tastymap.ui.common.NotificationBadgeManager
+import org.beem.tastymap.ui.post.create.CreatePostScreenModel
+import org.beem.tastymap.ui.post.mypost.MyPostScreenModel
+import org.beem.tastymap.ui.post.otherpost.PostScreenModel
 import org.beem.tastymap.ui.profile.health.HealthScreenModel
 import org.beem.tastymap.ui.profile.myprofile.MyProfileScreenModel
 import org.beem.tastymap.ui.profile.myprofile.editprofile.EditProfileScreenModel
@@ -82,7 +85,8 @@ val appModule = module {
     single { NotificationsMemoryCache() }
     single { BlockedMemoryCache() }
     single { VisitMemoryCache() }
-    single { CacheManager(get(), get(), get(), get(), get(), get(),get()) }
+    single { PostMemoryCache() }
+    single { CacheManager(get(), get(), get(), get(), get(), get(),get(),get()) }
 
     single { ToggleFollowUseCase(get(), get()) }
     single { ToggleBlockUseCase(get(), get()) }
@@ -109,6 +113,7 @@ val appModule = module {
     single { DeleteAccountDataSource(get()) }
     single { AuthWebSocketClient(get()) }
     single { VisitDataSource(get()) }
+    single { PostDataSource(get()) }
 
     single { NotificationBadgeManager() }
 
@@ -124,6 +129,7 @@ val appModule = module {
     single { BlockRepository(get(), get(), get(), get(), get()) }
     single { DeleteAccountRepository(get(), get(), get()) }
     single { VisitRepository(get(), get(), get()) }
+    single { PostRepository(get(), get(), get(),get()) }
 
     factory { LogRegScreenModel(get(), get(), get(), get()) }
     factory { PendingScreenModel(get(), get(), get(), get()) }
@@ -134,6 +140,9 @@ val appModule = module {
     factory { HealthScreenModel(get()) }
     factory { SubscribersListScreenModel(get(), get()) }
     factory { VisitScreenModel(get()) }
+    factory { MyPostScreenModel(get()) }
+    factory { PostScreenModel(get()) }
+    factory { CreatePostScreenModel(get(),get()) }
     factory { (userId: Long) ->
         ProfileScreenModel(
             userId = userId,

@@ -506,4 +506,26 @@
 
     <string name="settings_section_activity">Activity &amp; History</string>
     <string name="settings_visit_history_sub">Manage places you have visited</string>
+
+    <string name="connection_error">Connection error. Please try again.</string>
+
+    <string name="create_post_title">New Post</string>
+    <string name="share_post">Share Post</string>
+
+    <string name="place_about_placeholder">What do you think about this place?</string>
+
+    <string name="comments">Comments</string>
+    <string name="allow_comments">Allow users to comment on this post</string>
+
+    <string name="your_visits">Your Visits</string>
+    <string name="no_saved_visits">You don't have any saved visits yet.</string>
+
+    <string name="selected_place">Selected Place</string>
+    <string name="select_place">Select a Place</string>
+    <string name="select_visit_to_share">Select a visit to share a post</string>
+
+    <string name="change">Change</string>
+
+    <string name="add_photo">Add Photo</string>
+    <string name="tap_to_upload_photo">Tap to Upload a Photo</string>
 </resources>

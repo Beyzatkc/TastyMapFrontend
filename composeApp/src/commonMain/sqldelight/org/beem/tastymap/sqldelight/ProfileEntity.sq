@@ -135,3 +135,17 @@ UPDATE ProfileEntity
 SET blockedByMe = 0,
     updatedAt = :updatedAt
 WHERE userId = :userId;
+
+--arttır postsayısı
+incrementPostCount:
+UPDATE ProfileEntity
+SET postCount = postCount + 1,
+    updatedAt = ?
+WHERE userId = ?;
+
+-- azaltpostsayısı
+decrementPostCount:
+UPDATE ProfileEntity
+SET postCount = MAX(0, postCount - 1),
+    updatedAt = ?
+WHERE userId = ?;

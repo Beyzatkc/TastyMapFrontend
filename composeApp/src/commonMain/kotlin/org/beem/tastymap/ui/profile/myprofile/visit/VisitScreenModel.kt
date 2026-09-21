@@ -31,7 +31,6 @@ class VisitScreenModel(
                 _state.update {
                     it.copy(
                         items = visitList,
-                        isLoading = false,
                         errorMessage = null
                     )
                 }
@@ -58,7 +57,11 @@ class VisitScreenModel(
                     _state.update {
                         it.copy(
                             isLoading = false,
-                            isRefreshing = false
+                            isRefreshing = false,
+                            isLastPage = result.data.last,
+                            isLoadingMore = false,
+                            currentPage = if (!result.data.last) 1 else 0,
+                            isInitialLoadCompleted = true
                         )
                     }
                 }
@@ -67,6 +70,8 @@ class VisitScreenModel(
                         it.copy(
                             isLoading = false,
                             isRefreshing = false,
+                            isLoadingMore = false,
+                            isInitialLoadCompleted = true,
                             errorMessage = result.message ?: "Bir hata oluştu"
                         )
                     }
@@ -79,7 +84,7 @@ class VisitScreenModel(
     fun loadMore() {
         val currentState = _state.value
 
-        if (currentState.isLoading || currentState.isLoadingMore || currentState.isLastPage) {
+        if ( !currentState.isInitialLoadCompleted || currentState.isLoading || currentState.isLoadingMore || currentState.isLastPage) {
             return
         }
 
@@ -113,6 +118,14 @@ class VisitScreenModel(
     }
 
     fun deleteVisit(visitId: Long) {
+
+        val previousItems = _state.value.items
+
+        _state.update { state ->
+            state.copy(
+                items = state.items.filterNot { it.visitId == visitId }
+            )
+        }
         screenModelScope.launch {
             when (val result = repository.deleteVisit(visitId)) {
                 is ResultWrapper.Success -> {
@@ -120,7 +133,7 @@ class VisitScreenModel(
                 }
                 is ResultWrapper.Error -> {
                     _state.update {
-                        it.copy(errorMessage = result.message ?: "Silme işlemi başarısız")
+                        it.copy(items = previousItems,errorMessage = result.message ?: "Silme işlemi başarısız")
                     }
                 }
             }

@@ -20,7 +20,7 @@ class SubscribersListScreenModel(
     val uiState = _uiState.asStateFlow()
 
     private var currentListType: SubscriberListType = SubscriberListType.SUBSCRIBERS
-    private val pageSize = 10
+    private val pageSize = 20
 
 
     fun loadInitialData(userId: Long, listType: SubscriberListType) {

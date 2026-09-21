@@ -151,6 +151,20 @@ class ProfileLocalDataSource(
         )
     }
 
+    suspend fun incrementPostCount(userId: Long) = withContext(dispatchers.io) {
+        queries.incrementPostCount(
+            updatedAt = Clock.System.now().toEpochMilliseconds(),
+            userId = userId
+        )
+    }
+
+    suspend fun decrementPostCount(userId: Long) = withContext(dispatchers.io) {
+        queries.decrementPostCount(
+            updatedAt = Clock.System.now().toEpochMilliseconds(),
+            userId = userId
+        )
+    }
+
     suspend fun blockUserInLocal(userId: Long) = withContext(dispatchers.io) {
         queries.blockUserUpdate(
             updatedAt = Clock.System.now().toEpochMilliseconds(),

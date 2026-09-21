@@ -14,6 +14,7 @@ import cafe.adriel.voyager.navigator.CurrentScreen
 import cafe.adriel.voyager.navigator.Navigator
 import cafe.adriel.voyager.navigator.tab.Tab
 import cafe.adriel.voyager.navigator.tab.TabOptions
+import org.beem.tastymap.ui.post.create.CreatePostScreen
 import org.beem.tastymap.ui.profile.myprofile.MyProfileScreen
 import org.beem.tastymap.ui.profile.myprofile.settings.deleteaccount.AccountDeactivatedScreen
 import org.beem.tastymap.ui.search.SearchScreen
@@ -77,7 +78,15 @@ object UploadTab : Tab {
 
     @Composable
     override fun Content() {
-        // UploadScreen() buraya gelecek
+        Navigator(CreatePostScreen()) { navigator ->
+            val bottomBarVisibility = LocalBottomBarVisibility.current
+            LaunchedEffect(navigator.lastItem) {
+                val currentScreen = navigator.lastItem
+                val isMyProfile = currentScreen is MyProfileScreen
+                bottomBarVisibility.value = isMyProfile || navigator.items.size == 1
+            }
+            CurrentScreen()
+        }
     }
 }
 

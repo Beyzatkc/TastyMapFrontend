@@ -89,7 +89,7 @@ class SubscribersListScreen(
             derivedStateOf {
                 val totalItems = listState.layoutInfo.totalItemsCount
                 val lastVisibleItem = listState.layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: 0
-                !uiState.isLoading && totalItems > 0 && lastVisibleItem >= totalItems - 2
+                !uiState.isLoading &&uiState.errorMessage == null && totalItems > 0 && lastVisibleItem >= totalItems - 2
             }
         }
 
