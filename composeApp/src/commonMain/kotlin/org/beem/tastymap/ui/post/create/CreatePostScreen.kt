@@ -10,12 +10,16 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AddPhotoAlternate
+import androidx.compose.material.icons.filled.ErrorOutline
 import androidx.compose.material.icons.filled.Place
+import androidx.compose.material.icons.rounded.CheckCircle
+import androidx.compose.material.icons.rounded.ChevronRight
 import androidx.compose.material.icons.rounded.KeyboardArrowDown
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -46,6 +50,7 @@ import tastymap.composeapp.generated.resources.comments
 import tastymap.composeapp.generated.resources.create_post_title
 import tastymap.composeapp.generated.resources.no_saved_visits
 import tastymap.composeapp.generated.resources.place_about_placeholder
+import tastymap.composeapp.generated.resources.post_description_hint
 import tastymap.composeapp.generated.resources.select_place
 import tastymap.composeapp.generated.resources.select_visit_to_share
 import tastymap.composeapp.generated.resources.selected_place
@@ -72,6 +77,8 @@ class CreatePostScreen : Screen {
 
         // BottomSheet State'i
         var showVisitSheet by remember { mutableStateOf(false) }
+
+
 
         LaunchedEffect(uiState.generalError) {
             uiState.generalError?.let { message ->
@@ -181,7 +188,8 @@ class CreatePostScreen : Screen {
                     ) {
 
                         PhotoUploadArea(
-                            customColors = customColors
+                            customColors = customColors,
+                            error = uiState.photoError?.let { stringResource(it) },
                         )
 
                         Column(
@@ -189,41 +197,72 @@ class CreatePostScreen : Screen {
                                 .fillMaxWidth()
                         ) {
 
-                            TastyTextField(
-                                value = explanation,
-                                onValueChange = {
-                                    if (it.length <= 500) {
-                                        explanation = it
-
-                                        if (uiState.explanationError != null) {
-                                            screenModel.clearErrors()
-                                        }
-                                    }
-                                },
-                                label = stringResource(
-                                    Res.string.place_about_placeholder
+                            Card(
+                                modifier = Modifier.fillMaxWidth(),
+                                shape = RoundedCornerShape(16.dp),
+                                colors = CardDefaults.cardColors(
+                                    containerColor = customColors.surface
                                 ),
-                                singleLine = false,
-                                maxLines = 5,
-                                error = uiState.explanationError
-                            )
-
-                            // Karakter Sayacı
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(horizontal = 8.dp),
-                                horizontalArrangement = Arrangement.End
-                            ) {
-                                Text(
-                                    text = "${explanation.length}/500",
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = if (explanation.length >= 500) {
-                                        customColors.error
-                                    } else {
-                                        customColors.textSecondary
-                                    }
+                                border = BorderStroke(
+                                    1.dp,
+                                    customColors.borderLight
                                 )
+                            ) {
+
+                                Column(
+                                    modifier = Modifier.padding(16.dp)
+                                ) {
+
+                                    Text(
+                                        text = stringResource(Res.string.place_about_placeholder),
+                                        style = MaterialTheme.typography.titleSmall,
+                                        color = customColors.textPrimary
+                                    )
+
+                                    Spacer(modifier = Modifier.height(6.dp))
+
+                                    Text(
+                                        text = stringResource(Res.string.post_description_hint),
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = customColors.textSecondary
+                                    )
+
+                                    Spacer(modifier = Modifier.height(16.dp))
+
+                                    TastyTextField(
+                                        value = explanation,
+                                        onValueChange = {
+                                            if (it.length <= 500) {
+                                                explanation = it
+
+                                                if (uiState.explanationError != null) {
+                                                    screenModel.clearErrors()
+                                                }
+                                            }
+                                        },
+                                        label = "",
+                                        singleLine = false,
+                                        maxLines = 5,
+                                        error = uiState.explanationError?.let { stringResource(it) }
+                                    )
+
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(top = 8.dp),
+                                        horizontalArrangement = Arrangement.End
+                                    ) {
+                                        Text(
+                                            text = "${explanation.length}/500",
+                                            style = MaterialTheme.typography.labelSmall,
+                                            color = if (explanation.length >= 500) {
+                                                customColors.error
+                                            } else {
+                                                customColors.textSecondary
+                                            }
+                                        )
+                                    }
+                                }
                             }
                         }
 
@@ -286,110 +325,141 @@ class CreatePostScreen : Screen {
             }
         }
 
-        // --- ZİYARET SEÇİMİ BOTTOM SHEET ---
         if (showVisitSheet) {
 
             ModalBottomSheet(
                 onDismissRequest = {
                     showVisitSheet = false
                 },
-                containerColor = customColors.background
+                containerColor = customColors.background,
+                dragHandle = { BottomSheetDefaults.DragHandle() }
             ) {
 
-                Text(
-                    text = stringResource(Res.string.your_visits),
-                    style = MaterialTheme.typography.titleMedium,
-                    color = customColors.textPrimary,
-                    modifier = Modifier.fillMaxWidth(),
-                    textAlign = TextAlign.Center
-                )
-
                 Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    modifier = Modifier.padding(
-                        bottom = 32.dp,
-                        top = 8.dp,
-                        start = 20.dp,
-                        end = 20.dp
-                    )
+                    modifier = Modifier
+                        .fillMaxHeight(0.75f)
+                        .fillMaxWidth()
+                        .padding(horizontal = 20.dp)
                 ) {
 
-                    Spacer(
-                        modifier = Modifier.height(16.dp)
-                    )
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 16.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(
+                            text = stringResource(Res.string.your_visits),
+                            style = MaterialTheme.typography.titleLarge,
+                            color = customColors.textPrimary
+                        )
 
-                    if (uiState.visits.isEmpty()) {
+                        Spacer(modifier = Modifier.height(4.dp))
 
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(32.dp),
-                            contentAlignment = Alignment.Center
-                        ) {
+                        Text(
+                            text = "Gönderi paylaşmak istediğin mekanı seç",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = customColors.textSecondary
+                        )
+                    }
 
-                            Text(
-                                text = stringResource(
-                                    Res.string.no_saved_visits
-                                ),
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = customColors.textSecondary
-                            )
+                    when {
+                        // 1. Yükleniyor Durumu
+                        uiState.isVisitsLoading -> {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .weight(1f),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                CircularProgressIndicator(color = customColors.navy)
+                            }
                         }
 
-                    } else {
+                        // 2. Boş Liste Durumu
+                        uiState.visits.isEmpty() -> {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .weight(1f),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = stringResource(Res.string.no_saved_visits),
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = customColors.textSecondary
+                                )
+                            }
+                        }
 
-                        LazyColumn {
+                        // 3. Kart Tasarımlı Liste
+                        else -> {
+                            LazyColumn(
+                                modifier = Modifier.weight(1f),
+                                verticalArrangement = Arrangement.spacedBy(10.dp),
+                                contentPadding = PaddingValues(vertical = 8.dp)
+                            ) {
+                                itemsIndexed(uiState.visits) { index, visit ->
 
-                            items(uiState.visits) { visit ->
+                                    // Pagination Tetikleyici
+                                    if (index >= uiState.visits.size - 2) {
+                                        LaunchedEffect(Unit) {
+                                            screenModel.loadMoreVisits()
+                                        }
+                                    }
 
-                                Row(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .clip(RoundedCornerShape(12.dp))
-                                        .clickable {
+                                    val isSelected = selectedVisit?.visitId == visit.visitId
 
+                                    // Özel Tasarlanmış Kart Öğesi
+                                    VisitListItemCard(
+                                        visit = visit,
+                                        isSelected = isSelected,
+                                        customColors = customColors,
+                                        onClick = {
                                             selectedVisit = visit
                                             showVisitSheet = false
                                         }
-                                        .padding(
-                                            vertical = 12.dp,
-                                            horizontal = 8.dp
-                                        ),
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-
-                                    Icon(
-                                        Icons.Default.Place,
-                                        contentDescription = null,
-                                        tint = customColors.navy
                                     )
+                                }
 
-                                    Spacer(
-                                        modifier = Modifier.width(12.dp)
-                                    )
-
-                                    Column(
-                                        verticalArrangement = Arrangement.spacedBy(2.dp)
-                                    ) {
-
-                                        Text(
-                                            text = visit.placeName,
-                                            style = MaterialTheme.typography.titleMedium,
-                                            color = customColors.textPrimary
-                                        )
-
-                                        Text(
-                                            text = "${visit.district ?: ""}, ${visit.city ?: ""}",
-                                            style = MaterialTheme.typography.bodyMedium,
-                                            color = customColors.textSecondary
-                                        )
+                                // Load More Progress Indicator
+                                if (uiState.isLoadingMoreVisits) {
+                                    item {
+                                        Box(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .padding(16.dp),
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            CircularProgressIndicator(
+                                                modifier = Modifier.size(24.dp),
+                                                color = customColors.navy,
+                                                strokeWidth = 2.dp
+                                            )
+                                        }
                                     }
                                 }
 
-                                HorizontalDivider(
-                                    color = customColors.borderLight,
-                                    thickness = 1.dp
-                                )
+                                // Load More Error State
+                                if (uiState.loadMoreError != null) {
+                                    item {
+                                        Column(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .padding(16.dp),
+                                            horizontalAlignment = Alignment.CenterHorizontally
+                                        ) {
+                                            Text(
+                                                text = uiState.loadMoreError ?: "",
+                                                style = MaterialTheme.typography.bodySmall,
+                                                color = customColors.error
+                                            )
+                                            TextButton(onClick = { screenModel.loadMoreVisits() }) {
+                                                Text("Tekrar Dene", color = customColors.navy)
+                                            }
+                                        }
+                                    }
+                                }
                             }
                         }
                     }
@@ -399,10 +469,99 @@ class CreatePostScreen : Screen {
     }
 }
 
-
 // --------------------------------------------------
 // ALT BİLEŞENLER
 // --------------------------------------------------
+
+@Composable
+private fun VisitListItemCard(
+    visit: VisitResponse,
+    isSelected: Boolean,
+    customColors: CustomColors,
+    onClick: () -> Unit
+) {
+    val backgroundColor = if (isSelected) customColors.gourmetOrange.copy(alpha = 0.08f) else customColors.surface
+    val borderColor = if (isSelected) customColors.gourmetOrange else customColors.borderLight
+
+    Surface(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(16.dp))
+            .clickable(onClick = onClick),
+        shape = RoundedCornerShape(16.dp),
+        color = backgroundColor,
+        border = BorderStroke(1.dp, borderColor)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(14.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // İkon Kutusu
+            Box(
+                modifier = Modifier
+                    .size(44.dp)
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(if (isSelected) customColors.gourmetOrange else customColors.wave),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Place,
+                    contentDescription = null,
+                    tint = if (isSelected) Color.White else customColors.navy,
+                    modifier = Modifier.size(22.dp)
+                )
+            }
+
+            Spacer(modifier = Modifier.width(14.dp))
+
+            // Metin Alanı
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(2.dp)
+            ) {
+                Text(
+                    text = visit.placeName,
+                    style = MaterialTheme.typography.titleMedium,
+                    color = customColors.textPrimary,
+                    maxLines = 1
+                )
+
+                val locationText = listOfNotNull(visit.district, visit.city)
+                    .filter { it.isNotBlank() }
+                    .joinToString(", ")
+
+                if (locationText.isNotEmpty()) {
+                    Text(
+                        text = locationText,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = customColors.textSecondary,
+                        maxLines = 1
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.width(8.dp))
+
+            if (isSelected) {
+                Icon(
+                    imageVector = Icons.Rounded.CheckCircle,
+                    contentDescription = null,
+                    tint = customColors.gourmetOrange,
+                    modifier = Modifier.size(24.dp)
+                )
+            } else {
+                Icon(
+                    imageVector = Icons.Rounded.ChevronRight,
+                    contentDescription = null,
+                    tint = customColors.textTertiary,
+                    modifier = Modifier.size(20.dp)
+                )
+            }
+        }
+    }
+}
 
 @Composable
 fun VisitSelectorCard(
@@ -511,47 +670,79 @@ fun VisitSelectorCard(
 
 @Composable
 fun PhotoUploadArea(
-    customColors: CustomColors
+    customColors: CustomColors,
+    error: String? = null,
+    onClick: () -> Unit = {}
 ) {
-
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(200.dp)
-            .shadow(
-                elevation = 4.dp, // Gölgenin derinliği (yüksekliği)
-                shape = RoundedCornerShape(16.dp),
-                spotColor = customColors.borderLight // İsteğe bağlı gölge rengi tonu
-            )
-            .clip(RoundedCornerShape(16.dp))
-            .background(customColors.surface)
-            .clickable {
-                /* Fotoğraf Seçici */
-            },
-        contentAlignment = Alignment.Center
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(6.dp)
     ) {
-
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(200.dp)
+                .shadow(
+                    elevation = 4.dp,
+                    shape = RoundedCornerShape(16.dp),
+                    spotColor = customColors.borderLight
+                )
+                .clip(RoundedCornerShape(16.dp))
+                .background(customColors.surface)
+                .border(
+                    width = if (error != null) 1.5.dp else 0.dp,
+                    color = if (error != null) customColors.error else Color.Transparent,
+                    shape = RoundedCornerShape(16.dp)
+                )
+                .clickable(onClick = onClick),
+            contentAlignment = Alignment.Center
         ) {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.AddPhotoAlternate,
+                    contentDescription = stringResource(Res.string.add_photo),
+                    modifier = Modifier.size(48.dp),
+                    tint = if (error != null) customColors.error else customColors.placeHolderIcon
+                )
 
-            Icon(
-                imageVector = Icons.Default.AddPhotoAlternate,
-                contentDescription = stringResource(
-                    Res.string.add_photo
-                ),
-                modifier = Modifier.size(48.dp),
-                tint = customColors.placeHolderIcon
-            )
+                Text(
+                    text = stringResource(Res.string.tap_to_upload_photo),
+                    style = MaterialTheme.typography.titleMedium,
+                    color = if (error != null) customColors.error else customColors.placeHolderIcon
+                )
+            }
+        }
 
-            Text(
-                text = stringResource(
-                    Res.string.tap_to_upload_photo
-                ),
-                style = MaterialTheme.typography.titleMedium,
-                color = customColors.placeHolderIcon
-            )
+        // Hata Mesajı (Minik Ünlem İkonu ile)
+        AnimatedVisibility(
+            visible = error != null,
+            enter = fadeIn() + expandVertically()
+        ) {
+            error?.let { errorMessage ->
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 4.dp, vertical = 2.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.ErrorOutline,
+                        contentDescription = null,
+                        tint = customColors.error,
+                        modifier = Modifier.size(16.dp)
+                    )
+
+                    Text(
+                        text = errorMessage,
+                        style = MaterialTheme.typography.labelMedium,
+                        color = customColors.error
+                    )
+                }
+            }
         }
     }
 }

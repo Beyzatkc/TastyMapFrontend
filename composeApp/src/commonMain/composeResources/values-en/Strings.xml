@@ -528,4 +528,10 @@
 
     <string name="add_photo">Add Photo</string>
     <string name="tap_to_upload_photo">Tap to Upload a Photo</string>
+
+    <string name="share_your_experience">Share your experience</string>
+    <string name="post_description_hint">Share your experience, thoughts, or recommendations about this place.</string>
+
+    <string name="error_photo_empty">Photo cannot be empty!</string>
+    <string name="error_explanation_limit">The description can be up to 500 characters.</string>
 </resources>

@@ -516,7 +516,7 @@
     <string name="create_post_title">Yeni Gönderi</string>
     <string name="share_post">Gönderiyi Paylaş</string>
 
-    <string name="place_about_placeholder">Mekan hakkında ne düşünüyorsun?</string>
+    <string name="place_about_placeholder">Mekan hakkında ne düşünüyorsunuz?</string>
 
     <string name="comments">Yorumlar</string>
     <string name="allow_comments">Kullanıcılar bu gönderiye yorum yapabilsin</string>
@@ -532,4 +532,11 @@
 
     <string name="add_photo">Fotoğraf Ekle</string>
     <string name="tap_to_upload_photo">Dokun ve Fotoğraf Yükle</string>
+
+    <string name="share_your_experience">Deneyimini paylaş</string>
+
+    <string name="post_description_hint">Bu mekânla ilgili deneyimini, düşüncelerini veya önerilerini paylaşabilirsin.</string>
+
+    <string name="error_photo_empty">Fotoğraf boş olamaz!</string>
+    <string name="error_explanation_limit">Açıklama alanı en fazla 500 karakter olabilir.</string>
 </resources>

@@ -3,7 +3,7 @@ package org.beem.tastymap.data.cache
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import org.beem.tastymap.data.model.PageResponse
-import org.beem.tastymap.data.model.post.PostResponse
+import org.beem.tastymap.data.model.post.PostGridResponse
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.TimeMark
@@ -21,11 +21,11 @@ class PostMemoryCache {
     private val mutex = Mutex()
 
     private data class CacheEntry(
-        val data: PageResponse<PostResponse>,
+        val data: PageResponse<PostGridResponse>,
         val createdAt: TimeMark
     )
 
-    suspend fun get(userId: Long, page: Int): PageResponse<PostResponse>? = mutex.withLock {
+    suspend fun get(userId: Long, page: Int): PageResponse<PostGridResponse>? = mutex.withLock {
         val key = PostCacheKey(userId, page)
         val entry = cache[key] ?: return@withLock null
 
@@ -37,7 +37,7 @@ class PostMemoryCache {
         return@withLock entry.data
     }
 
-    suspend fun put(userId: Long, page: Int, response: PageResponse<PostResponse>) = mutex.withLock {
+    suspend fun put(userId: Long, page: Int, response: PageResponse<PostGridResponse>) = mutex.withLock {
         val key = PostCacheKey(userId, page)
         cache[key] = CacheEntry(
             data = response,

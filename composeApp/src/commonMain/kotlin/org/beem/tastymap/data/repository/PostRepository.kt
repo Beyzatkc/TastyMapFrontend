@@ -7,6 +7,7 @@ import org.beem.tastymap.data.cache.PostMemoryCache
 import org.beem.tastymap.data.local.ProfileLocalDataSource
 import org.beem.tastymap.data.model.PageResponse
 import org.beem.tastymap.data.model.post.PostAndVisitRequest
+import org.beem.tastymap.data.model.post.PostGridResponse
 import org.beem.tastymap.data.model.post.PostLikeResponse
 import org.beem.tastymap.data.model.post.PostLikeUserResponse
 import org.beem.tastymap.data.model.post.PostResponse
@@ -22,10 +23,9 @@ class PostRepository(
     val myId: Long
         get() = userManager.userSession.value?.userId ?: 0L
 
-
     suspend fun addPost(
         request: PostAndVisitRequest
-    ): ResultWrapper<PostResponse>{
+    ): ResultWrapper<PostResponse> {
         val result = safeApiCall {
             dataSource.addPost(request)
         }
@@ -35,12 +35,13 @@ class PostRepository(
         }
         return result
     }
+
     suspend fun getUserPosts(
         userId: Long,
         page: Int = 0,
-        size: Int = 12,
+        size: Int = 15,
         forceFetch: Boolean = false
-    ): ResultWrapper<PageResponse<PostResponse>> {
+    ): ResultWrapper<PageResponse<PostGridResponse>> {
         if (!forceFetch) {
             val cached = memoryCache.get(userId, page)
             if (cached != null) {
@@ -61,9 +62,9 @@ class PostRepository(
 
     suspend fun getMyPosts(
         page: Int = 0,
-        size: Int = 12,
+        size: Int = 15,
         forceFetch: Boolean = false
-    ): ResultWrapper<PageResponse<PostResponse>> {
+    ): ResultWrapper<PageResponse<PostGridResponse>> {
         if (!forceFetch) {
             val cached = memoryCache.get(myId, page)
             if (cached != null) {
@@ -80,6 +81,13 @@ class PostRepository(
         }
 
         return result
+    }
+
+
+    suspend fun getPostDetail(postId: Long): ResultWrapper<PostResponse> {
+        return safeApiCall {
+            dataSource.getPostDetail(postId)
+        }
     }
 
     suspend fun deletePost(postId: Long): ResultWrapper<Map<String, String>> {

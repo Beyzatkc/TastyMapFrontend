@@ -129,3 +129,11 @@ data class PostLikeUserResponse(
     @SerialName("relationStatus")
     val relationStatus: RelationStatus? = null
 )
+
+@Serializable
+data class PostGridResponse(
+    val postId: Long,
+    val photoUrl: String,
+    @SerialName("isPinned")
+    val isPinned: Boolean
+)

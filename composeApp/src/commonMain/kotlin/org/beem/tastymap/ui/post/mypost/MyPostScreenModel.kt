@@ -7,7 +7,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import org.beem.tastymap.core.network.ResultWrapper
-import org.beem.tastymap.data.model.post.PostAndVisitRequest
 import org.beem.tastymap.data.model.post.PostUpdateRequest
 import org.beem.tastymap.data.repository.PostRepository
 import org.beem.tastymap.ui.post.otherpost.PostListUiState
