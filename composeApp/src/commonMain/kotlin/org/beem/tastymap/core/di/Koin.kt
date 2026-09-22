@@ -15,6 +15,7 @@ import org.beem.tastymap.core.provider.AppDispatchers
 import org.beem.tastymap.core.provider.DispatcherProvider
 import org.beem.tastymap.core.provider.HttpClientFactory
 import org.beem.tastymap.data.cache.*
+import org.beem.tastymap.data.local.PostLocalDataSource
 import org.beem.tastymap.data.local.ProfileLocalDataSource
 import org.beem.tastymap.data.local.SearchHistoryLocalDataSource
 import org.beem.tastymap.data.local.VisitLocalDataSource
@@ -76,6 +77,7 @@ val appModule = module {
     single { get<TastyDatabase>().profileEntityQueries }
     single { get<TastyDatabase>().searchHistoryEntityQueries }
     single { get<TastyDatabase>().visitEntityQueries }
+    single { get<TastyDatabase>().postEntityQueries }
 
     // Caches
     single { ProfileMemoryCache() }
@@ -96,6 +98,7 @@ val appModule = module {
     single { ProfileLocalDataSource(get(), get()) }
     single { SearchHistoryLocalDataSource(get(), get()) }
     single { VisitLocalDataSource(get(), get()) }
+    single { PostLocalDataSource(get(), get()) }
 
 
     single { AuthDataSource(get(named("noAuth"))) }
@@ -129,7 +132,7 @@ val appModule = module {
     single { BlockRepository(get(), get(), get(), get(), get()) }
     single { DeleteAccountRepository(get(), get(), get()) }
     single { VisitRepository(get(), get(), get()) }
-    single { PostRepository(get(), get(), get(),get()) }
+    single { PostRepository(get(), get(), get(),get(),get()) }
 
     factory { LogRegScreenModel(get(), get(), get(), get()) }
     factory { PendingScreenModel(get(), get(), get(), get()) }

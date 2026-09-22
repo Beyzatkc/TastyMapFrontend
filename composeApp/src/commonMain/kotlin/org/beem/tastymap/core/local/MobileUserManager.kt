@@ -70,7 +70,9 @@ class MobileUserManager(private val settings: Settings) : UserManager {
     }
 
     override fun clear() {
-        settings.clear()
+        ALL_USER_KEYS.forEach { key ->
+            settings.remove(key)
+        }
         _userSession.value = null
     }
 
@@ -86,5 +88,10 @@ class MobileUserManager(private val settings: Settings) : UserManager {
         private const val KEY_ON_BOARD_COMPLETE = "boardComplete"
         private const val KEY_STATUS = "status"
         private const val KEY_MESSAGE = "message"
+        private val ALL_USER_KEYS = listOf(
+            KEY_USER_ID, KEY_USERNAME, KEY_NAME, KEY_SURNAME,
+            KEY_PROFILE, KEY_ROLE, KEY_DATE, KEY_BIOGRAPHY,
+            KEY_ON_BOARD_COMPLETE, KEY_STATUS, KEY_MESSAGE
+        )
     }
 }

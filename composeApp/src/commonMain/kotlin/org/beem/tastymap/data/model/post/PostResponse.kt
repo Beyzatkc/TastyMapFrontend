@@ -22,13 +22,13 @@ data class PostResponse(
     val point: Int = 0,
 
     @SerialName("photoUrl")
-    val photoUrl: String? = null,
+    val photoUrl: String,
 
     @SerialName("numberof_likes")
     val numberOfLikes: Int = 0,
 
     @SerialName("createdAt")
-    val createdAt: String? = null,
+    val createdAt: String,
 
     @SerialName("updateDate")
     val updateDate: String? = null,
@@ -100,9 +100,6 @@ data class PostAndVisitRequest(
 data class PostUpdateRequest(
     @SerialName("explanation")
     val explanation: String? = null,
-
-    @SerialName("point")
-    val point: Int? = null,
 
     @SerialName("photoUrl")
     val photoUrl: String? = null,

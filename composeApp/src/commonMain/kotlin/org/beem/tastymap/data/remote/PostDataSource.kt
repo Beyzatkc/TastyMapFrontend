@@ -53,7 +53,7 @@ class PostDataSource(private val authHttpClientManager: AuthHttpClientManager) {
         return client.delete("api/posts/delete-post/$postId").body()
     }
 
-    suspend fun updatePost(postId: Long, request: PostUpdateRequest): Map<String, String> {
+    suspend fun updatePost(postId: Long, request: PostUpdateRequest): PostResponse {
         return client.patch("api/posts/update-post/$postId") {
             contentType(ContentType.Application.Json)
             setBody(request)
