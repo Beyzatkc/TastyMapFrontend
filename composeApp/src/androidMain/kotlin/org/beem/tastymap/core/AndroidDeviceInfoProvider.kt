@@ -5,6 +5,9 @@ import android.os.Build
 import org.beem.tastymap.core.provider.DeviceInfoProvider
 import dev.gitlive.firebase.Firebase
 import dev.gitlive.firebase.messaging.messaging
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeoutOrNull
 
 class AndroidDeviceInfoProvider(private val context: Context) : DeviceInfoProvider {
 
@@ -30,9 +33,14 @@ class AndroidDeviceInfoProvider(private val context: Context) : DeviceInfoProvid
         return "TastyMap/$appVersion (Android $osVersion; $manufacturer $model)"
     }
 
-    override suspend fun getFcmToken(): String {
-        return try {
-            Firebase.messaging.getToken()
+    override suspend fun getFcmToken(): String = withContext(Dispatchers.IO) {
+        try {
+            withTimeoutOrNull(5000L) {
+                Firebase.messaging.getToken()
+            } ?: run {
+                println("FcmToken Error: Firebase response timed out (5s)")
+                ""
+            }
         } catch (e: Exception) {
             println("FcmToken Error: ${e.message}")
             ""

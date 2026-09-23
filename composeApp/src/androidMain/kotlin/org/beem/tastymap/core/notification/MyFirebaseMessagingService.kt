@@ -12,6 +12,7 @@ import com.google.firebase.messaging.RemoteMessage
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import org.beem.tastymap.MainActivity
 import org.beem.tastymap.data.repository.UserDeviceRepository
@@ -86,7 +87,16 @@ class MyFirebaseMessagingService : FirebaseMessagingService(), KoinComponent {
     override fun onNewToken(token: String) {
         super.onNewToken(token)
         serviceScope.launch {
-            userDeviceRepository.updateFcmToken(fcmToken = token)
+            try {
+                userDeviceRepository.updateFcmToken(fcmToken = token)
+            } catch (e: Exception) {
+                println("New FCM Token Update Error: ${e.message}")
+            }
         }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        serviceScope.cancel()
     }
 }

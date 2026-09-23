@@ -99,10 +99,11 @@ class MyProfileRepository(
 
     suspend fun uploadProfilePhoto(file: PlatformFile): ResultWrapper<String> = withContext(dispatchers.io) {
         safeApiCall {
-            val response = fileRemoteDataSource.uploadFile(file)
+            val response = fileRemoteDataSource.uploadFile(file = file, type = "profiles")
             response.imageUrl
         }
     }
+
 
     suspend fun updateProfile(request: UpdateProfile): ResultWrapper<MessageResponse> = withContext(dispatchers.io) {
         val result = safeApiCall { dataSource.updateProfile(request) }

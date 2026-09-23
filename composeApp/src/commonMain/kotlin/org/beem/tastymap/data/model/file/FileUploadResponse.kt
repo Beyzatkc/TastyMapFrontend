@@ -6,3 +6,7 @@ import kotlinx.serialization.Serializable
 data class FileUploadResponse(
     val imageUrl: String
 )
+@Serializable
+data class MultipleFileUploadResponse(
+    val imageUrls: List<String>
+)

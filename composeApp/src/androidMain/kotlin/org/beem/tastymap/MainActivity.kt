@@ -17,6 +17,7 @@ class MainActivity : ComponentActivity() {
         PermissionsController(applicationContext)
     }
 
+
     override fun onCreate(savedInstanceState: Bundle?) {
         installSplashScreen()
         super.onCreate(savedInstanceState)

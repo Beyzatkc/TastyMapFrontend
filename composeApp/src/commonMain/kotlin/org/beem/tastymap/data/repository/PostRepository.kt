@@ -1,5 +1,6 @@
 package org.beem.tastymap.data.repository
 
+import io.github.vinceglb.filekit.core.PlatformFile
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emitAll
@@ -21,6 +22,7 @@ import org.beem.tastymap.data.model.post.PostLikeResponse
 import org.beem.tastymap.data.model.post.PostLikeUserResponse
 import org.beem.tastymap.data.model.post.PostResponse
 import org.beem.tastymap.data.model.post.PostUpdateRequest
+import org.beem.tastymap.data.remote.FileRemoteDataSource
 import org.beem.tastymap.data.remote.PostDataSource
 
 class PostRepository(
@@ -28,11 +30,11 @@ class PostRepository(
     private val profileLocalDataSource: ProfileLocalDataSource,
     private val postLocalDataSource: PostLocalDataSource,
     private val dispatchers: DispatcherProvider,
+    private val fileRemoteDataSource: FileRemoteDataSource,
     private val userManager: UserManager
 ) {
     val myId: Long
         get() = userManager.userSession.value?.userId ?: 0L
-
 
     fun getMyPostsStream(
         page: Int = 0,
@@ -46,7 +48,6 @@ class PostRepository(
     ): Flow<List<PostGridResponse>> = flow {
         coroutineScope {
             launch { fetchAndSaveUserPosts(userId, page, size) }
-
             emitAll(postLocalDataSource.getUserGridPostsFlow(userId))
         }
     }.flowOn(dispatchers.io)
@@ -58,90 +59,31 @@ class PostRepository(
         }
     }.flowOn(dispatchers.io)
 
-
-
     private suspend fun fetchAndSaveUserPosts(
         userId: Long,
         page: Int,
         size: Int
     ) {
-        println(
-            "DEBUG_POST: [fetchAndSaveUserPosts] START " +
-                    "userId=$userId page=$page size=$size myId=$myId"
-        )
-
         val result = if (userId == myId) {
-            println("DEBUG_POST: [fetchAndSaveUserPosts] getMyPosts çağrılıyor")
-
-            safeApiCall {
-                remoteDataSource.getMyPosts(page, size)
-            }
+            safeApiCall { remoteDataSource.getMyPosts(page, size) }
         } else {
-            println(
-                "DEBUG_POST: [fetchAndSaveUserPosts] " +
-                        "getUserPosts çağrılıyor userId=$userId"
-            )
-
-            safeApiCall {
-                remoteDataSource.getUserPosts(userId, page, size)
-            }
+            safeApiCall { remoteDataSource.getUserPosts(userId, page, size) }
         }
 
-        when (result) {
-
-            is ResultWrapper.Success -> {
-
-                println(
-                    "DEBUG_POST: [fetchAndSaveUserPosts] API SUCCESS " +
-                            "contentSize=${result.data.content.size}"
-                )
-
-                println(
-                    "DEBUG_POST: [fetchAndSaveUserPosts] " +
-                            "page=${result.data.number} " +
-                            "totalElements=${result.data.totalElements} " +
-                            "totalPages=${result.data.totalPages} " +
-                            "first=${result.data.first} " +
-                            "last=${result.data.last}"
-                )
-
-                result.data.content.forEach {
-                    println(
-                        "DEBUG_POST: API POST -> " +
-                                "id=${it.postId}, " +
-                                "photo=${it.photoUrl}, " +
-                                "pinned=${it.isPinned}"
-                    )
-                }
-
-                println(
-                    "DEBUG_POST: [fetchAndSaveUserPosts] " +
-                            "SQLite save başlıyor..."
-                )
-
-                postLocalDataSource.saveGridPosts(
-                    userId = userId,
-                    posts = result.data.content,
-                    page = page
-                )
-
-                println(
-                    "DEBUG_POST: [fetchAndSaveUserPosts] " +
-                            "SQLite save BİTTİ"
-                )
-            }
-
-            is ResultWrapper.Error -> {
-                println(
-                    "DEBUG_POST: [fetchAndSaveUserPosts] API ERROR " +
-                            "message=${result.message}"
-                )
-            }
+        if (result is ResultWrapper.Success) {
+            postLocalDataSource.saveGridPosts(
+                userId = userId,
+                posts = result.data.content,
+                page = page
+            )
         }
     }
 
-    suspend fun fetchUserPostsPage(userId: Long, page: Int, size: Int = 15): ResultWrapper<PageResponse<PostGridResponse>> {
-        println("DEBUG_POST: ID KARIS"+userId+"   "+myId)
+    suspend fun fetchUserPostsPage(
+        userId: Long,
+        page: Int,
+        size: Int = 15
+    ): ResultWrapper<PageResponse<PostGridResponse>> {
         val result = if (userId == myId) {
             safeApiCall { remoteDataSource.getMyPosts(page, size) }
         } else {
@@ -185,25 +127,19 @@ class PostRepository(
         result
     }
 
-    /**
-     * Optimistic Pin Toggle
-     */
     suspend fun togglePin(postId: Long): ResultWrapper<Unit> = withContext(dispatchers.io) {
         postLocalDataSource.togglePinLocal(postId)
 
         val result = safeApiCall { remoteDataSource.togglePin(postId) }
 
         if (result is ResultWrapper.Error) {
-            postLocalDataSource.togglePinLocal(postId) // Rollback
+            postLocalDataSource.togglePinLocal(postId)
             return@withContext ResultWrapper.Error(result.message, ErrorType.UNKNOWN_ERROR)
         }
 
         ResultWrapper.Success(Unit)
     }
 
-    /**
-     * Post Silme
-     */
     suspend fun deletePost(postId: Long): ResultWrapper<Unit> = withContext(dispatchers.io) {
         val result = safeApiCall { remoteDataSource.deletePost(postId) }
 
@@ -219,10 +155,10 @@ class PostRepository(
         }
     }
 
-    /**
-     * Post Güncelleme
-     */
-    suspend fun updatePost(postId: Long, request: PostUpdateRequest): ResultWrapper<PostResponse> = withContext(dispatchers.io) {
+    suspend fun updatePost(
+        postId: Long,
+        request: PostUpdateRequest
+    ): ResultWrapper<PostResponse> = withContext(dispatchers.io) {
         val result = safeApiCall { remoteDataSource.updatePost(postId, request) }
 
         if (result is ResultWrapper.Success) {
@@ -232,8 +168,21 @@ class PostRepository(
         result
     }
 
-
-    suspend fun getWhosLike(postId: Long, page: Int = 0, size: Int = 20): ResultWrapper<PageResponse<PostLikeUserResponse>> {
+    suspend fun getWhosLike(
+        postId: Long,
+        page: Int = 0,
+        size: Int = 20
+    ): ResultWrapper<PageResponse<PostLikeUserResponse>> {
         return safeApiCall { remoteDataSource.getWhosLike(postId, page, size) }
+    }
+
+    suspend fun uploadPostPhotos(imagesBytes: List<ByteArray>): ResultWrapper<List<String>> = withContext(dispatchers.io) {
+        safeApiCall {
+            val response = fileRemoteDataSource.uploadMultipleFiles(
+                imagesBytes = imagesBytes,
+                type = "posts"
+            )
+            response.imageUrls
+        }
     }
 }

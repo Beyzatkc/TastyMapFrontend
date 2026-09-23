@@ -132,7 +132,7 @@ val appModule = module {
     single { BlockRepository(get(), get(), get(), get(), get()) }
     single { DeleteAccountRepository(get(), get(), get()) }
     single { VisitRepository(get(), get(), get()) }
-    single { PostRepository(get(), get(), get(),get(),get()) }
+    single { PostRepository(get(), get(), get(),get(),get(),get()) }
 
     factory { LogRegScreenModel(get(), get(), get(), get()) }
     factory { PendingScreenModel(get(), get(), get(), get()) }

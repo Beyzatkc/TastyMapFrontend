@@ -9,20 +9,26 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AddPhotoAlternate
+import androidx.compose.material.icons.filled.CameraAlt
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.ErrorOutline
+import androidx.compose.material.icons.filled.PhotoLibrary
 import androidx.compose.material.icons.filled.Place
 import androidx.compose.material.icons.rounded.CheckCircle
 import androidx.compose.material.icons.rounded.ChevronRight
 import androidx.compose.material.icons.rounded.KeyboardArrowDown
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -34,6 +40,12 @@ import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.koin.koinScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
+import io.github.vinceglb.filekit.compose.rememberFilePickerLauncher
+import io.github.vinceglb.filekit.core.PickerMode
+import io.github.vinceglb.filekit.core.PickerType
+import io.github.vinceglb.filekit.core.PlatformFile
+import kotlinx.coroutines.launch
+import org.beem.tastymap.core.camera.rememberCameraLauncher
 import org.beem.tastymap.core.util.ToastManager
 import org.beem.tastymap.data.model.post.PostAndVisitRequest
 import org.beem.tastymap.data.model.visit.VisitResponse
@@ -72,12 +84,46 @@ class CreatePostScreen : Screen {
 
         var selectedVisit by remember { mutableStateOf<VisitResponse?>(null) }
         var explanation by remember { mutableStateOf("") }
-        var photoUrl by remember { mutableStateOf<String?>(null) }
         var commentEnabled by remember { mutableStateOf(true) }
 
         // BottomSheet State'i
         var showVisitSheet by remember { mutableStateOf(false) }
+        var showImagePickerSheet by remember { mutableStateOf(false) }
 
+        val scope = rememberCoroutineScope()
+        var selectedImagesBytes by remember { mutableStateOf<List<ByteArray>>(emptyList()) }
+
+
+        val remainingSlots = 3 - selectedImagesBytes.size
+
+        val galleryLauncher = rememberFilePickerLauncher(
+            type = PickerType.Image,
+            mode = PickerMode.Multiple(maxItems = remainingSlots.coerceAtLeast(1))
+        ) { files ->
+            files?.let { newFiles ->
+                val remaining = 3 - selectedImagesBytes.size
+
+                if (remaining <= 0) return@rememberFilePickerLauncher
+
+                scope.launch {
+                    val newBytes = newFiles
+                        .take(remaining)
+                        .map { it.readBytes() }
+
+                    selectedImagesBytes =
+                        selectedImagesBytes + newBytes
+                }
+            }
+        }
+
+
+        val cameraLauncher = rememberCameraLauncher { bytes ->
+            bytes?.let {
+                if (selectedImagesBytes.size < 3) {
+                    selectedImagesBytes = selectedImagesBytes + it
+                }
+            }
+        }
 
 
         LaunchedEffect(uiState.generalError) {
@@ -124,7 +170,6 @@ class CreatePostScreen : Screen {
                             text = stringResource(Res.string.share_post),
                             onClick = {
                                 selectedVisit?.let { visit ->
-
                                     val request = PostAndVisitRequest(
                                         placeId = visit.placeId,
                                         placeName = visit.placeName,
@@ -137,12 +182,12 @@ class CreatePostScreen : Screen {
                                         averagePoint = visit.averagePoint,
                                         isWantToPost = true,
                                         explanation = explanation.ifBlank { null },
-                                        photoUrl = photoUrl,
+                                        photoUrl = emptyList(),
                                         commentEnabled = commentEnabled
                                     )
-
                                     screenModel.addPost(
-                                        request = request
+                                        request = request,
+                                        selectedImagesBytes = selectedImagesBytes
                                     )
                                 }
                             },
@@ -168,7 +213,7 @@ class CreatePostScreen : Screen {
                 verticalArrangement = Arrangement.spacedBy(24.dp)
             ) {
 
-                // 1. Ziyaret Seçici Kartı
+
                 VisitSelectorCard(
                     selectedVisit = selectedVisit,
                     customColors = customColors,
@@ -177,7 +222,7 @@ class CreatePostScreen : Screen {
                     }
                 )
 
-                // 2. Gizli Form Alanı
+
                 AnimatedVisibility(
                     visible = selectedVisit != null,
                     enter = fadeIn() + expandVertically()
@@ -190,6 +235,17 @@ class CreatePostScreen : Screen {
                         PhotoUploadArea(
                             customColors = customColors,
                             error = uiState.photoError?.let { stringResource(it) },
+                            selectedImagesBytes = selectedImagesBytes,
+                            onAddClick = {
+                                showImagePickerSheet = true
+                            },
+                            onRemoveClick = { index ->
+                                if (index in selectedImagesBytes.indices) {
+                                    selectedImagesBytes = selectedImagesBytes.toMutableList().apply {
+                                        removeAt(index)
+                                    }
+                                }
+                            }
                         )
 
                         Column(
@@ -466,6 +522,63 @@ class CreatePostScreen : Screen {
                 }
             }
         }
+        if (showImagePickerSheet) {
+            ModalBottomSheet(
+                onDismissRequest = {
+                    showImagePickerSheet = false
+                },
+                containerColor = customColors.background,
+                dragHandle = { BottomSheetDefaults.DragHandle() }
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 48.dp, top = 8.dp, start = 24.dp, end = 24.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = "Fotoğraf Ekle", // stringResource(Res.string.add_photo_title)
+                        style = MaterialTheme.typography.titleLarge,
+                        color = customColors.textPrimary
+                    )
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Text(
+                        text = "Gönderin için bir fotoğraf kaynağı seçin",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = customColors.textSecondary
+                    )
+
+                    Spacer(modifier = Modifier.height(32.dp))
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceEvenly
+                    ) {
+                        // Kamera Seçeneği
+                        ImagePickerOptionCard(
+                            icon = Icons.Default.CameraAlt,
+                            title = "Kamera",
+                            customColors = customColors,
+                            onClick = {
+                                showImagePickerSheet = false
+                                cameraLauncher.launch()
+                            }
+                        )
+                        ImagePickerOptionCard(
+                            icon = Icons.Default.PhotoLibrary,
+                            title = "Galeri",
+                            customColors = customColors,
+                            onClick = {
+                                showImagePickerSheet = false
+                                galleryLauncher.launch()
+                            }
+                        )
+                    }
+                }
+            }
+        }
     }
 }
 
@@ -473,6 +586,43 @@ class CreatePostScreen : Screen {
 // ALT BİLEŞENLER
 // --------------------------------------------------
 
+@Composable
+private fun ImagePickerOptionCard(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    title: String,
+    customColors: CustomColors,
+    onClick: () -> Unit
+) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+        modifier = Modifier
+            .clip(RoundedCornerShape(16.dp))
+            .clickable(onClick = onClick)
+            .padding(16.dp)
+    ) {
+        Box(
+            modifier = Modifier
+                .size(64.dp)
+                .clip(RoundedCornerShape(16.dp))
+                .background(customColors.wave),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = title,
+                tint = customColors.navy,
+                modifier = Modifier.size(32.dp)
+            )
+        }
+
+        Text(
+            text = title,
+            style = MaterialTheme.typography.titleMedium,
+            color = customColors.textPrimary
+        )
+    }
+}
 @Composable
 private fun VisitListItemCard(
     visit: VisitResponse,
@@ -672,51 +822,93 @@ fun VisitSelectorCard(
 fun PhotoUploadArea(
     customColors: CustomColors,
     error: String? = null,
-    onClick: () -> Unit = {}
+    selectedImagesBytes: List<ByteArray> = emptyList(),
+    onAddClick: () -> Unit,
+    onRemoveClick: (Int) -> Unit
 ) {
     Column(
         modifier = Modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(6.dp)
     ) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(200.dp)
-                .shadow(
-                    elevation = 4.dp,
-                    shape = RoundedCornerShape(16.dp),
-                    spotColor = customColors.borderLight
-                )
-                .clip(RoundedCornerShape(16.dp))
-                .background(customColors.surface)
-                .border(
-                    width = if (error != null) 1.5.dp else 0.dp,
-                    color = if (error != null) customColors.error else Color.Transparent,
-                    shape = RoundedCornerShape(16.dp)
-                )
-                .clickable(onClick = onClick),
-            contentAlignment = Alignment.Center
+        LazyRow(
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            contentPadding = PaddingValues(vertical = 4.dp)
         ) {
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.Default.AddPhotoAlternate,
-                    contentDescription = stringResource(Res.string.add_photo),
-                    modifier = Modifier.size(48.dp),
-                    tint = if (error != null) customColors.error else customColors.placeHolderIcon
-                )
+            itemsIndexed(
+                items = selectedImagesBytes,
+                key = { index, _ -> index }
+            ) { index, bytes ->
+                Box(
+                    modifier = Modifier
+                        .size(140.dp, 180.dp)
+                        .clip(RoundedCornerShape(16.dp))
+                        .background(customColors.surface)
+                ) {
+                    coil3.compose.AsyncImage(
+                        model = bytes,
+                        contentDescription = null,
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = androidx.compose.ui.layout.ContentScale.Crop
+                    )
 
-                Text(
-                    text = stringResource(Res.string.tap_to_upload_photo),
-                    style = MaterialTheme.typography.titleMedium,
-                    color = if (error != null) customColors.error else customColors.placeHolderIcon
-                )
+                    // Fotoğraf Silme Butonu
+                    IconButton(
+                        onClick = { onRemoveClick(index) },
+                        modifier = Modifier
+                            .align(Alignment.TopEnd)
+                            .padding(6.dp)
+                            .size(28.dp)
+                            .background(Color.Black.copy(alpha = 0.6f), CircleShape)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Close,
+                            contentDescription = "Sil",
+                            tint = Color.White,
+                            modifier = Modifier.size(16.dp)
+                        )
+                    }
+                }
+            }
+
+            if (selectedImagesBytes.size < 3) {
+                item {
+                    Box(
+                        modifier = Modifier
+                            .size(140.dp, 180.dp)
+                            .clip(RoundedCornerShape(16.dp))
+                            .background(customColors.surface)
+                            .border(
+                                width = if (error != null) 1.5.dp else 1.dp,
+                                color = if (error != null) customColors.error else customColors.borderLight,
+                                shape = RoundedCornerShape(16.dp)
+                            )
+                            .clickable(onClick = onAddClick),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(8.dp),
+                            modifier = Modifier.padding(12.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.AddPhotoAlternate,
+                                contentDescription = stringResource(Res.string.add_photo),
+                                modifier = Modifier.size(36.dp),
+                                tint = if (error != null) customColors.error else customColors.placeHolderIcon
+                            )
+                            Text(
+                                text = "Fotoğraf Ekle\n(${selectedImagesBytes.size}/3)",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = if (error != null) customColors.error else customColors.placeHolderIcon,
+                                textAlign = TextAlign.Center
+                            )
+                        }
+                    }
+                }
             }
         }
 
-        // Hata Mesajı (Minik Ünlem İkonu ile)
+        // Hata Mesajı Görünümü
         AnimatedVisibility(
             visible = error != null,
             enter = fadeIn() + expandVertically()
@@ -735,10 +927,9 @@ fun PhotoUploadArea(
                         tint = customColors.error,
                         modifier = Modifier.size(16.dp)
                     )
-
                     Text(
                         text = errorMessage,
-                        style = MaterialTheme.typography.labelMedium,
+                        style = MaterialTheme.typography.bodySmall,
                         color = customColors.error
                     )
                 }

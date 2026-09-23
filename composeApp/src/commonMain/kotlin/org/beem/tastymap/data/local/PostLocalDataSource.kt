@@ -19,6 +19,16 @@ class PostLocalDataSource(
     private val dispatchers: DispatcherProvider
 ) {
 
+    // Helper: String -> List<String>
+    private fun String?.toUrlList(): List<String> {
+        return if (this.isNullOrBlank()) emptyList() else this.split(",")
+    }
+
+    // Helper: List<String> -> String
+    private fun List<String>?.toDbString(): String {
+        return this?.joinToString(",") ?: ""
+    }
+
     fun getUserGridPostsFlow(userId: Long): Flow<List<PostGridResponse>> {
         println("DEBUG_LOCAL: [getUserGridPostsFlow] Dinlenmeye başlandı. Hedef userId = $userId")
 
@@ -27,15 +37,13 @@ class PostLocalDataSource(
             .mapToList(dispatchers.io)
             .onEach { rawList ->
                 println("DEBUG_LOCAL: [getUserGridPostsFlow] SQL'den HAM liste boyutu: ${rawList.size} (userId = $userId)")
-                rawList.forEach { entity ->
-                    println("DEBUG_LOCAL:   -> Ham Kayıt: postId=${entity.postId}, photoUrl=${entity.photoUrl}")
-                }
             }
             .map { list ->
                 list.map { entity ->
+                    val photoUrlsList = entity.photoUrls.toUrlList()
                     PostGridResponse(
                         postId = entity.postId,
-                        photoUrl = entity.photoUrl,
+                        photoUrl = photoUrlsList.firstOrNull().orEmpty(), // Grid kapak fotoğrafı
                         isPinned = entity.isPinned == 1L
                     )
                 }
@@ -55,7 +63,7 @@ class PostLocalDataSource(
                     PostResponse(
                         postId = it.postId,
                         userId = it.userId,
-                        photoUrl = it.photoUrl,
+                        photoUrls = it.photoUrls.toUrlList(),
                         explanation = it.explanation,
                         point = 0,
                         numberOfLikes = it.numberOfLikes.toInt(),
@@ -93,7 +101,6 @@ class PostLocalDataSource(
         try {
             queries.transaction {
                 posts.forEach { post ->
-                    // 1. Veritabanında bu post zaten var mı?
                     val exists = queries.checkPostExists(post.postId).executeAsOne() > 0
 
                     if (exists) {
@@ -101,7 +108,7 @@ class PostLocalDataSource(
                         queries.updateGridPost(
                             postId = post.postId,
                             userId = userId,
-                            photoUrl = post.photoUrl,
+                            photoUrls = post.photoUrl, // Grid'den gelen kapak fotoğrafı
                             isPinned = if (post.isPinned) 1L else 0L,
                             page = page.toLong(),
                             updatedAt = now
@@ -111,7 +118,7 @@ class PostLocalDataSource(
                         queries.insertGridPost(
                             postId = post.postId,
                             userId = userId,
-                            photoUrl = post.photoUrl,
+                            photoUrls = post.photoUrl,
                             isPinned = if (post.isPinned) 1L else 0L,
                             page = page.toLong(),
                             updatedAt = now
@@ -125,7 +132,6 @@ class PostLocalDataSource(
             e.printStackTrace()
         }
 
-        // Doğrulama Testi
         val savedPosts = queries.getUserGridPosts(userId).executeAsList()
         println("DEBUG_SQL: TRANSACTION SONRASI DB count=${savedPosts.size}")
     }
@@ -139,7 +145,7 @@ class PostLocalDataSource(
             if (exists) {
                 queries.updatePostDetail(
                     postId = post.postId,
-                    photoUrl = post.photoUrl,
+                    photoUrls = post.photoUrls.toDbString(), // List -> String dönüştürüldü
                     explanation = post.explanation,
                     numberOfLikes = post.numberOfLikes.toLong(),
                     commentCount = post.commentCount.toLong(),
@@ -163,7 +169,7 @@ class PostLocalDataSource(
                 queries.insertPostDetail(
                     postId = post.postId,
                     userId = post.userId,
-                    photoUrl = post.photoUrl,
+                    photoUrls = post.photoUrls.toDbString(),
                     isPinned = if (post.isPinned) 1L else 0L,
                     explanation = post.explanation,
                     numberOfLikes = post.numberOfLikes.toLong(),

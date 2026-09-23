@@ -1,4 +1,5 @@
 package org.beem.tastymap.ui.post.create
+
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -10,10 +11,10 @@ import org.beem.tastymap.core.network.ResultWrapper
 import org.beem.tastymap.data.model.post.PostAndVisitRequest
 import org.beem.tastymap.data.repository.PostRepository
 import org.beem.tastymap.data.repository.VisitRepository
-import org.jetbrains.compose.resources.StringResource
 import tastymap.composeapp.generated.resources.Res
 import tastymap.composeapp.generated.resources.error_explanation_limit
 import tastymap.composeapp.generated.resources.error_photo_empty
+import tastymap.composeapp.generated.resources.error_photo_max_limit
 
 class CreatePostScreenModel(
     private val visitRepository: VisitRepository,
@@ -22,11 +23,6 @@ class CreatePostScreenModel(
 
     private val _uiState = MutableStateFlow(CreatePostUiState())
     val uiState = _uiState.asStateFlow()
-
-    sealed interface UiMessage {
-        data class Dynamic(val message: String) : UiMessage
-        data class Resource(val res: StringResource, val args: List<Any> = emptyList()) : UiMessage
-    }
 
     init {
         loadInitialVisits()
@@ -91,6 +87,7 @@ class CreatePostScreenModel(
                     )
                 }
             }
+
             is ResultWrapper.Error -> {
                 _uiState.update { state ->
                     if (isLoadMore) {
@@ -110,8 +107,15 @@ class CreatePostScreenModel(
     }
 
     fun clearErrors() {
-        _uiState.update { it.copy(explanationError = null, generalError = null) }
+        _uiState.update {
+            it.copy(
+                explanationError = null,
+                photoError = null,
+                generalError = null
+            )
+        }
     }
+
     private fun validateExplanation(explanation: String?): Boolean {
         if (explanation != null && explanation.length > 500) {
             _uiState.update { it.copy(explanationError = Res.string.error_explanation_limit) }
@@ -120,9 +124,14 @@ class CreatePostScreenModel(
         _uiState.update { it.copy(explanationError = null) }
         return true
     }
-    private fun validatePostPhoto(photoUrl: String?): Boolean {
-        if (photoUrl == null || photoUrl.isEmpty() ) {
+
+    private fun validatePostPhoto(selectedImagesBytes: List<ByteArray>): Boolean {
+        if (selectedImagesBytes.isEmpty()) {
             _uiState.update { it.copy(photoError = Res.string.error_photo_empty) }
+            return false
+        }
+        if (selectedImagesBytes.size > 3) {
+            _uiState.update { it.copy(photoError = Res.string.error_photo_max_limit) }
             return false
         }
         _uiState.update { it.copy(photoError = null) }
@@ -131,23 +140,49 @@ class CreatePostScreenModel(
 
     fun addPost(
         request: PostAndVisitRequest,
+        selectedImagesBytes: List<ByteArray>
     ) {
         if (_uiState.value.isLoading) return
 
-        if (!validateExplanation(request.explanation)) {
-            return
-        }
-        if (!validatePostPhoto(request.photoUrl)) {
-            return
-        }
+        // 1. Form Doğrulamaları
+        val isExplanationValid = validateExplanation(request.explanation)
+        val isPhotoValid = validatePostPhoto(selectedImagesBytes) // ByteArray listesi doğruluyor
+
+        if (!isExplanationValid || !isPhotoValid) return
 
         screenModelScope.launch {
             _uiState.update { it.copy(isLoading = true, generalError = null) }
 
-            when (val result = postRepository.addPost(request)) {
+            // 2. Fotoğrafları Yükleme (ByteArray Listesi)
+            var uploadedPhotoUrls = emptyList<String>()
+
+            when (val uploadResult = postRepository.uploadPostPhotos(selectedImagesBytes)) {
+                is ResultWrapper.Success -> {
+                    uploadedPhotoUrls = uploadResult.data
+                }
+
+                is ResultWrapper.Error -> {
+                    _uiState.update {
+                        it.copy(
+                            isLoading = false,
+                            generalError = uploadResult.message
+                        )
+                    }
+                    return@launch
+                }
+            }
+
+            // 3. Yüklenen Fotoğraf URL'lerini Request'e Ekleme
+            val finalRequest = request.copy(
+                photoUrl = uploadedPhotoUrls
+            )
+
+            // 4. Gönderiyi Oluşturma
+            when (val result = postRepository.addPost(finalRequest)) {
                 is ResultWrapper.Success -> {
                     _uiState.update { it.copy(isLoading = false, success = true) }
                 }
+
                 is ResultWrapper.Error -> {
                     _uiState.update {
                         it.copy(

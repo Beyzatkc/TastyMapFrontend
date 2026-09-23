@@ -534,4 +534,5 @@
 
     <string name="error_photo_empty">Photo cannot be empty!</string>
     <string name="error_explanation_limit">The description can be up to 500 characters.</string>
+    <string name="error_photo_max_limit">You can select a maximum of 3 photos.</string>
 </resources>

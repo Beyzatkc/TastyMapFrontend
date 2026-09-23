@@ -1,10 +1,8 @@
 package org.beem.tastymap.data.model.post
 
-import androidx.annotation.Size
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import org.beem.tastymap.data.model.visit.BaseVisitRequest
-import org.beem.tastymap.data.model.visit.VisitRequest
 import org.beem.tastymap.domain.model.RelationStatus
 
 @Serializable
@@ -22,7 +20,7 @@ data class PostResponse(
     val point: Int = 0,
 
     @SerialName("photoUrl")
-    val photoUrl: String,
+    val photoUrls: List<String>,
 
     @SerialName("numberof_likes")
     val numberOfLikes: Int = 0,
@@ -78,7 +76,7 @@ data class PostResponse(
     @SerialName("isPinned")
     val isPinned: Boolean = false
 )
-
+@Serializable
 data class PostAndVisitRequest(
     override val placeId: String,
     override val placeName: String,
@@ -92,7 +90,7 @@ data class PostAndVisitRequest(
     override val isWantToPost: Boolean = false,
 
     val explanation: String? = null,
-    val photoUrl: String? = null,
+    val photoUrl: List<String>,
     val commentEnabled: Boolean = true
 ) : BaseVisitRequest
 
@@ -102,7 +100,7 @@ data class PostUpdateRequest(
     val explanation: String? = null,
 
     @SerialName("photoUrl")
-    val photoUrl: String? = null,
+    val photoUrl: List<String>? = null,
 )
 
 @Serializable
