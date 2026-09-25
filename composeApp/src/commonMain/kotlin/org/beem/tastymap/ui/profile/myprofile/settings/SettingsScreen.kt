@@ -166,8 +166,8 @@ class SettingsScreen(val isPrivate: Boolean) : Screen {
                             IconButton(onClick = { navigator.pop() }) {
                                 Icon(
                                     imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                    contentDescription = stringResource(Res.string.settings_back_cd),
-                                    tint = customColors.textPrimary
+                                    contentDescription = "Geri",
+                                    tint = customColors.textPrimary,
                                 )
                             }
                         },

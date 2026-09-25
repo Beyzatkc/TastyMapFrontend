@@ -38,6 +38,7 @@ import org.beem.tastymap.ui.auth.verification.email.EmailScreenModel
 import org.beem.tastymap.ui.auth.verification.loginPending.PendingScreenModel
 import org.beem.tastymap.ui.common.NotificationBadgeManager
 import org.beem.tastymap.ui.post.create.CreatePostScreenModel
+import org.beem.tastymap.ui.post.detail.PostDetailScreenModel
 import org.beem.tastymap.ui.post.mypost.MyPostScreenModel
 import org.beem.tastymap.ui.post.otherpost.PostScreenModel
 import org.beem.tastymap.ui.profile.health.HealthScreenModel
@@ -145,7 +146,9 @@ val appModule = module {
     factory { VisitScreenModel(get()) }
     factory { MyPostScreenModel(get()) }
     factory { PostScreenModel(get()) }
+    factory { PostDetailScreenModel(get()) }
     factory { CreatePostScreenModel(get(),get()) }
+
     factory { (userId: Long) ->
         ProfileScreenModel(
             userId = userId,

@@ -24,10 +24,8 @@ class MyPostScreenModel(
 
     fun loadInitialData() {
         val currentMyId = postRepository.myId
-        println("DEBUG_POST: [loadInitialData] Tetiklendi. myId = $currentMyId")
 
         if (observeJob != null) {
-            println("DEBUG_POST: [loadInitialData] observeJob zaten aktif, tekrar başlatılmadı.")
             return
         }
 
@@ -35,16 +33,11 @@ class MyPostScreenModel(
 
         observeJob = screenModelScope.launch {
             postRepository.getMyPostsStream(page = 0, size = pageSize)
-                .onStart {
-                    println("DEBUG_POST: [getMyPostsStream] Flow dinlenmeye başlandı.")
-                }
                 .catch { e ->
-                    println("DEBUG_POST: [getMyPostsStream] HATA ALINDI! Message: ${e.message}")
                     e.printStackTrace()
                     _uiState.update { it.copy(isLoading = false, errorMessage = e.message) }
                 }
                 .collect { posts ->
-                    println("DEBUG_POST: [getMyPostsStream] Veri geldi! Eleman sayısı: ${posts.size}")
                     posts.forEachIndexed { index, post ->
                         println("DEBUG_POST:   -> Post[$index]: ID=${post.postId}, Photo=${post.photoUrl}, Pinned=${post.isPinned}")
                     }
@@ -63,7 +56,6 @@ class MyPostScreenModel(
 
     fun loadNextPage() {
         val currentState = _uiState.value
-        println("DEBUG_POST: [loadNextPage] İsteniyor. CurrentPage: ${currentState.currentPage}, isLoading: ${currentState.isLoading}")
 
         if (currentState.isLoading || currentState.isLoadingMore || currentState.isLastPage) return
 
@@ -80,7 +72,6 @@ class MyPostScreenModel(
             when (result) {
                 is ResultWrapper.Success -> {
                     val isLast = result.data.last ?: (result.data.content.size < pageSize)
-                    println("DEBUG_POST: [loadNextPage] Başarılı! Yeni gelen post sayısı: ${result.data.content.size}")
                     _uiState.update {
                         it.copy(
                             currentPage = nextPage,
@@ -90,7 +81,6 @@ class MyPostScreenModel(
                     }
                 }
                 is ResultWrapper.Error -> {
-                    println("DEBUG_POST: [loadNextPage] Hata: ${result.message}")
                     _uiState.update {
                         it.copy(isLoadingMore = false, errorMessage = result.message)
                     }
@@ -100,7 +90,6 @@ class MyPostScreenModel(
     }
 
     fun refresh() {
-        println("DEBUG_POST: [refresh] Yenileme başlatıldı.")
         if (_uiState.value.isRefreshing) return
 
         _uiState.update { it.copy(isRefreshing = true, errorMessage = null) }
@@ -113,25 +102,14 @@ class MyPostScreenModel(
             )
 
             if (result is ResultWrapper.Error) {
-                println("DEBUG_POST: [refresh] Hata alındı: ${result.message}")
                 _uiState.update { it.copy(isRefreshing = false, errorMessage = result.message) }
             } else {
-                println("DEBUG_POST: [refresh] Başarıyla yenilendi.")
                 _uiState.update { it.copy(currentPage = 0, isRefreshing = false) }
             }
         }
     }
 
 
-
-    fun deletePost(postId: Long) {
-        screenModelScope.launch {
-            val result = postRepository.deletePost(postId)
-            if (result is ResultWrapper.Error) {
-                _uiState.update { it.copy(errorMessage = result.message) }
-            }
-        }
-    }
 
     //UPDATEYE BAKICLAK YANLIS SUAN BURDA OLCAYACAK
     fun updatePost(postId: Long, request: PostUpdateRequest) {
@@ -144,12 +122,5 @@ class MyPostScreenModel(
         }
     }
 
-    fun togglePin(postId: Long) {
-        screenModelScope.launch {
-            val result = postRepository.togglePin(postId)
-            if (result is ResultWrapper.Error) {
-                _uiState.update { it.copy(errorMessage = result.message) }
-            }
-        }
-    }
+
 }

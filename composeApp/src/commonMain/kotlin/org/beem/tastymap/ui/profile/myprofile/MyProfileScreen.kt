@@ -1,6 +1,10 @@
 package org.beem.tastymap.ui.profile.myprofile
 
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.Crossfade
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -22,6 +26,7 @@ import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.PushPin
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.*
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults
@@ -31,6 +36,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
@@ -46,6 +52,7 @@ import coil3.compose.AsyncImage
 import org.beem.tastymap.core.util.ToastManager
 import org.beem.tastymap.data.model.post.PostGridResponse
 import org.beem.tastymap.ui.components.TastyButton
+import org.beem.tastymap.ui.post.detail.PostDetailScreen
 import org.beem.tastymap.ui.post.mypost.MyPostScreenModel
 import org.beem.tastymap.ui.profile.myprofile.editprofile.EditProfileScreen
 import org.beem.tastymap.ui.profile.myprofile.notification.NotificationScreen
@@ -56,6 +63,8 @@ import org.beem.tastymap.ui.theme.LocalCustomColors
 import org.jetbrains.compose.resources.getString
 import org.jetbrains.compose.resources.stringResource
 import tastymap.composeapp.generated.resources.Res
+import tastymap.composeapp.generated.resources.active_devices_retry
+import tastymap.composeapp.generated.resources.active_devices_retry_cd
 import tastymap.composeapp.generated.resources.my_profile_default_bio
 import tastymap.composeapp.generated.resources.my_profile_default_name
 import tastymap.composeapp.generated.resources.my_profile_default_photo_cd
@@ -100,7 +109,6 @@ class MyProfileScreen : Screen {
             postScreenModel.loadInitialData()
         }
 
-        // Sayfanın Sonuna Gelindiğinde Yeni Postları Yükle (Pagination)
         val shouldLoadMore = remember {
             derivedStateOf {
                 val totalItemsCount = gridState.layoutInfo.totalItemsCount
@@ -137,7 +145,7 @@ class MyProfileScreen : Screen {
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
-                        .background(customColors.placeHolderBack),
+                        .background(customColors.background),
                     contentAlignment = Alignment.Center
                 ) {
                     CircularProgressIndicator(color = customColors.gourmetOrange)
@@ -208,266 +216,332 @@ class MyProfileScreen : Screen {
                             )
                         }
                     ) {
-                        // 3'LÜ GRID YAPISI
-                        LazyVerticalGrid(
-                            columns = GridCells.Fixed(3),
-                            state = gridState,
-                            modifier = Modifier.fillMaxSize(),
-                            horizontalArrangement = Arrangement.spacedBy(2.dp),
-                            verticalArrangement = Arrangement.spacedBy(2.dp)
-                        ) {
-                            // 1. ÜST HEADER BÖLÜMÜ (3 Sütunu Kaplar)
-                            item(span = { GridItemSpan(maxLineSpan) }) {
-                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                    Surface(
-                                        color = customColors.darkHeaderColor,
-                                        shape = RoundedCornerShape(bottomStart = 28.dp, bottomEnd = 28.dp),
-                                        modifier = Modifier.fillMaxWidth()
-                                    ) {
-                                        Box(
-                                            modifier = Modifier.fillMaxWidth(),
-                                            contentAlignment = Alignment.Center
-                                        ) {
-                                            Column(
-                                                modifier = Modifier
-                                                    .widthIn(max = 600.dp)
-                                                    .padding(horizontal = 20.dp, vertical = 20.dp),
-                                                horizontalAlignment = Alignment.CenterHorizontally
-                                            ) {
-                                                Box(contentAlignment = Alignment.BottomEnd) {
-                                                    Box(
-                                                        modifier = Modifier
-                                                            .size(92.dp)
-                                                            .clip(CircleShape)
-                                                            .border(3.dp, customColors.gourmetOrange, CircleShape)
-                                                            .background(customColors.placeHolderBack)
-                                                            .pointerInput(Unit) {
-                                                                detectTapGestures(onLongPress = { isPhotoZoomed = true })
-                                                            },
-                                                        contentAlignment = Alignment.Center
-                                                    ) {
-                                                        if (!profileState.profile?.profilePhoto.isNullOrBlank()) {
-                                                            AsyncImage(
-                                                                model = profileState.profile?.profilePhoto,
-                                                                contentDescription = stringResource(Res.string.my_profile_photo_cd),
-                                                                modifier = Modifier.fillMaxSize().clip(CircleShape),
-                                                                contentScale = ContentScale.Crop
-                                                            )
-                                                        } else {
-                                                            Icon(
-                                                                imageVector = Icons.Default.Person,
-                                                                contentDescription = stringResource(Res.string.my_profile_default_photo_cd),
-                                                                tint = customColors.placeHolderIcon,
-                                                                modifier = Modifier.size(48.dp)
-                                                            )
-                                                        }
-                                                    }
+                        val profile = profileState.profile
 
-                                                    profileState.profile?.role?.let { role ->
-                                                        Surface(
-                                                            color = customColors.gourmetOrange,
-                                                            shape = RoundedCornerShape(6.dp),
-                                                            modifier = Modifier.offset(y = 4.dp)
-                                                        ) {
-                                                            Text(
-                                                                text = role,
-                                                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
-                                                                style = MaterialTheme.typography.labelSmall.copy(
-                                                                    color = Color.White,
-                                                                    fontWeight = FontWeight.Bold
-                                                                )
-                                                            )
-                                                        }
-                                                    }
-                                                }
-
-                                                Spacer(modifier = Modifier.height(12.dp))
-
+                        if (profile == null && !profileState.isLoading && profileState.errorMessage !=null && profileState.isRefreshing) {
+                            // --- PROFİL YÜKLENEMEDİĞİNDE GÖSTERİLECEK YENİDEN DENE EKRANI ---
+                            Box(
+                                modifier = Modifier.fillMaxSize(),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                FilledTonalButton(
+                                    onClick = {
+                                        profileScreenModel.refreshMyProfile()
+                                        postScreenModel.refresh()
+                                    },
+                                    enabled = !profileState.isLoading,
+                                    modifier = Modifier.height(48.dp),
+                                    colors = ButtonDefaults.filledTonalButtonColors(
+                                        containerColor = customColors.surfaceVariant,
+                                        contentColor = customColors.textPrimary
+                                    )
+                                ) {
+                                    AnimatedContent(
+                                        targetState = profileState.isLoading,
+                                        transitionSpec = { fadeIn() togetherWith fadeOut() },
+                                        label = "ButtonLoadingTransition"
+                                    ) { isLoading ->
+                                        if (isLoading) {
+                                            CircularProgressIndicator(
+                                                modifier = Modifier.size(24.dp),
+                                                strokeWidth = 2.5.dp,
+                                                color = customColors.textPrimary
+                                            )
+                                        } else {
+                                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                                Icon(
+                                                    imageVector = Icons.Default.Refresh,
+                                                    contentDescription = stringResource(Res.string.active_devices_retry_cd),
+                                                    modifier = Modifier.size(24.dp),
+                                                    tint = customColors.textPrimary
+                                                )
+                                                Spacer(modifier = Modifier.width(8.dp))
                                                 Text(
-                                                    text = profileState.profile?.name
-                                                        ?: stringResource(Res.string.my_profile_default_name),
-                                                    style = MaterialTheme.typography.bodyLarge.copy(
-                                                        fontSize = 18.sp,
-                                                        color = Color.White,
-                                                        fontWeight = FontWeight.Bold
+                                                    text = stringResource(Res.string.active_devices_retry),
+                                                    style = MaterialTheme.typography.titleSmall.copy(
+                                                        fontWeight = FontWeight.Bold,
+                                                        color = customColors.textPrimary
                                                     )
                                                 )
-
-                                                Spacer(modifier = Modifier.height(4.dp))
-
-                                                Text(
-                                                    text = profileState.profile?.biography
-                                                        ?: stringResource(Res.string.my_profile_default_bio),
-                                                    style = MaterialTheme.typography.bodyMedium.copy(
-                                                        color = Color.White.copy(alpha = 0.8f),
-                                                        textAlign = TextAlign.Center
-                                                    ),
-                                                    modifier = Modifier.padding(horizontal = 16.dp)
-                                                )
-
-                                                Spacer(modifier = Modifier.height(20.dp))
-
-                                                TastyButton(
-                                                    text = stringResource(Res.string.my_profile_edit_button),
-                                                    onClick = { navigator.push(EditProfileScreen()) },
-                                                    modifier = Modifier.fillMaxWidth(),
-                                                    isPrimary = true,
-                                                    isLoading = profileState.isActionLoading,
-                                                    backcolor = customColors.gourmetOrange,
-                                                    textcolor = Color.White,
-                                                    strokecolor = Color.Transparent
-                                                )
                                             }
                                         }
                                     }
-                                    Spacer(modifier = Modifier.height(16.dp))
                                 }
                             }
-
-                            // 2. METRİK KARTLAR (3 Sütunu Kaplar)
-                            item(span = { GridItemSpan(maxLineSpan) }) {
-                                Column {
-                                    Box(
-                                        modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp),
-                                        contentAlignment = Alignment.Center
-                                    ) {
-                                        Row(
-                                            modifier = Modifier.widthIn(max = 600.dp),
-                                            horizontalArrangement = Arrangement.spacedBy(12.dp)
-                                        ) {
-                                            MetricCard(
-                                                title = stringResource(Res.string.my_profile_metric_posts),
-                                                value = (profileState.profile?.postCount ?: 0).toString(),
-                                                onClick = {},
-                                                modifier = Modifier.weight(1f),
-                                                cardColor = customColors.surfaceVariant
-                                            )
-                                            MetricCard(
-                                                title = stringResource(Res.string.my_profile_metric_subscribers),
-                                                value = (profileState.profile?.subscriberCount ?: 0).toString(),
-                                                onClick = {
-                                                    profileState.profile?.userId?.let { userId ->
-                                                        navigator.push(SubscribersListScreen(userId = userId, initialTab = SubscriberListType.SUBSCRIBERS))
-                                                    }
-                                                },
-                                                modifier = Modifier.weight(1f),
-                                                cardColor = customColors.surfaceVariant
-                                            )
-                                            MetricCard(
-                                                title = stringResource(Res.string.my_profile_metric_following),
-                                                value = (profileState.profile?.subscribedCount ?: 0).toString(),
-                                                onClick = {
-                                                    profileState.profile?.userId?.let { userId ->
-                                                        navigator.push(SubscribersListScreen(userId = userId, initialTab = SubscriberListType.SUBSCRIBES))
-                                                    }
-                                                },
-                                                modifier = Modifier.weight(1f),
-                                                cardColor = customColors.surfaceVariant
-                                            )
-                                        }
-                                    }
-                                    Spacer(modifier = Modifier.height(16.dp))
-                                }
-                            }
-
-                            // 3. SEKMELER (3 Sütunu Kaplar)
-                            item(span = { GridItemSpan(maxLineSpan) }) {
-                                Column {
-                                    Box(
-                                        modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp),
-                                        contentAlignment = Alignment.Center
-                                    ) {
+                        } else {
+                            LazyVerticalGrid(
+                                columns = GridCells.Fixed(3),
+                                state = gridState,
+                                modifier = Modifier.fillMaxSize(),
+                                horizontalArrangement = Arrangement.spacedBy(2.dp),
+                                verticalArrangement = Arrangement.spacedBy(2.dp)
+                            ) {
+                                item(span = { GridItemSpan(maxLineSpan) }) {
+                                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                         Surface(
-                                            color = customColors.surfaceVariant,
-                                            shape = RoundedCornerShape(12.dp),
-                                            modifier = Modifier.widthIn(max = 600.dp)
+                                            color = customColors.darkHeaderColor,
+                                            shape = RoundedCornerShape(bottomStart = 28.dp, bottomEnd = 28.dp),
+                                            modifier = Modifier.fillMaxWidth()
                                         ) {
-                                            Row(modifier = Modifier.padding(4.dp)) {
-                                                TabButton(
-                                                    text = stringResource(Res.string.my_profile_tab_posts),
-                                                    icon = Icons.Default.GridOn,
-                                                    isSelected = selectedTab == 0,
-                                                    onClick = { selectedTab = 0 },
+                                            Box(
+                                                modifier = Modifier.fillMaxWidth(),
+                                                contentAlignment = Alignment.Center
+                                            ) {
+                                                Column(
+                                                    modifier = Modifier
+                                                        .widthIn(max = 600.dp)
+                                                        .padding(horizontal = 20.dp, vertical = 20.dp),
+                                                    horizontalAlignment = Alignment.CenterHorizontally
+                                                ) {
+                                                    Box(contentAlignment = Alignment.BottomEnd) {
+                                                        Box(
+                                                            modifier = Modifier
+                                                                .size(92.dp)
+                                                                .clip(CircleShape)
+                                                                .border(3.dp, customColors.gourmetOrange, CircleShape)
+                                                                .background(customColors.placeHolderBack)
+                                                                .pointerInput(Unit) {
+                                                                    detectTapGestures(onLongPress = { isPhotoZoomed = true })
+                                                                },
+                                                            contentAlignment = Alignment.Center
+                                                        ) {
+                                                            if (!profile?.profilePhoto.isNullOrBlank()) {
+                                                                AsyncImage(
+                                                                    model = profile.profilePhoto,
+                                                                    contentDescription = stringResource(Res.string.my_profile_photo_cd),
+                                                                    modifier = Modifier.fillMaxSize().clip(CircleShape),
+                                                                    contentScale = ContentScale.Crop
+                                                                )
+                                                            } else {
+                                                                Icon(
+                                                                    imageVector = Icons.Default.Person,
+                                                                    contentDescription = stringResource(Res.string.my_profile_default_photo_cd),
+                                                                    tint = customColors.placeHolderIcon,
+                                                                    modifier = Modifier.size(48.dp)
+                                                                )
+                                                            }
+                                                        }
+
+                                                        profile?.role?.let { role ->
+                                                            Surface(
+                                                                color = customColors.gourmetOrange,
+                                                                shape = RoundedCornerShape(6.dp),
+                                                                modifier = Modifier.offset(y = 4.dp)
+                                                            ) {
+                                                                Text(
+                                                                    text = role,
+                                                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
+                                                                    style = MaterialTheme.typography.labelSmall.copy(
+                                                                        color = Color.White,
+                                                                        fontWeight = FontWeight.Bold
+                                                                    )
+                                                                )
+                                                            }
+                                                        }
+                                                    }
+
+                                                    Spacer(modifier = Modifier.height(12.dp))
+
+                                                    Text(
+                                                        text = profile?.name
+                                                            ?: stringResource(Res.string.my_profile_default_name),
+                                                        style = MaterialTheme.typography.bodyLarge.copy(
+                                                            fontSize = 18.sp,
+                                                            color = Color.White,
+                                                            fontWeight = FontWeight.Bold
+                                                        )
+                                                    )
+
+                                                    Spacer(modifier = Modifier.height(4.dp))
+
+                                                    Text(
+                                                        text = profile?.biography
+                                                            ?: stringResource(Res.string.my_profile_default_bio),
+                                                        style = MaterialTheme.typography.bodyMedium.copy(
+                                                            color = Color.White.copy(alpha = 0.8f),
+                                                            textAlign = TextAlign.Center
+                                                        ),
+                                                        modifier = Modifier.padding(horizontal = 16.dp)
+                                                    )
+
+                                                    Spacer(modifier = Modifier.height(20.dp))
+
+                                                    TastyButton(
+                                                        text = stringResource(Res.string.my_profile_edit_button),
+                                                        onClick = { navigator.push(EditProfileScreen()) },
+                                                        modifier = Modifier.fillMaxWidth(),
+                                                        isPrimary = true,
+                                                        isLoading = profileState.isActionLoading,
+                                                        backcolor = customColors.gourmetOrange,
+                                                        textcolor = Color.White,
+                                                        strokecolor = Color.Transparent
+                                                    )
+                                                }
+                                            }
+                                        }
+                                        Spacer(modifier = Modifier.height(16.dp))
+                                    }
+                                }
+
+                                // 2. METRİK KARTLAR (3 Sütunu Kaplar)
+                                item(span = { GridItemSpan(maxLineSpan) }) {
+                                    Column {
+                                        Box(
+                                            modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp),
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            Row(
+                                                modifier = Modifier.widthIn(max = 600.dp),
+                                                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                                            ) {
+                                                MetricCard(
+                                                    title = stringResource(Res.string.my_profile_metric_posts),
+                                                    value = (profile?.postCount ?: 0).toString(),
+                                                    onClick = {},
                                                     modifier = Modifier.weight(1f),
-                                                    activeColor = customColors.navy,
-                                                    accentColor = customColors.gourmetOrange
+                                                    cardColor = customColors.surfaceVariant
                                                 )
-                                                TabButton(
-                                                    text = stringResource(Res.string.my_profile_tab_map),
-                                                    icon = Icons.Default.Map,
-                                                    isSelected = selectedTab == 1,
-                                                    onClick = { selectedTab = 1 },
+                                                MetricCard(
+                                                    title = stringResource(Res.string.my_profile_metric_subscribers),
+                                                    value = (profile?.subscriberCount ?: 0).toString(),
+                                                    onClick = {
+                                                        profile?.userId?.let { userId ->
+                                                            navigator.push(SubscribersListScreen(userId = userId, initialTab = SubscriberListType.SUBSCRIBERS))
+                                                        }
+                                                    },
                                                     modifier = Modifier.weight(1f),
-                                                    activeColor = customColors.navy,
-                                                    accentColor = customColors.gourmetOrange
+                                                    cardColor = customColors.surfaceVariant
+                                                )
+                                                MetricCard(
+                                                    title = stringResource(Res.string.my_profile_metric_following),
+                                                    value = (profile?.subscribedCount ?: 0).toString(),
+                                                    onClick = {
+                                                        profile?.userId?.let { userId ->
+                                                            navigator.push(SubscribersListScreen(userId = userId, initialTab = SubscriberListType.SUBSCRIBES))
+                                                        }
+                                                    },
+                                                    modifier = Modifier.weight(1f),
+                                                    cardColor = customColors.surfaceVariant
                                                 )
                                             }
                                         }
+                                        Spacer(modifier = Modifier.height(16.dp))
                                     }
-                                    Spacer(modifier = Modifier.height(8.dp))
                                 }
-                            }
 
-                            // 4. İÇERİK BÖLÜMÜ (SEKMEYE GÖRE DEĞİŞİR)
-                            if (selectedTab == 0) {
-                                // --- POSTLAR SEKMESİ ---
-                                if (postState.items.isEmpty() && !postState.isLoading) {
-                                    // BOŞ DURUM (Empty State)
+                                item(span = { GridItemSpan(maxLineSpan) }) {
+                                    Column {
+                                        Box(
+                                            modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp),
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            Surface(
+                                                color = customColors.surfaceVariant,
+                                                shape = RoundedCornerShape(12.dp),
+                                                modifier = Modifier.widthIn(max = 600.dp)
+                                            ) {
+                                                Row(modifier = Modifier.padding(4.dp)) {
+                                                    TabButton(
+                                                        text = stringResource(Res.string.my_profile_tab_posts),
+                                                        icon = Icons.Default.GridOn,
+                                                        isSelected = selectedTab == 0,
+                                                        onClick = { selectedTab = 0 },
+                                                        modifier = Modifier.weight(1f),
+                                                        activeColor = customColors.navy,
+                                                        accentColor = customColors.gourmetOrange
+                                                    )
+                                                    TabButton(
+                                                        text = stringResource(Res.string.my_profile_tab_map),
+                                                        icon = Icons.Default.Map,
+                                                        isSelected = selectedTab == 1,
+                                                        onClick = { selectedTab = 1 },
+                                                        modifier = Modifier.weight(1f),
+                                                        activeColor = customColors.navy,
+                                                        accentColor = customColors.gourmetOrange
+                                                    )
+                                                }
+                                            }
+                                        }
+                                        Spacer(modifier = Modifier.height(8.dp))
+                                    }
+                                }
+
+                                // 4. İÇERİK BÖLÜMÜ (SEKMEYE GÖRE DEĞİŞİR)
+                                if (selectedTab == 0) {
+                                    // --- POSTLAR SEKMESİ ---
+                                    if (postState.isLoading && postState.items.isEmpty()) {
+                                        // 1. İLK YÜKLEME DURUMU (Yükleniyor)
+                                        item(span = { GridItemSpan(maxLineSpan) }) {
+                                            Box(
+                                                modifier = Modifier
+                                                    .fillMaxWidth()
+                                                    .padding(48.dp),
+                                                contentAlignment = Alignment.Center
+                                            ) {
+                                                CircularProgressIndicator(
+                                                    modifier = Modifier.size(32.dp),
+                                                    color = customColors.gourmetOrange,
+                                                    strokeWidth = 3.dp
+                                                )
+                                            }
+                                        }
+                                    } else if (postState.items.isEmpty()) {
+                                        // 2. BOŞ DURUM (Empty State)
+                                        item(span = { GridItemSpan(maxLineSpan) }) {
+                                            Box(
+                                                modifier = Modifier.fillMaxWidth().padding(32.dp),
+                                                contentAlignment = Alignment.Center
+                                            ) {
+                                                Text(
+                                                    text = stringResource(Res.string.my_profile_posts_empty),
+                                                    style = MaterialTheme.typography.bodyMedium.copy(color = customColors.textSecondary),
+                                                    textAlign = TextAlign.Center
+                                                )
+                                            }
+                                        }
+                                    } else {
+                                        // 3. 3'LÜ GRID POST LİSTESİ
+                                        items(
+                                            items = postState.items,
+                                            key = { post -> post.postId }
+                                        ) { post ->
+                                            PostGridItem(
+                                                post = post,
+                                                onClick = {
+                                                    navigator.push(PostDetailScreen(post.postId))
+                                                }
+                                            )
+                                        }
+
+                                        // 4. SAYFALAMA / DAHA FAZLA YÜKLENİYOR INDICATOR
+                                        if (postState.isLoadingMore) {
+                                            item(span = { GridItemSpan(maxLineSpan) }) {
+                                                Box(
+                                                    modifier = Modifier.fillMaxWidth().padding(16.dp),
+                                                    contentAlignment = Alignment.Center
+                                                ) {
+                                                    CircularProgressIndicator(
+                                                        modifier = Modifier.size(24.dp),
+                                                        color = customColors.gourmetOrange,
+                                                        strokeWidth = 2.dp
+                                                    )
+                                                }
+                                            }
+                                        }
+                                    }
+                                } else {
+                                    // --- HARİTA SEKMESİ ---
                                     item(span = { GridItemSpan(maxLineSpan) }) {
                                         Box(
                                             modifier = Modifier.fillMaxWidth().padding(32.dp),
                                             contentAlignment = Alignment.Center
                                         ) {
                                             Text(
-                                                text = stringResource(Res.string.my_profile_posts_empty),
+                                                text = stringResource(Res.string.my_profile_map_empty),
                                                 style = MaterialTheme.typography.bodyMedium.copy(color = customColors.textSecondary),
                                                 textAlign = TextAlign.Center
                                             )
                                         }
-                                    }
-                                } else {
-                                    // 3'LÜ GRID POST LISTESI
-                                    items(
-                                        items = postState.items,
-                                        key = { post -> post.postId }
-                                    ) { post ->
-                                        PostGridItem(
-                                            post = post,
-                                            onClick = {
-                                                // Post detayına gitme veya tıklama aksiyonu
-                                                // navigator.push(PostDetailScreen(post.postId))
-                                            }
-                                        )
-                                    }
-
-                                    // DAHA FAZLA YÜKLENİYOR (LOADING MORE INDICATOR)
-                                    if (postState.isLoadingMore) {
-                                        item(span = { GridItemSpan(maxLineSpan) }) {
-                                            Box(
-                                                modifier = Modifier.fillMaxWidth().padding(16.dp),
-                                                contentAlignment = Alignment.Center
-                                            ) {
-                                                CircularProgressIndicator(
-                                                    modifier = Modifier.size(24.dp),
-                                                    color = customColors.gourmetOrange,
-                                                    strokeWidth = 2.dp
-                                                )
-                                            }
-                                        }
-                                    }
-                                }
-                            } else {
-                                // --- HARİTA SEKMESİ ---
-                                item(span = { GridItemSpan(maxLineSpan) }) {
-                                    Box(
-                                        modifier = Modifier.fillMaxWidth().padding(32.dp),
-                                        contentAlignment = Alignment.Center
-                                    ) {
-                                        Text(
-                                            text = stringResource(Res.string.my_profile_map_empty),
-                                            style = MaterialTheme.typography.bodyMedium.copy(color = customColors.textSecondary),
-                                            textAlign = TextAlign.Center
-                                        )
                                     }
                                 }
                             }
@@ -545,7 +619,7 @@ private fun MetricCard(
 @Composable
 private fun TabButton(
     text: String,
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    icon: ImageVector,
     isSelected: Boolean,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
@@ -555,9 +629,10 @@ private fun TabButton(
     val customColors = LocalCustomColors.current
 
     Surface(
+        onClick = onClick,
         color = if (isSelected) activeColor else Color.Transparent,
         shape = RoundedCornerShape(10.dp),
-        modifier = modifier.clickable { onClick() }
+        modifier = modifier
     ) {
         Row(
             modifier = Modifier.padding(vertical = 8.dp),
@@ -589,11 +664,10 @@ private fun PostGridItem(
 
     Box(
         modifier = modifier
-            .aspectRatio(1f) // 1:1 Kare Oran
+            .aspectRatio(1f)
             .background(customColors.surfaceVariant)
-            .clickable { onClick() }
+            .clickable(onClick = onClick)
     ) {
-        // Post Fotoğrafı
         AsyncImage(
             model = post.photoUrl,
             contentDescription = null,
@@ -601,23 +675,20 @@ private fun PostGridItem(
             contentScale = ContentScale.Crop
         )
 
-        // Eğer Post Sabitlenmişse (Pin Icon)
         if (post.isPinned) {
             Box(
                 modifier = Modifier
-                    .align(Alignment.TopEnd)
-                    .padding(4.dp)
-                    .background(
-                        color = Color.Black.copy(alpha = 0.6f),
-                        shape = CircleShape
-                    )
-                    .padding(4.dp)
+                    .align(alignment = Alignment.TopEnd)
+                    .size(30.dp) // Yuvarlağın toplam boyutu
+                    .clip(CircleShape)
+                    .background(Color.Gray.copy(alpha = 0.7f)), // Yarı şeffaf gri arka plan
+                contentAlignment = Alignment.Center
             ) {
                 Icon(
                     imageVector = Icons.Default.PushPin,
                     contentDescription = "Pinned",
-                    tint = customColors.gourmetOrange,
-                    modifier = Modifier.size(12.dp)
+                    tint = Color.White,
+                    modifier = Modifier.size(20.dp) // İçerideki ikonun boyutu
                 )
             }
         }

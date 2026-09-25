@@ -68,16 +68,13 @@ class VisitRepository(
     }
 
     suspend fun getPagedVisits(page: Int): ResultWrapper<PageResponse<VisitResponse>> {
-        val cachedPage = memoryCache.get(page)
-        if (cachedPage != null) {
-            return ResultWrapper.Success(cachedPage)
-        }
-
         val result = safeApiCall {
             dataSource.getVisit(page = page, size = 20)
         }
         if (result is ResultWrapper.Success) {
-            memoryCache.put(page, result.data)
+            result.data.content.forEach { visit ->
+                localDataSource.saveVisitLocal(visit)
+            }
         }
         return result
     }

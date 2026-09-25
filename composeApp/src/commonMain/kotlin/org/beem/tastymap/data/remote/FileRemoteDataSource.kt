@@ -11,6 +11,7 @@ import io.ktor.client.request.setBody
 import io.ktor.http.Headers
 import io.ktor.http.HttpHeaders
 import org.beem.tastymap.core.network.AuthHttpClientManager
+import org.beem.tastymap.core.util.ImageCompressor
 import org.beem.tastymap.data.model.file.FileUploadResponse
 import org.beem.tastymap.data.model.file.MultipleFileUploadResponse
 
@@ -19,13 +20,21 @@ class FileRemoteDataSource(private val authHttpClientManager: AuthHttpClientMana
         get() = authHttpClientManager.getClient()
 
     suspend fun uploadFile(file: PlatformFile, type: String = "profiles"): FileUploadResponse {
-        val bytes = file.readBytes()
+        val rawBytes = file.readBytes()
+
+        val compressedBytes = ImageCompressor.compress(
+            bytes = rawBytes,
+            maxWidth = 1024,
+            maxHeight = 1024,
+            quality = 75
+        )
+
         val fileName = file.name
 
         return client.submitFormWithBinaryData(
             url = "api/v1/files/upload/$type",
             formData = formData {
-                append("file", bytes, Headers.build {
+                append("file", compressedBytes, Headers.build {
                     append(HttpHeaders.ContentType, "image/jpeg")
                     append(HttpHeaders.ContentDisposition, "filename=\"$fileName\"")
                 })

@@ -11,19 +11,9 @@ import kotlinx.coroutines.launch
 import org.beem.tastymap.core.network.ResultWrapper
 import org.beem.tastymap.data.repository.PostRepository
 
+
 class PostScreenModel(
-    private val postRepository: PostRepository,
-): ScreenModel {
-
-    private val pageSize = 12
-    private val _uiState = MutableStateFlow(PostListUiState())
-    val uiState = _uiState.asStateFlow()
-
-
-
-    class PostScreenModel(
-        private val postRepository: PostRepository
-    ) : ScreenModel {
+        private val postRepository: PostRepository) : ScreenModel {
 
         private val pageSize = 12
         private val _uiState = MutableStateFlow(PostListUiState())
@@ -103,6 +93,5 @@ class PostScreenModel(
                 }
             }
         }
-    }
 
 }

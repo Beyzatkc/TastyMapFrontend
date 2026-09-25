@@ -23,6 +23,7 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.ErrorOutline
 import androidx.compose.material.icons.filled.PhotoLibrary
 import androidx.compose.material.icons.filled.Place
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.rounded.CheckCircle
 import androidx.compose.material.icons.rounded.ChevronRight
 import androidx.compose.material.icons.rounded.KeyboardArrowDown
@@ -34,6 +35,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import cafe.adriel.voyager.core.screen.Screen
@@ -57,17 +59,22 @@ import org.jetbrains.compose.resources.stringResource
 import tastymap.composeapp.generated.resources.Res
 import tastymap.composeapp.generated.resources.add_photo
 import tastymap.composeapp.generated.resources.allow_comments
+import tastymap.composeapp.generated.resources.camera
 import tastymap.composeapp.generated.resources.change
 import tastymap.composeapp.generated.resources.comments
 import tastymap.composeapp.generated.resources.create_post_title
 import tastymap.composeapp.generated.resources.no_saved_visits
+import tastymap.composeapp.generated.resources.notification_retry
 import tastymap.composeapp.generated.resources.place_about_placeholder
 import tastymap.composeapp.generated.resources.post_description_hint
+import tastymap.composeapp.generated.resources.profile_action_reject
+import tastymap.composeapp.generated.resources.select_photo_source
 import tastymap.composeapp.generated.resources.select_place
 import tastymap.composeapp.generated.resources.select_visit_to_share
 import tastymap.composeapp.generated.resources.selected_place
 import tastymap.composeapp.generated.resources.share_post
 import tastymap.composeapp.generated.resources.tap_to_upload_photo
+import tastymap.composeapp.generated.resources.verify_error_default
 import tastymap.composeapp.generated.resources.your_visits
 
 class CreatePostScreen : Screen {
@@ -86,7 +93,6 @@ class CreatePostScreen : Screen {
         var explanation by remember { mutableStateOf("") }
         var commentEnabled by remember { mutableStateOf(true) }
 
-        // BottomSheet State'i
         var showVisitSheet by remember { mutableStateOf(false) }
         var showImagePickerSheet by remember { mutableStateOf(false) }
 
@@ -221,7 +227,6 @@ class CreatePostScreen : Screen {
                         showVisitSheet = true
                     }
                 )
-
 
                 AnimatedVisibility(
                     visible = selectedVisit != null,
@@ -382,22 +387,17 @@ class CreatePostScreen : Screen {
         }
 
         if (showVisitSheet) {
-
             ModalBottomSheet(
-                onDismissRequest = {
-                    showVisitSheet = false
-                },
+                onDismissRequest = { showVisitSheet = false },
                 containerColor = customColors.background,
                 dragHandle = { BottomSheetDefaults.DragHandle() }
             ) {
-
                 Column(
                     modifier = Modifier
                         .fillMaxHeight(0.75f)
                         .fillMaxWidth()
                         .padding(horizontal = 20.dp)
                 ) {
-
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -413,14 +413,13 @@ class CreatePostScreen : Screen {
                         Spacer(modifier = Modifier.height(4.dp))
 
                         Text(
-                            text = "Gönderi paylaşmak istediğin mekanı seç",
+                            text = stringResource(Res.string.select_visit_to_share),
                             style = MaterialTheme.typography.bodyMedium,
                             color = customColors.textSecondary
                         )
                     }
 
                     when {
-                        // 1. Yükleniyor Durumu
                         uiState.isVisitsLoading -> {
                             Box(
                                 modifier = Modifier
@@ -432,7 +431,56 @@ class CreatePostScreen : Screen {
                             }
                         }
 
-                        // 2. Boş Liste Durumu
+                        uiState.generalError != null -> {
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .weight(1f),
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.Center
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.ErrorOutline,
+                                    contentDescription = null,
+                                    tint = customColors.error,
+                                    modifier = Modifier.size(48.dp)
+                                )
+
+                                Spacer(modifier = Modifier.height(12.dp))
+
+                                Text(
+                                    text = uiState.generalError ?: stringResource(Res.string.verify_error_default),
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = customColors.textSecondary,
+                                    textAlign = TextAlign.Center,
+                                    modifier = Modifier.padding(horizontal = 24.dp)
+                                )
+
+                                Spacer(modifier = Modifier.height(16.dp))
+
+                                FilledTonalButton(
+                                    onClick = { screenModel.loadInitialVisits() },
+                                    colors = ButtonDefaults.filledTonalButtonColors(
+                                        containerColor = customColors.surfaceVariant,
+                                        contentColor = customColors.textPrimary
+                                    ),
+                                    contentPadding = PaddingValues(horizontal = 20.dp, vertical = 10.dp)
+                                ) {
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Icon(
+                                            imageVector = Icons.Default.Refresh,
+                                            contentDescription = null,
+                                            modifier = Modifier.size(18.dp)
+                                        )
+                                        Spacer(modifier = Modifier.width(8.dp))
+                                        Text(
+                                            text = stringResource(Res.string.notification_retry),
+                                            style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold)
+                                        )
+                                    }
+                                }
+                            }
+                        }
                         uiState.visits.isEmpty() -> {
                             Box(
                                 modifier = Modifier
@@ -447,8 +495,6 @@ class CreatePostScreen : Screen {
                                 )
                             }
                         }
-
-                        // 3. Kart Tasarımlı Liste
                         else -> {
                             LazyColumn(
                                 modifier = Modifier.weight(1f),
@@ -457,7 +503,6 @@ class CreatePostScreen : Screen {
                             ) {
                                 itemsIndexed(uiState.visits) { index, visit ->
 
-                                    // Pagination Tetikleyici
                                     if (index >= uiState.visits.size - 2) {
                                         LaunchedEffect(Unit) {
                                             screenModel.loadMoreVisits()
@@ -466,7 +511,6 @@ class CreatePostScreen : Screen {
 
                                     val isSelected = selectedVisit?.visitId == visit.visitId
 
-                                    // Özel Tasarlanmış Kart Öğesi
                                     VisitListItemCard(
                                         visit = visit,
                                         isSelected = isSelected,
@@ -478,7 +522,6 @@ class CreatePostScreen : Screen {
                                     )
                                 }
 
-                                // Load More Progress Indicator
                                 if (uiState.isLoadingMoreVisits) {
                                     item {
                                         Box(
@@ -496,7 +539,6 @@ class CreatePostScreen : Screen {
                                     }
                                 }
 
-                                // Load More Error State
                                 if (uiState.loadMoreError != null) {
                                     item {
                                         Column(
@@ -511,7 +553,7 @@ class CreatePostScreen : Screen {
                                                 color = customColors.error
                                             )
                                             TextButton(onClick = { screenModel.loadMoreVisits() }) {
-                                                Text("Tekrar Dene", color = customColors.navy)
+                                                Text(stringResource(Res.string.notification_retry), color = customColors.navy)
                                             }
                                         }
                                     }
@@ -537,7 +579,7 @@ class CreatePostScreen : Screen {
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Text(
-                        text = "Fotoğraf Ekle", // stringResource(Res.string.add_photo_title)
+                        text = stringResource(Res.string.add_photo),
                         style = MaterialTheme.typography.titleLarge,
                         color = customColors.textPrimary
                     )
@@ -545,7 +587,7 @@ class CreatePostScreen : Screen {
                     Spacer(modifier = Modifier.height(8.dp))
 
                     Text(
-                        text = "Gönderin için bir fotoğraf kaynağı seçin",
+                        text = stringResource(Res.string.select_photo_source),
                         style = MaterialTheme.typography.bodyMedium,
                         color = customColors.textSecondary
                     )
@@ -556,10 +598,9 @@ class CreatePostScreen : Screen {
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceEvenly
                     ) {
-                        // Kamera Seçeneği
                         ImagePickerOptionCard(
                             icon = Icons.Default.CameraAlt,
-                            title = "Kamera",
+                            title = stringResource(Res.string.camera),
                             customColors = customColors,
                             onClick = {
                                 showImagePickerSheet = false
@@ -582,9 +623,6 @@ class CreatePostScreen : Screen {
     }
 }
 
-// --------------------------------------------------
-// ALT BİLEŞENLER
-// --------------------------------------------------
 
 @Composable
 private fun ImagePickerOptionCard(
@@ -862,7 +900,7 @@ fun PhotoUploadArea(
                     ) {
                         Icon(
                             imageVector = Icons.Default.Close,
-                            contentDescription = "Sil",
+                            contentDescription = stringResource(Res.string.profile_action_reject),
                             tint = Color.White,
                             modifier = Modifier.size(16.dp)
                         )

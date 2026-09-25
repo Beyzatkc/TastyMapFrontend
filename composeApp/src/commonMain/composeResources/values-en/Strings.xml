@@ -535,4 +535,27 @@
     <string name="error_photo_empty">Photo cannot be empty!</string>
     <string name="error_explanation_limit">The description can be up to 500 characters.</string>
     <string name="error_photo_max_limit">You can select a maximum of 3 photos.</string>
+
+    <string name="select_photo_source">Choose a photo source for your post</string>
+    <string name="camera">camera</string>
+    <string name="gallery">gallery</string>
+    <string name="add_photo_count">Add Photo\n(%1$d/3)</string>
+    <string name="profile_private_account_message">This account is private. Follow to see their posts.</string>
+
+    <string name="post">Post</string>
+    <string name="options">Options</string>
+    <string name="unpin_post">Unpin</string>
+    <string name="pin_post">Pin</string>
+    <string name="delete_post">Delete Post</string>
+    <string name="view_all_comments">View all %1$d comments</string>
+    <string name="be_first_to_comment">Be the first to comment...</string>
+    <string name="deleting_post">Deleting post...</string>
+
+    <string name="delete_post_title">Delete post?</string>
+    <string name="delete_post_message">Are you sure you want to delete this post? This action cannot be undone.</string>
+    <string name="delete">Delete</string>
+
+    <string name="like">Like</string>
+    <string name="comment">Comment</string>
+
 </resources>

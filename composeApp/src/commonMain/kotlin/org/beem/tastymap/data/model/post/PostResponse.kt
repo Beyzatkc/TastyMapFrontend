@@ -16,14 +16,11 @@ data class PostResponse(
     @SerialName("explanation")
     val explanation: String? = null,
 
-    @SerialName("point")
-    val point: Int = 0,
-
     @SerialName("photoUrl")
     val photoUrls: List<String>,
 
-    @SerialName("numberof_likes")
-    val numberOfLikes: Int = 0,
+    @SerialName("likeCount")
+    val likeCount: Int = 0,
 
     @SerialName("createdAt")
     val createdAt: String,
@@ -67,13 +64,13 @@ data class PostResponse(
     @SerialName("averagePoint")
     val averagePoint: Double = 0.0,
 
-    @SerialName("isLiked")
+    @SerialName("liked")
     val isLiked: Boolean = false,
 
     @SerialName("commentCount")
     val commentCount: Int = 0,
 
-    @SerialName("isPinned")
+    @SerialName("pinned")
     val isPinned: Boolean = false
 )
 @Serializable
@@ -87,6 +84,7 @@ data class PostAndVisitRequest(
     override val latitude: Double,
     override val longitude: Double,
     override val averagePoint: Double? = null,
+    @SerialName("wantToPost")
     override val isWantToPost: Boolean = false,
 
     val explanation: String? = null,
@@ -105,11 +103,11 @@ data class PostUpdateRequest(
 
 @Serializable
 data class PostLikeResponse(
-    @SerialName("isLiked")
+    @SerialName("liked")
     val liked: Boolean,
 
-    @SerialName("likeCount")
-    val totalLikes: Int
+    @SerialName("totalLikes")
+    val totalLikes: Long = 0L
 )
 
 @Serializable
@@ -129,6 +127,7 @@ data class PostLikeUserResponse(
 data class PostGridResponse(
     val postId: Long,
     val photoUrl: String,
+    val createdAt: String,
     @SerialName("isPinned")
     val isPinned: Boolean
 )

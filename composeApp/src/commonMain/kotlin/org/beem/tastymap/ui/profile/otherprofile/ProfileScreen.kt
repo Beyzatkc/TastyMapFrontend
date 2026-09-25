@@ -1,13 +1,21 @@
 package org.beem.tastymap.ui.profile.otherprofile
 
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.Crossfade
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.grid.GridItemSpan
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -17,6 +25,8 @@ import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Map
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.PushPin
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.*
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
@@ -40,18 +50,22 @@ import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import coil3.compose.AsyncImage
 import org.beem.tastymap.core.util.ToastManager
+import org.beem.tastymap.data.model.post.PostGridResponse
 import org.beem.tastymap.domain.model.RelationStatus
 import org.beem.tastymap.ui.animations.shimmerEffect
 import org.beem.tastymap.ui.components.DialogConfig
 import org.beem.tastymap.ui.components.TastyButton
 import org.beem.tastymap.ui.components.TastyConfirmDialog
+import org.beem.tastymap.ui.post.detail.PostDetailScreen
+import org.beem.tastymap.ui.post.otherpost.PostScreenModel
 import org.beem.tastymap.ui.profile.subscribers.SubscriberListType
 import org.beem.tastymap.ui.profile.subscribers.SubscribersListScreen
 import org.beem.tastymap.ui.theme.LocalCustomColors
-import org.jetbrains.compose.resources.getString
 import org.jetbrains.compose.resources.stringResource
 import org.koin.core.parameter.parametersOf
 import tastymap.composeapp.generated.resources.Res
+import tastymap.composeapp.generated.resources.active_devices_retry
+import tastymap.composeapp.generated.resources.active_devices_retry_cd
 import tastymap.composeapp.generated.resources.dialog_block_message
 import tastymap.composeapp.generated.resources.dialog_block_title
 import tastymap.composeapp.generated.resources.dialog_remove_follower_message
@@ -60,6 +74,7 @@ import tastymap.composeapp.generated.resources.dialog_unblock_message
 import tastymap.composeapp.generated.resources.dialog_unblock_title
 import tastymap.composeapp.generated.resources.dialog_unfollow_message
 import tastymap.composeapp.generated.resources.dialog_unfollow_title
+import tastymap.composeapp.generated.resources.my_profile_posts_empty
 import tastymap.composeapp.generated.resources.profile_action_accept
 import tastymap.composeapp.generated.resources.profile_action_block
 import tastymap.composeapp.generated.resources.profile_action_reject
@@ -80,6 +95,7 @@ import tastymap.composeapp.generated.resources.profile_metric_subscribers
 import tastymap.composeapp.generated.resources.profile_pending
 import tastymap.composeapp.generated.resources.profile_photo_cd
 import tastymap.composeapp.generated.resources.profile_posts_empty
+import tastymap.composeapp.generated.resources.profile_private_account_message
 import tastymap.composeapp.generated.resources.profile_subscribe
 import tastymap.composeapp.generated.resources.profile_subscribed
 import tastymap.composeapp.generated.resources.profile_tab_posts
@@ -92,9 +108,13 @@ class ProfileScreen(private val userId: Long) : Screen {
     @Composable
     override fun Content() {
         val screenModel = koinScreenModel<ProfileScreenModel> { parametersOf(userId) }
+        val postScreenModel = koinScreenModel<PostScreenModel>()
         val state by screenModel.profileState.collectAsState()
         val navigator = LocalNavigator.currentOrThrow
         var isPhotoZoomed by remember { mutableStateOf(false) }
+
+        val postState by postScreenModel.uiState.collectAsState()
+        val gridState = rememberLazyGridState()
 
         var showBottomSheet by remember { mutableStateOf(false) }
         var activeDialog by remember { mutableStateOf<DialogConfig?>(null) }
@@ -125,6 +145,24 @@ class ProfileScreen(private val userId: Long) : Screen {
                 screenModel.clearError()
             }
         }
+        LaunchedEffect(Unit){
+            postScreenModel.loadInitialData(userId)
+        }
+
+        val shouldLoadMore = remember {
+            derivedStateOf {
+                val totalItemsCount = gridState.layoutInfo.totalItemsCount
+                val lastVisibleItemIndex = gridState.layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: 0
+                lastVisibleItemIndex >= totalItemsCount - 3
+            }
+        }
+
+        LaunchedEffect(shouldLoadMore.value) {
+            if (shouldLoadMore.value && selectedTab == 0) {
+                postScreenModel.loadNextPage(userId)
+            }
+        }
+
         val isInitialLoading = state.isLoading && state.profile == null
 
         Crossfade(
@@ -132,11 +170,10 @@ class ProfileScreen(private val userId: Long) : Screen {
             label = "ProfileFullScreenLoading"
         ) { loading ->
             if (loading) {
-                // 1. TAM EKRAN YÜKLEME (Scaffold ve TopBar bu aşamada çizilmez)
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
-                        .background(customColors.placeHolderBack),
+                        .background(customColors.background),
                     contentAlignment = Alignment.Center
                 ) {
                     CircularProgressIndicator(color = customColors.gourmetOrange)
@@ -196,358 +233,432 @@ class ProfileScreen(private val userId: Long) : Screen {
                         }
                     ) {
                         val profile = state.profile
-                        println("PROFILE_UI_DEBUG -> User: ${profile?.username}, hasPending: ${profile?.hasPendingIncomingRequest}, status: ${profile?.relationStatus}")
-                        val isBlocked = profile?.blockedByMe == true || profile?.blockedMe == true
 
-                        LazyColumn(
-                            modifier = Modifier.fillMaxSize(),
-                            horizontalAlignment = Alignment.CenterHorizontally
-                        ) {
-                            // 1. Üst Kart Bilgileri
-                            item {
-                                Surface(
-                                    color = customColors.darkHeaderColor,
-                                    shape = RoundedCornerShape(
-                                        bottomStart = 28.dp,
-                                        bottomEnd = 28.dp
-                                    ),
-                                    modifier = Modifier.fillMaxWidth()
+                        if (profile == null && !state.isLoading && state.errorMessage !=null && state.isRefreshing) {
+                            Box(
+                                modifier = Modifier.fillMaxSize(),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                FilledTonalButton(
+                                    onClick = { screenModel.refreshProfile() },
+                                    enabled = !state.isLoading,
+                                    modifier = Modifier.height(48.dp),
+                                    colors = ButtonDefaults.filledTonalButtonColors(
+                                        containerColor = customColors.surfaceVariant,
+                                        contentColor = customColors.textPrimary
+                                    )
                                 ) {
-                                    Box(
-                                        modifier = Modifier.fillMaxWidth(),
-                                        contentAlignment = Alignment.Center
-                                    ) {
-                                        Column(
-                                            modifier = Modifier
-                                                .widthIn(max = 600.dp)
-                                                .padding(horizontal = 20.dp, vertical = 20.dp),
-                                            horizontalAlignment = Alignment.CenterHorizontally
+                                    AnimatedContent(
+                                        targetState = state.isLoading,
+                                        transitionSpec = { fadeIn() togetherWith fadeOut() },
+                                        label = "ButtonLoadingTransition"
+                                    ) { isLoading ->
+                                        if (isLoading) {
+                                            CircularProgressIndicator(
+                                                modifier = Modifier.size(24.dp),
+                                                strokeWidth = 2.5.dp,
+                                                color = customColors.textPrimary
+                                            )
+                                        } else {
+                                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                                Icon(
+                                                    imageVector = Icons.Default.Refresh,
+                                                    contentDescription = stringResource(Res.string.active_devices_retry_cd),
+                                                    modifier = Modifier.size(24.dp),
+                                                    tint = customColors.textPrimary
+                                                )
+                                                Spacer(modifier = Modifier.width(8.dp))
+                                                Text(
+                                                    text = stringResource(Res.string.active_devices_retry),
+                                                    style = MaterialTheme.typography.titleSmall.copy(
+                                                        fontWeight = FontWeight.Bold,
+                                                        color = customColors.textPrimary
+                                                    )
+                                                )
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        } else {
+                            val isBlocked = profile?.blockedByMe == true || profile?.blockedMe == true
+                            val isPrivateAndNotFollowing = profile?.privateProfile == true && profile.relationStatus != RelationStatus.FOLLOWING && profile.relationStatus != RelationStatus.SELF
+
+                            LazyVerticalGrid(
+                                columns = GridCells.Fixed(3),
+                                state = gridState,
+                                modifier = Modifier.fillMaxSize(),
+                                horizontalArrangement = Arrangement.spacedBy(2.dp),
+                                verticalArrangement = Arrangement.spacedBy(2.dp)
+                            ) {
+                                // 1. PROFİL HEADER BİLGİLERİ
+                                item(span = { GridItemSpan(maxLineSpan) }) {
+                                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                        Surface(
+                                            color = customColors.darkHeaderColor,
+                                            shape = RoundedCornerShape(bottomStart = 28.dp, bottomEnd = 28.dp),
+                                            modifier = Modifier.fillMaxWidth()
                                         ) {
-                                            // Profil Fotoğrafı
-                                            Box(contentAlignment = Alignment.BottomEnd) {
-                                                Box(
-                                                    modifier = Modifier
-                                                        .size(92.dp)
-                                                        .clip(CircleShape)
-                                                        .border(
-                                                            3.dp,
-                                                            customColors.gourmetOrange,
-                                                            CircleShape
-                                                        )
-                                                        .background(customColors.placeHolderBack)
-                                                        .pointerInput(Unit) {
-                                                            detectTapGestures(
-                                                                onLongPress = {
-                                                                    isPhotoZoomed = true
-                                                                }
-                                                            )
-                                                        },
-                                                    contentAlignment = Alignment.Center
-                                                ) {
-                                                    if (!profile?.profilePhoto.isNullOrBlank() && !isBlocked) {
-                                                        AsyncImage(
-                                                            model = profile?.profilePhoto,
-                                                            contentDescription = stringResource(Res.string.profile_photo_cd),
-                                                            modifier = Modifier
-                                                                .fillMaxSize()
-                                                                .clip(CircleShape),
-                                                            contentScale = ContentScale.Crop
-                                                        )
-                                                    } else {
-                                                        Icon(
-                                                            imageVector = Icons.Default.Person,
-                                                            contentDescription = stringResource(Res.string.profile_default_photo_cd),
-                                                            tint = customColors.placeHolderIcon,
-                                                            modifier = Modifier.size(48.dp)
-                                                        )
-                                                    }
-                                                }
-
-                                                profile?.role?.let { role ->
-                                                    Surface(
-                                                        color = customColors.gourmetOrange,
-                                                        shape = RoundedCornerShape(6.dp),
-                                                        modifier = Modifier.offset(y = 4.dp)
-                                                    ) {
-                                                        Text(
-                                                            text = role,
-                                                            modifier = Modifier.padding(
-                                                                horizontal = 8.dp,
-                                                                vertical = 2.dp
-                                                            ),
-                                                            style = MaterialTheme.typography.labelSmall.copy(
-                                                                color = Color.White,
-                                                                fontWeight = FontWeight.Bold
-                                                            )
-                                                        )
-                                                    }
-                                                }
-                                            }
-
-                                            Spacer(modifier = Modifier.height(12.dp))
-
-                                            Text(
-                                                text = profile?.name?.trim()
-                                                    .takeIf { !it.isNullOrBlank() }
-                                                    ?: stringResource(Res.string.profile_default_name),
-                                                style = MaterialTheme.typography.bodyLarge.copy(
-                                                    fontSize = 18.sp,
-                                                    color = Color.White,
-                                                    fontWeight = FontWeight.Bold
-                                                )
-                                            )
-
-                                            Spacer(modifier = Modifier.height(4.dp))
-
-                                            Text(
-                                                text = profile?.biography
-                                                    ?: stringResource(Res.string.profile_default_bio),
-
-                                                style = MaterialTheme.typography.bodyMedium.copy(
-                                                    color = Color.White.copy(alpha = 0.8f),
-                                                    textAlign = TextAlign.Center
-                                                ),
-                                                modifier = Modifier.padding(horizontal = 16.dp)
-                                            )
-
-                                            Spacer(modifier = Modifier.height(20.dp))
-
-                                            if (profile?.hasPendingIncomingRequest == true) {
-                                                println("PROFILE_UI_DEBUG -> IncomingRequestCard CİZİLİYOR!")
-                                                IncomingRequestCard(
-                                                    username = profile.username,
-                                                    isLoading = state.isActionLoading,
-                                                    onAcceptClick = {
-                                                        screenModel.acceptRequest(userId)
-                                                    },
-                                                    onRejectClick = {
-                                                        screenModel.rejectRequest(userId)
-                                                    }
-                                                )
-                                            }
-                                            Row(
+                                            Box(
                                                 modifier = Modifier.fillMaxWidth(),
-                                                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                                                verticalAlignment = Alignment.CenterVertically
+                                                contentAlignment = Alignment.Center
                                             ) {
-                                                Box(modifier = Modifier.weight(1f)) {
-                                                    if (!isBlocked) {
-                                                        ProfileActionButton(
-                                                            relationStatus = profile?.relationStatus
-                                                                ?: RelationStatus.NOT_FOLLOWING,
-                                                            isLoading = state.isActionLoading,
-                                                            onActionClick = { status ->
-                                                                if (status == RelationStatus.FOLLOWING) {
-                                                                    activeDialog = DialogConfig(
-                                                                        title = unfollowTitle,
-                                                                        message = unfollowMessage,
-                                                                        confirmText = unfollowConfirm,
-                                                                        isDestructive = false,
-                                                                        onConfirm = {
-                                                                            screenModel.handleFollowAction(
-                                                                                userId,
-                                                                                status
-                                                                            )
-                                                                        }
-                                                                    )
-                                                                } else {
-                                                                    screenModel.handleFollowAction(
-                                                                        userId,
-                                                                        status
-                                                                    )
-                                                                }
+                                                Column(
+                                                    modifier = Modifier
+                                                        .widthIn(max = 600.dp)
+                                                        .padding(horizontal = 20.dp, vertical = 20.dp),
+                                                    horizontalAlignment = Alignment.CenterHorizontally
+                                                ) {
+                                                    // Profil Fotoğrafı
+                                                    Box(contentAlignment = Alignment.BottomEnd) {
+                                                        Box(
+                                                            modifier = Modifier
+                                                                .size(92.dp)
+                                                                .clip(CircleShape)
+                                                                .border(3.dp, customColors.gourmetOrange, CircleShape)
+                                                                .background(customColors.placeHolderBack)
+                                                                .pointerInput(Unit) {
+                                                                    detectTapGestures(onLongPress = { isPhotoZoomed = true })
+                                                                },
+                                                            contentAlignment = Alignment.Center
+                                                        ) {
+                                                            if (!profile?.profilePhoto.isNullOrBlank() && !isBlocked) {
+                                                                AsyncImage(
+                                                                    model = profile.profilePhoto,
+                                                                    contentDescription = stringResource(Res.string.profile_photo_cd),
+                                                                    modifier = Modifier.fillMaxSize().clip(CircleShape),
+                                                                    contentScale = ContentScale.Crop
+                                                                )
+                                                            } else {
+                                                                Icon(
+                                                                    imageVector = Icons.Default.Person,
+                                                                    contentDescription = stringResource(Res.string.profile_default_photo_cd),
+                                                                    tint = customColors.placeHolderIcon,
+                                                                    modifier = Modifier.size(48.dp)
+                                                                )
                                                             }
+                                                        }
+
+                                                        profile?.role?.let { role ->
+                                                            Surface(
+                                                                color = customColors.gourmetOrange,
+                                                                shape = RoundedCornerShape(6.dp),
+                                                                modifier = Modifier.offset(y = 4.dp)
+                                                            ) {
+                                                                Text(
+                                                                    text = role,
+                                                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
+                                                                    style = MaterialTheme.typography.labelSmall.copy(
+                                                                        color = Color.White,
+                                                                        fontWeight = FontWeight.Bold
+                                                                    )
+                                                                )
+                                                            }
+                                                        }
+                                                    }
+
+                                                    Spacer(modifier = Modifier.height(12.dp))
+
+                                                    Text(
+                                                        text = profile?.name?.trim().takeIf { !it.isNullOrBlank() }
+                                                            ?: stringResource(Res.string.profile_default_name),
+                                                        style = MaterialTheme.typography.bodyLarge.copy(
+                                                            fontSize = 18.sp,
+                                                            color = Color.White,
+                                                            fontWeight = FontWeight.Bold
                                                         )
-                                                    } else {
-                                                        BlockActionButton(
-                                                            blockedByMe = profile.blockedByMe
-                                                                ?: false,
-                                                            blockedMe = profile.blockedMe ?: false,
+                                                    )
+
+                                                    Spacer(modifier = Modifier.height(4.dp))
+
+                                                    Text(
+                                                        text = profile?.biography ?: stringResource(Res.string.profile_default_bio),
+                                                        style = MaterialTheme.typography.bodyMedium.copy(
+                                                            color = Color.White.copy(alpha = 0.8f),
+                                                            textAlign = TextAlign.Center
+                                                        ),
+                                                        modifier = Modifier.padding(horizontal = 16.dp)
+                                                    )
+
+                                                    Spacer(modifier = Modifier.height(20.dp))
+
+                                                    if (profile?.hasPendingIncomingRequest == true) {
+                                                        IncomingRequestCard(
+                                                            username = profile.username,
                                                             isLoading = state.isActionLoading,
-                                                            onActionClick = {
-                                                                val isBlockedByMe =
-                                                                    profile?.blockedByMe == true
-                                                                activeDialog = DialogConfig(
-                                                                    title = if (isBlockedByMe) unblockTitle else blockTitle,
-                                                                    message = if (isBlockedByMe) unblockMessage else blockMessage,
-                                                                    confirmText = if (isBlockedByMe) unblockConfirm else blockConfirm,
-                                                                    isDestructive = !isBlockedByMe,
-                                                                    onConfirm = {
-                                                                        screenModel.toggleBlockStatus(
-                                                                            userId
+                                                            onAcceptClick = { screenModel.acceptRequest(userId) },
+                                                            onRejectClick = { screenModel.rejectRequest(userId) }
+                                                        )
+                                                        Spacer(modifier = Modifier.height(12.dp))
+                                                    }
+
+                                                    Row(
+                                                        modifier = Modifier.fillMaxWidth(),
+                                                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                                        verticalAlignment = Alignment.CenterVertically
+                                                    ) {
+                                                        Box(modifier = Modifier.weight(1f)) {
+                                                            if (!isBlocked) {
+                                                                ProfileActionButton(
+                                                                    relationStatus = profile?.relationStatus ?: RelationStatus.NOT_FOLLOWING,
+                                                                    isLoading = state.isActionLoading,
+                                                                    onActionClick = { status ->
+                                                                        if (status == RelationStatus.FOLLOWING) {
+                                                                            activeDialog = DialogConfig(
+                                                                                title = unfollowTitle,
+                                                                                message = unfollowMessage,
+                                                                                confirmText = unfollowConfirm,
+                                                                                isDestructive = false,
+                                                                                onConfirm = { screenModel.handleFollowAction(userId, status) }
+                                                                            )
+                                                                        } else {
+                                                                            screenModel.handleFollowAction(userId, status)
+                                                                        }
+                                                                    }
+                                                                )
+                                                            } else {
+                                                                BlockActionButton(
+                                                                    blockedByMe = profile.blockedByMe ?: false,
+                                                                    blockedMe = profile.blockedMe ?: false,
+                                                                    isLoading = state.isActionLoading,
+                                                                    onActionClick = {
+                                                                        val isBlockedByMe = profile.blockedByMe == true
+                                                                        activeDialog = DialogConfig(
+                                                                            title = if (isBlockedByMe) unblockTitle else blockTitle,
+                                                                            message = if (isBlockedByMe) unblockMessage else blockMessage,
+                                                                            confirmText = if (isBlockedByMe) unblockConfirm else blockConfirm,
+                                                                            isDestructive = !isBlockedByMe,
+                                                                            onConfirm = { screenModel.toggleBlockStatus(userId) }
                                                                         )
                                                                     }
                                                                 )
                                                             }
-                                                        )
-                                                    }
-                                                }
+                                                        }
 
-                                                // 2. Yanındaki Paylaş Butonu
-                                                if (profile?.relationStatus != RelationStatus.SELF) {
-                                                    IconButton(
-                                                        onClick = { /* Profil paylaşma fonksiyonu */ },
-                                                        modifier = Modifier
-                                                            .size(48.dp) // TastyButton yüksekliği ile uyumlu
-                                                            .background(
-                                                                color = Color.White.copy(alpha = 0.15f),
-                                                                shape = RoundedCornerShape(12.dp)
-                                                            )
-                                                    ) {
-                                                        Icon(
-                                                            imageVector = Icons.Default.Share, // Android material icons altından Share ikonu
-                                                            contentDescription = "Profili Paylaş",
-                                                            tint = Color.White
-                                                        )
+                                                        if (profile?.relationStatus != RelationStatus.SELF) {
+                                                            IconButton(
+                                                                onClick = { /* Paylaş */ },
+                                                                modifier = Modifier
+                                                                    .size(48.dp)
+                                                                    .background(
+                                                                        color = Color.White.copy(alpha = 0.15f),
+                                                                        shape = RoundedCornerShape(12.dp)
+                                                                    )
+                                                            ) {
+                                                                Icon(
+                                                                    imageVector = Icons.Default.Share,
+                                                                    contentDescription = "Profili Paylaş",
+                                                                    tint = Color.White
+                                                                )
+                                                            }
+                                                        }
                                                     }
                                                 }
                                             }
                                         }
+                                        Spacer(modifier = Modifier.height(16.dp))
                                     }
                                 }
-                                Spacer(modifier = Modifier.height(16.dp))
-                            }
 
-                            item {
-                                Box(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(horizontal = 20.dp),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    val isClickable =
-                                        profile?.relationStatus == RelationStatus.FOLLOWING
-                                    Row(
-                                        modifier = Modifier.widthIn(max = 600.dp),
-                                        horizontalArrangement = Arrangement.spacedBy(12.dp)
-                                    ) {
-                                        MetricCard(
-                                            title = stringResource(Res.string.profile_metric_posts),
-                                            value = (profile?.postCount ?: 0).toString(),
-                                            enabled = isClickable,
-                                            onClick = {
-                                            },
-                                            modifier = Modifier.weight(1f),
-                                            cardColor = customColors.surfaceVariant
-                                        )
-                                        MetricCard(
-                                            title = stringResource(Res.string.profile_metric_subscribers),
-                                            value = (profile?.subscriberCount ?: 0).toString(),
-                                            enabled = isClickable,
-                                            onClick = {
-                                                state.profile?.userId?.let { userId ->
-                                                    navigator.push(
-                                                        SubscribersListScreen(
-                                                            userId = userId,
-                                                            initialTab = SubscriberListType.SUBSCRIBERS
-                                                        )
-                                                    )
-                                                }
-                                            },
-                                            modifier = Modifier.weight(1f),
-                                            cardColor = customColors.surfaceVariant
-                                        )
-                                        MetricCard(
-                                            title = stringResource(Res.string.profile_metric_following),
-                                            value = (profile?.subscribedCount ?: 0).toString(),
-                                            enabled = isClickable,
-                                            onClick = {
-                                                state.profile?.userId?.let { userId ->
-                                                    navigator.push(
-                                                        SubscribersListScreen(
-                                                            userId = userId,
-                                                            initialTab = SubscriberListType.SUBSCRIBES
-                                                        )
-                                                    )
-                                                }
-                                            },
-                                            modifier = Modifier.weight(1f),
-                                            cardColor = customColors.surfaceVariant
-                                        )
-                                    }
-                                }
-                                Spacer(modifier = Modifier.height(16.dp))
-                            }
-
-                            // 2. Metrik Kartlar (Engelli Değilse)
-                            if (!isBlocked) {
-                                item {
-                                    Box(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .padding(horizontal = 20.dp),
-                                        contentAlignment = Alignment.Center
-                                    ) {
-                                        Surface(
-                                            color = customColors.surfaceVariant,
-                                            shape = RoundedCornerShape(12.dp),
-                                            modifier = Modifier.widthIn(max = 600.dp)
+                                // 2. METRİK KARTLAR (3 Sütunu Kaplar)
+                                item(span = { GridItemSpan(maxLineSpan) }) {
+                                    Column {
+                                        Box(
+                                            modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp),
+                                            contentAlignment = Alignment.Center
                                         ) {
-                                            Row(modifier = Modifier.padding(4.dp)) {
-                                                TabButton(
-                                                    text = stringResource(Res.string.profile_tab_posts),
-                                                    icon = Icons.Default.GridOn,
-                                                    isSelected = selectedTab == 0,
-                                                    onClick = { selectedTab = 0 },
+                                            val isClickable = profile?.relationStatus == RelationStatus.FOLLOWING || profile?.relationStatus == RelationStatus.SELF
+                                            Row(
+                                                modifier = Modifier.widthIn(max = 600.dp),
+                                                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                                            ) {
+                                                MetricCard(
+                                                    title = stringResource(Res.string.profile_metric_posts),
+                                                    value = (profile?.postCount ?: 0).toString(),
+                                                    enabled = isClickable,
+                                                    onClick = {},
                                                     modifier = Modifier.weight(1f),
-                                                    activeColor = customColors.navy,
-                                                    accentColor = customColors.gourmetOrange
+                                                    cardColor = customColors.surfaceVariant
                                                 )
-                                                TabButton(
-                                                    text = stringResource(Res.string.profile_tab_taste_map),
-                                                    icon = Icons.Default.Map,
-                                                    isSelected = selectedTab == 1,
-                                                    onClick = { selectedTab = 1 },
+                                                MetricCard(
+                                                    title = stringResource(Res.string.profile_metric_subscribers),
+                                                    value = (profile?.subscriberCount ?: 0).toString(),
+                                                    enabled = isClickable,
+                                                    onClick = {
+                                                        state.profile?.userId?.let { uId ->
+                                                            navigator.push(SubscribersListScreen(userId = uId, initialTab = SubscriberListType.SUBSCRIBERS))
+                                                        }
+                                                    },
                                                     modifier = Modifier.weight(1f),
-                                                    activeColor = customColors.navy,
-                                                    accentColor = customColors.gourmetOrange
+                                                    cardColor = customColors.surfaceVariant
+                                                )
+                                                MetricCard(
+                                                    title = stringResource(Res.string.profile_metric_following),
+                                                    value = (profile?.subscribedCount ?: 0).toString(),
+                                                    enabled = isClickable,
+                                                    onClick = {
+                                                        state.profile?.userId?.let { uId ->
+                                                            navigator.push(SubscribersListScreen(userId = uId, initialTab = SubscriberListType.SUBSCRIBES))
+                                                        }
+                                                    },
+                                                    modifier = Modifier.weight(1f),
+                                                    cardColor = customColors.surfaceVariant
                                                 )
                                             }
                                         }
+                                        Spacer(modifier = Modifier.height(16.dp))
                                     }
-                                    Spacer(modifier = Modifier.height(16.dp))
                                 }
 
-                                // 4. Boş İçerik Metinleri
-                                item {
-                                    Box(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .padding(16.dp),
-                                        contentAlignment = Alignment.Center
-                                    ) {
-                                        Text(
-                                            text = if (selectedTab == 0) {
-                                                stringResource(Res.string.profile_posts_empty)
-                                            } else {
-                                                stringResource(Res.string.profile_map_empty)
-                                            },
-                                            style = MaterialTheme.typography.bodyMedium.copy(color = customColors.textSecondary),
-                                            textAlign = TextAlign.Center
-                                        )
+                                // 3. İÇERİK SEÇİMİ VE GİZLİLİK KONTROLLERİ
+                                if (isBlocked) {
+                                    // ENGELLENMİŞ DURUM
+                                    item(span = { GridItemSpan(maxLineSpan) }) {
+                                        Column(
+                                            modifier = Modifier.fillMaxWidth().padding(32.dp),
+                                            horizontalAlignment = Alignment.CenterHorizontally
+                                        ) {
+                                            Icon(
+                                                imageVector = Icons.Default.Lock,
+                                                contentDescription = null,
+                                                tint = customColors.textSecondary,
+                                                modifier = Modifier.size(48.dp)
+                                            )
+                                            Spacer(modifier = Modifier.height(8.dp))
+                                            Text(
+                                                text = stringResource(Res.string.profile_blocked_message),
+                                                style = MaterialTheme.typography.bodyMedium.copy(color = customColors.textSecondary),
+                                                textAlign = TextAlign.Center
+                                            )
+                                        }
                                     }
-                                }
-                            } else {
-                                // Engellenmiş Durum Mesajı
-                                item {
-                                    Column(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .padding(32.dp),
-                                        horizontalAlignment = Alignment.CenterHorizontally
-                                    ) {
-                                        Icon(
-                                            imageVector = Icons.Default.Lock,
-                                            contentDescription = null,
-                                            tint = customColors.textSecondary,
-                                            modifier = Modifier.size(48.dp)
-                                        )
-                                        Spacer(modifier = Modifier.height(8.dp))
-                                        Text(
-                                            text = stringResource(Res.string.profile_blocked_message),
-                                            style = MaterialTheme.typography.bodyMedium.copy(color = customColors.textSecondary),
-                                            textAlign = TextAlign.Center
-                                        )
+                                } else if (isPrivateAndNotFollowing) {
+                                    item(span = { GridItemSpan(maxLineSpan) }) {
+                                        Column(
+                                            modifier = Modifier.fillMaxWidth().padding(32.dp),
+                                            horizontalAlignment = Alignment.CenterHorizontally
+                                        ) {
+                                            Icon(
+                                                imageVector = Icons.Default.Lock,
+                                                contentDescription = null,
+                                                tint = customColors.textSecondary,
+                                                modifier = Modifier.size(48.dp)
+                                            )
+                                            Spacer(modifier = Modifier.height(8.dp))
+                                            Text(
+                                                text = stringResource(Res.string.profile_private_account_message),
+                                                style = MaterialTheme.typography.bodyMedium.copy(color = customColors.textSecondary),
+                                                textAlign = TextAlign.Center
+                                            )
+                                        }
+                                    }
+                                } else {
+                                    item(span = { GridItemSpan(maxLineSpan) }) {
+                                        Column {
+                                            Box(
+                                                modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp),
+                                                contentAlignment = Alignment.Center
+                                            ) {
+                                                Surface(
+                                                    color = customColors.surfaceVariant,
+                                                    shape = RoundedCornerShape(12.dp),
+                                                    modifier = Modifier.widthIn(max = 600.dp)
+                                                ) {
+                                                    Row(modifier = Modifier.padding(4.dp)) {
+                                                        TabButton(
+                                                            text = stringResource(Res.string.profile_tab_posts),
+                                                            icon = Icons.Default.GridOn,
+                                                            isSelected = selectedTab == 0,
+                                                            onClick = { selectedTab = 0 },
+                                                            modifier = Modifier.weight(1f),
+                                                            activeColor = customColors.navy,
+                                                            accentColor = customColors.gourmetOrange
+                                                        )
+                                                        TabButton(
+                                                            text = stringResource(Res.string.profile_tab_taste_map),
+                                                            icon = Icons.Default.Map,
+                                                            isSelected = selectedTab == 1,
+                                                            onClick = { selectedTab = 1 },
+                                                            modifier = Modifier.weight(1f),
+                                                            activeColor = customColors.navy,
+                                                            accentColor = customColors.gourmetOrange
+                                                        )
+                                                    }
+                                                }
+                                            }
+                                            Spacer(modifier = Modifier.height(8.dp))
+                                        }
+                                    }
+
+                                    if (selectedTab == 0) {
+                                        if (postState.isLoading && postState.items.isEmpty()) {
+                                            item(span = { GridItemSpan(maxLineSpan) }) {
+                                                Box(
+                                                    modifier = Modifier
+                                                        .fillMaxWidth()
+                                                        .padding(48.dp),
+                                                    contentAlignment = Alignment.Center
+                                                ) {
+                                                    CircularProgressIndicator(
+                                                        modifier = Modifier.size(32.dp),
+                                                        color = customColors.gourmetOrange,
+                                                        strokeWidth = 3.dp
+                                                    )
+                                                }
+                                            }
+                                        } else if (postState.items.isEmpty()) {
+                                            item(span = { GridItemSpan(maxLineSpan) }) {
+                                                Box(
+                                                    modifier = Modifier.fillMaxWidth().padding(32.dp),
+                                                    contentAlignment = Alignment.Center
+                                                ) {
+                                                    Text(
+                                                        text = stringResource(Res.string.my_profile_posts_empty),
+                                                        style = MaterialTheme.typography.bodyMedium.copy(color = customColors.textSecondary),
+                                                        textAlign = TextAlign.Center
+                                                    )
+                                                }
+                                            }
+                                        } else {
+                                            items(
+                                                items = postState.items,
+                                                key = { post -> post.postId }
+                                            ) { post ->
+                                                PostGridItem(
+                                                    post = post,
+                                                    onClick = {
+                                                        navigator.push(PostDetailScreen(post.postId))
+                                                    }
+                                                )
+                                            }
+                                            if (postState.isLoadingMore) {
+                                                item(span = { GridItemSpan(maxLineSpan) }) {
+                                                    Box(
+                                                        modifier = Modifier.fillMaxWidth().padding(16.dp),
+                                                        contentAlignment = Alignment.Center
+                                                    ) {
+                                                        CircularProgressIndicator(
+                                                            modifier = Modifier.size(24.dp),
+                                                            color = customColors.gourmetOrange,
+                                                            strokeWidth = 2.dp
+                                                        )
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    } else {
+                                        item(span = { GridItemSpan(maxLineSpan) }) {
+                                            Box(
+                                                modifier = Modifier.fillMaxWidth().padding(32.dp),
+                                                contentAlignment = Alignment.Center
+                                            ) {
+                                                Text(
+                                                    text = stringResource(Res.string.profile_map_empty),
+                                                    style = MaterialTheme.typography.bodyMedium.copy(color = customColors.textSecondary),
+                                                    textAlign = TextAlign.Center
+                                                )
+                                            }
+                                        }
                                     }
                                 }
                             }
@@ -861,6 +972,47 @@ private fun IncomingRequestCard(
                         strokecolor = customColors.textSecondary.copy(alpha = 0.4f)
                     )
                 }
+            }
+        }
+    }
+}
+
+@Composable
+private fun PostGridItem(
+    post: PostGridResponse,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val customColors = LocalCustomColors.current
+
+    Box(
+        modifier = modifier
+            .aspectRatio(1f) // 1:1 Kare Oran
+            .background(customColors.surfaceVariant)
+            .clickable(onClick = onClick)
+    ) {
+        AsyncImage(
+            model = post.photoUrl,
+            contentDescription = null,
+            modifier = Modifier.fillMaxSize(),
+            contentScale = ContentScale.Crop
+        )
+
+        if (post.isPinned) {
+            Box(
+                modifier = Modifier
+                    .align(alignment = Alignment.TopEnd)
+                    .size(30.dp) // Yuvarlağın toplam boyutu
+                    .clip(CircleShape)
+                    .background(Color.Gray.copy(alpha = 0.7f)),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Default.PushPin,
+                    contentDescription = "Pinned",
+                    tint = Color.White,
+                    modifier = Modifier.size(20.dp)
+                )
             }
         }
     }

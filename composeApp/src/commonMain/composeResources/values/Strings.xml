@@ -540,4 +540,25 @@
     <string name="error_photo_empty">Fotoğraf boş olamaz!</string>
     <string name="error_explanation_limit">Açıklama alanı en fazla 500 karakter olabilir.</string>
     <string name="error_photo_max_limit">En fazla 3 fotoğraf seçebilirsiniz.</string>
+
+    <string name="select_photo_source">Gönderin için bir fotoğraf kaynağı seçin</string>
+    <string name="camera">kamera</string>
+    <string name="gallery">galeri</string>
+    <string name="add_photo_count">Fotoğraf Ekle\n(%1$d/3)</string>
+    <string name="profile_private_account_message">Bu hesap gizlidir. Gönderilerini görmek için takip isteği gönderin.</string>
+
+    <string name="post">Gönderi</string>
+    <string name="options">Seçenekler</string>
+    <string name="unpin_post">Sabitlemeyi kaldır</string>
+    <string name="pin_post">Sabitle</string>
+    <string name="delete_post">Gönderiyi Sil</string>
+    <string name="view_all_comments">%1$d yorumun tümünü gör</string>
+    <string name="be_first_to_comment">İlk yorumu sen yap...</string>
+    <string name="deleting_post">Gönderi siliniyor...</string>
+
+    <string name="delete_post_title">Gönderi silinsin mi?</string>
+    <string name="delete_post_message">Bu gönderiyi silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.</string>
+
+    <string name="like">Beğen</string>
+    <string name="comment">Yorum Yap</string>
 </resources>

@@ -10,7 +10,7 @@ CREATE TABLE PostEntity (
     commentCount INTEGER NOT NULL DEFAULT 0,
     isLiked INTEGER NOT NULL DEFAULT 0,
     commentEnabled INTEGER NOT NULL DEFAULT 1,
-    createdAt INTEGER,
+    createdAt TEXT NOT NULL,
     updateDate INTEGER,
 
     -- Sahibinin Anlık Bilgileri
@@ -41,7 +41,7 @@ CREATE INDEX idx_post_updatedAt ON PostEntity(updatedAt DESC);
 
 -- 1. Kullanıcının Grid Postlarını Getir
 getUserGridPosts:
-SELECT postId, photoUrls, isPinned
+SELECT postId, photoUrls,createdAt, isPinned
 FROM PostEntity
 WHERE userId = :userId
 ORDER BY isPinned DESC, createdAt DESC;
@@ -58,8 +58,8 @@ SELECT COUNT(postId) FROM PostEntity WHERE postId = :postId;
 
 -- 4. Grid Ekleme
 insertGridPost:
-INSERT INTO PostEntity (postId, userId, photoUrls, isPinned, page, updatedAt)
-VALUES (:postId, :userId, :photoUrls, :isPinned, :page, :updatedAt);
+INSERT INTO PostEntity (postId, userId, photoUrls, isPinned,createdAt, page, updatedAt)
+VALUES (:postId, :userId, :photoUrls, :isPinned, :creaetedAt, :page, :updatedAt);
 
 -- 5. Grid Güncelleme
 updateGridPost:

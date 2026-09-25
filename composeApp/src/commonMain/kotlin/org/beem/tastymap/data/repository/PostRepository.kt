@@ -1,12 +1,8 @@
 package org.beem.tastymap.data.repository
 
-import io.github.vinceglb.filekit.core.PlatformFile
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.emitAll
-import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.withContext
 import org.beem.tastymap.core.local.UserManager
 import org.beem.tastymap.core.network.ErrorType
@@ -41,42 +37,59 @@ class PostRepository(
         size: Int = 15
     ): Flow<List<PostGridResponse>> = getUserPostsStream(myId, page, size)
 
+
+    suspend fun refreshPostDetail(postId: Long): ResultWrapper<PostResponse> = withContext(dispatchers.io) {
+        fetchAndSavePostDetail(postId)
+    }
     fun getUserPostsStream(
         userId: Long,
         page: Int = 0,
         size: Int = 15
-    ): Flow<List<PostGridResponse>> = flow {
-        coroutineScope {
-            launch { fetchAndSaveUserPosts(userId, page, size) }
-            emitAll(postLocalDataSource.getUserGridPostsFlow(userId))
-        }
-    }.flowOn(dispatchers.io)
+    ): Flow<List<PostGridResponse>> {
+        return postLocalDataSource.getUserGridPostsFlow(userId)
+            .onStart {
+                fetchAndSaveUserPosts(userId, page, size)
+            }
+            .flowOn(dispatchers.io)
+    }
 
-    fun getPostDetailStream(postId: Long): Flow<PostResponse?> = flow {
-        coroutineScope {
-            launch { fetchAndSavePostDetail(postId) }
-            emitAll(postLocalDataSource.getPostDetailFlow(postId))
-        }
-    }.flowOn(dispatchers.io)
+    fun getPostDetailStream(postId: Long): Flow<PostResponse?> {
+        return postLocalDataSource.getPostDetailFlow(postId)
+            .flowOn(dispatchers.io)
+    }
 
-    private suspend fun fetchAndSaveUserPosts(
+    // Hata alınsa da arka planda sessizce kalabilir, aksi halde ResultWrapper dönerek ViewModel'e bildirilebilir
+    suspend fun fetchAndSaveUserPosts(
         userId: Long,
         page: Int,
         size: Int
-    ) {
+    ): ResultWrapper<Unit> {
         val result = if (userId == myId) {
             safeApiCall { remoteDataSource.getMyPosts(page, size) }
         } else {
             safeApiCall { remoteDataSource.getUserPosts(userId, page, size) }
         }
 
-        if (result is ResultWrapper.Success) {
-            postLocalDataSource.saveGridPosts(
-                userId = userId,
-                posts = result.data.content,
-                page = page
-            )
+        return when (result) {
+            is ResultWrapper.Success -> {
+                postLocalDataSource.saveGridPosts(userId, result.data.content, page)
+                ResultWrapper.Success(Unit)
+            }
+            is ResultWrapper.Error -> ResultWrapper.Error(result.message, ErrorType.UNKNOWN_ERROR)
         }
+    }
+
+    suspend fun fetchAndSavePostDetail(postId: Long): ResultWrapper<PostResponse> {
+        val result = safeApiCall { remoteDataSource.getPostDetail(postId) }
+
+        if (result is ResultWrapper.Success) {
+            postLocalDataSource.savePostDetail(result.data)
+        }
+        if(result is ResultWrapper.Error){
+            ResultWrapper.Error(result.message, ErrorType.UNKNOWN_ERROR)
+        }
+
+        return result
     }
 
     suspend fun fetchUserPostsPage(
@@ -94,13 +107,6 @@ class PostRepository(
             postLocalDataSource.saveGridPosts(userId, result.data.content, page)
         }
         return result
-    }
-
-    private suspend fun fetchAndSavePostDetail(postId: Long) {
-        val result = safeApiCall { remoteDataSource.getPostDetail(postId) }
-        if (result is ResultWrapper.Success) {
-            postLocalDataSource.savePostDetail(result.data)
-        }
     }
 
     suspend fun addPost(
@@ -121,7 +127,6 @@ class PostRepository(
 
         if (result is ResultWrapper.Error) {
             postLocalDataSource.toggleLikeLocal(postId)
-            return@withContext ResultWrapper.Error(result.message, ErrorType.UNKNOWN_ERROR)
         }
 
         result
@@ -133,6 +138,7 @@ class PostRepository(
         val result = safeApiCall { remoteDataSource.togglePin(postId) }
 
         if (result is ResultWrapper.Error) {
+            // Hata durumunda yerel durum eski haline döndürülür
             postLocalDataSource.togglePinLocal(postId)
             return@withContext ResultWrapper.Error(result.message, ErrorType.UNKNOWN_ERROR)
         }
@@ -149,9 +155,7 @@ class PostRepository(
                 profileLocalDataSource.decrementPostCount(myId)
                 ResultWrapper.Success(Unit)
             }
-            is ResultWrapper.Error -> {
-                ResultWrapper.Error(result.message, ErrorType.UNKNOWN_ERROR)
-            }
+            is ResultWrapper.Error -> ResultWrapper.Error(result.message, ErrorType.UNKNOWN_ERROR)
         }
     }
 

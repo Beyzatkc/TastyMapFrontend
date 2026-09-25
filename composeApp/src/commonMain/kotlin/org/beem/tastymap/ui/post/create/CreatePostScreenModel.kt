@@ -8,6 +8,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import org.beem.tastymap.core.network.ResultWrapper
+import org.beem.tastymap.core.util.ImageCompressor
 import org.beem.tastymap.data.model.post.PostAndVisitRequest
 import org.beem.tastymap.data.repository.PostRepository
 import org.beem.tastymap.data.repository.VisitRepository
@@ -144,7 +145,6 @@ class CreatePostScreenModel(
     ) {
         if (_uiState.value.isLoading) return
 
-        // 1. Form Doğrulamaları
         val isExplanationValid = validateExplanation(request.explanation)
         val isPhotoValid = validatePostPhoto(selectedImagesBytes) // ByteArray listesi doğruluyor
 
@@ -153,10 +153,18 @@ class CreatePostScreenModel(
         screenModelScope.launch {
             _uiState.update { it.copy(isLoading = true, generalError = null) }
 
+            val compressedImagesBytes = selectedImagesBytes.map { rawBytes ->
+                ImageCompressor.compress(
+                    bytes = rawBytes,
+                    maxWidth = 1280,
+                    maxHeight = 1280,
+                    quality = 75
+                )
+            }
             // 2. Fotoğrafları Yükleme (ByteArray Listesi)
             var uploadedPhotoUrls = emptyList<String>()
 
-            when (val uploadResult = postRepository.uploadPostPhotos(selectedImagesBytes)) {
+            when (val uploadResult = postRepository.uploadPostPhotos(compressedImagesBytes)) {
                 is ResultWrapper.Success -> {
                     uploadedPhotoUrls = uploadResult.data
                 }
