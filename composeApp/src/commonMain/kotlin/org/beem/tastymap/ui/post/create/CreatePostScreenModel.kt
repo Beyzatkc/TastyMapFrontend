@@ -194,6 +194,7 @@ class CreatePostScreenModel(
                 is ResultWrapper.Error -> {
                     _uiState.update {
                         it.copy(
+                            success = false,
                             isLoading = false,
                             generalError = result.message
                         )
@@ -201,5 +202,8 @@ class CreatePostScreenModel(
                 }
             }
         }
+    }
+    fun resetSuccess() {
+        _uiState.update { it.copy(success = false) }
     }
 }

@@ -22,8 +22,9 @@ class MyPostScreenModel(
     val uiState = _uiState.asStateFlow()
     private var observeJob: Job? = null
 
+
+
     fun loadInitialData() {
-        val currentMyId = postRepository.myId
 
         if (observeJob != null) {
             return
@@ -35,7 +36,7 @@ class MyPostScreenModel(
             postRepository.getMyPostsStream(page = 0, size = pageSize)
                 .catch { e ->
                     e.printStackTrace()
-                    _uiState.update { it.copy(isLoading = false, errorMessage = e.message) }
+                    _uiState.update { it.copy( isLoadingMore = false,isLoading = false, errorMessage = e.message) }
                 }
                 .collect { posts ->
                     posts.forEachIndexed { index, post ->
@@ -76,13 +77,14 @@ class MyPostScreenModel(
                         it.copy(
                             currentPage = nextPage,
                             isLastPage = isLast,
-                            isLoadingMore = false
+                            isLoadingMore = false,
+                            loadingMoreError = false
                         )
                     }
                 }
                 is ResultWrapper.Error -> {
                     _uiState.update {
-                        it.copy(isLoadingMore = false, errorMessage = result.message)
+                        it.copy(loadingMoreError = true, isLoadingMore = false, errorMessage = result.message)
                     }
                 }
             }

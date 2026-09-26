@@ -64,8 +64,8 @@ class PostDataSource(private val authHttpClientManager: AuthHttpClientManager) {
         return client.post("api/posts/toggle-like/$postId").body()
     }
 
-    suspend fun getWhosLike(postId: Long, page: Int = 0, size: Int = 20): PageResponse<PostLikeUserResponse> {
-        return client.get("api/posts/whos-like/$postId") {
+    suspend fun getPostLikes(postId: Long, page: Int = 0, size: Int = 20): PageResponse<PostLikeUserResponse> {
+        return client.get("api/posts/liked-users/$postId") {
             parameter("page", page)
             parameter("size", size)
         }.body()

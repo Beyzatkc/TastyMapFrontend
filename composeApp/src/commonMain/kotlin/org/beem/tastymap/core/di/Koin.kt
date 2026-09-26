@@ -41,6 +41,7 @@ import org.beem.tastymap.ui.post.create.CreatePostScreenModel
 import org.beem.tastymap.ui.post.detail.PostDetailScreenModel
 import org.beem.tastymap.ui.post.mypost.MyPostScreenModel
 import org.beem.tastymap.ui.post.otherpost.PostScreenModel
+import org.beem.tastymap.ui.post.postlike.PostLikesScreenModel
 import org.beem.tastymap.ui.profile.health.HealthScreenModel
 import org.beem.tastymap.ui.profile.myprofile.MyProfileScreenModel
 import org.beem.tastymap.ui.profile.myprofile.editprofile.EditProfileScreenModel
@@ -123,7 +124,7 @@ val appModule = module {
 
     single { AuthRepository(get(), get(), get(), get(),get()) }
     single { UserSecurityRepository(get()) }
-    single { SubscribersRepository(get(), get(), get()) }
+    single { SubscribersRepository(get(), get(), get(),get()) }
     single { HealthRepository(get(), get(), get()) }
     single { PasswordResetSessionManager() }
     single { ProfileRepository(get(), get(), get(), get()) }
@@ -148,6 +149,7 @@ val appModule = module {
     factory { PostScreenModel(get()) }
     factory { PostDetailScreenModel(get()) }
     factory { CreatePostScreenModel(get(),get()) }
+    factory { PostLikesScreenModel(get(),get()) }
 
     factory { (userId: Long) ->
         ProfileScreenModel(

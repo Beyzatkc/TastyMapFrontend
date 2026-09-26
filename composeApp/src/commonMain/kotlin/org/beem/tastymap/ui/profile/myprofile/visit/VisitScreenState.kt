@@ -8,6 +8,7 @@ data class VisitScreenState(
     val isLoading: Boolean = true,
     val isRefreshing: Boolean = false,
     val isLoadingMore: Boolean = false,
+    val isLoadingMoreError: Boolean = false,
     val isInitialLoadCompleted: Boolean = false,
     val currentPage: Int = 0,
     val isLastPage: Boolean = false,

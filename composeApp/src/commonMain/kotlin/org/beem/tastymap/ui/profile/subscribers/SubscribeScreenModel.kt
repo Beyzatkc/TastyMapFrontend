@@ -23,6 +23,10 @@ class SubscribersListScreenModel(
     private val pageSize = 20
 
 
+    fun isMe(userId: Long): Boolean {
+        return subscribersRepository.isMe(userId)
+    }
+
     fun loadInitialData(userId: Long, listType: SubscriberListType) {
         currentListType = listType
 

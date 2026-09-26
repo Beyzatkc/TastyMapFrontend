@@ -20,28 +20,36 @@ class PostLikesScreenModel(
     private val _uiState = MutableStateFlow(PostLikesUiState())
     val uiState = _uiState.asStateFlow()
 
+    fun isMe(userId: Long): Boolean {
+        return postRepository.isMe(userId)
+    }
 
-    fun loadInitialData(userId: Long) {
+    fun loadInitialData(postId: Long) {
 
         _uiState.update {
             PostLikesUiState(isLoading = true)
         }
 
-        fetchPage(userId,page = 0)
+        fetchPage(postId,page = 0)
     }
 
     fun loadNextPage(postId: Long) {
         val currentState = _uiState.value
         if (currentState.isLoading || currentState.isLoadingMore || currentState.isLastPage) return
 
-        _uiState.update { it.copy(isLoadingMore = true) }
-        fetchPage(postId,page = currentState.currentPage + 1)
+        _uiState.update {
+            it.copy(
+                isLoadingMore = true,
+                isLoadingMoreError = false
+            )
+        }
+        fetchPage(postId, page = currentState.currentPage + 1)
     }
 
 
-    private fun fetchPage(postId: Long,page: Int) {
+    private fun fetchPage(postId: Long, page: Int) {
         screenModelScope.launch {
-            val result = postRepository.getWhosLike(postId)
+            val result = postRepository.getPostLikes(postId)
 
             when (result) {
                 is ResultWrapper.Success -> {
@@ -60,6 +68,7 @@ class PostLikesScreenModel(
                             items = updatedList,
                             isLoading = false,
                             isLoadingMore = false,
+                            isLoadingMoreError = false,
                             currentPage = page,
                             isLastPage = isLast,
                             errorMessage = null
@@ -68,11 +77,19 @@ class PostLikesScreenModel(
                 }
                 is ResultWrapper.Error -> {
                     _uiState.update { currentState ->
-                        currentState.copy(
-                            isLoading = false,
-                            isLoadingMore = false,
-                            errorMessage = result.message
-                        )
+                        if (page == 0) {
+                            currentState.copy(
+                                isLoading = false,
+                                isLoadingMore = false,
+                                errorMessage = result.message
+                            )
+                        } else {
+                            currentState.copy(
+                                isLoadingMore = false,
+                                isLoadingMoreError = true,
+                                errorMessage = result.message
+                            )
+                        }
                     }
                 }
             }

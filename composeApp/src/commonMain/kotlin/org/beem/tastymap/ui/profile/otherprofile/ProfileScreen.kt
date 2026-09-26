@@ -66,6 +66,7 @@ import org.koin.core.parameter.parametersOf
 import tastymap.composeapp.generated.resources.Res
 import tastymap.composeapp.generated.resources.active_devices_retry
 import tastymap.composeapp.generated.resources.active_devices_retry_cd
+import tastymap.composeapp.generated.resources.connection_error
 import tastymap.composeapp.generated.resources.dialog_block_message
 import tastymap.composeapp.generated.resources.dialog_block_title
 import tastymap.composeapp.generated.resources.dialog_remove_follower_message
@@ -606,7 +607,37 @@ class ProfileScreen(private val userId: Long) : Screen {
                                                     )
                                                 }
                                             }
+                                        } else if (postState.errorMessage != null && postState.items.isEmpty()) {
+                                            item(span = { GridItemSpan(maxLineSpan) }) {
+                                                Column(
+                                                    modifier = Modifier
+                                                        .fillMaxWidth()
+                                                        .padding(vertical = 16.dp),
+                                                    horizontalAlignment = Alignment.CenterHorizontally
+                                                ) {
+                                                    IconButton(
+                                                        onClick = {
+                                                            postScreenModel.loadInitialData(userId)
+                                                        }
+                                                    ) {
+                                                        Icon(
+                                                            imageVector = Icons.Default.Refresh,
+                                                            contentDescription = stringResource(Res.string.active_devices_retry),
+                                                            tint = customColors.textSecondary,
+                                                            modifier = Modifier.size(28.dp)
+                                                        )
+                                                    }
+                                                    Text(
+                                                        text = stringResource(Res.string.active_devices_retry),
+                                                        style = MaterialTheme.typography.bodySmall.copy(
+                                                            color = customColors.textSecondary,
+                                                            fontWeight = FontWeight.Medium
+                                                        )
+                                                    )
+                                                }
+                                            }
                                         } else if (postState.items.isEmpty()) {
+                                            // 2. BOŞ DURUM (Empty State)
                                             item(span = { GridItemSpan(maxLineSpan) }) {
                                                 Box(
                                                     modifier = Modifier.fillMaxWidth().padding(32.dp),
@@ -619,7 +650,7 @@ class ProfileScreen(private val userId: Long) : Screen {
                                                     )
                                                 }
                                             }
-                                        } else {
+                                        }  else {
                                             items(
                                                 items = postState.items,
                                                 key = { post -> post.postId }
@@ -645,8 +676,39 @@ class ProfileScreen(private val userId: Long) : Screen {
                                                     }
                                                 }
                                             }
+                                            if (postState.loadingMoreError && !postState.isLoadingMore) {
+                                                item(span = { GridItemSpan(maxLineSpan) }) {
+                                                    Column(
+                                                        modifier = Modifier
+                                                            .fillMaxWidth()
+                                                            .padding(vertical = 10.dp),
+                                                        horizontalAlignment = Alignment.CenterHorizontally
+                                                    ) {
+                                                        IconButton(
+                                                            onClick = {
+                                                                postScreenModel.loadNextPage(userId)
+                                                            }
+                                                        ) {
+                                                            Icon(
+                                                                imageVector = Icons.Default.Refresh,
+                                                                contentDescription = stringResource(Res.string.active_devices_retry),
+                                                                tint = customColors.placeHolderIcon,
+                                                                modifier = Modifier.size(28.dp)
+                                                            )
+                                                        }
+                                                        Text(
+                                                            text = stringResource(Res.string.connection_error),
+                                                            style = MaterialTheme.typography.bodySmall.copy(
+                                                                color = customColors.placeHolderIcon,
+                                                                fontWeight = FontWeight.Medium
+                                                            )
+                                                        )
+                                                    }
+                                                }
+                                            }
                                         }
-                                    } else {
+                                    }
+                                    else {
                                         item(span = { GridItemSpan(maxLineSpan) }) {
                                             Box(
                                                 modifier = Modifier.fillMaxWidth().padding(32.dp),

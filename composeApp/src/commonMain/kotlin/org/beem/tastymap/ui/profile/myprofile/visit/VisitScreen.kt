@@ -210,6 +210,7 @@ class VisitScreen : Screen {
                                 }
                             }
 
+                            // 3. BOŞ LİSTE DURUMU
                             isEmpty -> {
                                 Column(
                                     modifier = Modifier.fillMaxSize(),
@@ -233,6 +234,7 @@ class VisitScreen : Screen {
                                 }
                             }
 
+                            // 4. LİSTE VE SAYFALANDIRMA DURUMU
                             else -> {
                                 LazyColumn(
                                     state = listState,
@@ -265,11 +267,14 @@ class VisitScreen : Screen {
                                         )
                                     }
 
+                                    // SAYFA ALTI YÜKLEME VEYA TEKRAR DENE FOOTER'I
                                     if (!uiState.isLastPage) {
                                         if (uiState.isLoadingMore) {
                                             item {
                                                 Box(
-                                                    modifier = Modifier.fillMaxWidth().padding(vertical = 16.dp),
+                                                    modifier = Modifier
+                                                        .fillMaxWidth()
+                                                        .padding(vertical = 16.dp),
                                                     contentAlignment = Alignment.Center
                                                 ) {
                                                     CircularProgressIndicator(
@@ -279,22 +284,35 @@ class VisitScreen : Screen {
                                                     )
                                                 }
                                             }
-                                        } else if (!uiState.errorMessage.isNullOrBlank()) {
+                                        } else if (
+                                            uiState.isLoadingMoreError) {
                                             item {
-                                                Box(
-                                                    modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
-                                                    contentAlignment = Alignment.Center
+                                                Column(
+                                                    modifier = Modifier
+                                                        .fillMaxWidth()
+                                                        .padding(vertical = 12.dp),
+                                                    horizontalAlignment = Alignment.CenterHorizontally
                                                 ) {
-                                                    TextButton(onClick = {
-                                                        screenModel.clearMessages()
-                                                        screenModel.loadMore()
-                                                    }) {
-                                                        Text(
-                                                            text = stringResource(Res.string.connection_error),
-                                                            color = customColors.gourmetOrange,
-                                                            fontWeight = FontWeight.SemiBold
+                                                    IconButton(
+                                                        onClick = {
+                                                            screenModel.clearMessages()
+                                                            screenModel.loadMore()
+                                                        }
+                                                    ) {
+                                                        Icon(
+                                                            imageVector = Icons.Default.Refresh,
+                                                            contentDescription = stringResource(Res.string.active_devices_retry),
+                                                            tint = customColors.textSecondary,
+                                                            modifier = Modifier.size(28.dp)
                                                         )
                                                     }
+                                                    Text(
+                                                        text = stringResource(Res.string.active_devices_retry),
+                                                        style = MaterialTheme.typography.bodySmall.copy(
+                                                            color = customColors.textSecondary,
+                                                            fontWeight = FontWeight.Medium
+                                                        )
+                                                    )
                                                 }
                                             }
                                         }

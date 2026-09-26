@@ -65,13 +65,14 @@ class PostScreenModel(
                             it.copy(
                                 currentPage = nextPage,
                                 isLastPage = isLast,
-                                isLoadingMore = false
+                                isLoadingMore = false,
+                                loadingMoreError = false
                             )
                         }
                     }
                     is ResultWrapper.Error -> {
                         _uiState.update {
-                            it.copy(isLoadingMore = false, errorMessage = result.message)
+                            it.copy(loadingMoreError = true,isLoadingMore = false, errorMessage = result.message)
                         }
                     }
                 }
@@ -89,7 +90,7 @@ class PostScreenModel(
                 if (result is ResultWrapper.Error) {
                     _uiState.update { it.copy(isRefreshing = false, errorMessage = result.message) }
                 } else {
-                    _uiState.update { it.copy(currentPage = 0, isRefreshing = false) }
+                    _uiState.update { it.copy(currentPage = 0, isRefreshing = false,loadingMoreError = false) }
                 }
             }
         }

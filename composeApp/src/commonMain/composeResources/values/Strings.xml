@@ -561,4 +561,6 @@
 
     <string name="like">Beğen</string>
     <string name="comment">Yorum Yap</string>
+
+    <string name="likes_title">Beğenenler</string>
 </resources>

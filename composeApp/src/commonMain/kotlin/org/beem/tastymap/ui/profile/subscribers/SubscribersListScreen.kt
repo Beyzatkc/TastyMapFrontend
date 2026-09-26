@@ -34,10 +34,12 @@ import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.koin.koinScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
+import cafe.adriel.voyager.navigator.tab.LocalTabNavigator
 import coil3.compose.AsyncImage
 import org.beem.tastymap.core.util.ToastManager
 import org.beem.tastymap.data.model.subscribers.SubscribeResponse
 import org.beem.tastymap.domain.model.RelationStatus
+import org.beem.tastymap.ui.bottomnav.ProfileTab
 import org.beem.tastymap.ui.components.TastyButton
 import org.beem.tastymap.ui.profile.otherprofile.ProfileScreen
 import org.beem.tastymap.ui.theme.LocalCustomColors
@@ -69,6 +71,7 @@ class SubscribersListScreen(
         val uiState by screenModel.uiState.collectAsState()
         val navigator = LocalNavigator.currentOrThrow
         val customColors = LocalCustomColors.current
+        val tabNavigator = LocalTabNavigator.current
 
         var selectedTab by remember { mutableStateOf(initialTab) }
         var searchQuery by remember { mutableStateOf("") }
@@ -261,14 +264,14 @@ class SubscribersListScreen(
                                                         imageVector = Icons.Default.Refresh,
                                                         contentDescription = stringResource(Res.string.active_devices_retry_cd),
                                                         modifier = Modifier.size(24.dp),
-                                                        tint = customColors.textPrimary
+                                                        tint = customColors.textSecondary
                                                     )
                                                     Spacer(modifier = Modifier.width(8.dp))
                                                     Text(
                                                         text = stringResource(Res.string.active_devices_retry),
                                                         style = MaterialTheme.typography.titleSmall.copy(
                                                             fontWeight = FontWeight.Bold,
-                                                            color = customColors.textPrimary
+                                                            color = customColors.textSecondary
                                                         )
                                                     )
                                                 }
@@ -311,7 +314,11 @@ class SubscribersListScreen(
                                         SubscriberUserItem(
                                             user = user,
                                             onUserClick = {
-                                                navigator.push(ProfileScreen(userId = user.id))
+                                                if (screenModel.isMe(user.id)) {
+                                                    tabNavigator.current = ProfileTab
+                                                } else {
+                                                    navigator.push(ProfileScreen(userId = user.id))
+                                                }
                                             },
                                             onActionClick = {
                                                 screenModel.handleFollowAction(

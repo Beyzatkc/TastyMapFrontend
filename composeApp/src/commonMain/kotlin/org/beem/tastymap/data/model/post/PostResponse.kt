@@ -89,7 +89,7 @@ data class PostAndVisitRequest(
 
     val explanation: String? = null,
     val photoUrl: List<String>,
-    val commentEnabled: Boolean = true
+    val commentEnabled: Boolean
 ) : BaseVisitRequest
 
 @Serializable

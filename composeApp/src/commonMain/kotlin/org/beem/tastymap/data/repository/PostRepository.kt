@@ -32,6 +32,10 @@ class PostRepository(
     val myId: Long
         get() = userManager.userSession.value?.userId ?: 0L
 
+
+    fun isMe(userId: Long): Boolean {
+        return userId == myId
+    }
     fun getMyPostsStream(
         page: Int = 0,
         size: Int = 15
@@ -172,12 +176,12 @@ class PostRepository(
         result
     }
 
-    suspend fun getWhosLike(
+    suspend fun getPostLikes(
         postId: Long,
         page: Int = 0,
         size: Int = 20
     ): ResultWrapper<PageResponse<PostLikeUserResponse>> {
-        return safeApiCall { remoteDataSource.getWhosLike(postId, page, size) }
+        return safeApiCall { remoteDataSource.getPostLikes(postId, page, size) }
     }
 
     suspend fun uploadPostPhotos(imagesBytes: List<ByteArray>): ResultWrapper<List<String>> = withContext(dispatchers.io) {

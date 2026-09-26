@@ -86,15 +86,21 @@ import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.koin.koinScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
+import cafe.adriel.voyager.navigator.tab.LocalTabNavigator
 import coil3.compose.AsyncImage
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.beem.tastymap.core.util.ToastManager
+import org.beem.tastymap.core.util.formatLikeCount
 import org.beem.tastymap.core.util.formatToRelativeDateTime
 import org.beem.tastymap.data.model.post.PostResponse
+import org.beem.tastymap.ui.bottomnav.ProfileTab
 import org.beem.tastymap.ui.components.DialogConfig
 import org.beem.tastymap.ui.components.LoadingOverlay
 import org.beem.tastymap.ui.components.TastyConfirmDialog
+import org.beem.tastymap.ui.post.postlike.PostLikesBottomSheet
+import org.beem.tastymap.ui.post.postlike.PostLikesScreenModel
+import org.beem.tastymap.ui.profile.otherprofile.ProfileScreen
 import org.beem.tastymap.ui.theme.LocalCustomColors
 import org.jetbrains.compose.resources.stringResource
 import tastymap.composeapp.generated.resources.Res
@@ -120,12 +126,16 @@ data class PostDetailScreen(val postId: Long) : Screen {
     @Composable
     override fun Content() {
         val screenModel = koinScreenModel<PostDetailScreenModel>()
+        val likeScreenModel = koinScreenModel<PostLikesScreenModel>()
+        val likeUiState by likeScreenModel.uiState.collectAsState()
         val uiState by screenModel.uiState.collectAsState()
         val pullToRefreshState = rememberPullToRefreshState()
+        val tabNavigator = LocalTabNavigator.current
         val navigator = LocalNavigator.currentOrThrow
         val customColors = LocalCustomColors.current
 
         var showMenu by remember { mutableStateOf(false) }
+        var showPostLikeSheet by remember { mutableStateOf(false) }
         var showDeleteDialog by remember { mutableStateOf(false) }
 
         LaunchedEffect(postId) {
@@ -284,7 +294,12 @@ data class PostDetailScreen(val postId: Long) : Screen {
                                         PostHeader(
                                             post = post,
                                             onUserClick = {
-                                                // Kullanıcı profiline gitme opsiyonu
+                                                if (screenModel.isMe(post.userId)) {
+                                                    tabNavigator.current = ProfileTab
+                                                    navigator.popUntilRoot()
+                                                } else {
+                                                    navigator.push(ProfileScreen(userId = post.userId))
+                                                }
                                             }
                                         )
 
@@ -302,6 +317,7 @@ data class PostDetailScreen(val postId: Long) : Screen {
                                         PostActionBar(
                                             post = post,
                                             onLikeClick = { screenModel.toggleLike(postId) },
+                                            onLikeCountClick = { showPostLikeSheet = true },
                                             onCommentClick = {
                                                 // Yorumlar ekranına git
                                             }
@@ -386,14 +402,14 @@ data class PostDetailScreen(val postId: Long) : Screen {
                                                         imageVector = Icons.Default.Refresh,
                                                         contentDescription = stringResource(Res.string.active_devices_retry_cd),
                                                         modifier = Modifier.size(24.dp),
-                                                        tint = customColors.textPrimary
+                                                        tint = customColors.textSecondary
                                                     )
                                                     Spacer(modifier = Modifier.width(8.dp))
                                                     Text(
                                                         text = stringResource(Res.string.active_devices_retry),
                                                         style = MaterialTheme.typography.titleSmall.copy(
                                                             fontWeight = FontWeight.Bold,
-                                                            color = customColors.textPrimary
+                                                            color = customColors.textSecondary
                                                         )
                                                     )
                                                 }
@@ -415,6 +431,34 @@ data class PostDetailScreen(val postId: Long) : Screen {
                     }
                 }
             }
+        }
+
+        if (showPostLikeSheet) {
+            LaunchedEffect(postId) {
+                likeScreenModel.loadInitialData(postId)
+            }
+            PostLikesBottomSheet(
+                onDismiss = { showPostLikeSheet = false },
+                onUserClick = { selectedUserId ->
+                    showPostLikeSheet = false
+                    if (likeScreenModel.isMe(selectedUserId)) {
+                        tabNavigator.current = ProfileTab
+                        navigator.popUntilRoot()
+                    } else {
+                        navigator.push(ProfileScreen(userId = selectedUserId))
+                    }
+                },
+                uiState = likeUiState,
+                onActionClick = { selectedUserId, status ->
+                    likeScreenModel.handleFollowAction(selectedUserId,status)
+                },
+                onLoadNextPage = {
+                    likeScreenModel.loadNextPage(postId)
+                },
+                onRetry = {
+                   likeScreenModel.loadInitialData(postId)
+                }
+            )
         }
 
         // SİLME ONAY DİALOGU
@@ -606,6 +650,7 @@ private fun PostMediaPager(
 private fun PostActionBar(
     post: PostResponse,
     onLikeClick: () -> Unit,
+    onLikeCountClick: () -> Unit,
     onCommentClick: () -> Unit
 ) {
     val customColors = LocalCustomColors.current
@@ -626,11 +671,17 @@ private fun PostActionBar(
         }
 
         Text(
-            text = "${post.likeCount}",
+            text = post.likeCount.formatLikeCount(),
             style = MaterialTheme.typography.titleSmall.copy(
                 fontWeight = FontWeight.Bold,
                 color = customColors.textPrimary
-            )
+            ),
+            modifier = Modifier
+                .clip(RoundedCornerShape(4.dp))
+                .clickable {
+                    onLikeCountClick()
+                }
+                .padding(horizontal = 4.dp, vertical = 2.dp)
         )
 
         if (post.isCommentEnabled) {
@@ -644,7 +695,7 @@ private fun PostActionBar(
             }
 
             Text(
-                text = post.commentCount.toString(),
+                text = post.commentCount.formatLikeCount(),
                 style = MaterialTheme.typography.titleSmall.copy(
                     fontWeight = FontWeight.Bold,
                     color = customColors.textPrimary
@@ -659,8 +710,9 @@ private fun PlaceInfoCard(post: PostResponse) {
     val customColors = LocalCustomColors.current
 
     Surface(
-        color = customColors.navy.copy(alpha = 0.12f),
+        color = customColors.surface,
         shape = RoundedCornerShape(12.dp),
+        shadowElevation = 1.dp,
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 6.dp)

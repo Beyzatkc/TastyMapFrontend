@@ -1,5 +1,6 @@
 package org.beem.tastymap.data.repository
 
+import org.beem.tastymap.core.local.UserManager
 import org.beem.tastymap.core.network.ResultWrapper
 import org.beem.tastymap.core.network.safeApiCall
 import org.beem.tastymap.data.cache.SubscribeMemoryCache
@@ -13,8 +14,13 @@ import org.beem.tastymap.domain.model.RelationStatus
 class SubscribersRepository(
     private val dataSource: SubscribersDataSource,
     private val localDataSource: ProfileLocalDataSource,
-    private val memoryCache: SubscribeMemoryCache
+    private val memoryCache: SubscribeMemoryCache,
+    private val userManager: UserManager,
 ) {
+
+    fun isMe(userId: Long): Boolean {
+        return userId == userManager.userSession.value?.userId
+    }
     suspend fun subscribe(targetUserId: Long, myUserId: Long): ResultWrapper<SubscribeActionResult> {
         val result = safeApiCall { dataSource.subscribe(targetUserId) }
 

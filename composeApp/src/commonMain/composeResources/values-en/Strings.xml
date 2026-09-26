@@ -558,4 +558,6 @@
     <string name="like">Like</string>
     <string name="comment">Comment</string>
 
+    <string name="likes_title">Liked by</string>
+
 </resources>

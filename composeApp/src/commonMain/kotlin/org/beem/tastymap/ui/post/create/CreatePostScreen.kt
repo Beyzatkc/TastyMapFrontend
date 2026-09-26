@@ -1,8 +1,11 @@
 package org.beem.tastymap.ui.post.create
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -19,6 +22,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AddPhotoAlternate
 import androidx.compose.material.icons.filled.CameraAlt
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.ErrorOutline
 import androidx.compose.material.icons.filled.PhotoLibrary
@@ -42,15 +46,18 @@ import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.koin.koinScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
+import cafe.adriel.voyager.navigator.tab.LocalTabNavigator
 import io.github.vinceglb.filekit.compose.rememberFilePickerLauncher
 import io.github.vinceglb.filekit.core.PickerMode
 import io.github.vinceglb.filekit.core.PickerType
 import io.github.vinceglb.filekit.core.PlatformFile
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.beem.tastymap.core.camera.rememberCameraLauncher
 import org.beem.tastymap.core.util.ToastManager
 import org.beem.tastymap.data.model.post.PostAndVisitRequest
 import org.beem.tastymap.data.model.visit.VisitResponse
+import org.beem.tastymap.ui.bottomnav.ProfileTab
 import org.beem.tastymap.ui.components.TastyButton
 import org.beem.tastymap.ui.components.TastyTextField
 import org.beem.tastymap.ui.theme.CustomColors
@@ -87,7 +94,8 @@ class CreatePostScreen : Screen {
         val uiState by screenModel.uiState.collectAsState()
 
         val customColors = LocalCustomColors.current
-        val navigator = LocalNavigator.currentOrThrow
+        val tabNavigator = LocalTabNavigator.current
+        var isSuccessAnimated by remember { mutableStateOf(false) }
 
         var selectedVisit by remember { mutableStateOf<VisitResponse?>(null) }
         var explanation by remember { mutableStateOf("") }
@@ -139,10 +147,14 @@ class CreatePostScreen : Screen {
         }
 
         LaunchedEffect(uiState.success) {
-            uiState.success?.let { message ->
-                // YÖNLENDİRME YAPILACAK
+            if (uiState.success == true) {
+                isSuccessAnimated = true
+                delay(500)
+                screenModel.resetSuccess()
+                tabNavigator.current = ProfileTab
             }
         }
+
 
         Scaffold(
             containerColor = customColors.background,
@@ -382,6 +394,48 @@ class CreatePostScreen : Screen {
                             modifier = Modifier.height(60.dp)
                         )
                     }
+                }
+            }
+        }
+
+        AnimatedVisibility(
+            visible = isSuccessAnimated,
+            enter = fadeIn(animationSpec = tween(300)) + scaleIn(initialScale = 0.8f, animationSpec = tween(300)),
+            exit = fadeOut(animationSpec = tween(200)),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(customColors.background.copy(alpha = 0.95f)),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(80.dp)
+                            .clip(CircleShape)
+                            .background(customColors.gourmetOrange),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Check,
+                            contentDescription = null,
+                            tint = Color.White,
+                            modifier = Modifier.size(48.dp)
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text(
+                        text = "Gönderi Paylaşıldı",//stringResource(Res.string.post_shared_success), // "Gönderi Paylaşıldı!"
+                        style = MaterialTheme.typography.titleMedium.copy(
+                            fontWeight = FontWeight.Bold,
+                            color = customColors.textPrimary
+                        )
+                    )
                 }
             }
         }

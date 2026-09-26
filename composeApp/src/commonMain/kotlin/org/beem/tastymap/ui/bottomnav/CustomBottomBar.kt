@@ -10,15 +10,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
-import cafe.adriel.voyager.navigator.CurrentScreen
 import cafe.adriel.voyager.navigator.Navigator
 import cafe.adriel.voyager.navigator.tab.Tab
 import cafe.adriel.voyager.navigator.tab.TabOptions
+import cafe.adriel.voyager.transitions.SlideTransition
 import org.beem.tastymap.ui.post.create.CreatePostScreen
 import org.beem.tastymap.ui.profile.myprofile.MyProfileScreen
 import org.beem.tastymap.ui.profile.myprofile.settings.deleteaccount.AccountDeactivatedScreen
 import org.beem.tastymap.ui.search.SearchScreen
-import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import tastymap.composeapp.generated.resources.Res
 import tastymap.composeapp.generated.resources.nav_map
@@ -61,7 +60,7 @@ object SearchTab : Tab {
                 val isMyProfile = currentScreen is MyProfileScreen
                 bottomBarVisibility.value = isMyProfile || navigator.items.size == 1
             }
-            CurrentScreen()
+            SlideTransition(navigator)
         }
     }
 }
@@ -78,14 +77,14 @@ object UploadTab : Tab {
 
     @Composable
     override fun Content() {
-        Navigator(CreatePostScreen()) { navigator ->
+        Navigator(key = "CreatePostNavigator", screen = CreatePostScreen()) { navigator ->
             val bottomBarVisibility = LocalBottomBarVisibility.current
             LaunchedEffect(navigator.lastItem) {
                 val currentScreen = navigator.lastItem
                 val isMyProfile = currentScreen is MyProfileScreen
                 bottomBarVisibility.value = isMyProfile || navigator.items.size == 1
             }
-            CurrentScreen()
+            SlideTransition(navigator)
         }
     }
 }
@@ -105,7 +104,6 @@ object ProfileTab : Tab {
         Navigator(MyProfileScreen()) { navigator ->
             val bottomBarVisibility = LocalBottomBarVisibility.current
 
-            // SİHİRLİ DOKUNUŞ: Sayfa her değiştiğinde bu blok tetiklenir
             LaunchedEffect(navigator.lastItem) {
                 val currentScreen = navigator.lastItem
                 if (currentScreen is AccountDeactivatedScreen) {
@@ -114,11 +112,11 @@ object ProfileTab : Tab {
                     bottomBarVisibility.value = navigator.items.size == 1
                 }
             }
-
-            CurrentScreen()
+            SlideTransition(navigator)
         }
     }
 }
+
 object AITab : Tab {
     override val options: TabOptions
         @Composable

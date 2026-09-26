@@ -60,6 +60,7 @@ class VisitScreenModel(
                             isRefreshing = false,
                             isLastPage = result.data.last,
                             isLoadingMore = false,
+                            isLoadingMoreError = false,
                             currentPage = if (!result.data.last) 1 else 0,
                             isInitialLoadCompleted = true
                         )
@@ -71,6 +72,7 @@ class VisitScreenModel(
                             isLoading = false,
                             isRefreshing = false,
                             isLoadingMore = false,
+                            isLoadingMoreError = false,
                             isInitialLoadCompleted = true,
                             errorMessage = result.message ?: "Bir hata oluştu"
                         )
@@ -100,6 +102,7 @@ class VisitScreenModel(
                         state.copy(
                             items = combinedList,
                             isLoadingMore = false,
+                            isLoadingMoreError = false,
                             isLastPage = pageResponse.last,
                             currentPage = if (!pageResponse.last) state.currentPage + 1 else state.currentPage
                         )
@@ -109,6 +112,7 @@ class VisitScreenModel(
                     _state.update {
                         it.copy(
                             isLoadingMore = false,
+                            isLoadingMoreError = true,
                             errorMessage = result.message ?: "Daha fazla veri yüklenemedi"
                         )
                     }

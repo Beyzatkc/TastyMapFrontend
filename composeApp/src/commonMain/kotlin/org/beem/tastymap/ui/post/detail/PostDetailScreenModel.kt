@@ -19,8 +19,9 @@ class PostDetailScreenModel(
 
     private var observeJob: Job? = null
 
-    // PostDetailScreenModel.kt
-
+    fun isMe(userId: Long): Boolean {
+        return postRepository.isMe(userId)
+    }
 
     fun loadPostDetail(postId: Long) {
         observeJob?.cancel()

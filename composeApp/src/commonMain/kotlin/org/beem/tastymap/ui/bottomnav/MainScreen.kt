@@ -1,5 +1,7 @@
 package org.beem.tastymap.ui.bottomnav
 
+import androidx.compose.animation.Crossfade
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -19,12 +21,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import cafe.adriel.voyager.core.screen.Screen
-import cafe.adriel.voyager.navigator.tab.CurrentTab
 import cafe.adriel.voyager.navigator.tab.LocalTabNavigator
 import cafe.adriel.voyager.navigator.tab.Tab
 import cafe.adriel.voyager.navigator.tab.TabNavigator
@@ -110,13 +110,22 @@ class MainScreen : Screen {
                             .fillMaxSize()
                             .padding(innerPadding)
                     ) {
-                        CurrentTab()
+                        val tabNavigator = LocalTabNavigator.current
+
+                        Crossfade(
+                            targetState = tabNavigator.current,
+                            animationSpec = tween(durationMillis = 250),
+                            label = "TabCrossfadeTransition"
+                        ) { targetTab ->
+                            targetTab.Content()
+                        }
                     }
                 }
             }
         }
     }
 }
+
 @Composable
 private fun BottomTabItem(
     tab: Tab,
@@ -146,7 +155,7 @@ private fun BottomTabItem(
                 tabNavigator.current = tab
             },
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center // Dikeyde ortalandı
+        verticalArrangement = Arrangement.Center
     ) {
 
         tab.options.icon?.let { iconPainter ->
@@ -186,9 +195,8 @@ private fun AITabItem(
                 tabNavigator.current = tab
             },
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center // Diğerleriyle aynı hizaya getirildi
+        verticalArrangement = Arrangement.Center
     ) {
-        // İsteğe göre kutuyu küçülttük veya tamamen metin/ikon dengesine çektik
         Row(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.Center,
@@ -200,28 +208,24 @@ private fun AITabItem(
                     else
                         customColors.gourmetOrange
                 )
-                .padding(horizontal = 10.dp, vertical = 6.dp) // Daha kompakt ve şık rozet görünümü
+                .padding(horizontal = 10.dp, vertical = 6.dp)
         ) {
+            Icon(
+                imageVector = Icons.Rounded.AutoAwesome,
+                contentDescription = null,
+                tint = Color.White,
+                modifier = Modifier.size(16.dp)
+            )
 
+            Spacer(modifier = Modifier.width(8.dp))
 
-                Icon(
-                    imageVector = Icons.Rounded.AutoAwesome,
-                    contentDescription = null,
-                    tint = Color.White,
-                    modifier = Modifier.size(16.dp)
-                )
-
-                Spacer(modifier = Modifier.width(8.dp))
-
-                Text(
-                    text ="AI",
-                    color =  Color.White,
-                    fontSize = 13.sp,
-                    fontWeight = FontWeight.Bold
-                )
-            }
+            Text(
+                text = "AI",
+                color = Color.White,
+                fontSize = 13.sp,
+                fontWeight = FontWeight.Bold
+            )
+        }
         Spacer(modifier = Modifier.height(5.dp))
-
-
     }
 }

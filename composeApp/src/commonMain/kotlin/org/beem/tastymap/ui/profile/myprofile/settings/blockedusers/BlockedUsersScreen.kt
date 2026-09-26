@@ -217,14 +217,14 @@ class BlockedUsersScreen() : Screen {
                                                         imageVector = Icons.Default.Refresh,
                                                         contentDescription = stringResource(Res.string.active_devices_retry_cd),
                                                         modifier = Modifier.size(24.dp),
-                                                        tint = customColors.textPrimary
+                                                        tint = customColors.textSecondary
                                                     )
                                                     Spacer(modifier = Modifier.width(8.dp))
                                                     Text(
                                                         text = stringResource(Res.string.active_devices_retry),
                                                         style = MaterialTheme.typography.titleSmall.copy(
                                                             fontWeight = FontWeight.Bold,
-                                                            color = customColors.textPrimary
+                                                            color = customColors.textSecondary
                                                         )
                                                     )
                                                 }

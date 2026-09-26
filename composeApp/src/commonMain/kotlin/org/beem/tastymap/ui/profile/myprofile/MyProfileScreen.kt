@@ -65,6 +65,7 @@ import org.jetbrains.compose.resources.stringResource
 import tastymap.composeapp.generated.resources.Res
 import tastymap.composeapp.generated.resources.active_devices_retry
 import tastymap.composeapp.generated.resources.active_devices_retry_cd
+import tastymap.composeapp.generated.resources.connection_error
 import tastymap.composeapp.generated.resources.my_profile_default_bio
 import tastymap.composeapp.generated.resources.my_profile_default_name
 import tastymap.composeapp.generated.resources.my_profile_default_photo_cd
@@ -468,9 +469,7 @@ class MyProfileScreen : Screen {
 
                                 // 4. İÇERİK BÖLÜMÜ (SEKMEYE GÖRE DEĞİŞİR)
                                 if (selectedTab == 0) {
-                                    // --- POSTLAR SEKMESİ ---
                                     if (postState.isLoading && postState.items.isEmpty()) {
-                                        // 1. İLK YÜKLEME DURUMU (Yükleniyor)
                                         item(span = { GridItemSpan(maxLineSpan) }) {
                                             Box(
                                                 modifier = Modifier
@@ -482,6 +481,36 @@ class MyProfileScreen : Screen {
                                                     modifier = Modifier.size(32.dp),
                                                     color = customColors.gourmetOrange,
                                                     strokeWidth = 3.dp
+                                                )
+                                            }
+                                        }
+                                    }
+                                    else if (postState.errorMessage != null && postState.items.isEmpty()) {
+                                        item(span = { GridItemSpan(maxLineSpan) }) {
+                                            Column(
+                                                modifier = Modifier
+                                                    .fillMaxWidth()
+                                                    .padding(vertical = 16.dp),
+                                                horizontalAlignment = Alignment.CenterHorizontally
+                                            ) {
+                                                IconButton(
+                                                    onClick = {
+                                                        postScreenModel.loadInitialData()
+                                                    }
+                                                ) {
+                                                    Icon(
+                                                        imageVector = Icons.Default.Refresh,
+                                                        contentDescription = stringResource(Res.string.active_devices_retry),
+                                                        tint = customColors.textSecondary,
+                                                        modifier = Modifier.size(28.dp)
+                                                    )
+                                                }
+                                                Text(
+                                                    text = stringResource(Res.string.active_devices_retry),
+                                                    style = MaterialTheme.typography.bodySmall.copy(
+                                                        color = customColors.textSecondary,
+                                                        fontWeight = FontWeight.Medium
+                                                    )
                                                 )
                                             }
                                         }
@@ -500,7 +529,6 @@ class MyProfileScreen : Screen {
                                             }
                                         }
                                     } else {
-                                        // 3. 3'LÜ GRID POST LİSTESİ
                                         items(
                                             items = postState.items,
                                             key = { post -> post.postId }
@@ -524,6 +552,36 @@ class MyProfileScreen : Screen {
                                                         modifier = Modifier.size(24.dp),
                                                         color = customColors.gourmetOrange,
                                                         strokeWidth = 2.dp
+                                                    )
+                                                }
+                                            }
+                                        }
+                                        if (postState.loadingMoreError && !postState.isLoadingMore) {
+                                            item(span = { GridItemSpan(maxLineSpan) }) {
+                                                Column(
+                                                    modifier = Modifier
+                                                        .fillMaxWidth()
+                                                        .padding(vertical = 10.dp),
+                                                    horizontalAlignment = Alignment.CenterHorizontally
+                                                ) {
+                                                    IconButton(
+                                                        onClick = {
+                                                            postScreenModel.loadNextPage()
+                                                        }
+                                                    ) {
+                                                        Icon(
+                                                            imageVector = Icons.Default.Refresh,
+                                                            contentDescription = stringResource(Res.string.active_devices_retry),
+                                                            tint = customColors.placeHolderIcon,
+                                                            modifier = Modifier.size(28.dp)
+                                                        )
+                                                    }
+                                                    Text(
+                                                        text = stringResource(Res.string.connection_error),
+                                                        style = MaterialTheme.typography.bodySmall.copy(
+                                                            color = customColors.placeHolderIcon,
+                                                            fontWeight = FontWeight.Medium
+                                                        )
                                                     )
                                                 }
                                             }
