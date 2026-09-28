@@ -62,7 +62,7 @@ class PostRepository(
             .flowOn(dispatchers.io)
     }
 
-    // Hata alınsa da arka planda sessizce kalabilir, aksi halde ResultWrapper dönerek ViewModel'e bildirilebilir
+
     suspend fun fetchAndSaveUserPosts(
         userId: Long,
         page: Int,
@@ -166,14 +166,15 @@ class PostRepository(
     suspend fun updatePost(
         postId: Long,
         request: PostUpdateRequest
-    ): ResultWrapper<PostResponse> = withContext(dispatchers.io) {
+    ): ResultWrapper<Unit> = withContext(dispatchers.io) {
         val result = safeApiCall { remoteDataSource.updatePost(postId, request) }
-
-        if (result is ResultWrapper.Success) {
-            postLocalDataSource.savePostDetail(result.data)
+        when (result) {
+            is ResultWrapper.Success -> {
+                postLocalDataSource.updatePostLocally(postId,request.explanation,request.commentEnabled ?: false)
+                ResultWrapper.Success(Unit)
+            }
+            is ResultWrapper.Error -> ResultWrapper.Error(result.message, ErrorType.UNKNOWN_ERROR)
         }
-
-        result
     }
 
     suspend fun getPostLikes(

@@ -40,6 +40,7 @@ import org.beem.tastymap.ui.common.NotificationBadgeManager
 import org.beem.tastymap.ui.post.create.CreatePostScreenModel
 import org.beem.tastymap.ui.post.detail.PostDetailScreenModel
 import org.beem.tastymap.ui.post.mypost.MyPostScreenModel
+import org.beem.tastymap.ui.post.mypost.updatepost.EditPostScreenModel
 import org.beem.tastymap.ui.post.otherpost.PostScreenModel
 import org.beem.tastymap.ui.post.postlike.PostLikesScreenModel
 import org.beem.tastymap.ui.profile.health.HealthScreenModel
@@ -150,6 +151,7 @@ val appModule = module {
     factory { PostDetailScreenModel(get()) }
     factory { CreatePostScreenModel(get(),get()) }
     factory { PostLikesScreenModel(get(),get()) }
+    factory { EditPostScreenModel(get()) }
 
     factory { (userId: Long) ->
         ProfileScreenModel(

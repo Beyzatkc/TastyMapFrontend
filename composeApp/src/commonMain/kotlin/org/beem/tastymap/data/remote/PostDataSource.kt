@@ -53,7 +53,7 @@ class PostDataSource(private val authHttpClientManager: AuthHttpClientManager) {
         return client.delete("api/posts/delete-post/$postId").body()
     }
 
-    suspend fun updatePost(postId: Long, request: PostUpdateRequest): PostResponse {
+    suspend fun updatePost(postId: Long, request: PostUpdateRequest) {
         return client.patch("api/posts/update-post/$postId") {
             contentType(ContentType.Application.Json)
             setBody(request)
@@ -71,7 +71,7 @@ class PostDataSource(private val authHttpClientManager: AuthHttpClientManager) {
         }.body()
     }
 
-    suspend fun togglePin(postId: Long): PostResponse {
+    suspend fun togglePin(postId: Long) {
         return client.put("api/posts/toggle-pin/$postId").body()
     }
 }

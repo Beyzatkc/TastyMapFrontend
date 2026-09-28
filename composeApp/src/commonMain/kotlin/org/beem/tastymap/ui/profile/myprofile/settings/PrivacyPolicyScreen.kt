@@ -24,6 +24,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.TextUnitType
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
@@ -59,9 +60,10 @@ class PrivacyPolicyScreen : Screen {
                     title = {
                         Text(
                             text = stringResource(Res.string.privacy_policy_title),
-                            style = MaterialTheme.typography.titleMedium.copy(
+                            style = MaterialTheme.typography.titleLarge.copy(
                                 color = customColors.textPrimary,
-                                fontWeight = FontWeight.Bold
+                                fontSize = 20.sp,
+                                fontWeight = FontWeight.SemiBold
                             )
                         )
                     },

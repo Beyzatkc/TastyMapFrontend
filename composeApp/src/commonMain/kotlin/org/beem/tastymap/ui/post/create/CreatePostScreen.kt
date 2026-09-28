@@ -28,6 +28,7 @@ import androidx.compose.material.icons.filled.ErrorOutline
 import androidx.compose.material.icons.filled.PhotoLibrary
 import androidx.compose.material.icons.filled.Place
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.rounded.CheckCircle
 import androidx.compose.material.icons.rounded.ChevronRight
 import androidx.compose.material.icons.rounded.KeyboardArrowDown
@@ -41,7 +42,9 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.koin.koinScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
@@ -65,10 +68,12 @@ import org.beem.tastymap.ui.theme.LocalCustomColors
 import org.jetbrains.compose.resources.stringResource
 import tastymap.composeapp.generated.resources.Res
 import tastymap.composeapp.generated.resources.add_photo
+import tastymap.composeapp.generated.resources.add_photo_count
 import tastymap.composeapp.generated.resources.allow_comments
 import tastymap.composeapp.generated.resources.camera
 import tastymap.composeapp.generated.resources.change
 import tastymap.composeapp.generated.resources.comments
+import tastymap.composeapp.generated.resources.create_post_success
 import tastymap.composeapp.generated.resources.create_post_title
 import tastymap.composeapp.generated.resources.no_saved_visits
 import tastymap.composeapp.generated.resources.notification_retry
@@ -160,18 +165,32 @@ class CreatePostScreen : Screen {
             containerColor = customColors.background,
 
             topBar = {
-                CenterAlignedTopAppBar(
-                    title = {
-                        Text(
-                            text = stringResource(Res.string.create_post_title),
-                            style = MaterialTheme.typography.headlineMedium,
-                            color = customColors.textPrimary
+                Column {
+                    CenterAlignedTopAppBar(
+                        title = {
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.spacedBy(2.dp)
+                            ) {
+                                Text(
+                                    text = stringResource(Res.string.create_post_title),
+                                    style = MaterialTheme.typography.titleLarge.copy(
+                                        fontSize = 20.sp,
+                                        fontWeight = FontWeight.SemiBold
+                                    ),
+                                    color = customColors.textPrimary
+                                )
+                            }
+                        },
+                        colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                            containerColor = customColors.background
                         )
-                    },
-                    colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                        containerColor = customColors.background
                     )
-                )
+                    HorizontalDivider(
+                        color = customColors.borderLight.copy(alpha = 0.6f),
+                        thickness = 1.dp
+                    )
+                }
             },
 
             bottomBar = {
@@ -430,7 +449,7 @@ class CreatePostScreen : Screen {
                     }
                     Spacer(modifier = Modifier.height(16.dp))
                     Text(
-                        text = "Gönderi Paylaşıldı",//stringResource(Res.string.post_shared_success), // "Gönderi Paylaşıldı!"
+                        text = stringResource(Res.string.create_post_success),
                         style = MaterialTheme.typography.titleMedium.copy(
                             fontWeight = FontWeight.Bold,
                             color = customColors.textPrimary
@@ -740,7 +759,6 @@ private fun VisitListItemCard(
                 .padding(14.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // İkon Kutusu
             Box(
                 modifier = Modifier
                     .size(44.dp)
@@ -758,7 +776,6 @@ private fun VisitListItemCard(
 
             Spacer(modifier = Modifier.width(14.dp))
 
-            // Metin Alanı
             Column(
                 modifier = Modifier.weight(1f),
                 verticalArrangement = Arrangement.spacedBy(2.dp)
@@ -767,7 +784,8 @@ private fun VisitListItemCard(
                     text = visit.placeName,
                     style = MaterialTheme.typography.titleMedium,
                     color = customColors.textPrimary,
-                    maxLines = 1
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
 
                 val locationText = listOfNotNull(visit.district, visit.city)
@@ -786,6 +804,35 @@ private fun VisitListItemCard(
 
             Spacer(modifier = Modifier.width(8.dp))
 
+            visit.averagePoint.takeIf { it > 0 }?.let { point ->
+                Surface(
+                    color = if(isSelected) customColors.gourmetOrange else customColors.navy,
+                    shape = RoundedCornerShape(8.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Star,
+                            contentDescription = null,
+                            tint = Color.White,
+                            modifier = Modifier.size(14.dp)
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = point.toString(),
+                            style = MaterialTheme.typography.labelMedium.copy(
+                                color = Color.White,
+                                fontWeight = FontWeight.Bold
+                            )
+                        )
+                    }
+                }
+                Spacer(modifier = Modifier.width(8.dp))
+            }
+
+            // Seçim İkonu
             if (isSelected) {
                 Icon(
                     imageVector = Icons.Rounded.CheckCircle,
@@ -804,14 +851,12 @@ private fun VisitListItemCard(
         }
     }
 }
-
 @Composable
 fun VisitSelectorCard(
     selectedVisit: VisitResponse?,
     customColors: CustomColors,
     onClick: () -> Unit
 ) {
-
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -825,90 +870,118 @@ fun VisitSelectorCard(
             customColors.borderLight
         )
     ) {
-
         Row(
             modifier = Modifier.padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-
             Box(
                 modifier = Modifier
                     .size(48.dp)
                     .clip(RoundedCornerShape(12.dp))
-                    .background(customColors.wave),
+                    .background(customColors.gourmetOrange),
                 contentAlignment = Alignment.Center
             ) {
-
                 Icon(
                     Icons.Default.Place,
                     contentDescription = null,
-                    tint = customColors.navy
+                    tint = Color.White
                 )
             }
 
-            Spacer(
-                modifier = Modifier.width(16.dp)
-            )
+            Spacer(modifier = Modifier.width(16.dp))
 
             Column(
                 modifier = Modifier.weight(1f),
                 verticalArrangement = Arrangement.spacedBy(2.dp)
             ) {
-
                 if (selectedVisit != null) {
-
                     Text(
-                        text = stringResource(
-                            Res.string.selected_place
-                        ),
+                        text = stringResource(Res.string.selected_place),
                         style = MaterialTheme.typography.labelSmall.copy(
                             color = customColors.navy
                         )
                     )
 
-                    Text(
-                        text = selectedVisit.placeName,
-                        style = MaterialTheme.typography.titleMedium,
-                        color = customColors.textPrimary
-                    )
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Text(
+                            text = selectedVisit.placeName,
+                            style = MaterialTheme.typography.titleMedium,
+                            color = customColors.textPrimary,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier.weight(1f, fill = false)
+                        )
 
-                    Text(
-                        text = "${selectedVisit.district ?: ""}, ${selectedVisit.city ?: ""}",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = customColors.textSecondary
-                    )
+                        // Puan Rozeti
+                        selectedVisit.averagePoint?.takeIf { it > 0 }?.let { point ->
+                            Surface(
+                                color = customColors.gourmetOrange.copy(alpha = 0.12f),
+                                shape = RoundedCornerShape(8.dp)
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Star,
+                                        contentDescription = null,
+                                        tint = customColors.gourmetOrange,
+                                        modifier = Modifier.size(14.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(4.dp))
+                                    Text(
+                                        text = point.toString(),
+                                        style = MaterialTheme.typography.labelSmall.copy(
+                                            color = customColors.gourmetOrange,
+                                            fontWeight = FontWeight.Bold
+                                        )
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    val locationText = listOfNotNull(selectedVisit.district, selectedVisit.city)
+                        .filter { it.isNotBlank() }
+                        .joinToString(", ")
+
+                    if (locationText.isNotEmpty()) {
+                        Text(
+                            text = locationText,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = customColors.textSecondary,
+                            maxLines = 1
+                        )
+                    }
 
                 } else {
-
                     Text(
-                        text = stringResource(
-                            Res.string.select_place
-                        ),
+                        text = stringResource(Res.string.select_place),
                         style = MaterialTheme.typography.titleMedium,
                         color = customColors.textPrimary
                     )
 
                     Text(
-                        text = stringResource(
-                            Res.string.select_visit_to_share
-                        ),
+                        text = stringResource(Res.string.select_visit_to_share),
                         style = MaterialTheme.typography.bodyMedium,
                         color = customColors.textSecondary
                     )
                 }
             }
 
+            Spacer(modifier = Modifier.width(8.dp))
+
             Icon(
-                Icons.Rounded.KeyboardArrowDown,
-                contentDescription = stringResource(
-                    Res.string.change
-                ),
+                imageVector = Icons.Rounded.KeyboardArrowDown,
+                contentDescription = stringResource(Res.string.change),
                 tint = customColors.textTertiary
             )
         }
     }
 }
-
 
 @Composable
 fun PhotoUploadArea(
@@ -989,7 +1062,7 @@ fun PhotoUploadArea(
                                 tint = if (error != null) customColors.error else customColors.placeHolderIcon
                             )
                             Text(
-                                text = "Fotoğraf Ekle\n(${selectedImagesBytes.size}/3)",
+                                text = stringResource(Res.string.add_photo_count, selectedImagesBytes.size),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = if (error != null) customColors.error else customColors.placeHolderIcon,
                                 textAlign = TextAlign.Center
@@ -1000,7 +1073,6 @@ fun PhotoUploadArea(
             }
         }
 
-        // Hata Mesajı Görünümü
         AnimatedVisibility(
             visible = error != null,
             enter = fadeIn() + expandVertically()

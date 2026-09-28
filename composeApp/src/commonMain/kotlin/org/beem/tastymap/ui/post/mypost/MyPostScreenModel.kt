@@ -111,18 +111,4 @@ class MyPostScreenModel(
         }
     }
 
-
-
-    //UPDATEYE BAKICLAK YANLIS SUAN BURDA OLCAYACAK
-    fun updatePost(postId: Long, request: PostUpdateRequest) {
-        screenModelScope.launch {
-            val result = postRepository.updatePost(postId, request)
-            if (result is ResultWrapper.Error) {
-                _uiState.update { it.copy(errorMessage = result.message) }
-            }
-            // Başarılı olunca SQLite güncellenir ve Flow ekranı otomatik yeniler.
-        }
-    }
-
-
 }

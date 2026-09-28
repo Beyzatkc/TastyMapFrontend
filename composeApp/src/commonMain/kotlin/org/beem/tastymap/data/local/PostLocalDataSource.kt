@@ -7,7 +7,6 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.withContext
 import org.beem.tastymap.core.provider.DispatcherProvider
 import org.beem.tastymap.data.model.post.PostGridResponse
@@ -113,6 +112,22 @@ class PostLocalDataSource(
                 }
             }
         }
+    }
+
+    suspend fun updatePostLocally(
+        postId: Long,
+        newExplanation: String?,
+        isCommentEnabled: Boolean
+    ) = withContext(dispatchers.io) {
+        val now = Clock.System.now().toEpochMilliseconds()
+
+        queries.updatePostExplanationAndComment(
+            explanation = newExplanation,
+            commentEnabled = if (isCommentEnabled) 1L else 0L,
+            updateDate = now,
+            updatedAt = now,
+            postId = postId
+        )
     }
 
     suspend fun savePostDetail(post: PostResponse) = withContext(dispatchers.io) {

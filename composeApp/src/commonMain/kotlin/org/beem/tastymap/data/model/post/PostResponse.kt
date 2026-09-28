@@ -97,8 +97,7 @@ data class PostUpdateRequest(
     @SerialName("explanation")
     val explanation: String? = null,
 
-    @SerialName("photoUrl")
-    val photoUrl: List<String>? = null,
+    val commentEnabled: Boolean?
 )
 
 @Serializable

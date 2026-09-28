@@ -1,7 +1,9 @@
 package org.beem.tastymap.ui.auth.common
 
+import kotlinx.coroutines.flow.update
 import org.jetbrains.compose.resources.StringResource
 import tastymap.composeapp.generated.resources.Res
+import tastymap.composeapp.generated.resources.error_explanation_limit
 import tastymap.composeapp.generated.resources.validation_email_empty
 import tastymap.composeapp.generated.resources.validation_email_invalid
 import tastymap.composeapp.generated.resources.validation_name_empty
@@ -80,6 +82,14 @@ object CheckValidator {
         return if (value.isBlank()) {
             ValidationResult.Invalid(errorRes)
         } else {
+            ValidationResult.Valid
+        }
+    }
+
+     fun validateExplanation(explanation: String?): ValidationResult {
+       return if (explanation != null && explanation.length > 500) {
+            ValidationResult.Invalid(Res.string.error_explanation_limit)
+        }else {
             ValidationResult.Valid
         }
     }

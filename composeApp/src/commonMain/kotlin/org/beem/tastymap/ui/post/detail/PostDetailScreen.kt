@@ -37,12 +37,14 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.outlined.Comment
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.PushPin
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.Update
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.outlined.LocationOn
 import androidx.compose.material3.ButtonDefaults
@@ -98,6 +100,7 @@ import org.beem.tastymap.ui.bottomnav.ProfileTab
 import org.beem.tastymap.ui.components.DialogConfig
 import org.beem.tastymap.ui.components.LoadingOverlay
 import org.beem.tastymap.ui.components.TastyConfirmDialog
+import org.beem.tastymap.ui.post.mypost.updatepost.EditPostScreen
 import org.beem.tastymap.ui.post.postlike.PostLikesBottomSheet
 import org.beem.tastymap.ui.post.postlike.PostLikesScreenModel
 import org.beem.tastymap.ui.profile.otherprofile.ProfileScreen
@@ -111,6 +114,7 @@ import tastymap.composeapp.generated.resources.delete_post
 import tastymap.composeapp.generated.resources.delete_post_message
 import tastymap.composeapp.generated.resources.delete_post_title
 import tastymap.composeapp.generated.resources.deleting_post
+import tastymap.composeapp.generated.resources.edit_post
 import tastymap.composeapp.generated.resources.options
 import tastymap.composeapp.generated.resources.pin_post
 import tastymap.composeapp.generated.resources.post
@@ -179,10 +183,11 @@ data class PostDetailScreen(val postId: Long) : Screen {
                             title = {
                                 Text(
                                     text = stringResource(Res.string.post),
-                                    style = MaterialTheme.typography.titleMedium.copy(
+                                    style = MaterialTheme.typography.titleLarge.copy(
                                         color = customColors.textPrimary,
-                                        fontWeight = FontWeight.Bold
-                                    )
+                                        fontSize = 20.sp,
+                                        fontWeight = FontWeight.SemiBold
+                                    ),
                                 )
                             },
                             navigationIcon = {
@@ -230,6 +235,27 @@ data class PostDetailScreen(val postId: Long) : Screen {
                                                     screenModel.togglePin(postId)
                                                 }
                                             )
+
+                                            DropdownMenuItem(
+                                                text = {
+                                                    Text(
+                                                        stringResource(Res.string.edit_post
+                                                        ),
+                                                        color = customColors.textPrimary
+                                                    )
+                                                },
+                                                leadingIcon = {
+                                                    Icon(
+                                                        imageVector = Icons.Default.Edit,
+                                                        contentDescription = null,
+                                                        tint = customColors.textPrimary
+                                                    )
+                                                },
+                                                onClick = {
+                                                    showMenu = false
+                                                    navigator.push(EditPostScreen(postId))
+                                                }
+                                            )
                                             DropdownMenuItem(
                                                 text = {
                                                     Text(
@@ -249,6 +275,7 @@ data class PostDetailScreen(val postId: Long) : Screen {
                                                     showDeleteDialog = true
                                                 }
                                             )
+
                                         }
                                     }
                                 }
@@ -530,8 +557,11 @@ private fun PostHeader(
                     color = customColors.textPrimary
                 )
             )
+            val locationText = listOfNotNull(post.placeName,post.district, post.city)
+                .filter { it.isNotBlank() }
+                .joinToString(", ")
+
             if (!post.placeName.isNullOrBlank() || !post.city.isNullOrBlank()) {
-                val locationText = listOfNotNull(post.placeName, post.city).joinToString(", ")
                 Text(
                     text = locationText,
                     style = MaterialTheme.typography.bodySmall.copy(color = customColors.textSecondary),
@@ -658,7 +688,7 @@ private fun PostActionBar(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 8.dp, vertical = 4.dp),
+            .padding(horizontal = 4.dp, vertical = 4.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         IconButton(onClick = onLikeClick) {
@@ -730,9 +760,11 @@ private fun PlaceInfoCard(post: PostResponse) {
                     imageVector = Icons.Outlined.LocationOn,
                     contentDescription = null,
                     tint = customColors.gourmetOrange,
-                    modifier = Modifier.size(20.dp)
+                    modifier = Modifier.size(24.dp)
                 )
                 Spacer(modifier = Modifier.width(8.dp))
+
+
                 Column {
                     Text(
                         text = post.placeName ?: "",
@@ -752,7 +784,7 @@ private fun PlaceInfoCard(post: PostResponse) {
 
             if (post.averagePoint > 0) {
                 Surface(
-                    color = customColors.navy,
+                    color = customColors.gourmetOrange.copy(alpha = 0.12f),
                     shape = RoundedCornerShape(8.dp)
                 ) {
                     Row(
@@ -762,14 +794,14 @@ private fun PlaceInfoCard(post: PostResponse) {
                         Icon(
                             imageVector = Icons.Default.Star,
                             contentDescription = null,
-                            tint = Color.White,
+                            tint = customColors.gourmetOrange,
                             modifier = Modifier.size(14.dp)
                         )
                         Spacer(modifier = Modifier.width(4.dp))
                         Text(
                             text = post.averagePoint.toString(),
                             style = MaterialTheme.typography.labelMedium.copy(
-                                color = Color.White,
+                                color = customColors.gourmetOrange,
                                 fontWeight = FontWeight.Bold
                             )
                         )

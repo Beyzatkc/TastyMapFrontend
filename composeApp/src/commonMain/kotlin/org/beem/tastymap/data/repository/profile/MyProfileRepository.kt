@@ -57,7 +57,7 @@ class MyProfileRepository(
 
                         emitAll(
                             localDataSource
-                                .getProfileFlow(userId) // filterNotNull() KALDIRILDI
+                                .getProfileFlow(userId)
                                 .distinctUntilChanged()
                                 .onEach { profile ->
                                     if (profile != null) {

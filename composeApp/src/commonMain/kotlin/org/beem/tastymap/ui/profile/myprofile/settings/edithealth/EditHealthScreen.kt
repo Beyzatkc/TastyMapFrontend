@@ -109,9 +109,10 @@ fun EditHealthContent(
                 title = {
                     Text(
                         text = stringResource(Res.string.edit_health_title),
-                        style = MaterialTheme.typography.titleMedium.copy(
+                        style = MaterialTheme.typography.titleLarge.copy(
                             color = customColors.textPrimary,
-                            fontWeight = FontWeight.Bold
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.SemiBold
                         )
                     )
                 },

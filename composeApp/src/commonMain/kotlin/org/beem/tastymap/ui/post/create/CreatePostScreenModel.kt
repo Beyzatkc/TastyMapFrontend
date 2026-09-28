@@ -146,7 +146,7 @@ class CreatePostScreenModel(
         if (_uiState.value.isLoading) return
 
         val isExplanationValid = validateExplanation(request.explanation)
-        val isPhotoValid = validatePostPhoto(selectedImagesBytes) // ByteArray listesi doğruluyor
+        val isPhotoValid = validatePostPhoto(selectedImagesBytes)
 
         if (!isExplanationValid || !isPhotoValid) return
 

@@ -28,6 +28,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.koin.koinScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
@@ -72,9 +73,10 @@ class ActiveDevicesScreen : Screen {
                     title = {
                         Text(
                             text = stringResource(Res.string.active_devices_title),
-                            style = MaterialTheme.typography.titleMedium.copy(
+                            style = MaterialTheme.typography.titleLarge.copy(
                                 color = customColors.textPrimary,
-                                fontWeight = FontWeight.Bold
+                                fontSize = 20.sp,
+                                fontWeight = FontWeight.SemiBold
                             )
                         )
                     },

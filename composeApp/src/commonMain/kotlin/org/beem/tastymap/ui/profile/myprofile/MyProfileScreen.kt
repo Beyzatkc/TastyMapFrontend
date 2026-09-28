@@ -737,16 +737,16 @@ private fun PostGridItem(
             Box(
                 modifier = Modifier
                     .align(alignment = Alignment.TopEnd)
-                    .size(30.dp) // Yuvarlağın toplam boyutu
+                    .size(30.dp)
                     .clip(CircleShape)
-                    .background(Color.Gray.copy(alpha = 0.7f)), // Yarı şeffaf gri arka plan
+                    .background(Color.Gray.copy(alpha = 0.7f)),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
                     imageVector = Icons.Default.PushPin,
                     contentDescription = "Pinned",
                     tint = Color.White,
-                    modifier = Modifier.size(20.dp) // İçerideki ikonun boyutu
+                    modifier = Modifier.size(20.dp)
                 )
             }
         }

@@ -545,6 +545,7 @@
     <string name="post">Post</string>
     <string name="options">Options</string>
     <string name="unpin_post">Unpin</string>
+    <string name="edit_post">Edit</string>
     <string name="pin_post">Pin</string>
     <string name="delete_post">Delete Post</string>
     <string name="view_all_comments">View all %1$d comments</string>
@@ -560,4 +561,10 @@
 
     <string name="likes_title">Liked by</string>
 
+    <string name="edit_post_success">Post updated successfully.</string>
+    <string name="create_post_success">Post shared.</string>
+    <string name="edit_post_title">Edit Post</string>
+
+    <string name="photos_title">Photos</string>
+    <string name="cannot_be_changed">Cannot be changed</string>
 </resources>

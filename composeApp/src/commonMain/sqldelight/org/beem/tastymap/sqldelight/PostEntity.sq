@@ -87,6 +87,14 @@ INSERT INTO PostEntity (
     :neighbourhood, :latitude, :longitude, :averagePoint, :page, :updatedAt
 );
 
+updatePostExplanationAndComment:
+UPDATE PostEntity
+SET explanation = :explanation,
+    commentEnabled = :commentEnabled,
+    updateDate =: updateDate,
+    updatedAt = :updatedAt
+WHERE postId = :postId;
+
 -- 7. Detay Güncelleme
 updatePostDetail:
 UPDATE PostEntity

@@ -37,6 +37,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.koin.koinScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
@@ -114,8 +115,9 @@ class VisitScreen : Screen {
                     title = {
                         Text(
                             text = stringResource(Res.string.visit_history_title),
-                            style = MaterialTheme.typography.titleMedium.copy(
+                            style = MaterialTheme.typography.titleLarge.copy(
                                 color = customColors.textPrimary,
+                                fontSize = 20.sp,
                                 fontWeight = FontWeight.SemiBold
                             )
                         )
@@ -376,13 +378,13 @@ private fun VisitItemCard(
                     modifier = Modifier
                         .size(44.dp)
                         .clip(RoundedCornerShape(12.dp))
-                        .background(customColors.wave),
+                        .background(customColors.gourmetOrange),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         imageVector = Icons.Default.Place,
                         contentDescription = null,
-                        tint = customColors.navy,
+                        tint = Color.White,
                         modifier = Modifier.size(22.dp)
                     )
                 }
@@ -412,7 +414,7 @@ private fun VisitItemCard(
                                 verticalAlignment = Alignment.CenterVertically,
                                 modifier = Modifier
                                     .background(
-                                        color = customColors.gourmetOrange,
+                                        color = customColors.gourmetOrange.copy(alpha = 0.12f),
                                         shape = RoundedCornerShape(percent = 50)
                                     )
                                     .padding(horizontal = 8.dp, vertical = 3.dp)
@@ -420,7 +422,7 @@ private fun VisitItemCard(
                                 Icon(
                                     imageVector = Icons.Default.Star,
                                     contentDescription = stringResource(Res.string.visit_item_rating_desc),
-                                    tint = Color.White,
+                                    tint = customColors.gourmetOrange,
                                     modifier = Modifier.size(11.dp)
                                 )
                                 Spacer(modifier = Modifier.width(3.dp))
@@ -428,7 +430,7 @@ private fun VisitItemCard(
                                     text = visit.averagePoint.toString(),
                                     style = MaterialTheme.typography.labelSmall.copy(
                                         fontWeight = FontWeight.Bold,
-                                        color = Color.White
+                                        color =  customColors.gourmetOrange,
                                     )
                                 )
                             }
