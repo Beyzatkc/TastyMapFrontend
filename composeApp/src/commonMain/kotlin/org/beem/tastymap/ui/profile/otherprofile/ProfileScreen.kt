@@ -235,7 +235,7 @@ class ProfileScreen(private val userId: Long) : Screen {
                     ) {
                         val profile = state.profile
 
-                        if (profile == null && !state.isLoading && state.errorMessage !=null && state.isRefreshing) {
+                        if (profile == null && !state.isLoading && state.errorMessage != null && state.isRefreshing) {
                             Box(
                                 modifier = Modifier.fillMaxSize(),
                                 contentAlignment = Alignment.Center
@@ -282,8 +282,10 @@ class ProfileScreen(private val userId: Long) : Screen {
                                 }
                             }
                         } else {
-                            val isBlocked = profile?.blockedByMe == true || profile?.blockedMe == true
-                            val isPrivateAndNotFollowing = profile?.privateProfile == true && profile.relationStatus != RelationStatus.FOLLOWING && profile.relationStatus != RelationStatus.SELF
+                            val isBlocked =
+                                profile?.blockedByMe == true || profile?.blockedMe == true
+                            val isPrivateAndNotFollowing =
+                                profile?.privateProfile == true && profile.relationStatus != RelationStatus.FOLLOWING && profile.relationStatus != RelationStatus.SELF
 
                             LazyVerticalGrid(
                                 columns = GridCells.Fixed(3),
@@ -292,12 +294,15 @@ class ProfileScreen(private val userId: Long) : Screen {
                                 horizontalArrangement = Arrangement.spacedBy(2.dp),
                                 verticalArrangement = Arrangement.spacedBy(2.dp)
                             ) {
-                                // 1. PROFİL HEADER BİLGİLERİ
+                                // 1. PROFİL HEADER BİLGİLERİ (Tam Genişlik - Sınırlandırılmadı)
                                 item(span = { GridItemSpan(maxLineSpan) }) {
                                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                         Surface(
                                             color = customColors.darkHeaderColor,
-                                            shape = RoundedCornerShape(bottomStart = 28.dp, bottomEnd = 28.dp),
+                                            shape = RoundedCornerShape(
+                                                bottomStart = 28.dp,
+                                                bottomEnd = 28.dp
+                                            ),
                                             modifier = Modifier.fillMaxWidth()
                                         ) {
                                             Box(
@@ -307,7 +312,10 @@ class ProfileScreen(private val userId: Long) : Screen {
                                                 Column(
                                                     modifier = Modifier
                                                         .widthIn(max = 600.dp)
-                                                        .padding(horizontal = 20.dp, vertical = 20.dp),
+                                                        .padding(
+                                                            horizontal = 20.dp,
+                                                            vertical = 20.dp
+                                                        ),
                                                     horizontalAlignment = Alignment.CenterHorizontally
                                                 ) {
                                                     // Profil Fotoğrafı
@@ -316,24 +324,35 @@ class ProfileScreen(private val userId: Long) : Screen {
                                                             modifier = Modifier
                                                                 .size(92.dp)
                                                                 .clip(CircleShape)
-                                                                .border(3.dp, customColors.gourmetOrange, CircleShape)
+                                                                .border(
+                                                                    3.dp,
+                                                                    customColors.gourmetOrange,
+                                                                    CircleShape
+                                                                )
                                                                 .background(customColors.placeHolderBack)
                                                                 .pointerInput(Unit) {
-                                                                    detectTapGestures(onLongPress = { isPhotoZoomed = true })
+                                                                    detectTapGestures(onLongPress = {
+                                                                        isPhotoZoomed = true
+                                                                    })
                                                                 },
                                                             contentAlignment = Alignment.Center
                                                         ) {
                                                             if (!profile?.profilePhoto.isNullOrBlank() && !isBlocked) {
                                                                 AsyncImage(
                                                                     model = profile.profilePhoto,
-                                                                    contentDescription = stringResource(Res.string.profile_photo_cd),
-                                                                    modifier = Modifier.fillMaxSize().clip(CircleShape),
+                                                                    contentDescription = stringResource(
+                                                                        Res.string.profile_photo_cd
+                                                                    ),
+                                                                    modifier = Modifier.fillMaxSize()
+                                                                        .clip(CircleShape),
                                                                     contentScale = ContentScale.Crop
                                                                 )
                                                             } else {
                                                                 Icon(
                                                                     imageVector = Icons.Default.Person,
-                                                                    contentDescription = stringResource(Res.string.profile_default_photo_cd),
+                                                                    contentDescription = stringResource(
+                                                                        Res.string.profile_default_photo_cd
+                                                                    ),
                                                                     tint = customColors.placeHolderIcon,
                                                                     modifier = Modifier.size(48.dp)
                                                                 )
@@ -348,7 +367,10 @@ class ProfileScreen(private val userId: Long) : Screen {
                                                             ) {
                                                                 Text(
                                                                     text = role,
-                                                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
+                                                                    modifier = Modifier.padding(
+                                                                        horizontal = 8.dp,
+                                                                        vertical = 2.dp
+                                                                    ),
                                                                     style = MaterialTheme.typography.labelSmall.copy(
                                                                         color = Color.White,
                                                                         fontWeight = FontWeight.Bold
@@ -361,7 +383,8 @@ class ProfileScreen(private val userId: Long) : Screen {
                                                     Spacer(modifier = Modifier.height(12.dp))
 
                                                     Text(
-                                                        text = profile?.name?.trim().takeIf { !it.isNullOrBlank() }
+                                                        text = profile?.name?.trim()
+                                                            .takeIf { !it.isNullOrBlank() }
                                                             ?: stringResource(Res.string.profile_default_name),
                                                         style = MaterialTheme.typography.bodyLarge.copy(
                                                             fontSize = 18.sp,
@@ -373,7 +396,9 @@ class ProfileScreen(private val userId: Long) : Screen {
                                                     Spacer(modifier = Modifier.height(4.dp))
 
                                                     Text(
-                                                        text = profile?.biography ?: stringResource(Res.string.profile_default_bio),
+                                                        text = profile?.biography ?: stringResource(
+                                                            Res.string.profile_default_bio
+                                                        ),
                                                         style = MaterialTheme.typography.bodyMedium.copy(
                                                             color = Color.White.copy(alpha = 0.8f),
                                                             textAlign = TextAlign.Center
@@ -387,49 +412,76 @@ class ProfileScreen(private val userId: Long) : Screen {
                                                         IncomingRequestCard(
                                                             username = profile.username,
                                                             isLoading = state.isActionLoading,
-                                                            onAcceptClick = { screenModel.acceptRequest(userId) },
-                                                            onRejectClick = { screenModel.rejectRequest(userId) }
+                                                            onAcceptClick = {
+                                                                screenModel.acceptRequest(
+                                                                    userId
+                                                                )
+                                                            },
+                                                            onRejectClick = {
+                                                                screenModel.rejectRequest(
+                                                                    userId
+                                                                )
+                                                            }
                                                         )
                                                         Spacer(modifier = Modifier.height(12.dp))
                                                     }
 
                                                     Row(
                                                         modifier = Modifier.fillMaxWidth(),
-                                                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                                        horizontalArrangement = Arrangement.spacedBy(
+                                                            8.dp
+                                                        ),
                                                         verticalAlignment = Alignment.CenterVertically
                                                     ) {
                                                         Box(modifier = Modifier.weight(1f)) {
                                                             if (!isBlocked) {
                                                                 ProfileActionButton(
-                                                                    relationStatus = profile?.relationStatus ?: RelationStatus.NOT_FOLLOWING,
+                                                                    relationStatus = profile?.relationStatus
+                                                                        ?: RelationStatus.NOT_FOLLOWING,
                                                                     isLoading = state.isActionLoading,
                                                                     onActionClick = { status ->
                                                                         if (status == RelationStatus.FOLLOWING) {
-                                                                            activeDialog = DialogConfig(
-                                                                                title = unfollowTitle,
-                                                                                message = unfollowMessage,
-                                                                                confirmText = unfollowConfirm,
-                                                                                isDestructive = false,
-                                                                                onConfirm = { screenModel.handleFollowAction(userId, status) }
-                                                                            )
+                                                                            activeDialog =
+                                                                                DialogConfig(
+                                                                                    title = unfollowTitle,
+                                                                                    message = unfollowMessage,
+                                                                                    confirmText = unfollowConfirm,
+                                                                                    isDestructive = false,
+                                                                                    onConfirm = {
+                                                                                        screenModel.handleFollowAction(
+                                                                                            userId,
+                                                                                            status
+                                                                                        )
+                                                                                    }
+                                                                                )
                                                                         } else {
-                                                                            screenModel.handleFollowAction(userId, status)
+                                                                            screenModel.handleFollowAction(
+                                                                                userId,
+                                                                                status
+                                                                            )
                                                                         }
                                                                     }
                                                                 )
                                                             } else {
                                                                 BlockActionButton(
-                                                                    blockedByMe = profile.blockedByMe ?: false,
-                                                                    blockedMe = profile.blockedMe ?: false,
+                                                                    blockedByMe = profile.blockedByMe
+                                                                        ?: false,
+                                                                    blockedMe = profile.blockedMe
+                                                                        ?: false,
                                                                     isLoading = state.isActionLoading,
                                                                     onActionClick = {
-                                                                        val isBlockedByMe = profile.blockedByMe == true
+                                                                        val isBlockedByMe =
+                                                                            profile.blockedByMe == true
                                                                         activeDialog = DialogConfig(
                                                                             title = if (isBlockedByMe) unblockTitle else blockTitle,
                                                                             message = if (isBlockedByMe) unblockMessage else blockMessage,
                                                                             confirmText = if (isBlockedByMe) unblockConfirm else blockConfirm,
                                                                             isDestructive = !isBlockedByMe,
-                                                                            onConfirm = { screenModel.toggleBlockStatus(userId) }
+                                                                            onConfirm = {
+                                                                                screenModel.toggleBlockStatus(
+                                                                                    userId
+                                                                                )
+                                                                            }
                                                                         )
                                                                     }
                                                                 )
@@ -442,8 +494,12 @@ class ProfileScreen(private val userId: Long) : Screen {
                                                                 modifier = Modifier
                                                                     .size(48.dp)
                                                                     .background(
-                                                                        color = Color.White.copy(alpha = 0.15f),
-                                                                        shape = RoundedCornerShape(12.dp)
+                                                                        color = Color.White.copy(
+                                                                            alpha = 0.15f
+                                                                        ),
+                                                                        shape = RoundedCornerShape(
+                                                                            12.dp
+                                                                        )
                                                                     )
                                                             ) {
                                                                 Icon(
@@ -461,14 +517,18 @@ class ProfileScreen(private val userId: Long) : Screen {
                                     }
                                 }
 
-                                // 2. METRİK KARTLAR (3 Sütunu Kaplar)
+                                // --- BURADAN İTİBAREN TÜM ALT ALANLAR MAX 600DP ---
+
+                                // 2. METRİK KARTLAR (Max 600dp)
                                 item(span = { GridItemSpan(maxLineSpan) }) {
                                     Column {
                                         Box(
-                                            modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp),
+                                            modifier = Modifier.fillMaxWidth()
+                                                .padding(horizontal = 20.dp),
                                             contentAlignment = Alignment.Center
                                         ) {
-                                            val isClickable = profile?.relationStatus == RelationStatus.FOLLOWING || profile?.relationStatus == RelationStatus.SELF
+                                            val isClickable =
+                                                profile?.relationStatus == RelationStatus.FOLLOWING || profile?.relationStatus == RelationStatus.SELF
                                             Row(
                                                 modifier = Modifier.widthIn(max = 600.dp),
                                                 horizontalArrangement = Arrangement.spacedBy(12.dp)
@@ -483,11 +543,17 @@ class ProfileScreen(private val userId: Long) : Screen {
                                                 )
                                                 MetricCard(
                                                     title = stringResource(Res.string.profile_metric_subscribers),
-                                                    value = (profile?.subscriberCount ?: 0).toString(),
+                                                    value = (profile?.subscriberCount
+                                                        ?: 0).toString(),
                                                     enabled = isClickable,
                                                     onClick = {
                                                         state.profile?.userId?.let { uId ->
-                                                            navigator.push(SubscribersListScreen(userId = uId, initialTab = SubscriberListType.SUBSCRIBERS))
+                                                            navigator.push(
+                                                                SubscribersListScreen(
+                                                                    userId = uId,
+                                                                    initialTab = SubscriberListType.SUBSCRIBERS
+                                                                )
+                                                            )
                                                         }
                                                     },
                                                     modifier = Modifier.weight(1f),
@@ -495,11 +561,17 @@ class ProfileScreen(private val userId: Long) : Screen {
                                                 )
                                                 MetricCard(
                                                     title = stringResource(Res.string.profile_metric_following),
-                                                    value = (profile?.subscribedCount ?: 0).toString(),
+                                                    value = (profile?.subscribedCount
+                                                        ?: 0).toString(),
                                                     enabled = isClickable,
                                                     onClick = {
                                                         state.profile?.userId?.let { uId ->
-                                                            navigator.push(SubscribersListScreen(userId = uId, initialTab = SubscriberListType.SUBSCRIBES))
+                                                            navigator.push(
+                                                                SubscribersListScreen(
+                                                                    userId = uId,
+                                                                    initialTab = SubscriberListType.SUBSCRIBES
+                                                                )
+                                                            )
                                                         }
                                                     },
                                                     modifier = Modifier.weight(1f),
@@ -513,51 +585,67 @@ class ProfileScreen(private val userId: Long) : Screen {
 
                                 // 3. İÇERİK SEÇİMİ VE GİZLİLİK KONTROLLERİ
                                 if (isBlocked) {
-                                    // ENGELLENMİŞ DURUM
                                     item(span = { GridItemSpan(maxLineSpan) }) {
-                                        Column(
-                                            modifier = Modifier.fillMaxWidth().padding(32.dp),
-                                            horizontalAlignment = Alignment.CenterHorizontally
+                                        Box(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            contentAlignment = Alignment.Center
                                         ) {
-                                            Icon(
-                                                imageVector = Icons.Default.Lock,
-                                                contentDescription = null,
-                                                tint = customColors.textSecondary,
-                                                modifier = Modifier.size(48.dp)
-                                            )
-                                            Spacer(modifier = Modifier.height(8.dp))
-                                            Text(
-                                                text = stringResource(Res.string.profile_blocked_message),
-                                                style = MaterialTheme.typography.bodyMedium.copy(color = customColors.textSecondary),
-                                                textAlign = TextAlign.Center
-                                            )
+                                            Column(
+                                                modifier = Modifier.widthIn(max = 600.dp)
+                                                    .fillMaxWidth().padding(32.dp),
+                                                horizontalAlignment = Alignment.CenterHorizontally
+                                            ) {
+                                                Icon(
+                                                    imageVector = Icons.Default.Lock,
+                                                    contentDescription = null,
+                                                    tint = customColors.textSecondary,
+                                                    modifier = Modifier.size(48.dp)
+                                                )
+                                                Spacer(modifier = Modifier.height(8.dp))
+                                                Text(
+                                                    text = stringResource(Res.string.profile_blocked_message),
+                                                    style = MaterialTheme.typography.bodyMedium.copy(
+                                                        color = customColors.textSecondary
+                                                    ),
+                                                    textAlign = TextAlign.Center
+                                                )
+                                            }
                                         }
                                     }
                                 } else if (isPrivateAndNotFollowing) {
                                     item(span = { GridItemSpan(maxLineSpan) }) {
-                                        Column(
-                                            modifier = Modifier.fillMaxWidth().padding(32.dp),
-                                            horizontalAlignment = Alignment.CenterHorizontally
+                                        Box(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            contentAlignment = Alignment.Center
                                         ) {
-                                            Icon(
-                                                imageVector = Icons.Default.Lock,
-                                                contentDescription = null,
-                                                tint = customColors.textSecondary,
-                                                modifier = Modifier.size(48.dp)
-                                            )
-                                            Spacer(modifier = Modifier.height(8.dp))
-                                            Text(
-                                                text = stringResource(Res.string.profile_private_account_message),
-                                                style = MaterialTheme.typography.bodyMedium.copy(color = customColors.textSecondary),
-                                                textAlign = TextAlign.Center
-                                            )
+                                            Column(
+                                                modifier = Modifier.widthIn(max = 600.dp)
+                                                    .fillMaxWidth().padding(32.dp),
+                                                horizontalAlignment = Alignment.CenterHorizontally
+                                            ) {
+                                                Icon(
+                                                    imageVector = Icons.Default.Lock,
+                                                    contentDescription = null,
+                                                    tint = customColors.textSecondary,
+                                                    modifier = Modifier.size(48.dp)
+                                                )
+                                                Spacer(modifier = Modifier.height(8.dp))
+                                                Text(
+                                                    text = stringResource(Res.string.profile_private_account_message),
+                                                    style = MaterialTheme.typography.bodyMedium.copy(
+                                                        color = customColors.textSecondary
+                                                    ),
+                                                    textAlign = TextAlign.Center
+                                                )
+                                            }
                                         }
                                     }
                                 } else {
                                     item(span = { GridItemSpan(maxLineSpan) }) {
                                         Column {
                                             Box(
-                                                modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp),
+                                                modifier = Modifier.fillMaxWidth()
+                                                    .padding(horizontal = 20.dp),
                                                 contentAlignment = Alignment.Center
                                             ) {
                                                 Surface(
@@ -595,130 +683,219 @@ class ProfileScreen(private val userId: Long) : Screen {
                                         if (postState.isLoading && postState.items.isEmpty()) {
                                             item(span = { GridItemSpan(maxLineSpan) }) {
                                                 Box(
-                                                    modifier = Modifier
-                                                        .fillMaxWidth()
-                                                        .padding(48.dp),
+                                                    modifier = Modifier.fillMaxWidth(),
                                                     contentAlignment = Alignment.Center
                                                 ) {
-                                                    CircularProgressIndicator(
-                                                        modifier = Modifier.size(32.dp),
-                                                        color = customColors.gourmetOrange,
-                                                        strokeWidth = 3.dp
-                                                    )
+                                                    Box(
+                                                        modifier = Modifier
+                                                            .widthIn(max = 600.dp)
+                                                            .fillMaxWidth()
+                                                            .padding(48.dp),
+                                                        contentAlignment = Alignment.Center
+                                                    ) {
+                                                        CircularProgressIndicator(
+                                                            modifier = Modifier.size(32.dp),
+                                                            color = customColors.gourmetOrange,
+                                                            strokeWidth = 3.dp
+                                                        )
+                                                    }
                                                 }
                                             }
                                         } else if (postState.errorMessage != null && postState.items.isEmpty()) {
                                             item(span = { GridItemSpan(maxLineSpan) }) {
-                                                Column(
-                                                    modifier = Modifier
-                                                        .fillMaxWidth()
-                                                        .padding(vertical = 16.dp),
-                                                    horizontalAlignment = Alignment.CenterHorizontally
-                                                ) {
-                                                    IconButton(
-                                                        onClick = {
-                                                            postScreenModel.loadInitialData(userId)
-                                                        }
-                                                    ) {
-                                                        Icon(
-                                                            imageVector = Icons.Default.Refresh,
-                                                            contentDescription = stringResource(Res.string.active_devices_retry),
-                                                            tint = customColors.textSecondary,
-                                                            modifier = Modifier.size(28.dp)
-                                                        )
-                                                    }
-                                                    Text(
-                                                        text = stringResource(Res.string.active_devices_retry),
-                                                        style = MaterialTheme.typography.bodySmall.copy(
-                                                            color = customColors.textSecondary,
-                                                            fontWeight = FontWeight.Medium
-                                                        )
-                                                    )
-                                                }
-                                            }
-                                        } else if (postState.items.isEmpty()) {
-                                            // 2. BOŞ DURUM (Empty State)
-                                            item(span = { GridItemSpan(maxLineSpan) }) {
                                                 Box(
-                                                    modifier = Modifier.fillMaxWidth().padding(32.dp),
+                                                    modifier = Modifier.fillMaxWidth(),
                                                     contentAlignment = Alignment.Center
                                                 ) {
-                                                    Text(
-                                                        text = stringResource(Res.string.my_profile_posts_empty),
-                                                        style = MaterialTheme.typography.bodyMedium.copy(color = customColors.textSecondary),
-                                                        textAlign = TextAlign.Center
-                                                    )
-                                                }
-                                            }
-                                        }  else {
-                                            items(
-                                                items = postState.items,
-                                                key = { post -> post.postId }
-                                            ) { post ->
-                                                PostGridItem(
-                                                    post = post,
-                                                    onClick = {
-                                                        navigator.push(PostDetailScreen(post.postId))
-                                                    }
-                                                )
-                                            }
-                                            if (postState.isLoadingMore) {
-                                                item(span = { GridItemSpan(maxLineSpan) }) {
-                                                    Box(
-                                                        modifier = Modifier.fillMaxWidth().padding(16.dp),
-                                                        contentAlignment = Alignment.Center
-                                                    ) {
-                                                        CircularProgressIndicator(
-                                                            modifier = Modifier.size(24.dp),
-                                                            color = customColors.gourmetOrange,
-                                                            strokeWidth = 2.dp
-                                                        )
-                                                    }
-                                                }
-                                            }
-                                            if (postState.loadingMoreError && !postState.isLoadingMore) {
-                                                item(span = { GridItemSpan(maxLineSpan) }) {
                                                     Column(
                                                         modifier = Modifier
+                                                            .widthIn(max = 600.dp)
                                                             .fillMaxWidth()
-                                                            .padding(vertical = 10.dp),
+                                                            .padding(vertical = 16.dp),
                                                         horizontalAlignment = Alignment.CenterHorizontally
                                                     ) {
                                                         IconButton(
                                                             onClick = {
-                                                                postScreenModel.loadNextPage(userId)
+                                                                postScreenModel.loadInitialData(
+                                                                    userId
+                                                                )
                                                             }
                                                         ) {
                                                             Icon(
                                                                 imageVector = Icons.Default.Refresh,
-                                                                contentDescription = stringResource(Res.string.active_devices_retry),
-                                                                tint = customColors.placeHolderIcon,
+                                                                contentDescription = stringResource(
+                                                                    Res.string.active_devices_retry
+                                                                ),
+                                                                tint = customColors.textSecondary,
                                                                 modifier = Modifier.size(28.dp)
                                                             )
                                                         }
                                                         Text(
-                                                            text = stringResource(Res.string.connection_error),
+                                                            text = stringResource(Res.string.active_devices_retry),
                                                             style = MaterialTheme.typography.bodySmall.copy(
-                                                                color = customColors.placeHolderIcon,
+                                                                color = customColors.textSecondary,
                                                                 fontWeight = FontWeight.Medium
                                                             )
                                                         )
                                                     }
                                                 }
                                             }
+                                        } else if (postState.items.isEmpty()) {
+                                            item(span = { GridItemSpan(maxLineSpan) }) {
+                                                Box(
+                                                    modifier = Modifier.fillMaxWidth(),
+                                                    contentAlignment = Alignment.Center
+                                                ) {
+                                                    Box(
+                                                        modifier = Modifier.widthIn(max = 600.dp)
+                                                            .fillMaxWidth().padding(32.dp),
+                                                        contentAlignment = Alignment.Center
+                                                    ) {
+                                                        Text(
+                                                            text = stringResource(Res.string.my_profile_posts_empty),
+                                                            style = MaterialTheme.typography.bodyMedium.copy(
+                                                                color = customColors.textSecondary
+                                                            ),
+                                                            textAlign = TextAlign.Center
+                                                        )
+                                                    }
+                                                }
+                                            }
+                                        } else {
+                                            // POST LİSTESİ (Max 600dp sınırlandırması için chunked ile 600dp içinde sarmalandı)
+                                            item(span = { GridItemSpan(maxLineSpan) }) {
+                                                Box(
+                                                    modifier = Modifier.fillMaxWidth(),
+                                                    contentAlignment = Alignment.Center
+                                                ) {
+                                                    Box(modifier = Modifier.widthIn(max = 600.dp)) {
+                                                        val chunkedPosts =
+                                                            postState.items.chunked(3)
+                                                        Column(
+                                                            verticalArrangement = Arrangement.spacedBy(
+                                                                2.dp
+                                                            )
+                                                        ) {
+                                                            chunkedPosts.forEach { rowItems ->
+                                                                Row(
+                                                                    horizontalArrangement = Arrangement.spacedBy(
+                                                                        2.dp
+                                                                    ),
+                                                                    modifier = Modifier.fillMaxWidth()
+                                                                ) {
+                                                                    for (post in rowItems) {
+                                                                        Box(
+                                                                            modifier = Modifier.weight(
+                                                                                1f
+                                                                            )
+                                                                        ) {
+                                                                            PostGridItem(
+                                                                                post = post,
+                                                                                onClick = {
+                                                                                    navigator.push(
+                                                                                        PostDetailScreen(
+                                                                                            post.postId
+                                                                                        )
+                                                                                    )
+                                                                                }
+                                                                            )
+                                                                        }
+                                                                    }
+                                                                    repeat(3 - rowItems.size) {
+                                                                        Spacer(
+                                                                            modifier = Modifier.weight(
+                                                                                1f
+                                                                            )
+                                                                        )
+                                                                    }
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
+
+                                            if (postState.isLoadingMore) {
+                                                item(span = { GridItemSpan(maxLineSpan) }) {
+                                                    Box(
+                                                        modifier = Modifier.fillMaxWidth(),
+                                                        contentAlignment = Alignment.Center
+                                                    ) {
+                                                        Box(
+                                                            modifier = Modifier.widthIn(max = 600.dp)
+                                                                .fillMaxWidth().padding(16.dp),
+                                                            contentAlignment = Alignment.Center
+                                                        ) {
+                                                            CircularProgressIndicator(
+                                                                modifier = Modifier.size(24.dp),
+                                                                color = customColors.gourmetOrange,
+                                                                strokeWidth = 2.dp
+                                                            )
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                            if (postState.loadingMoreError && !postState.isLoadingMore) {
+                                                item(span = { GridItemSpan(maxLineSpan) }) {
+                                                    Box(
+                                                        modifier = Modifier.fillMaxWidth(),
+                                                        contentAlignment = Alignment.Center
+                                                    ) {
+                                                        Column(
+                                                            modifier = Modifier
+                                                                .widthIn(max = 600.dp)
+                                                                .fillMaxWidth()
+                                                                .padding(vertical = 10.dp),
+                                                            horizontalAlignment = Alignment.CenterHorizontally
+                                                        ) {
+                                                            IconButton(
+                                                                onClick = {
+                                                                    postScreenModel.loadNextPage(
+                                                                        userId
+                                                                    )
+                                                                }
+                                                            ) {
+                                                                Icon(
+                                                                    imageVector = Icons.Default.Refresh,
+                                                                    contentDescription = stringResource(
+                                                                        Res.string.active_devices_retry
+                                                                    ),
+                                                                    tint = customColors.placeHolderIcon,
+                                                                    modifier = Modifier.size(28.dp)
+                                                                )
+                                                            }
+                                                            Text(
+                                                                text = stringResource(Res.string.connection_error),
+                                                                style = MaterialTheme.typography.bodySmall.copy(
+                                                                    color = customColors.placeHolderIcon,
+                                                                    fontWeight = FontWeight.Medium
+                                                                )
+                                                            )
+                                                        }
+                                                    }
+                                                }
+                                            }
                                         }
-                                    }
-                                    else {
+                                    } else {
+                                        // HARİTA SEKMESİ (Max 600dp)
                                         item(span = { GridItemSpan(maxLineSpan) }) {
                                             Box(
-                                                modifier = Modifier.fillMaxWidth().padding(32.dp),
+                                                modifier = Modifier.fillMaxWidth(),
                                                 contentAlignment = Alignment.Center
                                             ) {
-                                                Text(
-                                                    text = stringResource(Res.string.profile_map_empty),
-                                                    style = MaterialTheme.typography.bodyMedium.copy(color = customColors.textSecondary),
-                                                    textAlign = TextAlign.Center
-                                                )
+                                                Box(
+                                                    modifier = Modifier.widthIn(max = 600.dp)
+                                                        .fillMaxWidth().padding(32.dp),
+                                                    contentAlignment = Alignment.Center
+                                                ) {
+                                                    Text(
+                                                        text = stringResource(Res.string.profile_map_empty),
+                                                        style = MaterialTheme.typography.bodyMedium.copy(
+                                                            color = customColors.textSecondary
+                                                        ),
+                                                        textAlign = TextAlign.Center
+                                                    )
+                                                }
                                             }
                                         }
                                     }

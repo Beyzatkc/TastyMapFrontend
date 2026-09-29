@@ -1,3 +1,64 @@
-CREATE TABLE  (
-
+CREATE TABLE HealthEntity (
+    userId INTEGER NOT NULL PRIMARY KEY,
+    hasDiabetes INTEGER, -- 1: true, 0: false, NULL
+    eatType TEXT, -- VEGETARIAN, VEGAN, NORMAL
+    allergyInfo TEXT, -- JSON olarak saklanır: [{"id":1,"name":"Gluten"}, ...]
+    updatedAt INTEGER NOT NULL
 );
+
+-- ==========================================
+-- SORGULAR (QUERIES)
+-- ===================================
+
+-- 1. Kullanıcının Sağlık Bilgisini Getir
+getHealthByUserId:
+SELECT * FROM HealthEntity WHERE userId = ?;
+
+-- 2. Sağlık Bilgisini Ekle veya Tamamen Yenile (Upsert)
+insertOrUpdateHealth:
+INSERT OR REPLACE INTO HealthEntity(
+    userId,
+    hasDiabetes,
+    eatType,
+    allergyInfo,
+    updatedAt
+) VALUES (?, ?, ?, ?, ?);
+
+-- 3. Kısmi Güncelleme (Patch Update)
+updatePartialHealth:
+UPDATE HealthEntity
+SET
+    hasDiabetes = COALESCE(:hasDiabetes, hasDiabetes),
+    eatType = COALESCE(:eatType, eatType),
+    allergyInfo = COALESCE(:allergyInfo, allergyInfo),
+    updatedAt = :updatedAt
+WHERE userId = :userId;
+
+
+updateDiabetesStatus:
+UPDATE HealthEntity
+SET hasDiabetes = ?,
+    updatedAt = ?
+WHERE userId = ?;
+
+
+updateEatType:
+UPDATE HealthEntity
+SET eatType = ?,
+    updatedAt = ?
+WHERE userId = ?;
+
+-- 6. Sadece Alerjileri Güncelle
+updateAllergies:
+UPDATE HealthEntity
+SET allergyInfo = ?,
+    updatedAt = ?
+WHERE userId = ?;
+
+-- 7. Kullanıcının Sağlık Verisini Sil
+deleteHealthByUserId:
+DELETE FROM HealthEntity WHERE userId = ?;
+
+-- 8. Tüm Sağlık Verilerini Temizle (Logout durumu için)
+clearAllHealthData:
+DELETE FROM HealthEntity;

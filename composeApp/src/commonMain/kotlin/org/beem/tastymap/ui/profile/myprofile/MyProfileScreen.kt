@@ -181,7 +181,11 @@ class MyProfileScreen : Screen {
                                     }
                                 }
                                 IconButton(onClick = {
-                                    navigator.push(SettingsScreen(profileState.profile?.privateProfile ?: false))
+                                    navigator.push(
+                                        SettingsScreen(
+                                            profileState.profile?.privateProfile ?: false
+                                        )
+                                    )
                                 }) {
                                     Icon(
                                         imageVector = Icons.Default.Menu,
@@ -219,7 +223,7 @@ class MyProfileScreen : Screen {
                     ) {
                         val profile = profileState.profile
 
-                        if (profile == null && !profileState.isLoading && profileState.errorMessage !=null && profileState.isRefreshing) {
+                        if (profile == null && !profileState.isLoading && profileState.errorMessage != null && profileState.isRefreshing) {
                             // --- PROFİL YÜKLENEMEDİĞİNDE GÖSTERİLECEK YENİDEN DENE EKRANI ---
                             Box(
                                 modifier = Modifier.fillMaxSize(),
@@ -281,7 +285,10 @@ class MyProfileScreen : Screen {
                                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                         Surface(
                                             color = customColors.darkHeaderColor,
-                                            shape = RoundedCornerShape(bottomStart = 28.dp, bottomEnd = 28.dp),
+                                            shape = RoundedCornerShape(
+                                                bottomStart = 28.dp,
+                                                bottomEnd = 28.dp
+                                            ),
                                             modifier = Modifier.fillMaxWidth()
                                         ) {
                                             Box(
@@ -291,7 +298,10 @@ class MyProfileScreen : Screen {
                                                 Column(
                                                     modifier = Modifier
                                                         .widthIn(max = 600.dp)
-                                                        .padding(horizontal = 20.dp, vertical = 20.dp),
+                                                        .padding(
+                                                            horizontal = 20.dp,
+                                                            vertical = 20.dp
+                                                        ),
                                                     horizontalAlignment = Alignment.CenterHorizontally
                                                 ) {
                                                     Box(contentAlignment = Alignment.BottomEnd) {
@@ -299,24 +309,36 @@ class MyProfileScreen : Screen {
                                                             modifier = Modifier
                                                                 .size(92.dp)
                                                                 .clip(CircleShape)
-                                                                .border(3.dp, customColors.gourmetOrange, CircleShape)
+                                                                .border(
+                                                                    3.dp,
+                                                                    customColors.gourmetOrange,
+                                                                    CircleShape
+                                                                )
                                                                 .background(customColors.placeHolderBack)
                                                                 .pointerInput(Unit) {
-                                                                    detectTapGestures(onLongPress = { isPhotoZoomed = true })
+                                                                    detectTapGestures(onLongPress = {
+                                                                        isPhotoZoomed = true
+                                                                    })
                                                                 },
                                                             contentAlignment = Alignment.Center
                                                         ) {
                                                             if (!profile?.profilePhoto.isNullOrBlank()) {
+
                                                                 AsyncImage(
                                                                     model = profile.profilePhoto,
-                                                                    contentDescription = stringResource(Res.string.my_profile_photo_cd),
-                                                                    modifier = Modifier.fillMaxSize().clip(CircleShape),
+                                                                    contentDescription = stringResource(
+                                                                        Res.string.my_profile_photo_cd
+                                                                    ),
+                                                                    modifier = Modifier.fillMaxSize()
+                                                                        .clip(CircleShape),
                                                                     contentScale = ContentScale.Crop
                                                                 )
                                                             } else {
                                                                 Icon(
                                                                     imageVector = Icons.Default.Person,
-                                                                    contentDescription = stringResource(Res.string.my_profile_default_photo_cd),
+                                                                    contentDescription = stringResource(
+                                                                        Res.string.my_profile_default_photo_cd
+                                                                    ),
                                                                     tint = customColors.placeHolderIcon,
                                                                     modifier = Modifier.size(48.dp)
                                                                 )
@@ -331,7 +353,10 @@ class MyProfileScreen : Screen {
                                                             ) {
                                                                 Text(
                                                                     text = role,
-                                                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
+                                                                    modifier = Modifier.padding(
+                                                                        horizontal = 8.dp,
+                                                                        vertical = 2.dp
+                                                                    ),
                                                                     style = MaterialTheme.typography.labelSmall.copy(
                                                                         color = Color.White,
                                                                         fontWeight = FontWeight.Bold
@@ -388,7 +413,8 @@ class MyProfileScreen : Screen {
                                 item(span = { GridItemSpan(maxLineSpan) }) {
                                     Column {
                                         Box(
-                                            modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp),
+                                            modifier = Modifier.fillMaxWidth()
+                                                .padding(horizontal = 20.dp),
                                             contentAlignment = Alignment.Center
                                         ) {
                                             Row(
@@ -404,10 +430,16 @@ class MyProfileScreen : Screen {
                                                 )
                                                 MetricCard(
                                                     title = stringResource(Res.string.my_profile_metric_subscribers),
-                                                    value = (profile?.subscriberCount ?: 0).toString(),
+                                                    value = (profile?.subscriberCount
+                                                        ?: 0).toString(),
                                                     onClick = {
                                                         profile?.userId?.let { userId ->
-                                                            navigator.push(SubscribersListScreen(userId = userId, initialTab = SubscriberListType.SUBSCRIBERS))
+                                                            navigator.push(
+                                                                SubscribersListScreen(
+                                                                    userId = userId,
+                                                                    initialTab = SubscriberListType.SUBSCRIBERS
+                                                                )
+                                                            )
                                                         }
                                                     },
                                                     modifier = Modifier.weight(1f),
@@ -415,10 +447,16 @@ class MyProfileScreen : Screen {
                                                 )
                                                 MetricCard(
                                                     title = stringResource(Res.string.my_profile_metric_following),
-                                                    value = (profile?.subscribedCount ?: 0).toString(),
+                                                    value = (profile?.subscribedCount
+                                                        ?: 0).toString(),
                                                     onClick = {
                                                         profile?.userId?.let { userId ->
-                                                            navigator.push(SubscribersListScreen(userId = userId, initialTab = SubscriberListType.SUBSCRIBES))
+                                                            navigator.push(
+                                                                SubscribersListScreen(
+                                                                    userId = userId,
+                                                                    initialTab = SubscriberListType.SUBSCRIBES
+                                                                )
+                                                            )
                                                         }
                                                     },
                                                     modifier = Modifier.weight(1f),
@@ -433,7 +471,8 @@ class MyProfileScreen : Screen {
                                 item(span = { GridItemSpan(maxLineSpan) }) {
                                     Column {
                                         Box(
-                                            modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp),
+                                            modifier = Modifier.fillMaxWidth()
+                                                .padding(horizontal = 20.dp),
                                             contentAlignment = Alignment.Center
                                         ) {
                                             Surface(
@@ -472,23 +511,29 @@ class MyProfileScreen : Screen {
                                     if (postState.isLoading && postState.items.isEmpty()) {
                                         item(span = { GridItemSpan(maxLineSpan) }) {
                                             Box(
-                                                modifier = Modifier
-                                                    .fillMaxWidth()
-                                                    .padding(48.dp),
+                                                modifier = Modifier.fillMaxWidth(),
                                                 contentAlignment = Alignment.Center
                                             ) {
-                                                CircularProgressIndicator(
-                                                    modifier = Modifier.size(32.dp),
-                                                    color = customColors.gourmetOrange,
-                                                    strokeWidth = 3.dp
-                                                )
+                                                Box(
+                                                    modifier = Modifier
+                                                        .widthIn(max = 600.dp)
+                                                        .fillMaxWidth()
+                                                        .padding(48.dp),
+                                                    contentAlignment = Alignment.Center
+                                                ) {
+                                                    CircularProgressIndicator(
+                                                        modifier = Modifier.size(32.dp),
+                                                        color = customColors.gourmetOrange,
+                                                        strokeWidth = 3.dp
+                                                    )
+                                                }
                                             }
                                         }
-                                    }
-                                    else if (postState.errorMessage != null && postState.items.isEmpty()) {
+                                    } else if (postState.errorMessage != null && postState.items.isEmpty()) {
                                         item(span = { GridItemSpan(maxLineSpan) }) {
                                             Column(
                                                 modifier = Modifier
+                                                    .widthIn(max = 600.dp)
                                                     .fillMaxWidth()
                                                     .padding(vertical = 16.dp),
                                                 horizontalAlignment = Alignment.CenterHorizontally
@@ -523,82 +568,143 @@ class MyProfileScreen : Screen {
                                             ) {
                                                 Text(
                                                     text = stringResource(Res.string.my_profile_posts_empty),
-                                                    style = MaterialTheme.typography.bodyMedium.copy(color = customColors.textSecondary),
+                                                    style = MaterialTheme.typography.bodyMedium.copy(
+                                                        color = customColors.textSecondary
+                                                    ),
                                                     textAlign = TextAlign.Center
                                                 )
                                             }
                                         }
                                     } else {
-                                        items(
-                                            items = postState.items,
-                                            key = { post -> post.postId }
-                                        ) { post ->
-                                            PostGridItem(
-                                                post = post,
-                                                onClick = {
-                                                    navigator.push(PostDetailScreen(post.postId))
+                                        // POST LİSTESİ: Grid'in tamamı ekrana yayılmasın diye post grid alanını 600dp'lik bir item içinde toplamak
+                                        item(span = { GridItemSpan(maxLineSpan) }) {
+                                            Box(
+                                                modifier = Modifier.fillMaxWidth(),
+                                                contentAlignment = Alignment.Center
+                                            ) {
+                                                Box(modifier = Modifier.widthIn(max = 600.dp)) {
+                                                    // 3'lü sütun grid mantığını 600dp kapsayıcı içinde kurmak
+                                                    val chunkedPosts = postState.items.chunked(3)
+                                                    Column(
+                                                        verticalArrangement = Arrangement.spacedBy(
+                                                            2.dp
+                                                        )
+                                                    ) {
+                                                        chunkedPosts.forEach { rowItems ->
+                                                            Row(
+                                                                horizontalArrangement = Arrangement.spacedBy(
+                                                                    2.dp
+                                                                ),
+                                                                modifier = Modifier.fillMaxWidth()
+                                                            ) {
+                                                                for (post in rowItems) {
+                                                                    Box(
+                                                                        modifier = Modifier.weight(
+                                                                            1f
+                                                                        )
+                                                                    ) {
+                                                                        PostGridItem(
+                                                                            post = post,
+                                                                            onClick = {
+                                                                                navigator.push(
+                                                                                    PostDetailScreen(
+                                                                                        post.postId
+                                                                                    )
+                                                                                )
+                                                                            }
+                                                                        )
+                                                                    }
+                                                                }
+                                                                // Eğer son satırda 3'ten az eleman varsa boşlukları koru
+                                                                repeat(3 - rowItems.size) {
+                                                                    Spacer(
+                                                                        modifier = Modifier.weight(
+                                                                            1f
+                                                                        )
+                                                                    )
+                                                                }
+                                                            }
+                                                        }
+                                                    }
                                                 }
-                                            )
+                                            }
                                         }
 
                                         // 4. SAYFALAMA / DAHA FAZLA YÜKLENİYOR INDICATOR
                                         if (postState.isLoadingMore) {
                                             item(span = { GridItemSpan(maxLineSpan) }) {
                                                 Box(
-                                                    modifier = Modifier.fillMaxWidth().padding(16.dp),
+                                                    modifier = Modifier.fillMaxWidth(),
                                                     contentAlignment = Alignment.Center
                                                 ) {
-                                                    CircularProgressIndicator(
-                                                        modifier = Modifier.size(24.dp),
-                                                        color = customColors.gourmetOrange,
-                                                        strokeWidth = 2.dp
-                                                    )
+                                                    Box(
+                                                        modifier = Modifier.widthIn(max = 600.dp)
+                                                            .padding(16.dp),
+                                                        contentAlignment = Alignment.Center
+                                                    ) {
+                                                        CircularProgressIndicator(
+                                                            modifier = Modifier.size(24.dp),
+                                                            color = customColors.gourmetOrange,
+                                                            strokeWidth = 2.dp
+                                                        )
+                                                    }
                                                 }
                                             }
                                         }
                                         if (postState.loadingMoreError && !postState.isLoadingMore) {
                                             item(span = { GridItemSpan(maxLineSpan) }) {
-                                                Column(
-                                                    modifier = Modifier
-                                                        .fillMaxWidth()
-                                                        .padding(vertical = 10.dp),
-                                                    horizontalAlignment = Alignment.CenterHorizontally
+                                                Box(
+                                                    modifier = Modifier.fillMaxWidth(),
+                                                    contentAlignment = Alignment.Center
                                                 ) {
-                                                    IconButton(
-                                                        onClick = {
-                                                            postScreenModel.loadNextPage()
-                                                        }
+                                                    Column(
+                                                        modifier = Modifier
+                                                            .widthIn(max = 600.dp)
+                                                            .padding(vertical = 10.dp),
+                                                        horizontalAlignment = Alignment.CenterHorizontally
                                                     ) {
-                                                        Icon(
-                                                            imageVector = Icons.Default.Refresh,
-                                                            contentDescription = stringResource(Res.string.active_devices_retry),
-                                                            tint = customColors.placeHolderIcon,
-                                                            modifier = Modifier.size(28.dp)
+                                                        IconButton(onClick = { postScreenModel.loadNextPage() }) {
+                                                            Icon(
+                                                                imageVector = Icons.Default.Refresh,
+                                                                contentDescription = stringResource(
+                                                                    Res.string.active_devices_retry
+                                                                ),
+                                                                tint = customColors.placeHolderIcon,
+                                                                modifier = Modifier.size(28.dp)
+                                                            )
+                                                        }
+                                                        Text(
+                                                            text = stringResource(Res.string.connection_error),
+                                                            style = MaterialTheme.typography.bodySmall.copy(
+                                                                color = customColors.placeHolderIcon,
+                                                                fontWeight = FontWeight.Medium
+                                                            )
                                                         )
                                                     }
-                                                    Text(
-                                                        text = stringResource(Res.string.connection_error),
-                                                        style = MaterialTheme.typography.bodySmall.copy(
-                                                            color = customColors.placeHolderIcon,
-                                                            fontWeight = FontWeight.Medium
-                                                        )
-                                                    )
                                                 }
                                             }
                                         }
                                     }
                                 } else {
-                                    // --- HARİTA SEKMESİ ---
+                                    // HARİTA SEKMESİ (Max 600dp)
                                     item(span = { GridItemSpan(maxLineSpan) }) {
                                         Box(
-                                            modifier = Modifier.fillMaxWidth().padding(32.dp),
+                                            modifier = Modifier.fillMaxWidth(),
                                             contentAlignment = Alignment.Center
                                         ) {
-                                            Text(
-                                                text = stringResource(Res.string.my_profile_map_empty),
-                                                style = MaterialTheme.typography.bodyMedium.copy(color = customColors.textSecondary),
-                                                textAlign = TextAlign.Center
-                                            )
+                                            Box(
+                                                modifier = Modifier.widthIn(max = 600.dp)
+                                                    .padding(32.dp),
+                                                contentAlignment = Alignment.Center
+                                            ) {
+                                                Text(
+                                                    text = stringResource(Res.string.my_profile_map_empty),
+                                                    style = MaterialTheme.typography.bodyMedium.copy(
+                                                        color = customColors.textSecondary
+                                                    ),
+                                                    textAlign = TextAlign.Center
+                                                )
+                                            }
                                         }
                                     }
                                 }
@@ -608,7 +714,6 @@ class MyProfileScreen : Screen {
                 }
             }
         }
-
         // BÜYÜTÜLMÜŞ FOTOĞRAF OVERLAY
         if (isPhotoZoomed && !profileState.profile?.profilePhoto.isNullOrBlank()) {
             Box(

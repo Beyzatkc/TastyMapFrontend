@@ -28,8 +28,6 @@ import cafe.adriel.voyager.navigator.Navigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import org.beem.tastymap.core.util.ToastManager
 import org.beem.tastymap.ui.components.TastyButton
-import org.beem.tastymap.ui.profile.health.HealthScreenModel
-import org.beem.tastymap.ui.profile.health.HealthWizardScreen
 import org.beem.tastymap.ui.profile.myprofile.MyProfileScreen
 import org.beem.tastymap.ui.theme.CustomColors
 import org.beem.tastymap.ui.theme.LocalCustomColors

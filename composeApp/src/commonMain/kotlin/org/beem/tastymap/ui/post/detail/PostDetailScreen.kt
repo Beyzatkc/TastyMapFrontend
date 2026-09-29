@@ -200,7 +200,7 @@ data class PostDetailScreen(val postId: Long) : Screen {
                                 }
                             },
                             actions = {
-                                if (uiState.isOwnPost) {
+                                if (uiState.isOwnPost && !uiState.post?.username.isNullOrEmpty()) {
                                     Box {
                                         IconButton(onClick = { showMenu = true }) {
                                             Icon(
@@ -308,8 +308,9 @@ data class PostDetailScreen(val postId: Long) : Screen {
                     ) {
                         Box(
                             modifier = Modifier.fillMaxSize()
+                                .background(customColors.background),
                         ) {
-                            if (uiState.post != null) {
+                            if (uiState.post != null && !uiState.post?.username.isNullOrEmpty()) {
                                 uiState.post?.let { post ->
                                     Column(
                                         modifier = Modifier
@@ -398,7 +399,7 @@ data class PostDetailScreen(val postId: Long) : Screen {
                                         Spacer(modifier = Modifier.height(24.dp))
                                     }
                                 }
-                            } else if (!uiState.isLoading && uiState.errorMessage!=null && uiState.post != null) {
+                            } else if (!uiState.isLoading) {
                                 Box(
                                     modifier = Modifier.fillMaxSize(),
                                     contentAlignment = Alignment.Center

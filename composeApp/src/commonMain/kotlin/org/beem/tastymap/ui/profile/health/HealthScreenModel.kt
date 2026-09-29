@@ -1,4 +1,5 @@
 package org.beem.tastymap.ui.profile.health
+
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
 import kotlinx.coroutines.channels.Channel
@@ -8,9 +9,9 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import org.beem.tastymap.core.network.ResultWrapper
-import org.beem.tastymap.data.model.health.AllergyInfo
 import org.beem.tastymap.data.model.health.HealthEnum
 import org.beem.tastymap.data.model.health.HealthRequest
+import org.beem.tastymap.data.model.health.HealthResponse
 import org.beem.tastymap.data.repository.HealthRepository
 import tastymap.composeapp.generated.resources.Res
 import tastymap.composeapp.generated.resources.allergy_dairy
@@ -20,17 +21,17 @@ import tastymap.composeapp.generated.resources.allergy_gluten
 import tastymap.composeapp.generated.resources.allergy_none
 import tastymap.composeapp.generated.resources.allergy_other
 import tastymap.composeapp.generated.resources.allergy_peanut
-import kotlin.collections.listOf
-
 
 class HealthScreenModel(
     private val repo: HealthRepository
-): ScreenModel{
+) : ScreenModel {
+
     private val _healthState = MutableStateFlow(HealthUiState())
     val healthState = _healthState.asStateFlow()
 
-    private val _uiMessage = Channel<String>()
+    private val _uiMessage = Channel<String>(Channel.BUFFERED)
     val uiMessage = _uiMessage.receiveAsFlow()
+
     companion object {
         private const val NO_ALLERGY_ID = 6L
     }
@@ -49,42 +50,56 @@ class HealthScreenModel(
             it.copy(
                 availableAllergies = defaultAllergies,
                 selectedAllergyIds = listOf(NO_ALLERGY_ID),
-                isLoading = true ,
+                isLoading = true
             )
         }
+
+        observeLocalHealth()
     }
-    fun loadUserHealthProfile() {
+
+    private fun observeLocalHealth() {
         screenModelScope.launch {
-            _healthState.update { it.copy(isLoading = true) }
-
-            when (val result = repo.getHealth()) {
-                is ResultWrapper.Success -> {
-                    val userHealth = result.data
-
-                    val parsedEatType = try {
-                        userHealth.eatType?.let { HealthEnum.valueOf(it) } ?: HealthEnum.NORMAL
-                    } catch (e: IllegalArgumentException) {
-                        HealthEnum.NORMAL
-                    }
-
-                    val allergyIds = userHealth.allergyInfo?.map { it.id } ?: emptyList()
-                    val finalAllergyIds = if (allergyIds.isEmpty()) listOf(6L) else allergyIds
-
-                    _healthState.update { state ->
-                        state.copy(
-                            isLoading = false,
-                            hasDiabetes = userHealth.hasDiabetes ?: false,
-                            selectedEatType = parsedEatType,
-                            selectedAllergyIds = finalAllergyIds,
-                            initialHealthProfile = userHealth
-                        )
-                    }
-                }
-                is ResultWrapper.Error -> {
-                    _healthState.update { it.copy(isLoading = false) }
-                    _uiMessage.send(result.message)
+            repo.observeHealth().collect { userHealth ->
+                if (userHealth != null) {
+                    updateStateFromHealthResponse(userHealth)
                 }
             }
+        }
+    }
+
+    fun loadUserHealthProfile() {
+        screenModelScope.launch {
+            repo.getHealth().collect { result ->
+                when (result) {
+                    is ResultWrapper.Success -> {
+                    }
+                    is ResultWrapper.Error -> {
+                        _healthState.update { it.copy(isLoading = false) }
+                        _uiMessage.send(result.message)
+                    }
+                }
+            }
+        }
+    }
+
+    private fun updateStateFromHealthResponse(userHealth: HealthResponse) {
+        val parsedEatType = try {
+            userHealth.eatType?.let { HealthEnum.valueOf(it) } ?: HealthEnum.NORMAL
+        } catch (e: IllegalArgumentException) {
+            HealthEnum.NORMAL
+        }
+
+        val allergyIds = userHealth.allergyInfo?.map { it.id } ?: emptyList()
+        val finalAllergyIds = if (allergyIds.isEmpty()) listOf(NO_ALLERGY_ID) else allergyIds
+
+        _healthState.update { state ->
+            state.copy(
+                isLoading = false,
+                hasDiabetes = userHealth.hasDiabetes ?: false,
+                selectedEatType = parsedEatType,
+                selectedAllergyIds = finalAllergyIds,
+                initialHealthProfile = userHealth
+            )
         }
     }
 
@@ -105,6 +120,7 @@ class HealthScreenModel(
         }
         return false
     }
+
     fun toggleDiabetes(hasDiabetes: Boolean) {
         _healthState.update { it.copy(hasDiabetes = hasDiabetes) }
     }
@@ -135,6 +151,7 @@ class HealthScreenModel(
             state.copy(selectedAllergyIds = current)
         }
     }
+
     fun saveHealthProfile() {
         val currentState = _healthState.value
         if (currentState.isActionLoading) return
@@ -157,6 +174,7 @@ class HealthScreenModel(
             }
         }
     }
+
     fun updateHealthProfile() {
         val currentState = _healthState.value
         if (currentState.isActionLoading) return
@@ -205,6 +223,7 @@ class HealthScreenModel(
             }
         }
     }
+
     fun skipHealthWizard() {
         val currentState = _healthState.value
         if (currentState.isActionLoading) return
@@ -229,6 +248,7 @@ class HealthScreenModel(
             }
         }
     }
+
     fun resetSuccessState() {
         _healthState.update { it.copy(isSuccess = false) }
     }

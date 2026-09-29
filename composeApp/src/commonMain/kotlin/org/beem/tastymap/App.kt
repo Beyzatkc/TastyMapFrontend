@@ -6,6 +6,12 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.tooling.preview.Preview
 import cafe.adriel.voyager.navigator.Navigator
 import cafe.adriel.voyager.transitions.SlideTransition
+import coil3.ImageLoader
+import coil3.compose.setSingletonImageLoaderFactory
+import coil3.network.ktor3.KtorNetworkFetcherFactory
+import io.ktor.client.HttpClient
+import io.ktor.client.plugins.DefaultRequest
+import io.ktor.client.request.header
 
 import org.beem.tastymap.core.auth.AuthEventBus
 import org.beem.tastymap.core.local.ChangeAppLanguage
@@ -42,6 +48,23 @@ fun App() {
 
 
     TastyTheme(useDarkTheme = useDarkTheme) {
+
+        setSingletonImageLoaderFactory { context ->
+            ImageLoader.Builder(context)
+                .components {
+                    add(
+                        KtorNetworkFetcherFactory(
+                            httpClient = HttpClient {
+                                install(DefaultRequest) {
+                                    header("ngrok-skip-browser-warning", "true")
+                                }
+                            }
+                        )
+                    )
+                }
+                .build()
+        }
+
         Navigator(SplashScreen()) { navigator ->
 
             // DeepLink dinleyicisi

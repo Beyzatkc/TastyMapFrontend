@@ -9,14 +9,9 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import org.beem.tastymap.core.network.ResultWrapper
-import org.beem.tastymap.data.model.profile.UpdateProfile
 import org.beem.tastymap.data.repository.SocialNotificationsRepository
 import org.beem.tastymap.data.repository.profile.MyProfileRepository
-import org.beem.tastymap.ui.auth.common.CheckValidator
-import org.beem.tastymap.ui.auth.common.ValidationResult
 import org.beem.tastymap.ui.common.NotificationBadgeManager
-import tastymap.composeapp.generated.resources.Res
-import tastymap.composeapp.generated.resources.edit_profile_success
 
 class MyProfileScreenModel(
     private val repo: MyProfileRepository,

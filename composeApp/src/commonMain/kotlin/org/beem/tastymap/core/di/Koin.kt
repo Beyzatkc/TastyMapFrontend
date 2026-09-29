@@ -15,6 +15,7 @@ import org.beem.tastymap.core.provider.AppDispatchers
 import org.beem.tastymap.core.provider.DispatcherProvider
 import org.beem.tastymap.core.provider.HttpClientFactory
 import org.beem.tastymap.data.cache.*
+import org.beem.tastymap.data.local.HealthLocalDataSource
 import org.beem.tastymap.data.local.PostLocalDataSource
 import org.beem.tastymap.data.local.ProfileLocalDataSource
 import org.beem.tastymap.data.local.SearchHistoryLocalDataSource
@@ -81,6 +82,7 @@ val appModule = module {
     single { get<TastyDatabase>().searchHistoryEntityQueries }
     single { get<TastyDatabase>().visitEntityQueries }
     single { get<TastyDatabase>().postEntityQueries }
+    single { get<TastyDatabase>().healthEntityQueries }
 
     // Caches
     single { ProfileMemoryCache() }
@@ -102,6 +104,7 @@ val appModule = module {
     single { SearchHistoryLocalDataSource(get(), get()) }
     single { VisitLocalDataSource(get(), get()) }
     single { PostLocalDataSource(get(), get()) }
+    single { HealthLocalDataSource(get(),get()) }
 
 
     single { AuthDataSource(get(named("noAuth"))) }
@@ -126,7 +129,7 @@ val appModule = module {
     single { AuthRepository(get(), get(), get(), get(),get()) }
     single { UserSecurityRepository(get()) }
     single { SubscribersRepository(get(), get(), get(),get()) }
-    single { HealthRepository(get(), get(), get()) }
+    single { HealthRepository(get(), get(), get(),get(),get()) }
     single { PasswordResetSessionManager() }
     single { ProfileRepository(get(), get(), get(), get()) }
     single { MyProfileRepository(get(), get(), get(), get(), get(), get(), get()) }

@@ -64,10 +64,6 @@ class EditHealthScreen : Screen {
 
         LaunchedEffect(Unit) {
             screenModel.loadUserHealthProfile()
-
-            screenModel.uiMessage.collect { message ->
-                ToastManager.show(message)
-            }
         }
         val successMessage = stringResource(Res.string.edit_health_success_toast)
 
@@ -76,6 +72,12 @@ class EditHealthScreen : Screen {
                 ToastManager.show(successMessage)
                 screenModel.resetSuccessState()
                 navigator.pop()
+            }
+        }
+
+        LaunchedEffect(Unit) {
+            screenModel.uiMessage.collect { message ->
+                ToastManager.show(message)
             }
         }
 
@@ -172,7 +174,6 @@ fun EditHealthContent(
                 verticalArrangement = Arrangement.spacedBy(20.dp),
                 contentPadding = PaddingValues(vertical = 12.dp)
             ) {
-                // 1. DİYABET / ŞEKER HASSASİYETİ (EMERALD VURGU)
                 item {
                     SectionHeader(
                         icon = Icons.Default.HealthAndSafety,
@@ -227,7 +228,6 @@ fun EditHealthContent(
                     }
                 }
 
-                // 2. BESLENME DÜZENİ (GOURMET ORANGE VURGU)
                 item {
                     SectionHeader(
                         icon = Icons.Default.Restaurant,
@@ -296,7 +296,6 @@ fun EditHealthContent(
                     }
                 }
 
-                // 3. ALERJEN SEÇİMİ (SOFT ORANGE CHIPS)
                 item {
                     SectionHeader(
                         icon = Icons.Default.Warning,

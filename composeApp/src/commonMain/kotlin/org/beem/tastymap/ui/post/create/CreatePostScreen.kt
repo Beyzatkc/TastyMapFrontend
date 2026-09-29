@@ -200,6 +200,8 @@ class CreatePostScreen : Screen {
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
+                            .wrapContentWidth(Alignment.CenterHorizontally)
+                            .widthIn(max = 800.dp)
                             .background(customColors.background)
                             .padding(16.dp)
                     ) {
@@ -228,7 +230,8 @@ class CreatePostScreen : Screen {
                                     )
                                 }
                             },
-                            modifier = Modifier.fillMaxWidth(),
+                            modifier = Modifier
+                                .fillMaxWidth(),
                             isLoading = uiState.isLoading,
                             backcolor = customColors.navy,
                             textcolor = Color.White
@@ -242,6 +245,8 @@ class CreatePostScreen : Screen {
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(paddingValues)
+                    .wrapContentWidth(Alignment.CenterHorizontally)
+                    .widthIn(max = 800.dp)
                     .verticalScroll(rememberScrollState())
                     .padding(
                         horizontal = 20.dp,

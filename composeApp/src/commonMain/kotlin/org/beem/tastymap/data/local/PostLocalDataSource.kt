@@ -1,5 +1,6 @@
 package org.beem.tastymap.data.local
 
+import app.cash.sqldelight.async.coroutines.awaitAsOne
 import app.cash.sqldelight.coroutines.asFlow
 import app.cash.sqldelight.coroutines.mapToList
 import app.cash.sqldelight.coroutines.mapToOneOrNull
@@ -88,7 +89,7 @@ class PostLocalDataSource(
 
         queries.transaction {
             posts.forEach { post ->
-                val exists = queries.checkPostExists(post.postId).executeAsOne() > 0
+                val exists = queries.checkPostExists(post.postId).awaitAsOne() > 0
 
                 if (exists) {
                     queries.updateGridPost(
@@ -134,7 +135,7 @@ class PostLocalDataSource(
         val now = Clock.System.now().toEpochMilliseconds()
 
         queries.transaction {
-            val exists = queries.checkPostExists(post.postId).executeAsOne() > 0
+            val exists = queries.checkPostExists(post.postId).awaitAsOne() > 0
 
             if (exists) {
                 queries.updatePostDetail(
