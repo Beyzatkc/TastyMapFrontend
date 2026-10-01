@@ -9,18 +9,20 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
@@ -167,29 +169,41 @@ data class EditPostScreen(val postId: Long) : Screen {
             bottomBar = {
                 if (uiState.post != null) {
                     Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .background(customColors.background)
-                            .padding(16.dp)
+                        modifier = Modifier.fillMaxWidth(),
+                        contentAlignment = Alignment.Center
                     ) {
-                        TastyButton(
-                            text = stringResource(Res.string.edit_profile_save),
-                            onClick = {
-                                val request = PostUpdateRequest(
-                                    explanation = explanation.ifBlank { null },
-                                    commentEnabled = commentEnabled
-                                )
-                                screenModel.updatePost(postId, request)
-                            },
-                            modifier = Modifier.fillMaxWidth(),
-                            isLoading = uiState.isActionLoading,
-                            backcolor = customColors.navy,
-                            textcolor = Color.White
-                        )
+                        Box(
+                            modifier = Modifier
+                                .widthIn(max = 600.dp) // Web için 600dp sınırı
+                                .fillMaxWidth()
+                                .background(customColors.background)
+                                .padding(16.dp)
+                        ) {
+                            TastyButton(
+                                text = stringResource(Res.string.edit_profile_save),
+                                onClick = {
+                                    val request = PostUpdateRequest(
+                                        explanation = explanation.ifBlank { null },
+                                        commentEnabled = commentEnabled
+                                    )
+                                    screenModel.updatePost(postId, request)
+                                },
+                                modifier = Modifier.fillMaxWidth(),
+                                isLoading = uiState.isActionLoading,
+                                backcolor = customColors.navy,
+                                textcolor = Color.White
+                            )
+                        }
                     }
                 }
             }
         ) { paddingValues ->
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues),
+                contentAlignment = Alignment.TopCenter
+            ) {
 
             when {
                 uiState.isLoading && uiState.post == null -> {
@@ -208,8 +222,9 @@ data class EditPostScreen(val postId: Long) : Screen {
 
                     Column(
                         modifier = Modifier
-                            .fillMaxSize()
-                            .padding(paddingValues)
+                            .widthIn(max = 600.dp)
+                            .fillMaxWidth()
+                            .fillMaxHeight()
                             .verticalScroll(rememberScrollState())
                             .padding(horizontal = 20.dp, vertical = 12.dp),
                         verticalArrangement = Arrangement.spacedBy(20.dp)
@@ -333,6 +348,7 @@ data class EditPostScreen(val postId: Long) : Screen {
                         Spacer(modifier = Modifier.height(40.dp))
                     }
                 }
+            }
             }
         }
 
@@ -505,7 +521,8 @@ private fun ReadOnlyPhotosSection(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(260.dp)
+                .aspectRatio(1f)
+                //.height(260.dp)
                 .clip(RoundedCornerShape(16.dp))
                 .border(1.dp, customColors.borderLight, RoundedCornerShape(16.dp))
                 .background(customColors.surface)

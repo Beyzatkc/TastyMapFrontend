@@ -9,6 +9,9 @@ import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.Orientation
+import androidx.compose.foundation.gestures.rememberScrollableState
+import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -27,6 +30,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
@@ -65,6 +69,10 @@ class SearchScreen : Screen {
         val customColors = LocalCustomColors.current
         val listState = rememberLazyListState()
         val tabNavigator = LocalTabNavigator.current
+
+        val outerScrollState = rememberScrollableState { delta ->
+            listState.dispatchRawDelta(-delta)
+        }
 
         LaunchedEffect(uiState.errorMessage) {
             uiState.errorMessage?.let { message ->
@@ -121,15 +129,39 @@ class SearchScreen : Screen {
                 )
             }
         ) { innerPadding ->
+            val boxShape = RoundedCornerShape(16.dp)
             Box(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(innerPadding)
-                    .background(customColors.background),
+                    .background(customColors.background)
+                    .scrollable(
+                        state = outerScrollState,
+                        orientation = Orientation.Vertical
+                    ),
                 contentAlignment = Alignment.TopCenter
             ) {
+                Box(
+                    modifier = Modifier
+                        .widthIn(max = 600.dp)
+                        .fillMaxSize()
+
+                        .padding(horizontal = 16.dp, vertical = 12.dp)
+                        .shadow(
+                            elevation = 8.dp,
+                            shape = boxShape,
+                            spotColor = Color.Black.copy(alpha = 0.35f),  // Ana gölgeyi oldukça belirginleştirir
+                            ambientColor = Color.Black.copy(alpha = 0.20f) // Kenar yayılı
+                        )
+                        .background(
+                            color = customColors.background,
+                            shape = boxShape
+                        )
+                        .clip(boxShape)
+                ){
                 val isError = !uiState.errorMessage.isNullOrBlank()
-                val currentList = if (uiState.isHistoryMode) uiState.historyResults else uiState.searchResults
+                val currentList =
+                    if (uiState.isHistoryMode) uiState.historyResults else uiState.searchResults
                 val isEmpty = currentList.isEmpty()
 
                 when {
@@ -205,11 +237,12 @@ class SearchScreen : Screen {
                             )
                         }
                     }
+
                     else -> {
                         LazyColumn(
                             state = listState,
                             modifier = Modifier
-                                .widthIn(max = 1500.dp)
+                                .widthIn(600.dp)
                                 .fillMaxSize(),
                             contentPadding = PaddingValues(bottom = 16.dp, top = 8.dp)
                         ) {
@@ -280,9 +313,9 @@ class SearchScreen : Screen {
                 }
             }
         }
+        }
     }
-}
-@Composable
+}@Composable
 private fun SearchBarInput(
     query: String,
     onQueryChange: (String) -> Unit,
@@ -290,57 +323,69 @@ private fun SearchBarInput(
     modifier: Modifier = Modifier
 ) {
     val customColors = LocalCustomColors.current
+    val inputShape = RoundedCornerShape(12.dp) // Köşe yuvarlaklığı
 
-    TextField(
-        value = query,
-        onValueChange = onQueryChange,
-        textStyle = MaterialTheme.typography.bodyMedium.copy(
-            fontWeight = FontWeight.Normal,
-            color = customColors.textPrimary
-        ),
-        leadingIcon = {
-            Icon(
-                imageVector = Icons.Default.Search,
-                contentDescription = null,
-                tint = customColors.textSecondary,
-                modifier = Modifier.size(20.dp)
-            )
-        },
-        placeholder = {
-            Text(
-                text = stringResource(Res.string.common_search_placeholder),
-                style = MaterialTheme.typography.bodyMedium.copy(color = customColors.textSecondary)
-            )
-        },
-        trailingIcon = {
-            if (query.isNotEmpty()) {
-                IconButton(onClick = onClearClick) {
-                    Icon(
-                        imageVector = Icons.Default.Close,
-                        contentDescription = null,
-                        tint = customColors.textSecondary
-                    )
+    Box(
+        modifier = modifier.fillMaxWidth(),
+        contentAlignment = Alignment.Center
+    ) {
+        TextField(
+            value = query,
+            onValueChange = onQueryChange,
+            textStyle = MaterialTheme.typography.bodyMedium.copy(
+                fontWeight = FontWeight.Normal,
+                color = customColors.textPrimary
+            ),
+            leadingIcon = {
+                Icon(
+                    imageVector = Icons.Default.Search,
+                    contentDescription = null,
+                    tint = customColors.textSecondary,
+                    modifier = Modifier.size(20.dp)
+                )
+            },
+            placeholder = {
+                Text(
+                    text = stringResource(Res.string.common_search_placeholder),
+                    style = MaterialTheme.typography.bodyMedium.copy(color = customColors.textSecondary)
+                )
+            },
+            trailingIcon = {
+                if (query.isNotEmpty()) {
+                    IconButton(onClick = onClearClick) {
+                        Icon(
+                            imageVector = Icons.Default.Close,
+                            contentDescription = null,
+                            tint = customColors.textSecondary
+                        )
+                    }
                 }
-            }
-        },
-        singleLine = true,
-        shape = RoundedCornerShape(12.dp),
-        colors = TextFieldDefaults.colors(
-            focusedContainerColor = customColors.surfaceVariant,
-            unfocusedContainerColor = customColors.surfaceVariant,
-            focusedIndicatorColor = Color.Transparent,
-            unfocusedIndicatorColor = Color.Transparent,
-            cursorColor = customColors.gourmetOrange,
-            focusedTextColor = customColors.textPrimary,
-            unfocusedTextColor = customColors.textPrimary
-        ),
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(end = 8.dp)
-            .height(50.dp)
-    )
+            },
+            singleLine = true,
+            shape = inputShape,
+            colors = TextFieldDefaults.colors(
+                focusedContainerColor = customColors.surfaceVariant,
+                unfocusedContainerColor = customColors.surfaceVariant,
+                focusedIndicatorColor = Color.Transparent,
+                unfocusedIndicatorColor = Color.Transparent,
+                cursorColor = customColors.gourmetOrange,
+                focusedTextColor = customColors.textPrimary,
+                unfocusedTextColor = customColors.textPrimary
+            ),
+            modifier = Modifier
+                .widthIn(max = 600.dp)
+                .fillMaxWidth()
+                .padding(end = 8.dp)
+                .shadow(
+                    elevation = 8.dp,
+                    shape = inputShape,
+                    spotColor = Color.Black.copy(alpha = 0.35f),
+                    ambientColor = Color.Black.copy(alpha = 0.20f)
+                )
+                .height(50.dp)
+        )
+    }
 }
-
 @Composable
 private fun SearchUserItem(
     user: UserSearchResponse,
@@ -354,70 +399,76 @@ private fun SearchUserItem(
     val displayName = user.name
     val profileImage = user.profile
 
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable { onUserClick() }
-            .padding(horizontal = 16.dp, vertical = 10.dp),
-        verticalAlignment = Alignment.CenterVertically
+    Box(
+        modifier = Modifier.fillMaxWidth(),
+        contentAlignment = Alignment.Center
     ) {
-        Box(
+        Row(
             modifier = Modifier
-                .size(50.dp)
-                .clip(CircleShape)
-                .background(customColors.surfaceVariant),
-            contentAlignment = Alignment.Center
+                .widthIn(max = 600.dp)
+                .fillMaxWidth()
+                .clickable { onUserClick() }
+                .padding(horizontal = 16.dp, vertical = 10.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            if (!profileImage.isNullOrBlank()) {
-                AsyncImage(
-                    model = profileImage,
-                    contentDescription = null,
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .clip(CircleShape),
-                    contentScale = ContentScale.Crop
-                )
-            } else {
-                Icon(
-                    imageVector = Icons.Default.Person,
-                    contentDescription = null,
-                    tint = customColors.placeHolderIcon,
-                    modifier = Modifier.size(28.dp)
-                )
+            Box(
+                modifier = Modifier
+                    .size(50.dp)
+                    .clip(CircleShape)
+                    .background(customColors.surfaceVariant),
+                contentAlignment = Alignment.Center
+            ) {
+                if (!profileImage.isNullOrBlank()) {
+                    AsyncImage(
+                        model = profileImage,
+                        contentDescription = null,
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .clip(CircleShape),
+                        contentScale = ContentScale.Crop
+                    )
+                } else {
+                    Icon(
+                        imageVector = Icons.Default.Person,
+                        contentDescription = null,
+                        tint = customColors.placeHolderIcon,
+                        modifier = Modifier.size(28.dp)
+                    )
+                }
             }
-        }
 
-        Spacer(modifier = Modifier.width(12.dp))
+            Spacer(modifier = Modifier.width(12.dp))
 
-        Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = username,
-                style = MaterialTheme.typography.bodyMedium.copy(
-                    fontWeight = FontWeight.Bold,
-                    color = customColors.textPrimary
-                )
-            )
-            if (displayName.isNotBlank()) {
+            Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = displayName,
-                    style = MaterialTheme.typography.bodySmall.copy(
-                        color = customColors.textSecondary
+                    text = username,
+                    style = MaterialTheme.typography.bodyMedium.copy(
+                        fontWeight = FontWeight.Bold,
+                        color = customColors.textPrimary
                     )
                 )
+                if (displayName.isNotBlank()) {
+                    Text(
+                        text = displayName,
+                        style = MaterialTheme.typography.bodySmall.copy(
+                            color = customColors.textSecondary
+                        )
+                    )
+                }
             }
-        }
 
-        if (isHistoryItem) {
-            IconButton(
-                onClick = onDeleteHistoryClick,
-                modifier = Modifier.size(32.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Close,
-                    contentDescription = stringResource(Res.string.search_remove_from_history),
-                    tint = customColors.textSecondary,
-                    modifier = Modifier.size(20.dp)
-                )
+            if (isHistoryItem) {
+                IconButton(
+                    onClick = onDeleteHistoryClick,
+                    modifier = Modifier.size(32.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Close,
+                        contentDescription = stringResource(Res.string.search_remove_from_history),
+                        tint = customColors.textSecondary,
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
             }
         }
     }

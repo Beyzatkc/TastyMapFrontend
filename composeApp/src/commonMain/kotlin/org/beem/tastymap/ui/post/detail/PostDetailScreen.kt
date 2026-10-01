@@ -14,19 +14,24 @@ import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.gestures.rememberScrollableState
+import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
@@ -137,6 +142,12 @@ data class PostDetailScreen(val postId: Long) : Screen {
         val tabNavigator = LocalTabNavigator.current
         val navigator = LocalNavigator.currentOrThrow
         val customColors = LocalCustomColors.current
+
+        val scrollState = rememberScrollState()
+        val outerScrollState = rememberScrollableState { delta ->
+            scrollState.dispatchRawDelta(-delta)
+        }
+
 
         var showMenu by remember { mutableStateOf(false) }
         var showPostLikeSheet by remember { mutableStateOf(false) }
@@ -307,153 +318,170 @@ data class PostDetailScreen(val postId: Long) : Screen {
                         }
                     ) {
                         Box(
-                            modifier = Modifier.fillMaxSize()
-                                .background(customColors.background),
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .background(customColors.background)
+                                .scrollable(
+                                    state = outerScrollState,
+                                    orientation = Orientation.Vertical
+                                ),
+                            contentAlignment = Alignment.TopCenter
                         ) {
-                            if (uiState.post != null && !uiState.post?.username.isNullOrEmpty()) {
-                                uiState.post?.let { post ->
-                                    Column(
-                                        modifier = Modifier
-                                            .fillMaxSize()
-                                            .background(customColors.background)
-                                            .verticalScroll(rememberScrollState())
-                                    ) {
-                                        // 1. KULLANICI BİLGİSİ HEADER
-                                        PostHeader(
-                                            post = post,
-                                            onUserClick = {
-                                                if (screenModel.isMe(post.userId)) {
-                                                    tabNavigator.current = ProfileTab
-                                                    navigator.popUntilRoot()
-                                                } else {
-                                                    navigator.push(ProfileScreen(userId = post.userId))
-                                                }
-                                            }
-                                        )
-
-                                        // 2. MEDYA PAGER
-                                        PostMediaPager(
-                                            photoUrls = post.photoUrls,
-                                            onDoubleTapLike = {
-                                                if (!post.isLiked) {
-                                                    screenModel.toggleLike(postId)
-                                                }
-                                            }
-                                        )
-
-                                        // 3. ETKİLEŞİM BUTONLARI
-                                        PostActionBar(
-                                            post = post,
-                                            onLikeClick = { screenModel.toggleLike(postId) },
-                                            onLikeCountClick = { showPostLikeSheet = true },
-                                            onCommentClick = {
-                                                // Yorumlar ekranına git
-                                            }
-                                        )
-
-                                        // 4. MEKAN VE DERECELENDİRME KARTI
-                                        if (!post.placeName.isNullOrBlank()) {
-                                            PlaceInfoCard(post = post)
-                                        }
-
-                                        // 5. AÇIKLAMA METNİ
-                                        PostCaptionSection(post = post)
-
-                                        // 6. YORUMLARI GÖR BUTONU
-                                        if (post.isCommentEnabled) {
-                                            Text(
-                                                text = if (post.commentCount > 0) {
-                                                    stringResource(
-                                                        Res.string.view_all_comments,
-                                                        post.commentCount
-                                                    )
-                                                } else {
-                                                    stringResource(Res.string.be_first_to_comment)
-                                                },
-                                                style = MaterialTheme.typography.bodyMedium.copy(
-                                                    color = customColors.textSecondary
-                                                ),
-                                                modifier = Modifier
-                                                    .fillMaxWidth()
-                                                    .clickable {
-                                                        // navigator.push(CommentScreen(post.postId))
+                            Box(
+                                modifier = Modifier
+                                    .widthIn(max = 600.dp)
+                                    .fillMaxWidth()
+                                    .fillMaxSize()
+                                    .background(customColors.background),
+                            ) {
+                                if (uiState.post != null && !uiState.post?.username.isNullOrEmpty()) {
+                                    uiState.post?.let { post ->
+                                        Column(
+                                            modifier = Modifier
+                                                .fillMaxSize()
+                                                .background(customColors.background)
+                                                .verticalScroll(scrollState)
+                                        ) {
+                                            // 1. KULLANICI BİLGİSİ HEADER
+                                            PostHeader(
+                                                post = post,
+                                                onUserClick = {
+                                                    if (screenModel.isMe(post.userId)) {
+                                                        tabNavigator.current = ProfileTab
+                                                        navigator.popUntilRoot()
+                                                    } else {
+                                                        navigator.push(ProfileScreen(userId = post.userId))
                                                     }
-                                                    .padding(horizontal = 16.dp, vertical = 6.dp)
+                                                }
                                             )
-                                        }
 
-                                        // 7. TARİH
-                                        Text(
-                                            text = formatToRelativeDateTime(post.createdAt),
-                                            style = MaterialTheme.typography.labelSmall.copy(
-                                                color = customColors.textSecondary.copy(
-                                                    alpha = 0.6f
-                                                )
-                                            ),
-                                            modifier = Modifier.padding(
-                                                horizontal = 16.dp,
-                                                vertical = 8.dp
+                                            // 2. MEDYA PAGER
+                                            PostMediaPager(
+                                                photoUrls = post.photoUrls,
+                                                onDoubleTapLike = {
+                                                    if (!post.isLiked) {
+                                                        screenModel.toggleLike(postId)
+                                                    }
+                                                }
                                             )
-                                        )
 
-                                        Spacer(modifier = Modifier.height(24.dp))
-                                    }
-                                }
-                            } else if (!uiState.isLoading) {
-                                Box(
-                                    modifier = Modifier.fillMaxSize(),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    FilledTonalButton(
-                                        onClick = { screenModel.fetchRemotePost(postId) },
-                                        enabled = !uiState.isLoading,
-                                        modifier = Modifier.height(48.dp),
-                                        colors = ButtonDefaults.filledTonalButtonColors(
-                                            containerColor = customColors.surfaceVariant,
-                                            contentColor = customColors.textPrimary
-                                        )
-                                    ) {
-                                        AnimatedContent(
-                                            targetState = uiState.isLoading,
-                                            transitionSpec = { fadeIn() togetherWith fadeOut() },
-                                            label = "ButtonLoadingTransition"
-                                        ) { loading ->
-                                            if (loading) {
-                                                CircularProgressIndicator(
-                                                    modifier = Modifier.size(24.dp),
-                                                    strokeWidth = 2.5.dp,
-                                                    color = customColors.textPrimary
-                                                )
-                                            } else {
-                                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                                    Icon(
-                                                        imageVector = Icons.Default.Refresh,
-                                                        contentDescription = stringResource(Res.string.active_devices_retry_cd),
-                                                        modifier = Modifier.size(24.dp),
-                                                        tint = customColors.textSecondary
-                                                    )
-                                                    Spacer(modifier = Modifier.width(8.dp))
-                                                    Text(
-                                                        text = stringResource(Res.string.active_devices_retry),
-                                                        style = MaterialTheme.typography.titleSmall.copy(
-                                                            fontWeight = FontWeight.Bold,
-                                                            color = customColors.textSecondary
+                                            // 3. ETKİLEŞİM BUTONLARI
+                                            PostActionBar(
+                                                post = post,
+                                                onLikeClick = { screenModel.toggleLike(postId) },
+                                                onLikeCountClick = { showPostLikeSheet = true },
+                                                onCommentClick = {
+                                                    // Yorumlar ekranına git
+                                                }
+                                            )
+
+                                            // 4. MEKAN VE DERECELENDİRME KARTI
+                                            if (!post.placeName.isNullOrBlank()) {
+                                                PlaceInfoCard(post = post)
+                                            }
+
+                                            // 5. AÇIKLAMA METNİ
+                                            PostCaptionSection(post = post)
+
+                                            // 6. YORUMLARI GÖR BUTONU
+                                            if (post.isCommentEnabled) {
+                                                Text(
+                                                    text = if (post.commentCount > 0) {
+                                                        stringResource(
+                                                            Res.string.view_all_comments,
+                                                            post.commentCount
                                                         )
+                                                    } else {
+                                                        stringResource(Res.string.be_first_to_comment)
+                                                    },
+                                                    style = MaterialTheme.typography.bodyMedium.copy(
+                                                        color = customColors.textSecondary
+                                                    ),
+                                                    modifier = Modifier
+                                                        .fillMaxWidth()
+                                                        .clickable {
+                                                            // navigator.push(CommentScreen(post.postId))
+                                                        }
+                                                        .padding(
+                                                            horizontal = 16.dp,
+                                                            vertical = 6.dp
+                                                        )
+                                                )
+                                            }
+
+                                            // 7. TARİH
+                                            Text(
+                                                text = formatToRelativeDateTime(post.createdAt),
+                                                style = MaterialTheme.typography.labelSmall.copy(
+                                                    color = customColors.textSecondary.copy(
+                                                        alpha = 0.6f
                                                     )
+                                                ),
+                                                modifier = Modifier.padding(
+                                                    horizontal = 16.dp,
+                                                    vertical = 8.dp
+                                                )
+                                            )
+
+                                            Spacer(modifier = Modifier.height(24.dp))
+                                        }
+                                    }
+                                } else if (!uiState.isLoading && uiState.errorMessage != null) {
+                                    Box(
+                                        modifier = Modifier.fillMaxSize(),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        FilledTonalButton(
+                                            onClick = { screenModel.fetchRemotePost(postId) },
+                                            enabled = !uiState.isLoading,
+                                            modifier = Modifier.height(48.dp),
+                                            colors = ButtonDefaults.filledTonalButtonColors(
+                                                containerColor = customColors.surfaceVariant,
+                                                contentColor = customColors.textPrimary
+                                            )
+                                        ) {
+                                            AnimatedContent(
+                                                targetState = uiState.isLoading,
+                                                transitionSpec = { fadeIn() togetherWith fadeOut() },
+                                                label = "ButtonLoadingTransition"
+                                            ) { loading ->
+                                                if (loading) {
+                                                    CircularProgressIndicator(
+                                                        modifier = Modifier.size(24.dp),
+                                                        strokeWidth = 2.5.dp,
+                                                        color = customColors.textPrimary
+                                                    )
+                                                } else {
+                                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                                        Icon(
+                                                            imageVector = Icons.Default.Refresh,
+                                                            contentDescription = stringResource(Res.string.active_devices_retry_cd),
+                                                            modifier = Modifier.size(24.dp),
+                                                            tint = customColors.textSecondary
+                                                        )
+                                                        Spacer(modifier = Modifier.width(8.dp))
+                                                        Text(
+                                                            text = stringResource(Res.string.active_devices_retry),
+                                                            style = MaterialTheme.typography.titleSmall.copy(
+                                                                fontWeight = FontWeight.Bold,
+                                                                color = customColors.textSecondary
+                                                            )
+                                                        )
+                                                    }
                                                 }
                                             }
                                         }
                                     }
                                 }
-                            }
 
-                            if (uiState.isActionLoadingDelete) {
-                                LoadingOverlay(
-                                    message = stringResource(Res.string.deleting_post)
-                                )
-                            }
-                            if (uiState.isActionLoadingPin) {
-                                LoadingOverlay(message = null)
+                                if (uiState.isActionLoadingDelete) {
+                                    LoadingOverlay(
+                                        message = stringResource(Res.string.deleting_post)
+                                    )
+                                }
+                                if (uiState.isActionLoadingPin) {
+                                    LoadingOverlay(message = null)
+                                }
                             }
                         }
                     }
