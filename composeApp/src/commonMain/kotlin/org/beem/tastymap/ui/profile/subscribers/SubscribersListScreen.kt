@@ -26,6 +26,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
@@ -42,6 +43,8 @@ import org.beem.tastymap.data.model.subscribers.SubscribeResponse
 import org.beem.tastymap.domain.model.RelationStatus
 import org.beem.tastymap.ui.bottomnav.ProfileTab
 import org.beem.tastymap.ui.components.TastyButton
+import org.beem.tastymap.ui.components.TastyPullToRefreshBox
+import org.beem.tastymap.ui.components.responsiveContentWidth
 import org.beem.tastymap.ui.profile.otherprofile.ProfileScreen
 import org.beem.tastymap.ui.theme.LocalCustomColors
 import org.jetbrains.compose.resources.stringResource
@@ -59,7 +62,6 @@ import tastymap.composeapp.generated.resources.profile_pending
 import tastymap.composeapp.generated.resources.profile_subscribe
 import tastymap.composeapp.generated.resources.profile_subscribed
 import tastymap.composeapp.generated.resources.settings_back_cd
-
 class SubscribersListScreen(
     private val userId: Long,
     private val initialTab: SubscriberListType = SubscriberListType.SUBSCRIBERS
@@ -76,7 +78,6 @@ class SubscribersListScreen(
 
         var selectedTab by remember { mutableStateOf(initialTab) }
         var searchQuery by remember { mutableStateOf("") }
-        val pullToRefreshState = rememberPullToRefreshState()
         val listState = rememberLazyListState()
 
         LaunchedEffect(userId, selectedTab) {
@@ -93,7 +94,7 @@ class SubscribersListScreen(
             derivedStateOf {
                 val totalItems = listState.layoutInfo.totalItemsCount
                 val lastVisibleItem = listState.layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: 0
-                !uiState.isLoading &&uiState.errorMessage == null && totalItems > 0 && lastVisibleItem >= totalItems - 2
+                !uiState.isLoading && uiState.errorMessage == null && totalItems > 0 && lastVisibleItem >= totalItems - 2
             }
         }
 
@@ -141,7 +142,6 @@ class SubscribersListScreen(
                         )
                     )
 
-                    // TabRow'u geniş ekranlarda ortalamak için sınırlıyoruz
                     Box(
                         modifier = Modifier.fillMaxWidth(),
                         contentAlignment = Alignment.Center
@@ -151,7 +151,7 @@ class SubscribersListScreen(
                             containerColor = customColors.background,
                             contentColor = customColors.navy,
                             divider = {},
-                            modifier = Modifier.widthIn(max = 1500.dp)
+                            modifier = Modifier.responsiveContentWidth()
                         ) {
                             Tab(
                                 selected = selectedTab == SubscriberListType.SUBSCRIBERS,
@@ -180,6 +180,7 @@ class SubscribersListScreen(
                 }
             }
         ) { innerPadding ->
+            val boxShape = RoundedCornerShape(16.dp)
             Column(
                 modifier = Modifier
                     .fillMaxSize()
@@ -187,162 +188,171 @@ class SubscribersListScreen(
                     .background(customColors.background),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                // Arama Çubuğunu geniş ekranlarda ortalama
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(16.dp),
+                        .padding(horizontal = 16.dp, vertical = 8.dp),
                     contentAlignment = Alignment.Center
                 ) {
                     SearchBar(
                         query = searchQuery,
                         onQueryChange = { searchQuery = it },
-                        modifier = Modifier.widthIn(max = 1500.dp)
+                        modifier = Modifier.responsiveContentWidth()
                     )
                 }
 
-                PullToRefreshBox(
-                    state = pullToRefreshState,
+                TastyPullToRefreshBox(
                     isRefreshing = uiState.isRefreshing,
                     onRefresh = { screenModel.refresh(userId) },
-                    modifier = Modifier.fillMaxSize(),
-                    indicator = {
-                        PullToRefreshDefaults.Indicator(
-                            state = pullToRefreshState,
-                            isRefreshing = uiState.isRefreshing,
-                            modifier = Modifier.align(Alignment.TopCenter),
-                            containerColor = customColors.placeHolderBack,
-                            color = customColors.placeHolderIcon
-                        )
-                    }
+                    modifier = Modifier.fillMaxSize()
                 ) {
                     Box(
-                        modifier = Modifier.fillMaxSize(),
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(vertical = 4.dp),
                         contentAlignment = Alignment.TopCenter
                     ) {
-                        val isError = !uiState.errorMessage.isNullOrBlank()
-                        val isEmpty = uiState.items.isEmpty()
+                        Box(
+                            modifier = Modifier
+                                .responsiveContentWidth()
+                                .fillMaxHeight()
+                                .padding(horizontal = 16.dp, vertical = 8.dp)
+                                .shadow(
+                                    elevation = 8.dp,
+                                    shape = boxShape,
+                                    spotColor = Color.Black.copy(alpha = 0.35f),
+                                    ambientColor = Color.Black.copy(alpha = 0.20f)
+                                )
+                                .background(
+                                    color = customColors.background,
+                                    shape = boxShape
+                                )
+                                .clip(boxShape)
+                        ) {
+                            val isError = !uiState.errorMessage.isNullOrBlank()
+                            val isEmpty = uiState.items.isEmpty()
 
-                        when {
-                            // 1. İlk yükleme durumu
-                            uiState.isLoading && isEmpty && !isError -> {
-                                Box(
-                                    modifier = Modifier.fillMaxSize(),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    CircularProgressIndicator(color = customColors.gourmetOrange)
-                                }
-                            }
-
-                            // 2. İnternet/Ağ Hatası durumu
-                            isError && isEmpty -> {
-                                Box(
-                                    modifier = Modifier.fillMaxSize(),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    FilledTonalButton(
-                                        onClick = { screenModel.loadInitialData(userId, selectedTab) },
-                                        enabled = !uiState.isLoading,
-                                        modifier = Modifier.height(48.dp),
-                                        colors = ButtonDefaults.filledTonalButtonColors(
-                                            containerColor = customColors.surfaceVariant,
-                                            contentColor = customColors.textPrimary
-                                        )
+                            when {
+                                // 1. İlk yükleme durumu
+                                uiState.isLoading && isEmpty && !isError -> {
+                                    Box(
+                                        modifier = Modifier.fillMaxSize(),
+                                        contentAlignment = Alignment.Center
                                     ) {
-                                        AnimatedContent(
-                                            targetState = uiState.isLoading,
-                                            transitionSpec = { fadeIn() togetherWith fadeOut() },
-                                            label = "ButtonLoadingTransition"
-                                        ) { loading ->
-                                            if (loading) {
-                                                CircularProgressIndicator(
-                                                    modifier = Modifier.size(24.dp),
-                                                    strokeWidth = 2.5.dp,
-                                                    color = customColors.textPrimary
-                                                )
-                                            } else {
-                                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                                    Icon(
-                                                        imageVector = Icons.Default.Refresh,
-                                                        contentDescription = stringResource(Res.string.active_devices_retry_cd),
+                                        CircularProgressIndicator(color = customColors.gourmetOrange)
+                                    }
+                                }
+
+                                // 2. İnternet/Ağ Hatası durumu
+                                isError && isEmpty -> {
+                                    Box(
+                                        modifier = Modifier.fillMaxSize(),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        FilledTonalButton(
+                                            onClick = { screenModel.loadInitialData(userId, selectedTab) },
+                                            enabled = !uiState.isLoading,
+                                            modifier = Modifier.height(48.dp),
+                                            colors = ButtonDefaults.filledTonalButtonColors(
+                                                containerColor = customColors.surfaceVariant,
+                                                contentColor = customColors.textPrimary
+                                            )
+                                        ) {
+                                            AnimatedContent(
+                                                targetState = uiState.isLoading,
+                                                transitionSpec = { fadeIn() togetherWith fadeOut() },
+                                                label = "ButtonLoadingTransition"
+                                            ) { loading ->
+                                                if (loading) {
+                                                    CircularProgressIndicator(
                                                         modifier = Modifier.size(24.dp),
-                                                        tint = customColors.textSecondary
+                                                        strokeWidth = 2.5.dp,
+                                                        color = customColors.textPrimary
                                                     )
-                                                    Spacer(modifier = Modifier.width(8.dp))
-                                                    Text(
-                                                        text = stringResource(Res.string.active_devices_retry),
-                                                        style = MaterialTheme.typography.titleSmall.copy(
-                                                            fontWeight = FontWeight.Bold,
-                                                            color = customColors.textSecondary
+                                                } else {
+                                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                                        Icon(
+                                                            imageVector = Icons.Default.Refresh,
+                                                            contentDescription = stringResource(Res.string.active_devices_retry_cd),
+                                                            modifier = Modifier.size(24.dp),
+                                                            tint = customColors.textSecondary
                                                         )
-                                                    )
+                                                        Spacer(modifier = Modifier.width(8.dp))
+                                                        Text(
+                                                            text = stringResource(Res.string.active_devices_retry),
+                                                            style = MaterialTheme.typography.titleSmall.copy(
+                                                                fontWeight = FontWeight.Bold,
+                                                                color = customColors.textSecondary
+                                                            )
+                                                        )
+                                                    }
                                                 }
                                             }
                                         }
                                     }
                                 }
-                            }
 
-                            // 3. Veri hatasız çekildi ancak içerik gerçekten boş
-                            filteredList.isEmpty() -> {
-                                Box(
-                                    modifier = Modifier.fillMaxSize(),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Text(
-                                        text = if (searchQuery.isNotBlank()) {
-                                            stringResource(Res.string.profile_no_results)
-                                        } else {
-                                            stringResource(Res.string.profile_empty_list)
-                                        },
-                                        style = MaterialTheme.typography.bodyMedium.copy(color = customColors.textSecondary)
-                                    )
-                                }
-                            }
-
-                            // 4. Veri başarıyla yüklendiğinde gösterilecek liste (Sınırlı genişlik)
-                            else -> {
-                                LazyColumn(
-                                    state = listState,
-                                    modifier = Modifier
-                                        .widthIn(max = 1500.dp)
-                                        .fillMaxSize(),
-                                    contentPadding = PaddingValues(bottom = 16.dp)
-                                ) {
-                                    items(
-                                        items = filteredList,
-                                        key = { it.id }
-                                    ) { user ->
-                                        SubscriberUserItem(
-                                            user = user,
-                                            onUserClick = {
-                                                if (screenModel.isMe(user.id)) {
-                                                    tabNavigator.current = ProfileTab
-                                                } else {
-                                                    navigator.push(ProfileScreen(userId = user.id))
-                                                }
+                                // 3. Veri hatasız çekildi ancak içerik gerçekten boş
+                                filteredList.isEmpty() -> {
+                                    Box(
+                                        modifier = Modifier.fillMaxSize(),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Text(
+                                            text = if (searchQuery.isNotBlank()) {
+                                                stringResource(Res.string.profile_no_results)
+                                            } else {
+                                                stringResource(Res.string.profile_empty_list)
                                             },
-                                            onActionClick = {
-                                                screenModel.handleFollowAction(
-                                                    targetUserId = user.id,
-                                                    currentStatus = user.relationStatus ?: RelationStatus.NOT_FOLLOWING,
-                                                )
-                                            }
+                                            style = MaterialTheme.typography.bodyMedium.copy(color = customColors.textSecondary)
                                         )
                                     }
+                                }
 
-                                    if (uiState.isLoadingMore) {
-                                        item {
-                                            Box(
-                                                modifier = Modifier
-                                                    .fillMaxWidth()
-                                                    .padding(16.dp),
-                                                contentAlignment = Alignment.Center
-                                            ) {
-                                                CircularProgressIndicator(
-                                                    modifier = Modifier.size(24.dp),
-                                                    color = customColors.gourmetOrange
-                                                )
+                                // 4. Veri başarıyla yüklendiğinde gösterilecek liste
+                                else -> {
+                                    LazyColumn(
+                                        state = listState,
+                                        modifier = Modifier
+                                            .responsiveContentWidth()
+                                            .fillMaxHeight(),
+                                        contentPadding = PaddingValues(bottom = 16.dp, top = 8.dp)
+                                    ) {
+                                        items(
+                                            items = filteredList,
+                                            key = { it.id }
+                                        ) { user ->
+                                            SubscriberUserItem(
+                                                user = user,
+                                                onUserClick = {
+                                                    if (screenModel.isMe(user.id)) {
+                                                        tabNavigator.current = ProfileTab
+                                                    } else {
+                                                        navigator.push(ProfileScreen(userId = user.id))
+                                                    }
+                                                },
+                                                onActionClick = {
+                                                    screenModel.handleFollowAction(
+                                                        targetUserId = user.id,
+                                                        currentStatus = user.relationStatus ?: RelationStatus.NOT_FOLLOWING,
+                                                    )
+                                                }
+                                            )
+                                        }
+
+                                        if (uiState.isLoadingMore) {
+                                            item {
+                                                Box(
+                                                    modifier = Modifier
+                                                        .fillMaxWidth()
+                                                        .padding(16.dp),
+                                                    contentAlignment = Alignment.Center
+                                                ) {
+                                                    CircularProgressIndicator(
+                                                        modifier = Modifier.size(24.dp),
+                                                        color = customColors.gourmetOrange
+                                                    )
+                                                }
                                             }
                                         }
                                     }
@@ -363,44 +373,66 @@ private fun SearchBar(
     modifier: Modifier = Modifier
 ) {
     val customColors = LocalCustomColors.current
+    val inputShape = RoundedCornerShape(12.dp)
 
-    TextField(
-        value = query,
-        onValueChange = onQueryChange,
-        placeholder = {
-            Text(
-                text = stringResource(Res.string.common_search_placeholder),
-                style = MaterialTheme.typography.bodyMedium.copy(color = customColors.textSecondary)
-            )
-        },
-        leadingIcon = {
-            Icon(
-                imageVector = Icons.Default.Search,
-                contentDescription = null,
-                tint = customColors.textSecondary
-            )
-        },
-        trailingIcon = {
-            if (query.isNotEmpty()) {
-                IconButton(onClick = { onQueryChange("") }) {
-                    Icon(
-                        imageVector = Icons.Default.Close,
-                        contentDescription = null,
-                        tint = customColors.textSecondary
-                    )
+    Box(
+        modifier = modifier.fillMaxWidth(),
+        contentAlignment = Alignment.Center
+    ) {
+        TextField(
+            value = query,
+            onValueChange = onQueryChange,
+            textStyle = MaterialTheme.typography.bodyMedium.copy(
+                fontWeight = FontWeight.Normal,
+                color = customColors.textPrimary
+            ),
+            placeholder = {
+                Text(
+                    text = stringResource(Res.string.common_search_placeholder),
+                    style = MaterialTheme.typography.bodyMedium.copy(color = customColors.textSecondary)
+                )
+            },
+            leadingIcon = {
+                Icon(
+                    imageVector = Icons.Default.Search,
+                    contentDescription = null,
+                    tint = customColors.textSecondary,
+                    modifier = Modifier.size(20.dp)
+                )
+            },
+            trailingIcon = {
+                if (query.isNotEmpty()) {
+                    IconButton(onClick = { onQueryChange("") }) {
+                        Icon(
+                            imageVector = Icons.Default.Close,
+                            contentDescription = null,
+                            tint = customColors.textSecondary
+                        )
+                    }
                 }
-            }
-        },
-        singleLine = true,
-        shape = RoundedCornerShape(12.dp),
-        colors = TextFieldDefaults.colors(
-            focusedContainerColor = customColors.surfaceVariant,
-            unfocusedContainerColor = customColors.surfaceVariant,
-            focusedIndicatorColor = Color.Transparent,
-            unfocusedIndicatorColor = Color.Transparent
-        ),
-        modifier = modifier.fillMaxWidth()
-    )
+            },
+            singleLine = true,
+            shape = inputShape,
+            colors = TextFieldDefaults.colors(
+                focusedContainerColor = customColors.surfaceVariant,
+                unfocusedContainerColor = customColors.surfaceVariant,
+                focusedIndicatorColor = Color.Transparent,
+                unfocusedIndicatorColor = Color.Transparent,
+                cursorColor = customColors.gourmetOrange,
+                focusedTextColor = customColors.textPrimary,
+                unfocusedTextColor = customColors.textPrimary
+            ),
+            modifier = Modifier
+                .responsiveContentWidth()
+                .shadow(
+                    elevation = 8.dp,
+                    shape = inputShape,
+                    spotColor = Color.Black.copy(alpha = 0.35f),
+                    ambientColor = Color.Black.copy(alpha = 0.20f)
+                )
+                .height(50.dp)
+        )
+    }
 }
 
 @Composable
@@ -450,61 +482,66 @@ private fun SubscriberUserItem(
         RelationStatus.SELF -> null
     }
 
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable { onUserClick() }
-            .padding(horizontal = 16.dp, vertical = 10.dp),
-        verticalAlignment = Alignment.CenterVertically
+    Box(
+        modifier = Modifier.fillMaxWidth(),
+        contentAlignment = Alignment.Center
     ) {
-        Box(
+        Row(
             modifier = Modifier
-                .size(50.dp)
-                .clip(CircleShape)
-                .background(customColors.surfaceVariant),
-            contentAlignment = Alignment.Center
+                .responsiveContentWidth()
+                .clickable { onUserClick() }
+                .padding(horizontal = 16.dp, vertical = 10.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            if (!user.profile.isNullOrBlank()) {
-                AsyncImage(
-                    model = user.profile,
-                    contentDescription = null,
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .clip(CircleShape),
-                    contentScale = ContentScale.Crop
-                )
-            } else {
-                Icon(
-                    imageVector = Icons.Default.Person,
-                    contentDescription = null,
-                    tint = customColors.placeHolderIcon,
-                    modifier = Modifier.size(28.dp)
+            Box(
+                modifier = Modifier
+                    .size(50.dp)
+                    .clip(CircleShape)
+                    .background(customColors.surfaceVariant),
+                contentAlignment = Alignment.Center
+            ) {
+                if (!user.profile.isNullOrBlank()) {
+                    AsyncImage(
+                        model = user.profile,
+                        contentDescription = null,
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .clip(CircleShape),
+                        contentScale = ContentScale.Crop
+                    )
+                } else {
+                    Icon(
+                        imageVector = Icons.Default.Person,
+                        contentDescription = null,
+                        tint = customColors.placeHolderIcon,
+                        modifier = Modifier.size(28.dp)
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.width(12.dp))
+
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = user.username,
+                    style = MaterialTheme.typography.bodyMedium.copy(
+                        fontWeight = FontWeight.Bold,
+                        color = customColors.textPrimary
+                    )
                 )
             }
-        }
 
-        Spacer(modifier = Modifier.width(12.dp))
-
-        Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = user.username,
-                style = MaterialTheme.typography.bodyMedium.copy(
-                    fontWeight = FontWeight.Bold,
-                    color = customColors.textPrimary
+            actionStyle?.let { style ->
+                TastyButton(
+                    text = style.text,
+                    onClick = onActionClick,
+                    modifier = Modifier.width(130.dp),
+                    isPrimary = style.isPrimary,
+                    backcolor = style.backColor,
+                    textcolor = style.textColor,
+                    strokecolor = style.strokeColor
                 )
-            )
-        }
-
-        actionStyle?.let { style ->
-            TastyButton(
-                text = style.text,
-                onClick = onActionClick,
-                modifier = Modifier.width(130.dp),
-                isPrimary = style.isPrimary,
-                backcolor = style.backColor,
-                textcolor = style.textColor,
-                strokecolor = style.strokeColor
-            )
+            }
         }
     }
 }

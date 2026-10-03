@@ -34,6 +34,8 @@ import cafe.adriel.voyager.koin.koinScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import org.beem.tastymap.core.util.ToastManager
+import org.beem.tastymap.ui.components.TastyPullToRefreshBox
+import org.beem.tastymap.ui.components.responsiveContentWidth
 import org.beem.tastymap.ui.theme.LocalCustomColors
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
@@ -53,7 +55,6 @@ class ActiveDevicesScreen : Screen {
         val screenModel = koinScreenModel<ActiveDevicesScreenModel>()
         val uiState by screenModel.uiState.collectAsState()
         val navigator = LocalNavigator.currentOrThrow
-        val pullToRefreshState = rememberPullToRefreshState()
         val customColors = LocalCustomColors.current
 
         LaunchedEffect(Unit) {
@@ -95,24 +96,17 @@ class ActiveDevicesScreen : Screen {
                 )
             }
         ) { innerPadding ->
-            PullToRefreshBox(
-                state = pullToRefreshState,
+            TastyPullToRefreshBox(
                 isRefreshing = uiState.isLoading && uiState.devices.isNotEmpty(),
                 onRefresh = { screenModel.getActiveDevices() },
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(innerPadding),
-                indicator = {
-                    PullToRefreshDefaults.Indicator(
-                        state = pullToRefreshState,
-                        isRefreshing = uiState.isLoading && uiState.devices.isNotEmpty(),
-                        modifier = Modifier.align(Alignment.TopCenter),
-                        containerColor = customColors.surface,
-                        color = customColors.navy
-                    )
-                }
+                    .padding(innerPadding)
             ) {
-                Box(modifier = Modifier.fillMaxSize()) {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.TopCenter
+                ) {
                     val isError = !uiState.errorMessage.isNullOrBlank()
                     val isEmpty = uiState.devices.isEmpty()
 
@@ -155,7 +149,7 @@ class ActiveDevicesScreen : Screen {
                                             Row(verticalAlignment = Alignment.CenterVertically) {
                                                 Icon(
                                                     imageVector = Icons.Default.Refresh,
-                                                    contentDescription =stringResource(Res.string.active_devices_retry_cd),
+                                                    contentDescription = stringResource(Res.string.active_devices_retry_cd),
                                                     modifier = Modifier.size(24.dp),
                                                     tint = customColors.textSecondary
                                                 )
@@ -177,8 +171,9 @@ class ActiveDevicesScreen : Screen {
                         else -> {
                             LazyColumn(
                                 modifier = Modifier
-                                    .fillMaxSize()
-                                    .padding(16.dp),
+                                    .responsiveContentWidth()
+                                    .fillMaxHeight(),
+                                contentPadding = PaddingValues(16.dp),
                                 verticalArrangement = Arrangement.spacedBy(12.dp)
                             ) {
                                 items(

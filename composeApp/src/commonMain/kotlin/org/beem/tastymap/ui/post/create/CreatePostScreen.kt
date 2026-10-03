@@ -63,6 +63,7 @@ import org.beem.tastymap.data.model.visit.VisitResponse
 import org.beem.tastymap.ui.bottomnav.ProfileTab
 import org.beem.tastymap.ui.components.TastyButton
 import org.beem.tastymap.ui.components.TastyTextField
+import org.beem.tastymap.ui.components.responsiveContentWidth
 import org.beem.tastymap.ui.theme.CustomColors
 import org.beem.tastymap.ui.theme.LocalCustomColors
 import org.jetbrains.compose.resources.stringResource
@@ -197,45 +198,49 @@ class CreatePostScreen : Screen {
                 AnimatedVisibility(
                     visible = selectedVisit != null
                 ) {
+                    // BottomBar kapsayıcısı tam genişlikte, buton ise responsive sınırda ve ortalanmış
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .wrapContentWidth(Alignment.CenterHorizontally)
-                            .widthIn(max = 800.dp)
-                            .background(customColors.background)
-                            .padding(16.dp)
+                            .background(customColors.background),
+                        contentAlignment = Alignment.Center
                     ) {
-                        TastyButton(
-                            text = stringResource(Res.string.share_post),
-                            onClick = {
-                                selectedVisit?.let { visit ->
-                                    val request = PostAndVisitRequest(
-                                        placeId = visit.placeId,
-                                        placeName = visit.placeName,
-                                        categories = visit.categories,
-                                        city = visit.city,
-                                        district = visit.district,
-                                        neighbourhood = visit.neighbourhood,
-                                        latitude = visit.latitude,
-                                        longitude = visit.longitude,
-                                        averagePoint = visit.averagePoint,
-                                        isWantToPost = true,
-                                        explanation = explanation.ifBlank { null },
-                                        photoUrl = emptyList(),
-                                        commentEnabled = commentEnabled
-                                    )
-                                    screenModel.addPost(
-                                        request = request,
-                                        selectedImagesBytes = selectedImagesBytes
-                                    )
-                                }
-                            },
+                        Box(
                             modifier = Modifier
-                                .fillMaxWidth(),
-                            isLoading = uiState.isLoading,
-                            backcolor = customColors.navy,
-                            textcolor = Color.White
-                        )
+                                .responsiveContentWidth()
+                                .padding(16.dp)
+                        ) {
+                            TastyButton(
+                                text = stringResource(Res.string.share_post),
+                                onClick = {
+                                    selectedVisit?.let { visit ->
+                                        val request = PostAndVisitRequest(
+                                            placeId = visit.placeId,
+                                            placeName = visit.placeName,
+                                            categories = visit.categories,
+                                            city = visit.city,
+                                            district = visit.district,
+                                            neighbourhood = visit.neighbourhood,
+                                            latitude = visit.latitude,
+                                            longitude = visit.longitude,
+                                            averagePoint = visit.averagePoint,
+                                            isWantToPost = true,
+                                            explanation = explanation.ifBlank { null },
+                                            photoUrl = emptyList(),
+                                            commentEnabled = commentEnabled
+                                        )
+                                        screenModel.addPost(
+                                            request = request,
+                                            selectedImagesBytes = selectedImagesBytes
+                                        )
+                                    }
+                                },
+                                modifier = Modifier.fillMaxWidth(),
+                                isLoading = uiState.isLoading,
+                                backcolor = customColors.navy,
+                                textcolor = Color.White
+                            )
+                        }
                     }
                 }
             }
@@ -245,221 +250,234 @@ class CreatePostScreen : Screen {
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(paddingValues)
-                    .wrapContentWidth(Alignment.CenterHorizontally)
-                    .widthIn(max = 800.dp)
-                    .verticalScroll(rememberScrollState())
-                    .padding(
-                        horizontal = 20.dp,
-                        vertical = 12.dp
-                    ),
-                verticalArrangement = Arrangement.spacedBy(24.dp)
+                    .verticalScroll(rememberScrollState()),
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-
-
-                VisitSelectorCard(
-                    selectedVisit = selectedVisit,
-                    customColors = customColors,
-                    onClick = {
-                        showVisitSheet = true
-                    }
-                )
-
-                AnimatedVisibility(
-                    visible = selectedVisit != null,
-                    enter = fadeIn() + expandVertically()
+                Column(
+                    modifier = Modifier
+                        .responsiveContentWidth()
+                        .padding(
+                            horizontal = 20.dp,
+                            vertical = 12.dp
+                        ),
+                    verticalArrangement = Arrangement.spacedBy(24.dp)
                 ) {
 
-                    Column(
-                        verticalArrangement = Arrangement.spacedBy(24.dp)
+                    VisitSelectorCard(
+                        selectedVisit = selectedVisit,
+                        customColors = customColors,
+                        onClick = {
+                            showVisitSheet = true
+                        }
+                    )
+
+
+
+                    AnimatedVisibility(
+                        visible = selectedVisit != null,
+                        enter = fadeIn() + expandVertically()
                     ) {
 
-                        PhotoUploadArea(
-                            customColors = customColors,
-                            error = uiState.photoError?.let { stringResource(it) },
-                            selectedImagesBytes = selectedImagesBytes,
-                            onAddClick = {
-                                showImagePickerSheet = true
-                            },
-                            onRemoveClick = { index ->
-                                if (index in selectedImagesBytes.indices) {
-                                    selectedImagesBytes = selectedImagesBytes.toMutableList().apply {
-                                        removeAt(index)
+                        Column(
+                            verticalArrangement = Arrangement.spacedBy(24.dp)
+                        ) {
+
+                            PhotoUploadArea(
+                                customColors = customColors,
+                                error = uiState.photoError?.let { stringResource(it) },
+                                selectedImagesBytes = selectedImagesBytes,
+                                onAddClick = {
+                                    showImagePickerSheet = true
+                                },
+                                onRemoveClick = { index ->
+                                    if (index in selectedImagesBytes.indices) {
+                                        selectedImagesBytes =
+                                            selectedImagesBytes.toMutableList().apply {
+                                                removeAt(index)
+                                            }
+                                    }
+                                }
+                            )
+
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                            ) {
+
+                                Card(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    shape = RoundedCornerShape(16.dp),
+                                    colors = CardDefaults.cardColors(
+                                        containerColor = customColors.surface
+                                    ),
+                                    border = BorderStroke(
+                                        1.dp,
+                                        customColors.borderLight
+                                    )
+                                ) {
+
+                                    Column(
+                                        modifier = Modifier.padding(16.dp)
+                                    ) {
+
+                                        Text(
+                                            text = stringResource(Res.string.place_about_placeholder),
+                                            style = MaterialTheme.typography.titleSmall,
+                                            color = customColors.textPrimary
+                                        )
+
+                                        Spacer(modifier = Modifier.height(6.dp))
+
+                                        Text(
+                                            text = stringResource(Res.string.post_description_hint),
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = customColors.textSecondary
+                                        )
+
+                                        Spacer(modifier = Modifier.height(16.dp))
+
+                                        TastyTextField(
+                                            value = explanation,
+                                            onValueChange = {
+                                                if (it.length <= 500) {
+                                                    explanation = it
+
+                                                    if (uiState.explanationError != null) {
+                                                        screenModel.clearErrors()
+                                                    }
+                                                }
+                                            },
+                                            label = "",
+                                            singleLine = false,
+                                            maxLines = 5,
+                                            error = uiState.explanationError?.let {
+                                                stringResource(
+                                                    it
+                                                )
+                                            }
+                                        )
+
+                                        Row(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .padding(top = 8.dp),
+                                            horizontalArrangement = Arrangement.End
+                                        ) {
+                                            Text(
+                                                text = "${explanation.length}/500",
+                                                style = MaterialTheme.typography.labelSmall,
+                                                color = if (explanation.length >= 500) {
+                                                    customColors.error
+                                                } else {
+                                                    customColors.textSecondary
+                                                }
+                                            )
+                                        }
                                     }
                                 }
                             }
-                        )
 
-                        Column(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                        ) {
-
-                            Card(
-                                modifier = Modifier.fillMaxWidth(),
-                                shape = RoundedCornerShape(16.dp),
-                                colors = CardDefaults.cardColors(
-                                    containerColor = customColors.surface
-                                ),
-                                border = BorderStroke(
-                                    1.dp,
-                                    customColors.borderLight
-                                )
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clip(RoundedCornerShape(16.dp))
+                                    .background(customColors.surface)
+                                    .border(
+                                        1.dp,
+                                        customColors.borderLight,
+                                        RoundedCornerShape(16.dp)
+                                    )
+                                    .padding(
+                                        horizontal = 16.dp,
+                                        vertical = 16.dp
+                                    ),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceBetween
                             ) {
 
                                 Column(
-                                    modifier = Modifier.padding(16.dp)
+                                    modifier = Modifier.weight(1f),
+                                    verticalArrangement = Arrangement.spacedBy(5.dp)
                                 ) {
 
                                     Text(
-                                        text = stringResource(Res.string.place_about_placeholder),
-                                        style = MaterialTheme.typography.titleSmall,
+                                        text = stringResource(Res.string.comments),
+                                        style = MaterialTheme.typography.titleMedium,
                                         color = customColors.textPrimary
                                     )
 
-                                    Spacer(modifier = Modifier.height(6.dp))
-
                                     Text(
-                                        text = stringResource(Res.string.post_description_hint),
-                                        style = MaterialTheme.typography.bodySmall,
+                                        text = stringResource(Res.string.allow_comments),
+                                        style = MaterialTheme.typography.bodyMedium,
                                         color = customColors.textSecondary
                                     )
-
-                                    Spacer(modifier = Modifier.height(16.dp))
-
-                                    TastyTextField(
-                                        value = explanation,
-                                        onValueChange = {
-                                            if (it.length <= 500) {
-                                                explanation = it
-
-                                                if (uiState.explanationError != null) {
-                                                    screenModel.clearErrors()
-                                                }
-                                            }
-                                        },
-                                        label = "",
-                                        singleLine = false,
-                                        maxLines = 5,
-                                        error = uiState.explanationError?.let { stringResource(it) }
-                                    )
-
-                                    Row(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .padding(top = 8.dp),
-                                        horizontalArrangement = Arrangement.End
-                                    ) {
-                                        Text(
-                                            text = "${explanation.length}/500",
-                                            style = MaterialTheme.typography.labelSmall,
-                                            color = if (explanation.length >= 500) {
-                                                customColors.error
-                                            } else {
-                                                customColors.textSecondary
-                                            }
-                                        )
-                                    }
                                 }
-                            }
-                        }
 
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clip(RoundedCornerShape(16.dp))
-                                .background(customColors.surface)
-                                .border(
-                                    1.dp,
-                                    customColors.borderLight,
-                                    RoundedCornerShape(16.dp)
-                                )
-                                .padding(
-                                    horizontal = 16.dp,
-                                    vertical = 16.dp
-                                ),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-
-                            Column(
-                                modifier = Modifier.weight(1f),
-                                verticalArrangement = Arrangement.spacedBy(5.dp)
-                            ) {
-
-                                Text(
-                                    text = stringResource(Res.string.comments),
-                                    style = MaterialTheme.typography.titleMedium,
-                                    color = customColors.textPrimary
-                                )
-
-                                Text(
-                                    text = stringResource(Res.string.allow_comments),
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = customColors.textSecondary
+                                Switch(
+                                    checked = commentEnabled,
+                                    onCheckedChange = {
+                                        commentEnabled = it
+                                    },
+                                    colors = SwitchDefaults.colors(
+                                        checkedThumbColor = customColors.surface,
+                                        checkedTrackColor = customColors.navy,
+                                        uncheckedThumbColor = customColors.surface,
+                                        uncheckedTrackColor = customColors.borderStrong,
+                                        uncheckedBorderColor = customColors.borderStrong
+                                    )
                                 )
                             }
 
-                            Switch(
-                                checked = commentEnabled,
-                                onCheckedChange = {
-                                    commentEnabled = it
-                                },
-                                colors = SwitchDefaults.colors(
-                                    checkedThumbColor = customColors.surface,
-                                    checkedTrackColor = customColors.navy,
-                                    uncheckedThumbColor = customColors.surface,
-                                    uncheckedTrackColor = customColors.borderStrong,
-                                    uncheckedBorderColor = customColors.borderStrong
-                                )
+                            Spacer(
+                                modifier = Modifier.height(60.dp)
                             )
                         }
-
-                        Spacer(
-                            modifier = Modifier.height(60.dp)
-                        )
                     }
                 }
             }
-        }
 
-        AnimatedVisibility(
-            visible = isSuccessAnimated,
-            enter = fadeIn(animationSpec = tween(300)) + scaleIn(initialScale = 0.8f, animationSpec = tween(300)),
-            exit = fadeOut(animationSpec = tween(200)),
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(customColors.background.copy(alpha = 0.95f)),
-                contentAlignment = Alignment.Center
+            AnimatedVisibility(
+                visible = isSuccessAnimated,
+                enter = fadeIn(animationSpec = tween(300)) + scaleIn(
+                    initialScale = 0.8f,
+                    animationSpec = tween(300)
+                ),
+                exit = fadeOut(animationSpec = tween(200)),
+                modifier = Modifier.fillMaxWidth()
             ) {
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(customColors.background.copy(alpha = 0.95f)),
+                    contentAlignment = Alignment.Center
                 ) {
-                    Box(
-                        modifier = Modifier
-                            .size(80.dp)
-                            .clip(CircleShape)
-                            .background(customColors.gourmetOrange),
-                        contentAlignment = Alignment.Center
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
                     ) {
-                        Icon(
-                            imageVector = Icons.Default.Check,
-                            contentDescription = null,
-                            tint = Color.White,
-                            modifier = Modifier.size(48.dp)
+                        Box(
+                            modifier = Modifier
+                                .size(80.dp)
+                                .clip(CircleShape)
+                                .background(customColors.gourmetOrange),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Check,
+                                contentDescription = null,
+                                tint = Color.White,
+                                modifier = Modifier.size(48.dp)
+                            )
+                        }
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Text(
+                            text = stringResource(Res.string.create_post_success),
+                            style = MaterialTheme.typography.titleMedium.copy(
+                                fontWeight = FontWeight.Bold,
+                                color = customColors.textPrimary
+                            )
                         )
                     }
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Text(
-                        text = stringResource(Res.string.create_post_success),
-                        style = MaterialTheme.typography.titleMedium.copy(
-                            fontWeight = FontWeight.Bold,
-                            color = customColors.textPrimary
-                        )
-                    )
                 }
             }
         }

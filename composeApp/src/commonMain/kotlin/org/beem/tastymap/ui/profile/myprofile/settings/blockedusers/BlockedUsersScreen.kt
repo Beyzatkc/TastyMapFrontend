@@ -27,6 +27,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
@@ -42,6 +43,8 @@ import org.beem.tastymap.data.model.block.BlockResponse
 import org.beem.tastymap.ui.components.DialogConfig
 import org.beem.tastymap.ui.components.TastyButton
 import org.beem.tastymap.ui.components.TastyConfirmDialog
+import org.beem.tastymap.ui.components.TastyPullToRefreshBox
+import org.beem.tastymap.ui.components.responsiveContentWidth
 import org.beem.tastymap.ui.profile.otherprofile.ProfileScreen
 import org.beem.tastymap.ui.theme.LocalCustomColors
 import org.jetbrains.compose.resources.stringResource
@@ -68,10 +71,8 @@ class BlockedUsersScreen() : Screen {
         val customColors = LocalCustomColors.current
 
         var searchQuery by remember { mutableStateOf("") }
-        val pullToRefreshState = rememberPullToRefreshState()
         var activeDialog by remember { mutableStateOf<DialogConfig?>(null) }
         val listState = rememberLazyListState()
-
 
         LaunchedEffect(Unit) {
             screenModel.loadInitialData()
@@ -87,7 +88,7 @@ class BlockedUsersScreen() : Screen {
             derivedStateOf {
                 val totalItems = listState.layoutInfo.totalItemsCount
                 val lastVisibleItem = listState.layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: 0
-                !uiState.isLoading &&uiState.errorMessage == null && totalItems > 0 && lastVisibleItem >= totalItems - 2
+                !uiState.isLoading && uiState.errorMessage == null && totalItems > 0 && lastVisibleItem >= totalItems - 2
             }
         }
 
@@ -135,6 +136,7 @@ class BlockedUsersScreen() : Screen {
                 )
             }
         ) { innerPadding ->
+            val boxShape = RoundedCornerShape(16.dp)
             Column(
                 modifier = Modifier
                     .fillMaxSize()
@@ -145,158 +147,175 @@ class BlockedUsersScreen() : Screen {
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(16.dp),
+                        .padding(horizontal = 16.dp, vertical = 8.dp),
                     contentAlignment = Alignment.Center
                 ) {
                     SearchBar(
                         query = searchQuery,
                         onQueryChange = { searchQuery = it },
-                        modifier = Modifier.widthIn(max = 1500.dp)
+                        modifier = Modifier.responsiveContentWidth()
                     )
                 }
 
-                PullToRefreshBox(
-                    state = pullToRefreshState,
+                TastyPullToRefreshBox(
                     isRefreshing = uiState.isRefreshing,
                     onRefresh = { screenModel.refresh() },
-                    modifier = Modifier.fillMaxSize(),
-                    indicator = {
-                        PullToRefreshDefaults.Indicator(
-                            state = pullToRefreshState,
-                            isRefreshing = uiState.isRefreshing,
-                            modifier = Modifier.align(Alignment.TopCenter),
-                            containerColor = customColors.placeHolderBack,
-                            color = customColors.placeHolderIcon
-                        )
-                    }
+                    modifier = Modifier.fillMaxSize()
                 ) {
                     Box(
-                        modifier = Modifier.fillMaxSize(),
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(vertical = 4.dp),
                         contentAlignment = Alignment.TopCenter
                     ) {
-                        val isError = !uiState.errorMessage.isNullOrBlank()
-                        val isEmpty = uiState.items.isEmpty()
-
-                        when {
-                            // 1. İlk yükleme durumu
-                            uiState.isLoading && isEmpty && !isError -> {
-                                Box(
-                                    modifier = Modifier.fillMaxSize(),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    CircularProgressIndicator(color = customColors.gourmetOrange)
-                                }
-                            }
-
-                            isError && isEmpty -> {
-                                Box(
-                                    modifier = Modifier.fillMaxSize(),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    FilledTonalButton(
-                                        onClick = { screenModel.loadInitialData() },
-                                        enabled = !uiState.isLoading,
-                                        modifier = Modifier.height(48.dp),
-                                        colors = ButtonDefaults.filledTonalButtonColors(
-                                            containerColor = customColors.surfaceVariant,
-                                            contentColor = customColors.textPrimary
-                                        )
+                        Box(
+                            modifier = Modifier
+                                .responsiveContentWidth()
+                                .fillMaxHeight()
+                                .padding(horizontal = 16.dp, vertical = 8.dp)
+                                .shadow(
+                                    elevation = 8.dp,
+                                    shape = boxShape,
+                                    spotColor = Color.Black.copy(alpha = 0.35f),
+                                    ambientColor = Color.Black.copy(alpha = 0.20f)
+                                )
+                                .background(
+                                    color = customColors.background,
+                                    shape = boxShape
+                                )
+                                .clip(boxShape)
+                        ) {
+                            val isError = !uiState.errorMessage.isNullOrBlank()
+                            val isEmpty = uiState.items.isEmpty()
+                            when {
+                                uiState.isLoading && isEmpty && !isError -> {
+                                    Box(
+                                        modifier = Modifier.fillMaxSize(),
+                                        contentAlignment = Alignment.Center
                                     ) {
-                                        AnimatedContent(
-                                            targetState = uiState.isLoading,
-                                            transitionSpec = { fadeIn() togetherWith fadeOut() },
-                                            label = "ButtonLoadingTransition"
-                                        ) { loading ->
-                                            if (loading) {
-                                                CircularProgressIndicator(
-                                                    modifier = Modifier.size(24.dp),
-                                                    strokeWidth = 2.5.dp,
-                                                    color = customColors.textPrimary
-                                                )
-                                            } else {
-                                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                                    Icon(
-                                                        imageVector = Icons.Default.Refresh,
-                                                        contentDescription = stringResource(Res.string.active_devices_retry_cd),
+                                        CircularProgressIndicator(color = customColors.gourmetOrange)
+                                    }
+                                }
+
+                                isError && isEmpty -> {
+                                    Box(
+                                        modifier = Modifier.fillMaxSize(),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        FilledTonalButton(
+                                            onClick = { screenModel.loadInitialData() },
+                                            enabled = !uiState.isLoading,
+                                            modifier = Modifier.height(48.dp),
+                                            colors = ButtonDefaults.filledTonalButtonColors(
+                                                containerColor = customColors.surfaceVariant,
+                                                contentColor = customColors.textPrimary
+                                            )
+                                        ) {
+                                            AnimatedContent(
+                                                targetState = uiState.isLoading,
+                                                transitionSpec = { fadeIn() togetherWith fadeOut() },
+                                                label = "ButtonLoadingTransition"
+                                            ) { loading ->
+                                                if (loading) {
+                                                    CircularProgressIndicator(
                                                         modifier = Modifier.size(24.dp),
-                                                        tint = customColors.textSecondary
+                                                        strokeWidth = 2.5.dp,
+                                                        color = customColors.textPrimary
                                                     )
-                                                    Spacer(modifier = Modifier.width(8.dp))
-                                                    Text(
-                                                        text = stringResource(Res.string.active_devices_retry),
-                                                        style = MaterialTheme.typography.titleSmall.copy(
-                                                            fontWeight = FontWeight.Bold,
-                                                            color = customColors.textSecondary
+                                                } else {
+                                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                                        Icon(
+                                                            imageVector = Icons.Default.Refresh,
+                                                            contentDescription = stringResource(Res.string.active_devices_retry_cd),
+                                                            modifier = Modifier.size(24.dp),
+                                                            tint = customColors.textSecondary
                                                         )
-                                                    )
+                                                        Spacer(modifier = Modifier.width(8.dp))
+                                                        Text(
+                                                            text = stringResource(Res.string.active_devices_retry),
+                                                            style = MaterialTheme.typography.titleSmall.copy(
+                                                                fontWeight = FontWeight.Bold,
+                                                                color = customColors.textSecondary
+                                                            )
+                                                        )
+                                                    }
                                                 }
                                             }
                                         }
                                     }
                                 }
-                            }
 
-                            filteredList.isEmpty() -> {
-                                Box(
-                                    modifier = Modifier.fillMaxSize(),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Text(
-                                        text = if (searchQuery.isNotBlank()) {
-                                            stringResource(Res.string.profile_no_results)
-                                        } else {
-                                            stringResource(Res.string.profile_empty_list)
-                                        },
-                                        style = MaterialTheme.typography.bodyMedium.copy(color = customColors.textSecondary)
-                                    )
-                                }
-                            }
-
-                            else -> {
-                                LazyColumn(
-                                    state = listState,
-                                    modifier = Modifier
-                                        .widthIn(max = 1500.dp)
-                                        .fillMaxSize(),
-                                    contentPadding = PaddingValues(bottom = 16.dp)
-                                ) {
-                                    items(
-                                        items = filteredList,
-                                        key = { it.userId }
-                                    ) { user ->
-
-                                        val unblockTitle = stringResource(Res.string.dialog_unblock_title)
-                                        val unblockMessage = stringResource(Res.string.dialog_unblock_message, user.username ?: "")
-                                        val unblockConfirm = stringResource(Res.string.profile_action_unblock)
-                                        BlockedUserItem(
-                                            user = user,
-                                            onUserClick = {
-                                                navigator.push(ProfileScreen(userId = user.userId))
+                                filteredList.isEmpty() -> {
+                                    Box(
+                                        modifier = Modifier.fillMaxSize(),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Text(
+                                            text = if (searchQuery.isNotBlank()) {
+                                                stringResource(Res.string.profile_no_results)
+                                            } else {
+                                                stringResource(Res.string.profile_empty_list)
                                             },
-                                            onUnblockClick = {
-                                                activeDialog = DialogConfig(
-                                                    title = unblockTitle,
-                                                    message = unblockMessage,
-                                                    confirmText = unblockConfirm,
-                                                    isDestructive = false,
-                                                    onConfirm = { screenModel.unblockUser(targetUserId = user.userId) }
-                                                )
-                                            }
+                                            style = MaterialTheme.typography.bodyMedium.copy(color = customColors.textSecondary)
                                         )
                                     }
+                                }
 
-                                    if (uiState.isLoadingMore) {
-                                        item {
-                                            Box(
-                                                modifier = Modifier
-                                                    .fillMaxWidth()
-                                                    .padding(16.dp),
-                                                contentAlignment = Alignment.Center
-                                            ) {
-                                                CircularProgressIndicator(
-                                                    modifier = Modifier.size(24.dp),
-                                                    color = customColors.gourmetOrange
-                                                )
+                                else -> {
+                                    LazyColumn(
+                                        state = listState,
+                                        modifier = Modifier
+                                            .responsiveContentWidth()
+                                            .fillMaxHeight(),
+                                        contentPadding = PaddingValues(bottom = 16.dp, top = 8.dp)
+                                    ) {
+                                        items(
+                                            items = filteredList,
+                                            key = { it.userId }
+                                        ) { user ->
+
+                                            val unblockTitle =
+                                                stringResource(Res.string.dialog_unblock_title)
+                                            val unblockMessage = stringResource(
+                                                Res.string.dialog_unblock_message,
+                                                user.username ?: ""
+                                            )
+                                            val unblockConfirm =
+                                                stringResource(Res.string.profile_action_unblock)
+                                            BlockedUserItem(
+                                                user = user,
+                                                onUserClick = {
+                                                    navigator.push(ProfileScreen(userId = user.userId))
+                                                },
+                                                onUnblockClick = {
+                                                    activeDialog = DialogConfig(
+                                                        title = unblockTitle,
+                                                        message = unblockMessage,
+                                                        confirmText = unblockConfirm,
+                                                        isDestructive = false,
+                                                        onConfirm = {
+                                                            screenModel.unblockUser(
+                                                                targetUserId = user.userId
+                                                            )
+                                                        }
+                                                    )
+                                                }
+                                            )
+                                        }
+
+                                        if (uiState.isLoadingMore) {
+                                            item {
+                                                Box(
+                                                    modifier = Modifier
+                                                        .fillMaxWidth()
+                                                        .padding(16.dp),
+                                                    contentAlignment = Alignment.Center
+                                                ) {
+                                                    CircularProgressIndicator(
+                                                        modifier = Modifier.size(24.dp),
+                                                        color = customColors.gourmetOrange
+                                                    )
+                                                }
                                             }
                                         }
                                     }
@@ -306,12 +325,12 @@ class BlockedUsersScreen() : Screen {
                     }
                 }
             }
-        }
-        activeDialog?.let { config ->
-            TastyConfirmDialog(
-                config = config,
-                onDismiss = { activeDialog = null }
-            )
+            activeDialog?.let { config ->
+                TastyConfirmDialog(
+                    config = config,
+                    onDismiss = { activeDialog = null }
+                )
+            }
         }
     }
 }
@@ -323,44 +342,66 @@ private fun SearchBar(
     modifier: Modifier = Modifier
 ) {
     val customColors = LocalCustomColors.current
+    val inputShape = RoundedCornerShape(12.dp)
 
-    TextField(
-        value = query,
-        onValueChange = onQueryChange,
-        placeholder = {
-            Text(
-                text = stringResource(Res.string.common_search_placeholder),
-                style = MaterialTheme.typography.bodyMedium.copy(color = customColors.textSecondary)
-            )
-        },
-        leadingIcon = {
-            Icon(
-                imageVector = Icons.Default.Search,
-                contentDescription = null,
-                tint = customColors.textSecondary
-            )
-        },
-        trailingIcon = {
-            if (query.isNotEmpty()) {
-                IconButton(onClick = { onQueryChange("") }) {
-                    Icon(
-                        imageVector = Icons.Default.Close,
-                        contentDescription = null,
-                        tint = customColors.textSecondary
-                    )
+    Box(
+        modifier = modifier.fillMaxWidth(),
+        contentAlignment = Alignment.Center
+    ) {
+        TextField(
+            value = query,
+            onValueChange = onQueryChange,
+            textStyle = MaterialTheme.typography.bodyMedium.copy(
+                fontWeight = FontWeight.Normal,
+                color = customColors.textPrimary
+            ),
+            placeholder = {
+                Text(
+                    text = stringResource(Res.string.common_search_placeholder),
+                    style = MaterialTheme.typography.bodyMedium.copy(color = customColors.textSecondary)
+                )
+            },
+            leadingIcon = {
+                Icon(
+                    imageVector = Icons.Default.Search,
+                    contentDescription = null,
+                    tint = customColors.textSecondary,
+                    modifier = Modifier.size(20.dp)
+                )
+            },
+            trailingIcon = {
+                if (query.isNotEmpty()) {
+                    IconButton(onClick = { onQueryChange("") }) {
+                        Icon(
+                            imageVector = Icons.Default.Close,
+                            contentDescription = null,
+                            tint = customColors.textSecondary
+                        )
+                    }
                 }
-            }
-        },
-        singleLine = true,
-        shape = RoundedCornerShape(12.dp),
-        colors = TextFieldDefaults.colors(
-            focusedContainerColor = customColors.surfaceVariant,
-            unfocusedContainerColor = customColors.surfaceVariant,
-            focusedIndicatorColor = Color.Transparent,
-            unfocusedIndicatorColor = Color.Transparent
-        ),
-        modifier = modifier.fillMaxWidth()
-    )
+            },
+            singleLine = true,
+            shape = inputShape,
+            colors = TextFieldDefaults.colors(
+                focusedContainerColor = customColors.surfaceVariant,
+                unfocusedContainerColor = customColors.surfaceVariant,
+                focusedIndicatorColor = Color.Transparent,
+                unfocusedIndicatorColor = Color.Transparent,
+                cursorColor = customColors.gourmetOrange,
+                focusedTextColor = customColors.textPrimary,
+                unfocusedTextColor = customColors.textPrimary
+            ),
+            modifier = Modifier
+                .responsiveContentWidth()
+                .shadow(
+                    elevation = 8.dp,
+                    shape = inputShape,
+                    spotColor = Color.Black.copy(alpha = 0.35f),
+                    ambientColor = Color.Black.copy(alpha = 0.20f)
+                )
+                .height(50.dp)
+        )
+    }
 }
 
 @Composable
@@ -372,61 +413,66 @@ private fun BlockedUserItem(
     val customColors = LocalCustomColors.current
 
     val username = user.username ?: "Bilinmeyen Kullanıcı"
-    val profileImage =user.profilephoto
+    val profileImage = user.profilephoto
 
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable { onUserClick() }
-            .padding(horizontal = 16.dp, vertical = 10.dp),
-        verticalAlignment = Alignment.CenterVertically
+    Box(
+        modifier = Modifier.fillMaxWidth(),
+        contentAlignment = Alignment.Center
     ) {
-        Box(
+        Row(
             modifier = Modifier
-                .size(50.dp)
-                .clip(CircleShape)
-                .background(customColors.surfaceVariant),
-            contentAlignment = Alignment.Center
+                .responsiveContentWidth()
+                .clickable { onUserClick() }
+                .padding(horizontal = 16.dp, vertical = 10.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            if (!profileImage.isNullOrBlank()) {
-                AsyncImage(
-                    model = profileImage,
-                    contentDescription = null,
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .clip(CircleShape),
-                    contentScale = ContentScale.Crop
-                )
-            } else {
-                Icon(
-                    imageVector = Icons.Default.Person,
-                    contentDescription = null,
-                    tint = customColors.placeHolderIcon,
-                    modifier = Modifier.size(28.dp)
+            Box(
+                modifier = Modifier
+                    .size(50.dp)
+                    .clip(CircleShape)
+                    .background(customColors.surfaceVariant),
+                contentAlignment = Alignment.Center
+            ) {
+                if (!profileImage.isNullOrBlank()) {
+                    AsyncImage(
+                        model = profileImage,
+                        contentDescription = null,
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .clip(CircleShape),
+                        contentScale = ContentScale.Crop
+                    )
+                } else {
+                    Icon(
+                        imageVector = Icons.Default.Person,
+                        contentDescription = null,
+                        tint = customColors.placeHolderIcon,
+                        modifier = Modifier.size(28.dp)
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.width(12.dp))
+
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = username,
+                    style = MaterialTheme.typography.bodyMedium.copy(
+                        fontWeight = FontWeight.Bold,
+                        color = customColors.textPrimary
+                    )
                 )
             }
-        }
 
-        Spacer(modifier = Modifier.width(12.dp))
-
-        Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = username,
-                style = MaterialTheme.typography.bodyMedium.copy(
-                    fontWeight = FontWeight.Bold,
-                    color = customColors.textPrimary
-                )
+            TastyButton(
+                text = stringResource(Res.string.profile_action_unblock),
+                onClick = onUnblockClick,
+                modifier = Modifier.width(130.dp),
+                isPrimary = false,
+                backcolor = Color.Transparent,
+                textcolor = customColors.textPrimary,
+                strokecolor = customColors.textSecondary.copy(alpha = 0.4f)
             )
         }
-
-        TastyButton(
-            text = stringResource(Res.string.profile_action_unblock),
-            onClick = onUnblockClick,
-            modifier = Modifier.width(130.dp),
-            isPrimary = false,
-            backcolor = Color.Transparent,
-            textcolor = customColors.textPrimary,
-            strokecolor = customColors.textSecondary.copy(alpha = 0.4f)
-        )
     }
 }

@@ -52,6 +52,8 @@ import coil3.compose.AsyncImage
 import org.beem.tastymap.core.util.ToastManager
 import org.beem.tastymap.data.model.post.PostGridResponse
 import org.beem.tastymap.ui.components.TastyButton
+import org.beem.tastymap.ui.components.TastyPullToRefreshBox
+import org.beem.tastymap.ui.components.responsiveContentWidth
 import org.beem.tastymap.ui.post.detail.PostDetailScreen
 import org.beem.tastymap.ui.post.mypost.MyPostScreenModel
 import org.beem.tastymap.ui.profile.myprofile.editprofile.EditProfileScreen
@@ -96,7 +98,6 @@ class MyProfileScreen : Screen {
 
         val navigator = LocalNavigator.currentOrThrow
 
-        val pullToRefreshState = rememberPullToRefreshState()
         var isPhotoZoomed by remember { mutableStateOf(false) }
         val customColors = LocalCustomColors.current
         var selectedTab by remember { mutableIntStateOf(0) }
@@ -200,8 +201,7 @@ class MyProfileScreen : Screen {
                         )
                     }
                 ) { innerPadding ->
-                    PullToRefreshBox(
-                        state = pullToRefreshState,
+                    TastyPullToRefreshBox(
                         isRefreshing = profileState.isRefreshing || postState.isRefreshing,
                         onRefresh = {
                             profileScreenModel.refreshMyProfile()
@@ -210,17 +210,8 @@ class MyProfileScreen : Screen {
                         modifier = Modifier
                             .fillMaxSize()
                             .padding(innerPadding)
-                            .background(customColors.placeHolderBack),
-                        indicator = {
-                            PullToRefreshDefaults.Indicator(
-                                state = pullToRefreshState,
-                                isRefreshing = profileState.isRefreshing || postState.isRefreshing,
-                                modifier = Modifier.align(Alignment.TopCenter),
-                                containerColor = customColors.placeHolderBack,
-                                color = customColors.placeHolderIcon
-                            )
-                        }
-                    ) {
+                            .background(customColors.placeHolderBack)
+                    ){
                         val profile = profileState.profile
 
                         if (profile == null && !profileState.isLoading && profileState.errorMessage != null && profileState.isRefreshing) {
@@ -281,6 +272,7 @@ class MyProfileScreen : Screen {
                                 horizontalArrangement = Arrangement.spacedBy(2.dp),
                                 verticalArrangement = Arrangement.spacedBy(2.dp)
                             ) {
+                                // 1. PROFİL BAŞLIK ALANI
                                 item(span = { GridItemSpan(maxLineSpan) }) {
                                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                         Surface(
@@ -297,7 +289,7 @@ class MyProfileScreen : Screen {
                                             ) {
                                                 Column(
                                                     modifier = Modifier
-                                                        .widthIn(max = 600.dp)
+                                                        .responsiveContentWidth()
                                                         .padding(
                                                             horizontal = 20.dp,
                                                             vertical = 20.dp
@@ -323,7 +315,6 @@ class MyProfileScreen : Screen {
                                                             contentAlignment = Alignment.Center
                                                         ) {
                                                             if (!profile?.profilePhoto.isNullOrBlank()) {
-
                                                                 AsyncImage(
                                                                     model = profile.profilePhoto,
                                                                     contentDescription = stringResource(
@@ -418,9 +409,9 @@ class MyProfileScreen : Screen {
                                             contentAlignment = Alignment.Center
                                         ) {
                                             Row(
-                                                modifier = Modifier.widthIn(max = 600.dp),
+                                                modifier = Modifier.responsiveContentWidth(),
                                                 horizontalArrangement = Arrangement.spacedBy(12.dp)
-                                            ) {
+                                            ){
                                                 MetricCard(
                                                     title = stringResource(Res.string.my_profile_metric_posts),
                                                     value = (profile?.postCount ?: 0).toString(),
@@ -478,7 +469,7 @@ class MyProfileScreen : Screen {
                                             Surface(
                                                 color = customColors.surfaceVariant,
                                                 shape = RoundedCornerShape(12.dp),
-                                                modifier = Modifier.widthIn(max = 600.dp)
+                                                modifier = Modifier.responsiveContentWidth()
                                             ) {
                                                 Row(modifier = Modifier.padding(4.dp)) {
                                                     TabButton(
@@ -516,7 +507,7 @@ class MyProfileScreen : Screen {
                                             ) {
                                                 Box(
                                                     modifier = Modifier
-                                                        .widthIn(max = 600.dp)
+                                                        .responsiveContentWidth()
                                                         .fillMaxWidth()
                                                         .padding(48.dp),
                                                     contentAlignment = Alignment.Center
@@ -533,7 +524,7 @@ class MyProfileScreen : Screen {
                                         item(span = { GridItemSpan(maxLineSpan) }) {
                                             Column(
                                                 modifier = Modifier
-                                                    .widthIn(max = 600.dp)
+                                                    .responsiveContentWidth()
                                                     .fillMaxWidth()
                                                     .padding(vertical = 16.dp),
                                                 horizontalAlignment = Alignment.CenterHorizontally
@@ -582,7 +573,7 @@ class MyProfileScreen : Screen {
                                                 modifier = Modifier.fillMaxWidth(),
                                                 contentAlignment = Alignment.Center
                                             ) {
-                                                Box(modifier = Modifier.widthIn(max = 600.dp)) {
+                                                Box(modifier = Modifier.responsiveContentWidth()) {
                                                     // 3'lü sütun grid mantığını 600dp kapsayıcı içinde kurmak
                                                     val chunkedPosts = postState.items.chunked(3)
                                                     Column(
@@ -638,7 +629,7 @@ class MyProfileScreen : Screen {
                                                     contentAlignment = Alignment.Center
                                                 ) {
                                                     Box(
-                                                        modifier = Modifier.widthIn(max = 600.dp)
+                                                        modifier = Modifier.responsiveContentWidth()
                                                             .padding(16.dp),
                                                         contentAlignment = Alignment.Center
                                                     ) {
@@ -659,7 +650,7 @@ class MyProfileScreen : Screen {
                                                 ) {
                                                     Column(
                                                         modifier = Modifier
-                                                            .widthIn(max = 600.dp)
+                                                            .responsiveContentWidth()
                                                             .padding(vertical = 10.dp),
                                                         horizontalAlignment = Alignment.CenterHorizontally
                                                     ) {
@@ -693,7 +684,7 @@ class MyProfileScreen : Screen {
                                             contentAlignment = Alignment.Center
                                         ) {
                                             Box(
-                                                modifier = Modifier.widthIn(max = 600.dp)
+                                                modifier = Modifier.responsiveContentWidth()
                                                     .padding(32.dp),
                                                 contentAlignment = Alignment.Center
                                             ) {

@@ -44,6 +44,7 @@ import coil3.compose.AsyncImage
 import org.beem.tastymap.core.util.ToastManager
 import org.beem.tastymap.data.model.search.UserSearchResponse
 import org.beem.tastymap.ui.bottomnav.ProfileTab
+import org.beem.tastymap.ui.components.responsiveContentWidth
 import org.beem.tastymap.ui.profile.myprofile.MyProfileScreen
 import org.beem.tastymap.ui.profile.otherprofile.ProfileScreen
 import org.beem.tastymap.ui.theme.LocalCustomColors
@@ -57,7 +58,6 @@ import tastymap.composeapp.generated.resources.profile_no_results
 import tastymap.composeapp.generated.resources.search_recent_title
 import tastymap.composeapp.generated.resources.search_remove_from_history
 import tastymap.composeapp.generated.resources.settings_back_cd
-
 class SearchScreen : Screen {
 
     @OptIn(ExperimentalMaterial3Api::class)
@@ -84,7 +84,7 @@ class SearchScreen : Screen {
             derivedStateOf {
                 val totalItems = listState.layoutInfo.totalItemsCount
                 val lastVisibleItem = listState.layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: 0
-                !uiState.isLoading &&uiState.errorMessage == null && totalItems > 0 && lastVisibleItem >= totalItems - 2
+                !uiState.isLoading && uiState.errorMessage == null && totalItems > 0 && lastVisibleItem >= totalItems - 2
             }
         }
 
@@ -143,168 +143,168 @@ class SearchScreen : Screen {
             ) {
                 Box(
                     modifier = Modifier
-                        .widthIn(max = 600.dp)
-                        .fillMaxSize()
-
+                        .responsiveContentWidth()
+                        .fillMaxHeight()
                         .padding(horizontal = 16.dp, vertical = 12.dp)
                         .shadow(
                             elevation = 8.dp,
                             shape = boxShape,
-                            spotColor = Color.Black.copy(alpha = 0.35f),  // Ana gölgeyi oldukça belirginleştirir
-                            ambientColor = Color.Black.copy(alpha = 0.20f) // Kenar yayılı
+                            spotColor = Color.Black.copy(alpha = 0.35f),
+                            ambientColor = Color.Black.copy(alpha = 0.20f)
                         )
                         .background(
                             color = customColors.background,
                             shape = boxShape
                         )
                         .clip(boxShape)
-                ){
-                val isError = !uiState.errorMessage.isNullOrBlank()
-                val currentList =
-                    if (uiState.isHistoryMode) uiState.historyResults else uiState.searchResults
-                val isEmpty = currentList.isEmpty()
+                ) {
+                    val isError = !uiState.errorMessage.isNullOrBlank()
+                    val currentList =
+                        if (uiState.isHistoryMode) uiState.historyResults else uiState.searchResults
+                    val isEmpty = currentList.isEmpty()
 
-                when {
-                    uiState.isLoading && isEmpty && !isError -> {
-                        Box(
-                            modifier = Modifier.fillMaxSize(),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            CircularProgressIndicator(color = customColors.gourmetOrange)
-                        }
-                    }
-
-                    isError && isEmpty -> {
-                        Box(
-                            modifier = Modifier.fillMaxSize(),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            FilledTonalButton(
-                                onClick = { screenModel.refresh() },
-                                enabled = !uiState.isLoading,
-                                modifier = Modifier.height(48.dp),
-                                colors = ButtonDefaults.filledTonalButtonColors(
-                                    containerColor = customColors.surfaceVariant,
-                                    contentColor = customColors.textPrimary
-                                )
+                    when {
+                        uiState.isLoading && isEmpty && !isError -> {
+                            Box(
+                                modifier = Modifier.fillMaxSize(),
+                                contentAlignment = Alignment.Center
                             ) {
-                                AnimatedContent(
-                                    targetState = uiState.isLoading,
-                                    transitionSpec = { fadeIn() togetherWith fadeOut() },
-                                    label = "ButtonLoadingTransition"
-                                ) { loading ->
-                                    if (loading) {
-                                        CircularProgressIndicator(
-                                            modifier = Modifier.size(24.dp),
-                                            strokeWidth = 2.5.dp,
-                                            color = customColors.textPrimary
-                                        )
-                                    } else {
-                                        Row(verticalAlignment = Alignment.CenterVertically) {
-                                            Icon(
-                                                imageVector = Icons.Default.Refresh,
-                                                contentDescription = stringResource(Res.string.active_devices_retry_cd),
+                                CircularProgressIndicator(color = customColors.gourmetOrange)
+                            }
+                        }
+
+                        isError && isEmpty -> {
+                            Box(
+                                modifier = Modifier.fillMaxSize(),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                FilledTonalButton(
+                                    onClick = { screenModel.refresh() },
+                                    enabled = !uiState.isLoading,
+                                    modifier = Modifier.height(48.dp),
+                                    colors = ButtonDefaults.filledTonalButtonColors(
+                                        containerColor = customColors.surfaceVariant,
+                                        contentColor = customColors.textPrimary
+                                    )
+                                ) {
+                                    AnimatedContent(
+                                        targetState = uiState.isLoading,
+                                        transitionSpec = { fadeIn() togetherWith fadeOut() },
+                                        label = "ButtonLoadingTransition"
+                                    ) { loading ->
+                                        if (loading) {
+                                            CircularProgressIndicator(
                                                 modifier = Modifier.size(24.dp),
-                                                tint = customColors.textSecondary
+                                                strokeWidth = 2.5.dp,
+                                                color = customColors.textPrimary
+                                            )
+                                        } else {
+                                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                                Icon(
+                                                    imageVector = Icons.Default.Refresh,
+                                                    contentDescription = stringResource(Res.string.active_devices_retry_cd),
+                                                    modifier = Modifier.size(24.dp),
+                                                    tint = customColors.textSecondary
+                                                )
+                                                Spacer(modifier = Modifier.width(8.dp))
+                                                Text(
+                                                    text = stringResource(Res.string.active_devices_retry),
+                                                    style = MaterialTheme.typography.titleSmall.copy(
+                                                        fontWeight = FontWeight.Bold,
+                                                        color = customColors.textSecondary
+                                                    )
+                                                )
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        isEmpty && !uiState.isLoading -> {
+                            Box(
+                                modifier = Modifier.fillMaxSize(),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = if (uiState.isHistoryMode) {
+                                        stringResource(Res.string.profile_empty_list)
+                                    } else {
+                                        stringResource(Res.string.profile_no_results)
+                                    },
+                                    style = MaterialTheme.typography.bodyMedium.copy(color = customColors.textSecondary)
+                                )
+                            }
+                        }
+
+                        else -> {
+                            LazyColumn(
+                                state = listState,
+                                modifier = Modifier
+                                    .responsiveContentWidth()
+                                    .fillMaxHeight(),
+                                contentPadding = PaddingValues(bottom = 16.dp, top = 8.dp)
+                            ) {
+                                if (uiState.isHistoryMode && !isEmpty) {
+                                    item {
+                                        Row(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .padding(horizontal = 16.dp, vertical = 8.dp),
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            Icon(
+                                                imageVector = Icons.Default.History,
+                                                contentDescription = null,
+                                                tint = customColors.textSecondary,
+                                                modifier = Modifier.size(20.dp)
                                             )
                                             Spacer(modifier = Modifier.width(8.dp))
                                             Text(
-                                                text = stringResource(Res.string.active_devices_retry),
+                                                text = stringResource(Res.string.search_recent_title),
                                                 style = MaterialTheme.typography.titleSmall.copy(
-                                                    fontWeight = FontWeight.Bold,
-                                                    color = customColors.textSecondary
+                                                    color = customColors.textSecondary,
+                                                    fontWeight = FontWeight.Bold
                                                 )
                                             )
                                         }
                                     }
                                 }
-                            }
-                        }
-                    }
 
-                    isEmpty && !uiState.isLoading -> {
-                        Box(
-                            modifier = Modifier.fillMaxSize(),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(
-                                text = if (uiState.isHistoryMode) {
-                                    stringResource(Res.string.profile_empty_list)
-                                } else {
-                                    stringResource(Res.string.profile_no_results)
-                                },
-                                style = MaterialTheme.typography.bodyMedium.copy(color = customColors.textSecondary)
-                            )
-                        }
-                    }
-
-                    else -> {
-                        LazyColumn(
-                            state = listState,
-                            modifier = Modifier
-                                .widthIn(600.dp)
-                                .fillMaxSize(),
-                            contentPadding = PaddingValues(bottom = 16.dp, top = 8.dp)
-                        ) {
-                            if (uiState.isHistoryMode && !isEmpty) {
-                                item {
-                                    Row(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .padding(horizontal = 16.dp, vertical = 8.dp),
-                                        verticalAlignment = Alignment.CenterVertically
-                                    ) {
-                                        Icon(
-                                            imageVector = Icons.Default.History,
-                                            contentDescription = null,
-                                            tint = customColors.textSecondary,
-                                            modifier = Modifier.size(20.dp)
-                                        )
-                                        Spacer(modifier = Modifier.width(8.dp))
-                                        Text(
-                                            text = stringResource(Res.string.search_recent_title),
-                                            style = MaterialTheme.typography.titleSmall.copy(
-                                                color = customColors.textSecondary,
-                                                fontWeight = FontWeight.Bold
-                                            )
-                                        )
-                                    }
-                                }
-                            }
-
-                            items(
-                                items = currentList,
-                                key = { it.id }
-                            ) { user ->
-                                SearchUserItem(
-                                    user = user,
-                                    isHistoryItem = uiState.isHistoryMode,
-                                    onUserClick = {
-                                        screenModel.onUserClicked(user)
-                                        if (screenModel.isMe(user.id)) {
-                                            tabNavigator.current = ProfileTab
-                                        } else {
-                                            navigator.push(ProfileScreen(userId = user.id))
+                                items(
+                                    items = currentList,
+                                    key = { it.id }
+                                ) { user ->
+                                    SearchUserItem(
+                                        user = user,
+                                        isHistoryItem = uiState.isHistoryMode,
+                                        onUserClick = {
+                                            screenModel.onUserClicked(user)
+                                            if (screenModel.isMe(user.id)) {
+                                                tabNavigator.current = ProfileTab
+                                            } else {
+                                                navigator.push(ProfileScreen(userId = user.id))
+                                            }
+                                        },
+                                        onDeleteHistoryClick = {
+                                            screenModel.deleteHistoryItem(user.id)
                                         }
-                                    },
-                                    onDeleteHistoryClick = {
-                                        screenModel.deleteHistoryItem(user.id)
-                                    }
-                                )
-                            }
+                                    )
+                                }
 
-                            if (uiState.isLoadingMore && !uiState.isHistoryMode) {
-                                item {
-                                    Box(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .padding(16.dp),
-                                        contentAlignment = Alignment.Center
-                                    ) {
-                                        CircularProgressIndicator(
-                                            modifier = Modifier.size(24.dp),
-                                            color = customColors.gourmetOrange
-                                        )
+                                if (uiState.isLoadingMore && !uiState.isHistoryMode) {
+                                    item {
+                                        Box(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .padding(16.dp),
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            CircularProgressIndicator(
+                                                modifier = Modifier.size(24.dp),
+                                                color = customColors.gourmetOrange
+                                            )
+                                        }
                                     }
                                 }
                             }
@@ -313,9 +313,10 @@ class SearchScreen : Screen {
                 }
             }
         }
-        }
     }
-}@Composable
+}
+
+@Composable
 private fun SearchBarInput(
     query: String,
     onQueryChange: (String) -> Unit,
@@ -323,7 +324,7 @@ private fun SearchBarInput(
     modifier: Modifier = Modifier
 ) {
     val customColors = LocalCustomColors.current
-    val inputShape = RoundedCornerShape(12.dp) // Köşe yuvarlaklığı
+    val inputShape = RoundedCornerShape(12.dp)
 
     Box(
         modifier = modifier.fillMaxWidth(),
@@ -373,8 +374,7 @@ private fun SearchBarInput(
                 unfocusedTextColor = customColors.textPrimary
             ),
             modifier = Modifier
-                .widthIn(max = 600.dp)
-                .fillMaxWidth()
+                .responsiveContentWidth()
                 .padding(end = 8.dp)
                 .shadow(
                     elevation = 8.dp,
@@ -386,6 +386,7 @@ private fun SearchBarInput(
         )
     }
 }
+
 @Composable
 private fun SearchUserItem(
     user: UserSearchResponse,
@@ -405,8 +406,7 @@ private fun SearchUserItem(
     ) {
         Row(
             modifier = Modifier
-                .widthIn(max = 600.dp)
-                .fillMaxWidth()
+                .responsiveContentWidth()
                 .clickable { onUserClick() }
                 .padding(horizontal = 16.dp, vertical = 10.dp),
             verticalAlignment = Alignment.CenterVertically

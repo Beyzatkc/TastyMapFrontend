@@ -41,6 +41,8 @@ import org.beem.tastymap.data.model.socialnotifications.SocialNotificationType
 import org.beem.tastymap.data.model.socialnotifications.SocialNotificationsResponse
 import org.beem.tastymap.domain.model.RelationStatus
 import org.beem.tastymap.ui.components.TastyButton
+import org.beem.tastymap.ui.components.TastyPullToRefreshBox
+import org.beem.tastymap.ui.components.responsiveContentWidth
 import org.beem.tastymap.ui.profile.otherprofile.ProfileScreen
 import org.beem.tastymap.ui.theme.LocalCustomColors
 import org.jetbrains.compose.resources.stringResource
@@ -72,7 +74,6 @@ class NotificationScreen : Screen {
         val navigator = LocalNavigator.currentOrThrow
         val customColors = LocalCustomColors.current
 
-        val pullToRefreshState = rememberPullToRefreshState()
         val listState = rememberLazyListState()
 
         LaunchedEffect(Unit) {
@@ -90,7 +91,7 @@ class NotificationScreen : Screen {
             derivedStateOf {
                 val totalItems = listState.layoutInfo.totalItemsCount
                 val lastVisibleItem = listState.layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: 0
-                !uiState.isLoading &&uiState.errorMessage == null && totalItems > 0 && lastVisibleItem >= totalItems - 2
+                !uiState.isLoading && uiState.errorMessage == null && totalItems > 0 && lastVisibleItem >= totalItems - 2
             }
         }
 
@@ -135,20 +136,10 @@ class NotificationScreen : Screen {
                     .background(customColors.background),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                PullToRefreshBox(
-                    state = pullToRefreshState,
+                TastyPullToRefreshBox(
                     isRefreshing = uiState.isRefreshing,
                     onRefresh = { screenModel.refresh() },
-                    modifier = Modifier.fillMaxSize(),
-                    indicator = {
-                        PullToRefreshDefaults.Indicator(
-                            state = pullToRefreshState,
-                            isRefreshing = uiState.isRefreshing,
-                            modifier = Modifier.align(Alignment.TopCenter),
-                            containerColor = customColors.placeHolderBack,
-                            color = customColors.placeHolderIcon
-                        )
-                    }
+                    modifier = Modifier.fillMaxSize()
                 ) {
                     Box(
                         modifier = Modifier.fillMaxSize(),
@@ -159,13 +150,19 @@ class NotificationScreen : Screen {
 
                         when {
                             uiState.isLoading && isEmpty && !isError -> {
-                                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                                Box(
+                                    modifier = Modifier.fillMaxSize(),
+                                    contentAlignment = Alignment.Center
+                                ) {
                                     CircularProgressIndicator(color = customColors.gourmetOrange)
                                 }
                             }
 
                             isError && isEmpty -> {
-                                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                                Box(
+                                    modifier = Modifier.fillMaxSize(),
+                                    contentAlignment = Alignment.Center
+                                ) {
                                     FilledTonalButton(
                                         onClick = { screenModel.loadInitialData() },
                                         enabled = !uiState.isLoading,
@@ -188,7 +185,11 @@ class NotificationScreen : Screen {
                                                 )
                                             } else {
                                                 Row(verticalAlignment = Alignment.CenterVertically) {
-                                                    Icon(Icons.Default.Refresh, contentDescription = null, modifier = Modifier.size(24.dp))
+                                                    Icon(
+                                                        Icons.Default.Refresh,
+                                                        contentDescription = null,
+                                                        modifier = Modifier.size(24.dp)
+                                                    )
                                                     Spacer(modifier = Modifier.width(8.dp))
                                                     Text(
                                                         text = stringResource(Res.string.notification_retry),
@@ -202,7 +203,10 @@ class NotificationScreen : Screen {
                             }
 
                             isEmpty -> {
-                                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                                Box(
+                                    modifier = Modifier.fillMaxSize(),
+                                    contentAlignment = Alignment.Center
+                                ) {
                                     Text(
                                         text = stringResource(Res.string.notification_empty),
                                         color = customColors.textSecondary
@@ -214,24 +218,37 @@ class NotificationScreen : Screen {
                                 LazyColumn(
                                     state = listState,
                                     modifier = Modifier
-                                        .widthIn(max = 1500.dp)
-                                        .fillMaxSize(),
+                                        .responsiveContentWidth()
+                                        .fillMaxHeight(),
                                     contentPadding = PaddingValues(bottom = 16.dp)
                                 ) {
-                                    items(items = uiState.items, key = { it.id }) { notification ->
+                                    items(
+                                        items = uiState.items,
+                                        key = { it.id }
+                                    ) { notification ->
                                         NotificationItem(
                                             notification = notification,
                                             onItemClick = {
                                                 navigator.push(ProfileScreen(userId = notification.actor.id))
                                             },
                                             onAccept = {
-                                                screenModel.acceptRequest(notification.id, notification.actor.id)
+                                                screenModel.acceptRequest(
+                                                    notification.id,
+                                                    notification.actor.id
+                                                )
                                             },
                                             onReject = {
-                                                screenModel.rejectRequest(notification.id, notification.actor.id)
+                                                screenModel.rejectRequest(
+                                                    notification.id,
+                                                    notification.actor.id
+                                                )
                                             },
                                             onToggleFollow = { status ->
-                                                screenModel.toggleFollow(notification.id, notification.actor.id, status)
+                                                screenModel.toggleFollow(
+                                                    notification.id,
+                                                    notification.actor.id,
+                                                    status
+                                                )
                                             }
                                         )
                                     }
@@ -239,10 +256,15 @@ class NotificationScreen : Screen {
                                     if (uiState.isLoadingMore) {
                                         item {
                                             Box(
-                                                modifier = Modifier.fillMaxWidth().padding(16.dp),
+                                                modifier = Modifier
+                                                    .fillMaxWidth()
+                                                    .padding(16.dp),
                                                 contentAlignment = Alignment.Center
                                             ) {
-                                                CircularProgressIndicator(modifier = Modifier.size(24.dp), color = customColors.gourmetOrange)
+                                                CircularProgressIndicator(
+                                                    modifier = Modifier.size(24.dp),
+                                                    color = customColors.gourmetOrange
+                                                )
                                             }
                                         }
                                     }
@@ -271,7 +293,6 @@ private fun NotificationItem(
     } else {
         customColors.surfaceVariant.copy(alpha = 0.4f)
     }
-
 
     val notificationMessage = getNotificationMessage(notification.type, notification.actionStatus)
 
@@ -328,13 +349,13 @@ private fun NotificationItem(
                 // Mesaj Kısmı
                 Text(
                     text = notificationMessage,
-                    modifier = Modifier.weight(1f, fill = false), // Uzun mesajların zamanı itmesini engeller
+                    modifier = Modifier.weight(1f, fill = false),
                     style = MaterialTheme.typography.bodySmall.copy(
                         color = customColors.textSecondary
                     )
                 )
 
-                Spacer(modifier = Modifier.width(6.dp)) // Mesaj ile zaman arasındaki boşluk
+                Spacer(modifier = Modifier.width(6.dp))
 
                 Text(
                     text = "• " + formatToShortRelativeTime(notification.createdAt),
@@ -406,9 +427,9 @@ private fun NotificationItem(
 
 @Composable
 private fun getNotificationMessage(type: SocialNotificationType, actionStatus: NotificationActionStatus): String {
-        if (type == SocialNotificationType.FOLLOW_REQUEST && actionStatus == NotificationActionStatus.ACCEPTED) {
-            return stringResource(Res.string.notification_msg_new_follower)
-        }
+    if (type == SocialNotificationType.FOLLOW_REQUEST && actionStatus == NotificationActionStatus.ACCEPTED) {
+        return stringResource(Res.string.notification_msg_new_follower)
+    }
     return when (type) {
         SocialNotificationType.FOLLOW_REQUEST -> stringResource(Res.string.notification_msg_follow_request)
         SocialNotificationType.FOLLOW_ACCEPTED -> stringResource(Res.string.notification_msg_follow_accepted)

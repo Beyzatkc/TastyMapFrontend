@@ -76,6 +76,7 @@ import org.beem.tastymap.data.model.post.PostResponse
 import org.beem.tastymap.data.model.post.PostUpdateRequest
 import org.beem.tastymap.ui.components.TastyButton
 import org.beem.tastymap.ui.components.TastyTextField
+import org.beem.tastymap.ui.components.responsiveContentWidth
 import org.beem.tastymap.ui.theme.CustomColors
 import org.beem.tastymap.ui.theme.LocalCustomColors
 import org.jetbrains.compose.resources.stringResource
@@ -91,7 +92,7 @@ import tastymap.composeapp.generated.resources.place_about_placeholder
 import tastymap.composeapp.generated.resources.post_description_hint
 import tastymap.composeapp.generated.resources.profile_back_cd
 
-data class EditPostScreen(val postId: Long) : Screen {
+class EditPostScreen(val postId: Long) : Screen {
 
     @OptIn(ExperimentalMaterial3Api::class)
     @Composable
@@ -174,8 +175,7 @@ data class EditPostScreen(val postId: Long) : Screen {
                     ) {
                         Box(
                             modifier = Modifier
-                                .widthIn(max = 600.dp) // Web için 600dp sınırı
-                                .fillMaxWidth()
+                                .responsiveContentWidth()
                                 .background(customColors.background)
                                 .padding(16.dp)
                         ) {
@@ -205,150 +205,149 @@ data class EditPostScreen(val postId: Long) : Screen {
                 contentAlignment = Alignment.TopCenter
             ) {
 
-            when {
-                uiState.isLoading && uiState.post == null -> {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(paddingValues),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        CircularProgressIndicator(color = customColors.navy)
+                when {
+                    uiState.isLoading && uiState.post == null -> {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(paddingValues),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            CircularProgressIndicator(color = customColors.navy)
+                        }
                     }
-                }
 
-                uiState.post != null -> {
-                    val post = uiState.post!!
+                    uiState.post != null -> {
+                        val post = uiState.post!!
 
-                    Column(
-                        modifier = Modifier
-                            .widthIn(max = 600.dp)
-                            .fillMaxWidth()
-                            .fillMaxHeight()
-                            .verticalScroll(rememberScrollState())
-                            .padding(horizontal = 20.dp, vertical = 12.dp),
-                        verticalArrangement = Arrangement.spacedBy(20.dp)
-                    ) {
+                        Column(
+                            modifier = Modifier
+                                .responsiveContentWidth()
+                                .fillMaxHeight()
+                                .verticalScroll(rememberScrollState())
+                                .padding(horizontal = 20.dp, vertical = 12.dp),
+                            verticalArrangement = Arrangement.spacedBy(20.dp)
+                        ) {
 
-                        ReadOnlyPlaceCard(
-                            post = post,
-                            customColors = customColors
-                        )
-
-                        if (post.photoUrls.isNotEmpty()) {
-                            ReadOnlyPhotosSection(
-                                photos = post.photoUrls,
+                            ReadOnlyPlaceCard(
+                                post = post,
                                 customColors = customColors
                             )
-                        }
 
-                        Card(
-                            modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(16.dp),
-                            colors = CardDefaults.cardColors(
-                                containerColor = customColors.surface
-                            ),
-                            border = BorderStroke(1.dp, customColors.borderLight)
-                        ) {
-                            Column(
-                                modifier = Modifier.padding(16.dp)
+                            if (post.photoUrls.isNotEmpty()) {
+                                ReadOnlyPhotosSection(
+                                    photos = post.photoUrls,
+                                    customColors = customColors
+                                )
+                            }
+
+                            Card(
+                                modifier = Modifier.fillMaxWidth(),
+                                shape = RoundedCornerShape(16.dp),
+                                colors = CardDefaults.cardColors(
+                                    containerColor = customColors.surface
+                                ),
+                                border = BorderStroke(1.dp, customColors.borderLight)
                             ) {
-                                Text(
-                                    text = stringResource(Res.string.place_about_placeholder),
-                                    style = MaterialTheme.typography.titleSmall,
-                                    color = customColors.textPrimary
-                                )
-
-                                Spacer(modifier = Modifier.height(6.dp))
-
-                                Text(
-                                    text = stringResource(Res.string.post_description_hint),
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = customColors.textSecondary
-                                )
-
-                                Spacer(modifier = Modifier.height(16.dp))
-
-                                TastyTextField(
-                                    value = explanation,
-                                    onValueChange = {
-                                        if (it.length <= 500) {
-                                            explanation = it
-                                        }
-                                    },
-                                    label = "",
-                                    singleLine = false,
-                                    maxLines = 5,
-                                    error = uiState.explanationError?.let { stringResource(it) }
-                                )
-
-                                Row(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(top = 8.dp),
-                                    horizontalArrangement = Arrangement.End
+                                Column(
+                                    modifier = Modifier.padding(16.dp)
                                 ) {
                                     Text(
-                                        text = "${explanation.length}/500",
-                                        style = MaterialTheme.typography.labelSmall,
-                                        color = if (explanation.length >= 500) {
-                                            customColors.error
-                                        } else {
-                                            customColors.textSecondary
-                                        }
+                                        text = stringResource(Res.string.place_about_placeholder),
+                                        style = MaterialTheme.typography.titleSmall,
+                                        color = customColors.textPrimary
                                     )
+
+                                    Spacer(modifier = Modifier.height(6.dp))
+
+                                    Text(
+                                        text = stringResource(Res.string.post_description_hint),
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = customColors.textSecondary
+                                    )
+
+                                    Spacer(modifier = Modifier.height(16.dp))
+
+                                    TastyTextField(
+                                        value = explanation,
+                                        onValueChange = {
+                                            if (it.length <= 500) {
+                                                explanation = it
+                                            }
+                                        },
+                                        label = "",
+                                        singleLine = false,
+                                        maxLines = 5,
+                                        error = uiState.explanationError?.let { stringResource(it) }
+                                    )
+
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(top = 8.dp),
+                                        horizontalArrangement = Arrangement.End
+                                    ) {
+                                        Text(
+                                            text = "${explanation.length}/500",
+                                            style = MaterialTheme.typography.labelSmall,
+                                            color = if (explanation.length >= 500) {
+                                                customColors.error
+                                            } else {
+                                                customColors.textSecondary
+                                            }
+                                        )
+                                    }
                                 }
                             }
-                        }
 
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clip(RoundedCornerShape(16.dp))
-                                .background(customColors.surface)
-                                .border(
-                                    1.dp,
-                                    customColors.borderLight,
-                                    RoundedCornerShape(16.dp)
-                                )
-                                .padding(horizontal = 16.dp, vertical = 16.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            Column(
-                                modifier = Modifier.weight(1f),
-                                verticalArrangement = Arrangement.spacedBy(4.dp)
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clip(RoundedCornerShape(16.dp))
+                                    .background(customColors.surface)
+                                    .border(
+                                        1.dp,
+                                        customColors.borderLight,
+                                        RoundedCornerShape(16.dp)
+                                    )
+                                    .padding(horizontal = 16.dp, vertical = 16.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceBetween
                             ) {
-                                Text(
-                                    text = stringResource(Res.string.comments),
-                                    style = MaterialTheme.typography.titleMedium,
-                                    color = customColors.textPrimary
-                                )
+                                Column(
+                                    modifier = Modifier.weight(1f),
+                                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                                ) {
+                                    Text(
+                                        text = stringResource(Res.string.comments),
+                                        style = MaterialTheme.typography.titleMedium,
+                                        color = customColors.textPrimary
+                                    )
 
-                                Text(
-                                    text = stringResource(Res.string.allow_comments),
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = customColors.textSecondary
+                                    Text(
+                                        text = stringResource(Res.string.allow_comments),
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = customColors.textSecondary
+                                    )
+                                }
+
+                                Switch(
+                                    checked = commentEnabled,
+                                    onCheckedChange = { commentEnabled = it },
+                                    colors = SwitchDefaults.colors(
+                                        checkedThumbColor = customColors.surface,
+                                        checkedTrackColor = customColors.navy,
+                                        uncheckedThumbColor = customColors.surface,
+                                        uncheckedTrackColor = customColors.borderStrong,
+                                        uncheckedBorderColor = customColors.borderStrong
+                                    )
                                 )
                             }
 
-                            Switch(
-                                checked = commentEnabled,
-                                onCheckedChange = { commentEnabled = it },
-                                colors = SwitchDefaults.colors(
-                                    checkedThumbColor = customColors.surface,
-                                    checkedTrackColor = customColors.navy,
-                                    uncheckedThumbColor = customColors.surface,
-                                    uncheckedTrackColor = customColors.borderStrong,
-                                    uncheckedBorderColor = customColors.borderStrong
-                                )
-                            )
+                            Spacer(modifier = Modifier.height(40.dp))
                         }
-
-                        Spacer(modifier = Modifier.height(40.dp))
                     }
                 }
-            }
             }
         }
 

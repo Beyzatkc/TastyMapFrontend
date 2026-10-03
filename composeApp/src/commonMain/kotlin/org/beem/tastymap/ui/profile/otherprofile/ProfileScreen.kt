@@ -56,6 +56,8 @@ import org.beem.tastymap.ui.animations.shimmerEffect
 import org.beem.tastymap.ui.components.DialogConfig
 import org.beem.tastymap.ui.components.TastyButton
 import org.beem.tastymap.ui.components.TastyConfirmDialog
+import org.beem.tastymap.ui.components.TastyPullToRefreshBox
+import org.beem.tastymap.ui.components.responsiveContentWidth
 import org.beem.tastymap.ui.post.detail.PostDetailScreen
 import org.beem.tastymap.ui.post.otherpost.PostScreenModel
 import org.beem.tastymap.ui.profile.subscribers.SubscriberListType
@@ -120,7 +122,6 @@ class ProfileScreen(private val userId: Long) : Screen {
         var showBottomSheet by remember { mutableStateOf(false) }
         var activeDialog by remember { mutableStateOf<DialogConfig?>(null) }
 
-        val pullToRefreshState = rememberPullToRefreshState()
         val customColors = LocalCustomColors.current
         var selectedTab by remember { mutableIntStateOf(0) }
 
@@ -215,24 +216,14 @@ class ProfileScreen(private val userId: Long) : Screen {
                         )
                     }
                 ) { innerPadding ->
-                    PullToRefreshBox(
-                        state = pullToRefreshState,
+                    TastyPullToRefreshBox(
                         isRefreshing = state.isRefreshing,
                         onRefresh = { screenModel.refreshProfile() },
                         modifier = Modifier
                             .fillMaxSize()
                             .padding(innerPadding)
-                            .background(customColors.placeHolderBack),
-                        indicator = {
-                            PullToRefreshDefaults.Indicator(
-                                state = pullToRefreshState,
-                                isRefreshing = state.isRefreshing,
-                                modifier = Modifier.align(Alignment.TopCenter),
-                                containerColor = customColors.placeHolderBack,
-                                color = customColors.placeHolderIcon
-                            )
-                        }
-                    ) {
+                            .background(customColors.placeHolderBack)
+                    ){
                         val profile = state.profile
 
                         if (profile == null && !state.isLoading && state.errorMessage != null && state.isRefreshing) {
@@ -294,7 +285,7 @@ class ProfileScreen(private val userId: Long) : Screen {
                                 horizontalArrangement = Arrangement.spacedBy(2.dp),
                                 verticalArrangement = Arrangement.spacedBy(2.dp)
                             ) {
-                                // 1. PROFİL HEADER BİLGİLERİ (Tam Genişlik - Sınırlandırılmadı)
+                                // 1. PROFİL HEADER BİLGİLERİ
                                 item(span = { GridItemSpan(maxLineSpan) }) {
                                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                         Surface(
@@ -311,7 +302,7 @@ class ProfileScreen(private val userId: Long) : Screen {
                                             ) {
                                                 Column(
                                                     modifier = Modifier
-                                                        .widthIn(max = 600.dp)
+                                                        .responsiveContentWidth()
                                                         .padding(
                                                             horizontal = 20.dp,
                                                             vertical = 20.dp
@@ -413,14 +404,10 @@ class ProfileScreen(private val userId: Long) : Screen {
                                                             username = profile.username,
                                                             isLoading = state.isActionLoading,
                                                             onAcceptClick = {
-                                                                screenModel.acceptRequest(
-                                                                    userId
-                                                                )
+                                                                screenModel.acceptRequest(userId)
                                                             },
                                                             onRejectClick = {
-                                                                screenModel.rejectRequest(
-                                                                    userId
-                                                                )
+                                                                screenModel.rejectRequest(userId)
                                                             }
                                                         )
                                                         Spacer(modifier = Modifier.height(12.dp))
@@ -428,9 +415,7 @@ class ProfileScreen(private val userId: Long) : Screen {
 
                                                     Row(
                                                         modifier = Modifier.fillMaxWidth(),
-                                                        horizontalArrangement = Arrangement.spacedBy(
-                                                            8.dp
-                                                        ),
+                                                        horizontalArrangement = Arrangement.spacedBy(8.dp),
                                                         verticalAlignment = Alignment.CenterVertically
                                                     ) {
                                                         Box(modifier = Modifier.weight(1f)) {
@@ -441,19 +426,18 @@ class ProfileScreen(private val userId: Long) : Screen {
                                                                     isLoading = state.isActionLoading,
                                                                     onActionClick = { status ->
                                                                         if (status == RelationStatus.FOLLOWING) {
-                                                                            activeDialog =
-                                                                                DialogConfig(
-                                                                                    title = unfollowTitle,
-                                                                                    message = unfollowMessage,
-                                                                                    confirmText = unfollowConfirm,
-                                                                                    isDestructive = false,
-                                                                                    onConfirm = {
-                                                                                        screenModel.handleFollowAction(
-                                                                                            userId,
-                                                                                            status
-                                                                                        )
-                                                                                    }
-                                                                                )
+                                                                            activeDialog = DialogConfig(
+                                                                                title = unfollowTitle,
+                                                                                message = unfollowMessage,
+                                                                                confirmText = unfollowConfirm,
+                                                                                isDestructive = false,
+                                                                                onConfirm = {
+                                                                                    screenModel.handleFollowAction(
+                                                                                        userId,
+                                                                                        status
+                                                                                    )
+                                                                                }
+                                                                            )
                                                                         } else {
                                                                             screenModel.handleFollowAction(
                                                                                 userId,
@@ -464,10 +448,8 @@ class ProfileScreen(private val userId: Long) : Screen {
                                                                 )
                                                             } else {
                                                                 BlockActionButton(
-                                                                    blockedByMe = profile.blockedByMe
-                                                                        ?: false,
-                                                                    blockedMe = profile.blockedMe
-                                                                        ?: false,
+                                                                    blockedByMe = profile.blockedByMe ?: false,
+                                                                    blockedMe = profile.blockedMe ?: false,
                                                                     isLoading = state.isActionLoading,
                                                                     onActionClick = {
                                                                         val isBlockedByMe =
@@ -478,9 +460,7 @@ class ProfileScreen(private val userId: Long) : Screen {
                                                                             confirmText = if (isBlockedByMe) unblockConfirm else blockConfirm,
                                                                             isDestructive = !isBlockedByMe,
                                                                             onConfirm = {
-                                                                                screenModel.toggleBlockStatus(
-                                                                                    userId
-                                                                                )
+                                                                                screenModel.toggleBlockStatus(userId)
                                                                             }
                                                                         )
                                                                     }
@@ -494,12 +474,8 @@ class ProfileScreen(private val userId: Long) : Screen {
                                                                 modifier = Modifier
                                                                     .size(48.dp)
                                                                     .background(
-                                                                        color = Color.White.copy(
-                                                                            alpha = 0.15f
-                                                                        ),
-                                                                        shape = RoundedCornerShape(
-                                                                            12.dp
-                                                                        )
+                                                                        color = Color.White.copy(alpha = 0.15f),
+                                                                        shape = RoundedCornerShape(12.dp)
                                                                     )
                                                             ) {
                                                                 Icon(
@@ -516,7 +492,6 @@ class ProfileScreen(private val userId: Long) : Screen {
                                         Spacer(modifier = Modifier.height(16.dp))
                                     }
                                 }
-
                                 // --- BURADAN İTİBAREN TÜM ALT ALANLAR MAX 600DP ---
 
                                 // 2. METRİK KARTLAR (Max 600dp)
@@ -530,9 +505,9 @@ class ProfileScreen(private val userId: Long) : Screen {
                                             val isClickable =
                                                 profile?.relationStatus == RelationStatus.FOLLOWING || profile?.relationStatus == RelationStatus.SELF
                                             Row(
-                                                modifier = Modifier.widthIn(max = 600.dp),
+                                                modifier = Modifier.responsiveContentWidth(),
                                                 horizontalArrangement = Arrangement.spacedBy(12.dp)
-                                            ) {
+                                            ){
                                                 MetricCard(
                                                     title = stringResource(Res.string.profile_metric_posts),
                                                     value = (profile?.postCount ?: 0).toString(),
@@ -591,7 +566,7 @@ class ProfileScreen(private val userId: Long) : Screen {
                                             contentAlignment = Alignment.Center
                                         ) {
                                             Column(
-                                                modifier = Modifier.widthIn(max = 600.dp)
+                                                modifier = Modifier.responsiveContentWidth()
                                                     .fillMaxWidth().padding(32.dp),
                                                 horizontalAlignment = Alignment.CenterHorizontally
                                             ) {
@@ -619,7 +594,7 @@ class ProfileScreen(private val userId: Long) : Screen {
                                             contentAlignment = Alignment.Center
                                         ) {
                                             Column(
-                                                modifier = Modifier.widthIn(max = 600.dp)
+                                                modifier = Modifier.responsiveContentWidth()
                                                     .fillMaxWidth().padding(32.dp),
                                                 horizontalAlignment = Alignment.CenterHorizontally
                                             ) {
@@ -651,7 +626,7 @@ class ProfileScreen(private val userId: Long) : Screen {
                                                 Surface(
                                                     color = customColors.surfaceVariant,
                                                     shape = RoundedCornerShape(12.dp),
-                                                    modifier = Modifier.widthIn(max = 600.dp)
+                                                    modifier = Modifier.responsiveContentWidth()
                                                 ) {
                                                     Row(modifier = Modifier.padding(4.dp)) {
                                                         TabButton(
@@ -688,7 +663,7 @@ class ProfileScreen(private val userId: Long) : Screen {
                                                 ) {
                                                     Box(
                                                         modifier = Modifier
-                                                            .widthIn(max = 600.dp)
+                                                            .responsiveContentWidth()
                                                             .fillMaxWidth()
                                                             .padding(48.dp),
                                                         contentAlignment = Alignment.Center
@@ -709,7 +684,7 @@ class ProfileScreen(private val userId: Long) : Screen {
                                                 ) {
                                                     Column(
                                                         modifier = Modifier
-                                                            .widthIn(max = 600.dp)
+                                                            .responsiveContentWidth()
                                                             .fillMaxWidth()
                                                             .padding(vertical = 16.dp),
                                                         horizontalAlignment = Alignment.CenterHorizontally
@@ -747,7 +722,7 @@ class ProfileScreen(private val userId: Long) : Screen {
                                                     contentAlignment = Alignment.Center
                                                 ) {
                                                     Box(
-                                                        modifier = Modifier.widthIn(max = 600.dp)
+                                                        modifier = Modifier.responsiveContentWidth()
                                                             .fillMaxWidth().padding(32.dp),
                                                         contentAlignment = Alignment.Center
                                                     ) {
@@ -768,7 +743,7 @@ class ProfileScreen(private val userId: Long) : Screen {
                                                     modifier = Modifier.fillMaxWidth(),
                                                     contentAlignment = Alignment.Center
                                                 ) {
-                                                    Box(modifier = Modifier.widthIn(max = 600.dp)) {
+                                                    Box(modifier = Modifier.responsiveContentWidth()) {
                                                         val chunkedPosts =
                                                             postState.items.chunked(3)
                                                         Column(
@@ -822,7 +797,7 @@ class ProfileScreen(private val userId: Long) : Screen {
                                                         contentAlignment = Alignment.Center
                                                     ) {
                                                         Box(
-                                                            modifier = Modifier.widthIn(max = 600.dp)
+                                                            modifier = Modifier.responsiveContentWidth()
                                                                 .fillMaxWidth().padding(16.dp),
                                                             contentAlignment = Alignment.Center
                                                         ) {
@@ -843,7 +818,7 @@ class ProfileScreen(private val userId: Long) : Screen {
                                                     ) {
                                                         Column(
                                                             modifier = Modifier
-                                                                .widthIn(max = 600.dp)
+                                                                .responsiveContentWidth()
                                                                 .fillMaxWidth()
                                                                 .padding(vertical = 10.dp),
                                                             horizontalAlignment = Alignment.CenterHorizontally
@@ -884,7 +859,7 @@ class ProfileScreen(private val userId: Long) : Screen {
                                                 contentAlignment = Alignment.Center
                                             ) {
                                                 Box(
-                                                    modifier = Modifier.widthIn(max = 600.dp)
+                                                    modifier = Modifier.responsiveContentWidth()
                                                         .fillMaxWidth().padding(32.dp),
                                                     contentAlignment = Alignment.Center
                                                 ) {

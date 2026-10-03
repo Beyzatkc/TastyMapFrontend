@@ -47,6 +47,8 @@ import org.beem.tastymap.core.util.formatToRelativeDateTime
 import org.beem.tastymap.data.model.visit.VisitResponse
 import org.beem.tastymap.ui.components.DialogConfig
 import org.beem.tastymap.ui.components.TastyConfirmDialog
+import org.beem.tastymap.ui.components.TastyPullToRefreshBox
+import org.beem.tastymap.ui.components.responsiveContentWidth
 import org.beem.tastymap.ui.theme.LocalCustomColors
 import org.jetbrains.compose.resources.stringResource
 import tastymap.composeapp.generated.resources.Res
@@ -59,7 +61,6 @@ import tastymap.composeapp.generated.resources.visit_history_title
 import tastymap.composeapp.generated.resources.visit_item_category_unspecified
 import tastymap.composeapp.generated.resources.visit_item_delete_desc
 import tastymap.composeapp.generated.resources.visit_item_rating_desc
-
 class VisitScreen : Screen {
 
     @OptIn(ExperimentalMaterial3Api::class)
@@ -70,7 +71,6 @@ class VisitScreen : Screen {
         val navigator = LocalNavigator.currentOrThrow
         val customColors = LocalCustomColors.current
 
-        val pullToRefreshState = rememberPullToRefreshState()
         var activeDialog by remember { mutableStateOf<DialogConfig?>(null) }
         val listState = rememberLazyListState()
 
@@ -136,20 +136,10 @@ class VisitScreen : Screen {
                     .background(customColors.background),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                PullToRefreshBox(
-                    state = pullToRefreshState,
+                TastyPullToRefreshBox(
                     isRefreshing = uiState.isRefreshing,
                     onRefresh = { screenModel.syncWithServer(isPullToRefresh = true) },
-                    modifier = Modifier.fillMaxSize(),
-                    indicator = {
-                        PullToRefreshDefaults.Indicator(
-                            state = pullToRefreshState,
-                            isRefreshing = uiState.isRefreshing,
-                            modifier = Modifier.align(Alignment.TopCenter),
-                            containerColor = customColors.surfaceVariant,
-                            color = customColors.gourmetOrange
-                        )
-                    }
+                    modifier = Modifier.fillMaxSize()
                 ) {
                     Box(
                         modifier = Modifier.fillMaxSize(),
@@ -212,7 +202,7 @@ class VisitScreen : Screen {
                                 }
                             }
 
-                            // 3. BOŞ LİSTE DURUMU
+                            // BOŞ LİSTE DURUMU
                             isEmpty -> {
                                 Column(
                                     modifier = Modifier.fillMaxSize(),
@@ -236,13 +226,13 @@ class VisitScreen : Screen {
                                 }
                             }
 
-                            // 4. LİSTE VE SAYFALANDIRMA DURUMU
+                            // LİSTE VE SAYFALANDIRMA DURUMU
                             else -> {
                                 LazyColumn(
                                     state = listState,
                                     modifier = Modifier
-                                        .widthIn(max = 800.dp)
-                                        .fillMaxSize(),
+                                        .responsiveContentWidth()
+                                        .fillMaxHeight(),
                                     contentPadding = PaddingValues(horizontal = 16.dp, vertical = 16.dp),
                                     verticalArrangement = Arrangement.spacedBy(12.dp)
                                 ) {
@@ -286,8 +276,7 @@ class VisitScreen : Screen {
                                                     )
                                                 }
                                             }
-                                        } else if (
-                                            uiState.isLoadingMoreError) {
+                                        } else if (uiState.isLoadingMoreError) {
                                             item {
                                                 Column(
                                                     modifier = Modifier
@@ -430,7 +419,7 @@ private fun VisitItemCard(
                                     text = visit.averagePoint.toString(),
                                     style = MaterialTheme.typography.labelSmall.copy(
                                         fontWeight = FontWeight.Bold,
-                                        color =  customColors.gourmetOrange,
+                                        color = customColors.gourmetOrange,
                                     )
                                 )
                             }
@@ -483,7 +472,6 @@ private fun VisitItemCard(
                 Spacer(modifier = Modifier.height(12.dp))
 
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    // Tam Adres Satırı
                     if (locationText.isNotEmpty()) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Icon(

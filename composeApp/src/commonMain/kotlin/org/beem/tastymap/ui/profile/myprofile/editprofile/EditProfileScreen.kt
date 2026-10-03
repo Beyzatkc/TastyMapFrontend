@@ -39,6 +39,7 @@ import kotlinx.coroutines.launch
 import org.beem.tastymap.core.util.ToastManager
 import org.beem.tastymap.domain.model.UserProfile
 import org.beem.tastymap.ui.components.TastyTextField
+import org.beem.tastymap.ui.components.responsiveContentWidth
 import org.beem.tastymap.ui.theme.LocalCustomColors
 import org.beem.tastymap.ui.theme.TastyTheme
 import org.jetbrains.compose.resources.getString
@@ -56,7 +57,6 @@ import tastymap.composeapp.generated.resources.edit_profile_selected_photo_cd
 import tastymap.composeapp.generated.resources.edit_profile_surname
 import tastymap.composeapp.generated.resources.edit_profile_title
 import tastymap.composeapp.generated.resources.edit_profile_username
-
 class EditProfileScreen : Screen {
 
     @Composable
@@ -197,190 +197,211 @@ fun EditProfileContent(
                 )
             }
         } else {
-            LazyColumn(
+            Box(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(innerPadding),
-                contentPadding = PaddingValues(bottom = 24.dp)
+                contentAlignment = Alignment.TopCenter
             ) {
-                item {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(130.dp)
-                    ) {
+                LazyColumn(
+                    modifier = Modifier
+                        .responsiveContentWidth()
+                        .fillMaxHeight(),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    contentPadding = PaddingValues(bottom = 24.dp)
+                ) {
+                    // 1. Profil Resmi Değiştirme Alanı
+                    item {
                         Box(
-                            modifier = Modifier.align(Alignment.BottomCenter)
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(top = 16.dp),
+                            contentAlignment = Alignment.Center
                         ) {
-                            Surface(
-                                modifier = Modifier
-                                    .size(100.dp)
-                                    .clip(CircleShape)
-                                    .border(3.dp, customColors.background, CircleShape),
-                                color = customColors.placeHolderBack
+                            Box(
+                                modifier = Modifier.size(100.dp)
                             ) {
-                                when {
-                                    selectedImageBytes != null -> {
-                                        AsyncImage(
-                                            model = selectedImageBytes,
-                                            contentDescription = stringResource(Res.string.edit_profile_selected_photo_cd),
-                                            modifier = Modifier.fillMaxSize(),
-                                            contentScale = ContentScale.Crop
-                                        )
-                                    }
-                                    !userProfile?.profilePhoto.isNullOrEmpty() -> {
-                                        AsyncImage(
-                                            model = userProfile?.profilePhoto,
-                                            contentDescription = stringResource(Res.string.edit_profile_photo_cd),
-                                            modifier = Modifier.fillMaxSize(),
-                                            contentScale = ContentScale.Crop
-                                        )
-                                    }
-                                    else -> {
-                                        Icon(
-                                            imageVector = Icons.Default.Person,
-                                            contentDescription = null,
-                                            tint = customColors.placeHolderIcon,
-                                            modifier = Modifier.padding(22.dp)
-                                        )
+                                Surface(
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .clip(CircleShape)
+                                        .border(3.dp, customColors.background, CircleShape),
+                                    color = customColors.placeHolderBack
+                                ) {
+                                    when {
+                                        selectedImageBytes != null -> {
+                                            AsyncImage(
+                                                model = selectedImageBytes,
+                                                contentDescription = stringResource(Res.string.edit_profile_selected_photo_cd),
+                                                modifier = Modifier.fillMaxSize(),
+                                                contentScale = ContentScale.Crop
+                                            )
+                                        }
+
+                                        !userProfile?.profilePhoto.isNullOrEmpty() -> {
+                                            AsyncImage(
+                                                model = userProfile?.profilePhoto,
+                                                contentDescription = stringResource(Res.string.edit_profile_photo_cd),
+                                                modifier = Modifier.fillMaxSize(),
+                                                contentScale = ContentScale.Crop
+                                            )
+                                        }
+
+                                        else -> {
+                                            Icon(
+                                                imageVector = Icons.Default.Person,
+                                                contentDescription = null,
+                                                tint = customColors.placeHolderIcon,
+                                                modifier = Modifier.padding(22.dp)
+                                            )
+                                        }
                                     }
                                 }
-                            }
-                            Box(
-                                modifier = Modifier
-                                    .align(Alignment.BottomEnd)
-                                    .offset(x = 6.dp, y = 6.dp)
-                                    .size(38.dp)
-                                    .clip(CircleShape)
-                                    .background(customColors.navy)
-                                    .clickable {
-                                        launcher.launch()
-                                    },
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.CameraAlt,
-                                    contentDescription = stringResource(Res.string.edit_profile_change_photo_cd),
-                                    tint = customColors.surface,
-                                    modifier = Modifier.size(20.dp)
-                                )
+
+                                Box(
+                                    modifier = Modifier
+                                        .align(Alignment.BottomEnd)
+                                        .size(36.dp)
+                                        .clip(CircleShape)
+                                        .background(customColors.navy)
+                                        .clickable { launcher.launch() },
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.CameraAlt,
+                                        contentDescription = stringResource(Res.string.edit_profile_change_photo_cd),
+                                        tint = customColors.surface,
+                                        modifier = Modifier.size(18.dp)
+                                    )
+                                }
                             }
                         }
                     }
-                }
 
-                item {
-                    Column(
-                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-                        verticalArrangement = Arrangement.spacedBy(16.dp)
-                    ) {
-                        SectionHeader(
-                            icon = Icons.Default.Person,
-                            title = stringResource(Res.string.edit_profile_section_personal)
-                        )
-                        Card(
-                            colors = CardDefaults.cardColors(containerColor = customColors.surface),
-                            shape = RoundedCornerShape(16.dp),
-                            elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+                    // 2. Kişisel Bilgiler Bölümü
+                    item {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp, vertical = 8.dp),
+                            verticalArrangement = Arrangement.spacedBy(16.dp)
                         ) {
-                            Column(
-                                modifier = Modifier.padding(16.dp),
-                                verticalArrangement = Arrangement.spacedBy(14.dp)
+                            SectionHeader(
+                                icon = Icons.Default.Person,
+                                title = stringResource(Res.string.edit_profile_section_personal)
+                            )
+                            Card(
+                                colors = CardDefaults.cardColors(containerColor = customColors.surface),
+                                shape = RoundedCornerShape(16.dp),
+                                elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
                             ) {
-                                TastyTextField(
-                                    value = username,
-                                    onValueChange = { username = it },
-                                    label = stringResource(Res.string.edit_profile_username),
-                                    error = usernameError
-                                )
-
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                                Column(
+                                    modifier = Modifier.padding(16.dp),
+                                    verticalArrangement = Arrangement.spacedBy(14.dp)
                                 ) {
                                     TastyTextField(
-                                        value = name,
-                                        onValueChange = { name = it },
-                                        label = stringResource(Res.string.edit_profile_name),
-                                        error = nameError,
-                                        modifier = Modifier.weight(1f)
+                                        value = username,
+                                        onValueChange = { username = it },
+                                        label = stringResource(Res.string.edit_profile_username),
+                                        error = usernameError
                                     )
 
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                                    ) {
+                                        TastyTextField(
+                                            value = name,
+                                            onValueChange = { name = it },
+                                            label = stringResource(Res.string.edit_profile_name),
+                                            error = nameError,
+                                            modifier = Modifier.weight(1f)
+                                        )
+
+                                        TastyTextField(
+                                            value = surname,
+                                            onValueChange = { surname = it },
+                                            label = stringResource(Res.string.edit_profile_surname),
+                                            error = surnameError,
+                                            modifier = Modifier.weight(1f)
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    // 3. Biyografi Bölümü
+                    item {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp, vertical = 8.dp),
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            SectionHeader(
+                                icon = Icons.Default.ShortText,
+                                title = stringResource(Res.string.edit_profile_biography)
+                            )
+
+                            Card(
+                                colors = CardDefaults.cardColors(containerColor = customColors.surface),
+                                shape = RoundedCornerShape(16.dp),
+                                elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+                            ) {
+                                Column(
+                                    modifier = Modifier.padding(16.dp),
+                                    verticalArrangement = Arrangement.spacedBy(6.dp)
+                                ) {
                                     TastyTextField(
-                                        value = surname,
-                                        onValueChange = { surname = it },
-                                        label = stringResource(Res.string.edit_profile_surname),
-                                        error = surnameError,
-                                        modifier = Modifier.weight(1f)
+                                        value = biography,
+                                        onValueChange = { if (it.length <= 200) biography = it },
+                                        label = stringResource(Res.string.edit_profile_biography),
+                                        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done)
+                                    )
+                                    Text(
+                                        text = "${biography.length}/200",
+                                        style = MaterialTheme.typography.labelSmall.copy(
+                                            color = customColors.textTertiary
+                                        ),
+                                        modifier = Modifier.align(Alignment.End)
                                     )
                                 }
                             }
                         }
                     }
-                }
 
-                item {
-                    Column(
-                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        SectionHeader(
-                            icon = Icons.Default.ShortText,
-                            title = stringResource(Res.string.edit_profile_biography)
-                        )
-
-                        Card(
-                            colors = CardDefaults.cardColors(containerColor = customColors.surface),
-                            shape = RoundedCornerShape(16.dp),
-                            elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+                    // 4. Bilgilendirme Notu
+                    item {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp, vertical = 8.dp)
                         ) {
-                            Column(
-                                modifier = Modifier.padding(16.dp),
-                                verticalArrangement = Arrangement.spacedBy(6.dp)
+                            Surface(
+                                modifier = Modifier.fillMaxWidth(),
+                                color = customColors.surfaceVariant.copy(alpha = 0.5f),
+                                shape = RoundedCornerShape(12.dp)
                             ) {
-                                TastyTextField(
-                                    value = biography,
-                                    onValueChange = { if (it.length <= 200) biography = it },
-                                    label = stringResource(Res.string.edit_profile_biography),
-                                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done)
-                                )
-                                Text(
-                                    text = "${biography.length}/200",
-                                    style = MaterialTheme.typography.labelSmall.copy(
-                                        color = customColors.textTertiary
-                                    ),
-                                    modifier = Modifier.align(Alignment.End)
-                                )
+                                Row(
+                                    modifier = Modifier.padding(12.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Info,
+                                        contentDescription = null,
+                                        tint = customColors.textSecondary,
+                                        modifier = Modifier.size(18.dp)
+                                    )
+                                    Text(
+                                        text = stringResource(Res.string.edit_profile_info_note),
+                                        style = MaterialTheme.typography.bodySmall.copy(
+                                            color = customColors.textSecondary
+                                        )
+                                    )
+                                }
                             }
-                        }
-                    }
-                }
-
-                item {
-                    Surface(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp, vertical = 8.dp),
-                        color = customColors.surfaceVariant.copy(alpha = 0.5f),
-                        shape = RoundedCornerShape(12.dp)
-                    ) {
-                        Row(
-                            modifier = Modifier.padding(12.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(10.dp)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Info,
-                                contentDescription = null,
-                                tint = customColors.textSecondary,
-                                modifier = Modifier.size(18.dp)
-                            )
-                            Text(
-                                text = stringResource(Res.string.edit_profile_info_note),
-                                style = MaterialTheme.typography.bodySmall.copy(
-                                    color = customColors.textSecondary
-                                )
-                            )
                         }
                     }
                 }
@@ -415,7 +436,6 @@ private fun SectionHeader(
         )
     }
 }
-
 @Preview
 @Composable
 private fun EditProfileContentLightPreview() {

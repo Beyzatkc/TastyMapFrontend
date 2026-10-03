@@ -42,6 +42,7 @@ import kotlinx.coroutines.launch
 import org.beem.tastymap.core.auth.AuthEventBus
 import org.beem.tastymap.core.util.ToastManager
 import org.beem.tastymap.ui.auth.logReg.LogRegScreen
+import org.beem.tastymap.ui.components.responsiveContentWidth
 import org.beem.tastymap.ui.profile.myprofile.settings.activedevices.ActiveDevicesScreen
 import org.beem.tastymap.ui.profile.myprofile.settings.blockedusers.BlockedUsersScreen
 import org.beem.tastymap.ui.profile.myprofile.settings.changepassword.ChangePasswordBottomSheet
@@ -87,7 +88,6 @@ import tastymap.composeapp.generated.resources.settings_visit_history_sub
 import tastymap.composeapp.generated.resources.visit_history_title
 import kotlin.time.Clock
 
-
 class SettingsScreen(val isPrivate: Boolean) : Screen {
 
     @OptIn(ExperimentalMaterial3Api::class)
@@ -127,15 +127,6 @@ class SettingsScreen(val isPrivate: Boolean) : Screen {
                     changePasswordScreenModel.clearMessages()
                 }
             }
-/*
-            LaunchedEffect(settingsState.isLoggedOut) {
-                if (settingsState.isLoggedOut) {
-                    showLogoutDialog = false
-                    navigator.replaceAll(LogRegScreen())
-                }
-            }
-
- */
 
             LaunchedEffect(settingsState.isLoggedOut) {
                 if (settingsState.isLoggedOut) {
@@ -192,252 +183,259 @@ class SettingsScreen(val isPrivate: Boolean) : Screen {
                         )
                     }
                 } else {
-                LazyColumn(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(innerPadding)
-                        .padding(horizontal = 16.dp, vertical = 12.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    // 1. Hesabım & Güvenlik
-                    item {
-                        SettingsSectionHeader(title = stringResource(Res.string.settings_section_account_security))
-                        Card(
-                            colors = CardDefaults.cardColors(containerColor = customColors.surface),
-                            shape = RoundedCornerShape(16.dp),
-                            elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(innerPadding),
+                        contentAlignment = Alignment.TopCenter
+                    ) {
+                        LazyColumn(
+                            modifier = Modifier
+                                .responsiveContentWidth()
+                                .fillMaxHeight()
+                                .padding(horizontal = 16.dp, vertical = 12.dp),
+                            verticalArrangement = Arrangement.spacedBy(16.dp)
                         ) {
-                            Column {
-                                SettingsOptionItem(
-                                    icon = Icons.Default.Lock,
-                                    title = stringResource(Res.string.settings_change_password),
-                                    onClick = {
-                                        changePasswordScreenModel.clearMessages()
-                                        showChangePasswordSheet = true
-                                    }
-                                )
-                                SettingsDivider()
-                                SettingsOptionItem(
-                                    icon = Icons.Default.Devices,
-                                    title = stringResource(Res.string.settings_active_devices),
-                                    onClick = {
-                                        navigator.push(ActiveDevicesScreen())
-                                    }
-                                )
-                                SettingsDivider()
-                                SettingsOptionItem(
-                                    icon = Icons.Default.Block,
-                                    title = stringResource(Res.string.settings_blocked_users),
-                                    onClick = {
-                                        navigator.push(BlockedUsersScreen())
-                                    }
-                                )
-                                SettingsDivider()
 
-                                // GİZLİ HESAP (Tıklama mantığı sadece Switch'te)
-                                SettingsOptionItem(
-                                    icon = Icons.Default.VisibilityOff,
-                                    title = stringResource(Res.string.settings_private_account),
-                                    subtitle = stringResource(Res.string.settings_private_account_sub),
-                                    trailingContent = {
-                                        Switch(
-                                            checked = settingsState.isAccountPrivate,
-                                            enabled = !settingsState.isPrivacyLoading,
-                                            onCheckedChange = { isChecked ->
-                                                if (!settingsState.isPrivacyLoading) {
-                                                    settingsScreenModel.updatePrivacyStatus(
-                                                        isChecked
+                            item {
+                                SettingsSectionHeader(title = stringResource(Res.string.settings_section_account_security))
+                                Card(
+                                    colors = CardDefaults.cardColors(containerColor = customColors.surface),
+                                    shape = RoundedCornerShape(16.dp),
+                                    elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+                                ) {
+                                    Column {
+                                        SettingsOptionItem(
+                                            icon = Icons.Default.Lock,
+                                            title = stringResource(Res.string.settings_change_password),
+                                            onClick = {
+                                                changePasswordScreenModel.clearMessages()
+                                                showChangePasswordSheet = true
+                                            }
+                                        )
+                                        SettingsDivider()
+                                        SettingsOptionItem(
+                                            icon = Icons.Default.Devices,
+                                            title = stringResource(Res.string.settings_active_devices),
+                                            onClick = {
+                                                navigator.push(ActiveDevicesScreen())
+                                            }
+                                        )
+                                        SettingsDivider()
+                                        SettingsOptionItem(
+                                            icon = Icons.Default.Block,
+                                            title = stringResource(Res.string.settings_blocked_users),
+                                            onClick = {
+                                                navigator.push(BlockedUsersScreen())
+                                            }
+                                        )
+                                        SettingsDivider()
+
+                                        // GİZLİ HESAP (Tıklama mantığı sadece Switch'te)
+                                        SettingsOptionItem(
+                                            icon = Icons.Default.VisibilityOff,
+                                            title = stringResource(Res.string.settings_private_account),
+                                            subtitle = stringResource(Res.string.settings_private_account_sub),
+                                            trailingContent = {
+                                                Switch(
+                                                    checked = settingsState.isAccountPrivate,
+                                                    enabled = !settingsState.isPrivacyLoading,
+                                                    onCheckedChange = { isChecked ->
+                                                        if (!settingsState.isPrivacyLoading) {
+                                                            settingsScreenModel.updatePrivacyStatus(
+                                                                isChecked
+                                                            )
+                                                        }
+                                                    },
+                                                    colors = SwitchDefaults.colors(
+                                                        checkedThumbColor = customColors.surface,
+                                                        checkedTrackColor = customColors.navy,
+                                                        uncheckedThumbColor = customColors.surface,
+                                                        uncheckedTrackColor = customColors.borderStrong,
+                                                        uncheckedBorderColor = customColors.borderStrong
                                                     )
-                                                }
-                                            },
-                                            colors = SwitchDefaults.colors(
-                                                checkedThumbColor = customColors.surface,
-                                                checkedTrackColor = customColors.navy,
-                                                uncheckedThumbColor = customColors.surface,
-                                                uncheckedTrackColor = customColors.borderStrong,
-                                                uncheckedBorderColor = customColors.borderStrong
-                                            )
+                                                )
+                                            }
                                         )
                                     }
-                                )
+                                }
                             }
-                        }
-                    }
-                    item {
-                        SettingsSectionHeader(title = stringResource(Res.string.settings_section_activity))
-                        Card(
-                            colors = CardDefaults.cardColors(containerColor = customColors.surface),
-                            shape = RoundedCornerShape(16.dp),
-                            elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
-                        ) {
-                            Column {
-                                SettingsOptionItem(
-                                    icon = Icons.Default.Place,
-                                    title = stringResource(Res.string.visit_history_title),
-                                    subtitle = stringResource(Res.string.settings_visit_history_sub),
-                                    onClick = {
-                                        navigator.push(VisitScreen())
-                                    }
-                                )
-                            }
-                        }
-                    }
-
-                    item {
-                        SettingsSectionHeader(title = stringResource(Res.string.settings_section_nutrition))
-                        Card(
-                            colors = CardDefaults.cardColors(containerColor = customColors.surface),
-                            shape = RoundedCornerShape(16.dp),
-                            elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
-                        ) {
-                            Column {
-                                SettingsOptionItem(
-                                    icon = Icons.Default.Tune,
-                                    title = stringResource(Res.string.settings_nutrition_preferences),
-                                    subtitle = stringResource(Res.string.settings_nutrition_preferences_sub),
-                                    onClick = {
-                                        navigator.push(EditHealthScreen())
-                                    }
-                                )
-                            }
-                        }
-                    }
-
-                    // 2. Uygulama Tercihleri
-                    item {
-                        SettingsSectionHeader(title = stringResource(Res.string.settings_section_app_preferences))
-                        Card(
-                            colors = CardDefaults.cardColors(containerColor = customColors.surface),
-                            shape = RoundedCornerShape(16.dp),
-                            elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
-                        ) {
-                            Column {
-                                // BİLDİRİMLER (Tıklama mantığı sadece Switch'te)
-                                SettingsOptionItem(
-                                    icon = Icons.Default.Notifications,
-                                    title = stringResource(Res.string.settings_notifications),
-                                    trailingContent = {
-                                        Switch(
-                                            checked = isNotificationsEnabled,
-                                            onCheckedChange = { isChecked ->
-                                                isNotificationsEnabled = isChecked
-                                            },
-                                            colors = SwitchDefaults.colors(
-                                                checkedThumbColor = customColors.surface,
-                                                checkedTrackColor = customColors.navy,
-                                                uncheckedThumbColor = customColors.surface,
-                                                uncheckedTrackColor = customColors.borderStrong,
-                                                uncheckedBorderColor = customColors.borderStrong
-                                            )
+                            item {
+                                SettingsSectionHeader(title = stringResource(Res.string.settings_section_activity))
+                                Card(
+                                    colors = CardDefaults.cardColors(containerColor = customColors.surface),
+                                    shape = RoundedCornerShape(16.dp),
+                                    elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+                                ) {
+                                    Column {
+                                        SettingsOptionItem(
+                                            icon = Icons.Default.Place,
+                                            title = stringResource(Res.string.visit_history_title),
+                                            subtitle = stringResource(Res.string.settings_visit_history_sub),
+                                            onClick = {
+                                                navigator.push(VisitScreen())
+                                            }
                                         )
                                     }
-                                )
-                                SettingsDivider()
+                                }
+                            }
 
-                                SettingsOptionItem(
-                                    icon = Icons.Default.DarkMode,
-                                    title = stringResource(Res.string.settings_dark_mode),
-                                    trailingContent = {
-                                        Switch(
-                                            checked = isDarkModeActive,
-                                            onCheckedChange = { checked ->
-                                                settingsScreenModel.toggleDarkMode(checked)
-                                            },
-                                            colors = SwitchDefaults.colors(
-                                                checkedThumbColor = customColors.surface,
-                                                checkedTrackColor = customColors.navy,
-                                                uncheckedThumbColor = customColors.surface,
-                                                uncheckedTrackColor = customColors.borderStrong,
-                                                uncheckedBorderColor = customColors.borderStrong
-                                            )
+                            item {
+                                SettingsSectionHeader(title = stringResource(Res.string.settings_section_nutrition))
+                                Card(
+                                    colors = CardDefaults.cardColors(containerColor = customColors.surface),
+                                    shape = RoundedCornerShape(16.dp),
+                                    elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+                                ) {
+                                    Column {
+                                        SettingsOptionItem(
+                                            icon = Icons.Default.Tune,
+                                            title = stringResource(Res.string.settings_nutrition_preferences),
+                                            subtitle = stringResource(Res.string.settings_nutrition_preferences_sub),
+                                            onClick = {
+                                                navigator.push(EditHealthScreen())
+                                            }
                                         )
                                     }
-                                )
-                                SettingsDivider()
-                                SettingsOptionItem(
-                                    icon = Icons.Default.Language,
-                                    title = stringResource(Res.string.settings_language),
-                                    badgeText = if (currentLanguageCode == "tr") "Türkçe" else "English",
-                                    onClick = {
-                                        showLanguageDialog = true
+                                }
+                            }
+
+                            // 2. Uygulama Tercihleri
+                            item {
+                                SettingsSectionHeader(title = stringResource(Res.string.settings_section_app_preferences))
+                                Card(
+                                    colors = CardDefaults.cardColors(containerColor = customColors.surface),
+                                    shape = RoundedCornerShape(16.dp),
+                                    elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+                                ) {
+                                    Column {
+                                        // BİLDİRİMLER (Tıklama mantığı sadece Switch'te)
+                                        SettingsOptionItem(
+                                            icon = Icons.Default.Notifications,
+                                            title = stringResource(Res.string.settings_notifications),
+                                            trailingContent = {
+                                                Switch(
+                                                    checked = isNotificationsEnabled,
+                                                    onCheckedChange = { isChecked ->
+                                                        isNotificationsEnabled = isChecked
+                                                    },
+                                                    colors = SwitchDefaults.colors(
+                                                        checkedThumbColor = customColors.surface,
+                                                        checkedTrackColor = customColors.navy,
+                                                        uncheckedThumbColor = customColors.surface,
+                                                        uncheckedTrackColor = customColors.borderStrong,
+                                                        uncheckedBorderColor = customColors.borderStrong
+                                                    )
+                                                )
+                                            }
+                                        )
+                                        SettingsDivider()
+
+                                        SettingsOptionItem(
+                                            icon = Icons.Default.DarkMode,
+                                            title = stringResource(Res.string.settings_dark_mode),
+                                            trailingContent = {
+                                                Switch(
+                                                    checked = isDarkModeActive,
+                                                    onCheckedChange = { checked ->
+                                                        settingsScreenModel.toggleDarkMode(checked)
+                                                    },
+                                                    colors = SwitchDefaults.colors(
+                                                        checkedThumbColor = customColors.surface,
+                                                        checkedTrackColor = customColors.navy,
+                                                        uncheckedThumbColor = customColors.surface,
+                                                        uncheckedTrackColor = customColors.borderStrong,
+                                                        uncheckedBorderColor = customColors.borderStrong
+                                                    )
+                                                )
+                                            }
+                                        )
+                                        SettingsDivider()
+                                        SettingsOptionItem(
+                                            icon = Icons.Default.Language,
+                                            title = stringResource(Res.string.settings_language),
+                                            badgeText = if (currentLanguageCode == "tr") "Türkçe" else "English",
+                                            onClick = {
+                                                showLanguageDialog = true
+                                            }
+                                        )
                                     }
-                                )
+                                }
+                            }
+
+
+                            item {
+                                SettingsSectionHeader(title = stringResource(Res.string.settings_section_support_about))
+                                Card(
+                                    colors = CardDefaults.cardColors(containerColor = customColors.surface),
+                                    shape = RoundedCornerShape(16.dp),
+                                    elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+                                ) {
+                                    Column {
+                                        SettingsOptionItem(
+                                            icon = Icons.Default.Policy,
+                                            title = stringResource(Res.string.settings_privacy_policy),
+                                            onClick = {
+                                                navigator.push(PrivacyPolicyScreen())
+                                            }
+                                        )
+                                        SettingsDivider()
+                                        SettingsOptionItem(
+                                            icon = Icons.Default.HelpOutline,
+                                            title = stringResource(Res.string.settings_contact_us),
+                                            onClick = { }
+                                        )
+                                        SettingsDivider()
+                                        SettingsOptionItem(
+                                            icon = Icons.Default.Info,
+                                            title = stringResource(Res.string.settings_app_version),
+                                            badgeText = "v1.0.0",
+                                            showChevron = false
+                                        )
+                                    }
+                                }
+                            }
+
+                            // 4. Oturum & Gizlilik
+                            item {
+                                SettingsSectionHeader(title = stringResource(Res.string.settings_section_session_privacy))
+                                Card(
+                                    colors = CardDefaults.cardColors(containerColor = customColors.surface),
+                                    shape = RoundedCornerShape(16.dp),
+                                    elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+                                ) {
+                                    Column {
+                                        SettingsOptionItem(
+                                            icon = Icons.AutoMirrored.Filled.Logout,
+                                            title = stringResource(Res.string.settings_logout),
+                                            textColor = customColors.error,
+                                            iconColor = customColors.error,
+                                            showChevron = false,
+                                            onClick = {
+                                                showLogoutDialog = true
+                                            }
+                                        )
+                                        SettingsDivider()
+                                        SettingsOptionItem(
+                                            icon = Icons.Default.DeleteForever,
+                                            title = stringResource(Res.string.settings_delete_account),
+                                            textColor = customColors.error,
+                                            iconColor = customColors.error,
+                                            showChevron = false,
+                                            onClick = {
+                                                navigator.push(DeleteAccountScreen())
+                                            }
+                                        )
+                                    }
+                                }
+                            }
+
+                            item {
+                                Spacer(modifier = Modifier.height(16.dp))
                             }
                         }
-                    }
-
-
-                    item {
-                        SettingsSectionHeader(title = stringResource(Res.string.settings_section_support_about))
-                        Card(
-                            colors = CardDefaults.cardColors(containerColor = customColors.surface),
-                            shape = RoundedCornerShape(16.dp),
-                            elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
-                        ) {
-                            Column {
-                                SettingsOptionItem(
-                                    icon = Icons.Default.Policy,
-                                    title = stringResource(Res.string.settings_privacy_policy),
-                                    onClick = {
-                                        navigator.push(PrivacyPolicyScreen())
-                                    }
-                                )
-                                SettingsDivider()
-                                SettingsOptionItem(
-                                    icon = Icons.Default.HelpOutline,
-                                    title = stringResource(Res.string.settings_contact_us),
-                                    onClick = { }
-                                )
-                                SettingsDivider()
-                                SettingsOptionItem(
-                                    icon = Icons.Default.Info,
-                                    title = stringResource(Res.string.settings_app_version),
-                                    badgeText = "v1.0.0",
-                                    showChevron = false
-                                )
-                            }
-                        }
-                    }
-
-                    // 4. Oturum & Gizlilik
-                    item {
-                        SettingsSectionHeader(title = stringResource(Res.string.settings_section_session_privacy))
-                        Card(
-                            colors = CardDefaults.cardColors(containerColor = customColors.surface),
-                            shape = RoundedCornerShape(16.dp),
-                            elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
-                        ) {
-                            Column {
-                                SettingsOptionItem(
-                                    icon = Icons.AutoMirrored.Filled.Logout,
-                                    title = stringResource(Res.string.settings_logout),
-                                    textColor = customColors.error,
-                                    iconColor = customColors.error,
-                                    showChevron = false,
-                                    onClick = {
-                                        showLogoutDialog = true
-                                    }
-                                )
-                                SettingsDivider()
-                                SettingsOptionItem(
-                                    icon = Icons.Default.DeleteForever,
-                                    title = stringResource(Res.string.settings_delete_account),
-                                    textColor = customColors.error,
-                                    iconColor = customColors.error,
-                                    showChevron = false,
-                                    onClick = {
-                                        navigator.push(DeleteAccountScreen())
-                                    }
-                                )
-                            }
-                        }
-                    }
-
-                    item {
-                        Spacer(modifier = Modifier.height(16.dp))
                     }
                 }
-            }
 
                 if (showLanguageDialog) {
                     AlertDialog(
@@ -641,7 +639,6 @@ class SettingsScreen(val isPrivate: Boolean) : Screen {
         }
     }
 }
-
 @Composable
 private fun SettingsSectionHeader(title: String) {
     val customColors = LocalCustomColors.current

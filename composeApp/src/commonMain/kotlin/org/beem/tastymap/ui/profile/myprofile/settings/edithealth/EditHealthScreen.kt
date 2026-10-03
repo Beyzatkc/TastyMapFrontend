@@ -30,6 +30,7 @@ import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import org.beem.tastymap.core.util.ToastManager
 import org.beem.tastymap.data.model.health.HealthEnum
+import org.beem.tastymap.ui.components.responsiveContentWidth
 import org.beem.tastymap.ui.profile.health.AllergyUiModel
 import org.beem.tastymap.ui.profile.health.HealthScreenModel
 import org.beem.tastymap.ui.profile.health.HealthUiState
@@ -166,177 +167,195 @@ fun EditHealthContent(
                 CircularProgressIndicator(color = customColors.gourmetOrange)
             }
         } else {
-            LazyColumn(
+            Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(innerPadding)
-                    .padding(horizontal = 16.dp),
-                verticalArrangement = Arrangement.spacedBy(20.dp),
-                contentPadding = PaddingValues(vertical = 12.dp)
+                    .padding(innerPadding),
+                contentAlignment = Alignment.TopCenter
             ) {
-                item {
-                    SectionHeader(
-                        icon = Icons.Default.HealthAndSafety,
-                        title = stringResource(Res.string.edit_health_section_health_status),
-                        iconTint = customColors.navy
-                    )
-                    Card(
-                        colors = CardDefaults.cardColors(containerColor = customColors.surface),
-                        shape = RoundedCornerShape(16.dp),
-                        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
-                        border = BorderStroke(1.dp, customColors.borderLight)
-                    ) {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable(enabled = !uiState.isActionLoading) { onDiabetesToggle(!uiState.hasDiabetes) }
-                                .padding(16.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.SpaceBetween
+                LazyColumn(
+                    modifier = Modifier
+                        .responsiveContentWidth()
+                        .fillMaxHeight()
+                        .padding(horizontal = 16.dp),
+                    verticalArrangement = Arrangement.spacedBy(20.dp),
+                    contentPadding = PaddingValues(vertical = 12.dp)
+                ) {
+                    item {
+                        SectionHeader(
+                            icon = Icons.Default.HealthAndSafety,
+                            title = stringResource(Res.string.edit_health_section_health_status),
+                            iconTint = customColors.navy
+                        )
+                        Card(
+                            colors = CardDefaults.cardColors(containerColor = customColors.surface),
+                            shape = RoundedCornerShape(16.dp),
+                            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+                            border = BorderStroke(1.dp, customColors.borderLight)
                         ) {
-                            Column(modifier = Modifier.weight(1f)) {
-                                Text(
-                                    text = stringResource(Res.string.edit_health_diabetes_title),
-                                    style = MaterialTheme.typography.bodyMedium.copy(
-                                        fontWeight = FontWeight.SemiBold,
-                                        color = customColors.textPrimary
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable(enabled = !uiState.isActionLoading) {
+                                        onDiabetesToggle(
+                                            !uiState.hasDiabetes
+                                        )
+                                    }
+                                    .padding(16.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        text = stringResource(Res.string.edit_health_diabetes_title),
+                                        style = MaterialTheme.typography.bodyMedium.copy(
+                                            fontWeight = FontWeight.SemiBold,
+                                            color = customColors.textPrimary
+                                        )
                                     )
-                                )
-                                Spacer(modifier = Modifier.height(4.dp))
-                                Text(
-                                    text = stringResource(Res.string.edit_health_diabetes_desc),
-                                    style = MaterialTheme.typography.bodySmall.copy(
-                                        color = customColors.textSecondary,
-                                        lineHeight = 18.sp
+                                    Spacer(modifier = Modifier.height(4.dp))
+                                    Text(
+                                        text = stringResource(Res.string.edit_health_diabetes_desc),
+                                        style = MaterialTheme.typography.bodySmall.copy(
+                                            color = customColors.textSecondary,
+                                            lineHeight = 18.sp
+                                        )
+                                    )
+                                }
+                                Spacer(modifier = Modifier.width(12.dp))
+                                Switch(
+                                    checked = uiState.hasDiabetes,
+                                    enabled = !uiState.isActionLoading,
+                                    onCheckedChange = onDiabetesToggle,
+                                    colors = SwitchDefaults.colors(
+                                        checkedThumbColor = customColors.surface,
+                                        checkedTrackColor = customColors.navy,
+                                        uncheckedThumbColor = customColors.surface,
+                                        uncheckedTrackColor = customColors.borderStrong,
+                                        uncheckedBorderColor = customColors.borderStrong
                                     )
                                 )
                             }
-                            Spacer(modifier = Modifier.width(12.dp))
-                            Switch(
-                                checked = uiState.hasDiabetes,
-                                enabled = !uiState.isActionLoading,
-                                onCheckedChange = onDiabetesToggle,
-                                colors = SwitchDefaults.colors(
-                                    checkedThumbColor = customColors.surface,
-                                    checkedTrackColor = customColors.navy,
-                                    uncheckedThumbColor = customColors.surface,
-                                    uncheckedTrackColor = customColors.borderStrong,
-                                    uncheckedBorderColor = customColors.borderStrong
-                                )
-                            )
                         }
                     }
-                }
 
-                item {
-                    SectionHeader(
-                        icon = Icons.Default.Restaurant,
-                        title = stringResource(Res.string.edit_health_section_diet),
-                        iconTint = customColors.navy
-                    )
-                    Card(
-                        colors = CardDefaults.cardColors(containerColor = customColors.surface),
-                        shape = RoundedCornerShape(16.dp),
-                        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
-                        border = BorderStroke(1.dp, customColors.borderLight)
-                    ) {
-                        Column(
-                            modifier = Modifier.padding(12.dp),
-                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                    item {
+                        SectionHeader(
+                            icon = Icons.Default.Restaurant,
+                            title = stringResource(Res.string.edit_health_section_diet),
+                            iconTint = customColors.navy
+                        )
+                        Card(
+                            colors = CardDefaults.cardColors(containerColor = customColors.surface),
+                            shape = RoundedCornerShape(16.dp),
+                            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+                            border = BorderStroke(1.dp, customColors.borderLight)
                         ) {
-                            HealthEnum.entries.forEach { eatType ->
-                                val isSelected = uiState.selectedEatType == eatType
-                                val (title, description) = getEatTypeDetails(eatType)
+                            Column(
+                                modifier = Modifier.padding(12.dp),
+                                verticalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                HealthEnum.entries.forEach { eatType ->
+                                    val isSelected = uiState.selectedEatType == eatType
+                                    val (title, description) = getEatTypeDetails(eatType)
 
-                                Row(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .clip(RoundedCornerShape(12.dp))
-                                        .background(
-                                            if (isSelected) customColors.gourmetOrange.copy(alpha = 0.08f)
-                                            else customColors.surface
-                                        )
-                                        .border(
-                                            width = if (isSelected) 1.5.dp else 1.dp,
-                                            color = if (isSelected) customColors.gourmetOrange else customColors.borderLight,
-                                            shape = RoundedCornerShape(12.dp)
-                                        )
-                                        .clickable(enabled = !uiState.isActionLoading) { onEatTypeSelect(eatType) }
-                                        .padding(12.dp),
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    RadioButton(
-                                        selected = isSelected,
-                                        onClick = null,
-                                        enabled = !uiState.isActionLoading,
-                                        colors = RadioButtonDefaults.colors(
-                                            selectedColor = customColors.gourmetOrange,
-                                            unselectedColor = customColors.textTertiary
-                                        )
-                                    )
-                                    Spacer(modifier = Modifier.width(10.dp))
-                                    Column {
-                                        Text(
-                                            text = title,
-                                            style = MaterialTheme.typography.bodyMedium.copy(
-                                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                                                color = customColors.textPrimary
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .clip(RoundedCornerShape(12.dp))
+                                            .background(
+                                                if (isSelected) customColors.gourmetOrange.copy(
+                                                    alpha = 0.08f
+                                                )
+                                                else customColors.surface
+                                            )
+                                            .border(
+                                                width = if (isSelected) 1.5.dp else 1.dp,
+                                                color = if (isSelected) customColors.gourmetOrange else customColors.borderLight,
+                                                shape = RoundedCornerShape(12.dp)
+                                            )
+                                            .clickable(enabled = !uiState.isActionLoading) {
+                                                onEatTypeSelect(
+                                                    eatType
+                                                )
+                                            }
+                                            .padding(12.dp),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        RadioButton(
+                                            selected = isSelected,
+                                            onClick = null,
+                                            enabled = !uiState.isActionLoading,
+                                            colors = RadioButtonDefaults.colors(
+                                                selectedColor = customColors.gourmetOrange,
+                                                unselectedColor = customColors.textTertiary
                                             )
                                         )
-                                        Text(
-                                            text = description,
-                                            style = MaterialTheme.typography.bodySmall.copy(
-                                                color = customColors.textSecondary
+                                        Spacer(modifier = Modifier.width(10.dp))
+                                        Column {
+                                            Text(
+                                                text = title,
+                                                style = MaterialTheme.typography.bodyMedium.copy(
+                                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                                                    color = customColors.textPrimary
+                                                )
                                             )
-                                        )
+                                            Text(
+                                                text = description,
+                                                style = MaterialTheme.typography.bodySmall.copy(
+                                                    color = customColors.textSecondary
+                                                )
+                                            )
+                                        }
                                     }
                                 }
                             }
                         }
                     }
-                }
 
-                item {
-                    SectionHeader(
-                        icon = Icons.Default.Warning,
-                        title = stringResource(Res.string.edit_health_section_allergens),
-                        iconTint = customColors.navy
-                    )
-                    Card(
-                        colors = CardDefaults.cardColors(containerColor = customColors.surface),
-                        shape = RoundedCornerShape(16.dp),
-                        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
-                        border = BorderStroke(1.dp, customColors.borderLight)
-                    ) {
-                        Column(
-                            modifier = Modifier.padding(16.dp),
-                            verticalArrangement = Arrangement.spacedBy(12.dp)
+                    item {
+                        SectionHeader(
+                            icon = Icons.Default.Warning,
+                            title = stringResource(Res.string.edit_health_section_allergens),
+                            iconTint = customColors.navy
+                        )
+                        Card(
+                            colors = CardDefaults.cardColors(containerColor = customColors.surface),
+                            shape = RoundedCornerShape(16.dp),
+                            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+                            border = BorderStroke(1.dp, customColors.borderLight)
                         ) {
-                            Text(
-                                text = stringResource(Res.string.edit_health_allergens_desc),
-                                style = MaterialTheme.typography.bodySmall.copy(
-                                    color = customColors.textSecondary
+                            Column(
+                                modifier = Modifier.padding(16.dp),
+                                verticalArrangement = Arrangement.spacedBy(12.dp)
+                            ) {
+                                Text(
+                                    text = stringResource(Res.string.edit_health_allergens_desc),
+                                    style = MaterialTheme.typography.bodySmall.copy(
+                                        color = customColors.textSecondary
+                                    )
                                 )
-                            )
 
-                            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                                uiState.availableAllergies.chunked(2).forEach { rowAllergies ->
-                                    Row(
-                                        modifier = Modifier.fillMaxWidth(),
-                                        horizontalArrangement = Arrangement.spacedBy(10.dp)
-                                    ) {
-                                        for (allergy in rowAllergies) {
-                                            val isSelected = uiState.selectedAllergyIds.contains(allergy.id)
-                                            AllergyChip(
-                                                allergy = allergy,
-                                                isSelected = isSelected,
-                                                isEnabled = !uiState.isActionLoading,
-                                                onToggle = { onAllergyToggle(allergy.id) },
-                                                modifier = Modifier.weight(1f)
-                                            )
-                                        }
-                                        if (rowAllergies.size == 1) {
-                                            Spacer(modifier = Modifier.weight(1f))
+                                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                                    uiState.availableAllergies.chunked(2).forEach { rowAllergies ->
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            horizontalArrangement = Arrangement.spacedBy(10.dp)
+                                        ) {
+                                            for (allergy in rowAllergies) {
+                                                val isSelected =
+                                                    uiState.selectedAllergyIds.contains(allergy.id)
+                                                AllergyChip(
+                                                    allergy = allergy,
+                                                    isSelected = isSelected,
+                                                    isEnabled = !uiState.isActionLoading,
+                                                    onToggle = { onAllergyToggle(allergy.id) },
+                                                    modifier = Modifier.weight(1f)
+                                                )
+                                            }
+                                            if (rowAllergies.size == 1) {
+                                                Spacer(modifier = Modifier.weight(1f))
+                                            }
                                         }
                                     }
                                 }

@@ -31,11 +31,11 @@ import org.beem.tastymap.data.model.deleteaccount.DeleteReason
 import org.beem.tastymap.ui.auth.logReg.LogRegScreen
 import org.beem.tastymap.ui.components.TastyButton
 import org.beem.tastymap.ui.components.TastyTextField
+import org.beem.tastymap.ui.components.responsiveContentWidth
 import org.beem.tastymap.ui.theme.LocalCustomColors
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.koinInject
 import tastymap.composeapp.generated.resources.*
-
 class DeleteAccountScreen : Screen {
 
     @OptIn(ExperimentalMaterial3Api::class)
@@ -60,7 +60,6 @@ class DeleteAccountScreen : Screen {
                 navigator.replaceAll(AccountDeactivatedScreen())
             }
         }
-
 
         LaunchedEffect(uiState.errorMessage) {
             uiState.errorMessage?.let { message ->
@@ -109,172 +108,186 @@ class DeleteAccountScreen : Screen {
                 )
             }
         ) { innerPadding ->
-            Column(
+            Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(innerPadding)
-                    .verticalScroll(rememberScrollState())
-                    .padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(20.dp)
+                    .padding(innerPadding),
+                contentAlignment = Alignment.TopCenter
             ) {
-                Card(
-                    colors = CardDefaults.cardColors(
-                        containerColor = customColors.error.copy(alpha = 0.08f)
-                    ),
-                    shape = RoundedCornerShape(16.dp),
+                Column(
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .border(
-                            width = 1.dp,
-                            color = customColors.error.copy(alpha = 0.3f),
-                            shape = RoundedCornerShape(16.dp)
-                        )
+                        .responsiveContentWidth()
+                        .fillMaxHeight()
+                        .verticalScroll(rememberScrollState())
+                        .padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(20.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Row(
-                        modifier = Modifier.padding(16.dp),
-                        verticalAlignment = Alignment.Top,
-                        horizontalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Info,
-                            contentDescription = null,
-                            tint = customColors.error,
-                            modifier = Modifier.size(24.dp)
-                        )
-                        Column {
-                            Text(
-                                text = stringResource(Res.string.delete_account_warning_title),
-                                style = MaterialTheme.typography.titleSmall.copy(
-                                    fontWeight = FontWeight.Bold,
-                                    color = customColors.error
-                                )
-                            )
-                            Text(
-                                text = stringResource(Res.string.delete_account_warning_description),
-                                style = MaterialTheme.typography.bodySmall,
-                                color = customColors.textSecondary
-                            )
-                        }
-                    }
-                }
-
-                // 2. Silme Sebebi Seçimi Section
-                Column (verticalArrangement = Arrangement.spacedBy(8.dp)){
-                    Text(
-                        text = stringResource(Res.string.delete_account_reason_title),
-                        style = MaterialTheme.typography.titleSmall.copy(
-                            fontWeight = FontWeight.Bold,
-                            color = customColors.textPrimary
-                        )
-                    )
-
                     Card(
-                        colors = CardDefaults.cardColors(containerColor = customColors.surface),
+                        colors = CardDefaults.cardColors(
+                            containerColor = customColors.error.copy(alpha = 0.08f)
+                        ),
                         shape = RoundedCornerShape(16.dp),
-                        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .border(
+                                width = 1.dp,
+                                color = customColors.error.copy(alpha = 0.3f),
+                                shape = RoundedCornerShape(16.dp)
+                            )
                     ) {
-                        Column {
-                            DeleteReason.entries.forEachIndexed { index, reason ->
-                                Row(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .clickable { selectedReason = reason }
-                                        .padding(horizontal = 3.dp, vertical = 2.dp),
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    RadioButton(
-                                        selected = selectedReason == reason,
-                                        onClick = { selectedReason = reason },
-                                        colors = RadioButtonDefaults.colors(
-                                            selectedColor = customColors.gourmetOrange,
-                                            unselectedColor = customColors.borderStrong
+                        Row(
+                            modifier = Modifier.padding(16.dp),
+                            verticalAlignment = Alignment.Top,
+                            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Info,
+                                contentDescription = null,
+                                tint = customColors.error,
+                                modifier = Modifier.size(24.dp)
+                            )
+                            Column {
+                                Text(
+                                    text = stringResource(Res.string.delete_account_warning_title),
+                                    style = MaterialTheme.typography.titleSmall.copy(
+                                        fontWeight = FontWeight.Bold,
+                                        color = customColors.error
+                                    )
+                                )
+                                Text(
+                                    text = stringResource(Res.string.delete_account_warning_description),
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = customColors.textSecondary
+                                )
+                            }
+                        }
+                    }
+
+                    // 2. Silme Sebebi Seçimi Section
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Text(
+                            text = stringResource(Res.string.delete_account_reason_title),
+                            style = MaterialTheme.typography.titleSmall.copy(
+                                fontWeight = FontWeight.Bold,
+                                color = customColors.textPrimary
+                            )
+                        )
+
+                        Card(
+                            colors = CardDefaults.cardColors(containerColor = customColors.surface),
+                            shape = RoundedCornerShape(16.dp),
+                            elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+                        ) {
+                            Column {
+                                DeleteReason.entries.forEachIndexed { index, reason ->
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .clickable { selectedReason = reason }
+                                            .padding(horizontal = 3.dp, vertical = 2.dp),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        RadioButton(
+                                            selected = selectedReason == reason,
+                                            onClick = { selectedReason = reason },
+                                            colors = RadioButtonDefaults.colors(
+                                                selectedColor = customColors.gourmetOrange,
+                                                unselectedColor = customColors.borderStrong
+                                            )
                                         )
-                                    )
-                                    Spacer(modifier = Modifier.width(12.dp))
-                                    Text(
-                                        text = reason.toDisplayName(),
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        color = customColors.textPrimary
-                                    )
-                                }
-                                if (index < DeleteReason.entries.size - 1) {
-                                    HorizontalDivider(
-                                        color = customColors.borderStrong.copy(alpha = 0.3f),
-                                        thickness = 0.5.dp
-                                    )
+                                        Spacer(modifier = Modifier.width(12.dp))
+                                        Text(
+                                            text = reason.toDisplayName(),
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            color = customColors.textPrimary
+                                        )
+                                    }
+                                    if (index < DeleteReason.entries.size - 1) {
+                                        HorizontalDivider(
+                                            color = customColors.borderStrong.copy(alpha = 0.3f),
+                                            thickness = 0.5.dp
+                                        )
+                                    }
                                 }
                             }
                         }
                     }
-                }
 
-                // 3. Özel Sebep Metin Alanı (TastyTextField)
-                TastyTextField(
-                    value = customReasonText,
-                    onValueChange = { customReasonText = it },
-                    label = if (isCustomReasonRequired) {
-                        stringResource(Res.string.delete_account_custom_reason_title_must)
-                    } else {
-                        stringResource(Res.string.delete_account_custom_reason_title_ops)
-                    },
-                    singleLine = false,
-                    maxLines = 4,
-                    modifier = Modifier.fillMaxWidth()
-                )
-
-                // 4. Şifre Doğrulama Alanı (TastyTextField)
-                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    // 3. Özel Sebep Metin Alanı (TastyTextField)
                     TastyTextField(
-                        value = passwordText,
-                        onValueChange = { newValue ->
-                            passwordText = newValue
-                            if (uiState.passwordError != null) {
-                                deleteScreenModel.clearPasswordError()
-                            }
+                        value = customReasonText,
+                        onValueChange = { customReasonText = it },
+                        label = if (isCustomReasonRequired) {
+                            stringResource(Res.string.delete_account_custom_reason_title_must)
+                        } else {
+                            stringResource(Res.string.delete_account_custom_reason_title_ops)
                         },
-                        label = stringResource(Res.string.delete_account_password_title),
-                        isPassword = true,
-                        error = uiState.passwordError,
-                        keyboardOptions = KeyboardOptions(
-                            keyboardType = KeyboardType.Password,
-                            imeAction = ImeAction.Done
-                        ),
-                        leadingIcon = {
-                            Icon(
-                                imageVector = Icons.Default.Lock,
-                                contentDescription = null,
-                                tint = customColors.textSecondary
-                            )
-                        },
+                        singleLine = false,
+                        maxLines = 4,
                         modifier = Modifier.fillMaxWidth()
                     )
 
-                    Text(
-                        text = stringResource(Res.string.delete_account_password_helper),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = customColors.textTertiary,
-                        modifier = Modifier.padding(start = 8.dp)
+                    // 4. Şifre Doğrulama Alanı (TastyTextField)
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        TastyTextField(
+                            value = passwordText,
+                            onValueChange = { newValue ->
+                                passwordText = newValue
+                                if (uiState.passwordError != null) {
+                                    deleteScreenModel.clearPasswordError()
+                                }
+                            },
+                            label = stringResource(Res.string.delete_account_password_title),
+                            isPassword = true,
+                            error = uiState.passwordError,
+                            keyboardOptions = KeyboardOptions(
+                                keyboardType = KeyboardType.Password,
+                                imeAction = ImeAction.Done
+                            ),
+                            leadingIcon = {
+                                Icon(
+                                    imageVector = Icons.Default.Lock,
+                                    contentDescription = null,
+                                    tint = customColors.textSecondary
+                                )
+                            },
+                            modifier = Modifier.fillMaxWidth()
+                        )
+
+                        Text(
+                            text = stringResource(Res.string.delete_account_password_helper),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = customColors.textTertiary,
+                            modifier = Modifier.padding(start = 8.dp)
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    // 5. Hesabı Sil Butonu (TastyButton)
+                    TastyButton(
+                        text = stringResource(Res.string.delete_account_button),
+                        onClick = {
+                            deleteScreenModel.deleteAccount(
+                                password = passwordText,
+                                reasonType = selectedReason,
+                                customReason = customReasonText.ifBlank { null }
+                            )
+                        },
+                        isLoading = uiState.isDeleteLoading,
+                        enabled = isButtonEnabled,
+                        backcolor = customColors.error,
+                        textcolor = customColors.surface,
+                        modifier = Modifier.fillMaxWidth()
                     )
                 }
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                // 5. Hesabı Sil Butonu (TastyButton)
-                TastyButton(
-                    text = stringResource(Res.string.delete_account_button),
-                    onClick = {
-                        deleteScreenModel.deleteAccount(
-                            password = passwordText,
-                            reasonType = selectedReason,
-                            customReason = customReasonText.ifBlank { null }
-                        )
-                    },
-                    isLoading = uiState.isDeleteLoading,
-                    enabled = isButtonEnabled,
-                    backcolor = customColors.error,
-                    textcolor = customColors.surface,
-                    modifier = Modifier.fillMaxWidth()
-                )
             }
         }
     }
