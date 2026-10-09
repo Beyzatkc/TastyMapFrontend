@@ -22,6 +22,9 @@ CREATE TABLE ProfileEntity (
 getProfileById:
 SELECT * FROM ProfileEntity WHERE userId = ?;
 
+getPrivacyStatus:
+SELECT privateProfile FROM ProfileEntity WHERE userId = ?;
+
 -- Profil Ekle veya Güncelle (Upsert)
 insertOrUpdateProfile:
 INSERT OR REPLACE INTO ProfileEntity(

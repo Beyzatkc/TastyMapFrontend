@@ -38,7 +38,8 @@ data class CustomColors(
     val red: Color,
     val success: Color,
     val warning: Color,
-    val error: Color
+    val error: Color,
+    val blackWhite: Color
 )
 
 val LightCustomColors = CustomColors(
@@ -69,7 +70,8 @@ val LightCustomColors = CustomColors(
     red = AppColors.passwordRed,
     success = AppColors.SuccessGreen,
     warning = AppColors.WarningYellow,
-    error = AppColors.ErrorRed
+    error = AppColors.ErrorRed,
+    blackWhite = Color.Black
 )
 
 val DarkCustomColors = CustomColors(
@@ -100,7 +102,8 @@ val DarkCustomColors = CustomColors(
     red = AppColors.passwordRed,
     success = AppColors.SuccessGreen,
     warning = AppColors.WarningYellow,
-    error = AppColors.ErrorRed
+    error = AppColors.ErrorRed,
+    blackWhite = Color.White
 )
 
 val LocalCustomColors = staticCompositionLocalOf { LightCustomColors }

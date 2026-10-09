@@ -88,7 +88,7 @@ import tastymap.composeapp.generated.resources.settings_visit_history_sub
 import tastymap.composeapp.generated.resources.visit_history_title
 import kotlin.time.Clock
 
-class SettingsScreen(val isPrivate: Boolean) : Screen {
+class SettingsScreen() : Screen {
 
     @OptIn(ExperimentalMaterial3Api::class)
     @Composable
@@ -106,6 +106,7 @@ class SettingsScreen(val isPrivate: Boolean) : Screen {
         val currentLanguageCode by settingsScreenModel.languageCode.collectAsState()
         var showLanguageDialog by remember { mutableStateOf(false) }
 
+
         key(currentLanguageCode) {
 
             val customColors = LocalCustomColors.current
@@ -115,10 +116,6 @@ class SettingsScreen(val isPrivate: Boolean) : Screen {
             var showLogoutDialog by remember { mutableStateOf(false) }
             var isNotificationsEnabled by remember { mutableStateOf(true) }
 
-            remember(isPrivate) {
-                settingsScreenModel.setInitialPrivacyStatus(isPrivate)
-                true
-            }
 
             LaunchedEffect(changePasswordState.successMessageRes) {
                 changePasswordState.successMessageRes?.let { res ->

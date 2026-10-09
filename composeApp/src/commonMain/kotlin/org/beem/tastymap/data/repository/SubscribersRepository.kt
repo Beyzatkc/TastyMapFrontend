@@ -47,13 +47,17 @@ class SubscribersRepository(
         return result
     }
     // 4. Takipten Çık / Gönderilen İsteği İptal Et
-    suspend fun unSubscribe(targetUserId: Long, myUserId: Long): ResultWrapper<SubscribeActionResult> {
+    suspend fun unSubscribe(
+        targetUserId: Long,
+        myUserId: Long,
+        previousStatus: RelationStatus
+    ): ResultWrapper<SubscribeActionResult> {
         val result = safeApiCall { dataSource.unSubscribe(targetUserId) }
 
         if (result is ResultWrapper.Success) {
             val actionResult = result.data
 
-            if (actionResult.relationStatus == RelationStatus.FOLLOW_BACK ) {
+            if (previousStatus == RelationStatus.FOLLOWING) {
                 localDataSource.decrementSubscribed(myUserId)
                 localDataSource.decrementSubscriber(targetUserId)
 
@@ -67,7 +71,6 @@ class SubscribersRepository(
                 hasPendingIncomingRequest = actionResult.hasPendingIncomingRequest,
                 isFollower = actionResult.isFollower
             )
-
         }
 
         return result

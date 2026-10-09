@@ -16,14 +16,12 @@ import org.beem.tastymap.data.model.deleteaccount.DeleteReason
 import org.beem.tastymap.data.repository.DeleteAccountRepository
 
 import org.beem.tastymap.data.repository.profile.MyProfileRepository
-
 class SettingsScreenModel(
     private val repo: MyProfileRepository,
     private val deviceInfoProvider: DeviceInfoProvider,
     private val settingsManager: SettingsManager,
     private val authEventBus: AuthEventBus
 ) : ScreenModel {
-
     private val _uiState = MutableStateFlow(SettingsUiState())
     val uiState = _uiState.asStateFlow()
     val isDarkMode: StateFlow<Boolean?> = settingsManager.isDarkMode
@@ -31,13 +29,25 @@ class SettingsScreenModel(
     val languageCode = settingsManager.languageCode
 
 
+    init {
+        observePrivacyStatus()
+    }
 
-    fun setInitialPrivacyStatus(initialStatus: Boolean) {
-        _uiState.update {
-            it.copy(
-                isAccountPrivate = initialStatus,
-                isLoading = false
-            )
+    private fun observePrivacyStatus() {
+        screenModelScope.launch {
+            repo.getPrivacyStatus().collect { isPrivate ->
+                if (isPrivate != null) {
+                    _uiState.update {
+                        it.copy(
+                            isAccountPrivate = isPrivate,
+                            isLoading = false
+                        )
+                    }
+                } else {
+                    _uiState.update { it.copy(isLoading = true) }
+                    repo.refreshMyProfile()
+                }
+            }
         }
     }
     fun setLanguage(code: String) {
@@ -82,8 +92,6 @@ class SettingsScreenModel(
             }
         }
     }
-
-
     fun clearMessages() {
         _uiState.update { it.copy(errorMessage = null) }
     }

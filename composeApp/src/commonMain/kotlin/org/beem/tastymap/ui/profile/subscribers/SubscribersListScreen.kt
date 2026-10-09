@@ -42,7 +42,9 @@ import org.beem.tastymap.core.util.ToastManager
 import org.beem.tastymap.data.model.subscribers.SubscribeResponse
 import org.beem.tastymap.domain.model.RelationStatus
 import org.beem.tastymap.ui.bottomnav.ProfileTab
+import org.beem.tastymap.ui.components.DialogConfig
 import org.beem.tastymap.ui.components.TastyButton
+import org.beem.tastymap.ui.components.TastyConfirmDialog
 import org.beem.tastymap.ui.components.TastyPullToRefreshBox
 import org.beem.tastymap.ui.components.responsiveContentWidth
 import org.beem.tastymap.ui.profile.otherprofile.ProfileScreen
@@ -52,6 +54,9 @@ import tastymap.composeapp.generated.resources.Res
 import tastymap.composeapp.generated.resources.active_devices_retry
 import tastymap.composeapp.generated.resources.active_devices_retry_cd
 import tastymap.composeapp.generated.resources.common_search_placeholder
+import tastymap.composeapp.generated.resources.dialog_unfollow_message
+import tastymap.composeapp.generated.resources.dialog_unfollow_title
+import tastymap.composeapp.generated.resources.profile_action_unfollow
 import tastymap.composeapp.generated.resources.profile_connections_title
 import tastymap.composeapp.generated.resources.profile_empty_list
 import tastymap.composeapp.generated.resources.profile_follow_back
@@ -75,6 +80,8 @@ class SubscribersListScreen(
         val navigator = LocalNavigator.currentOrThrow
         val customColors = LocalCustomColors.current
         val tabNavigator = LocalTabNavigator.current
+
+        var activeDialog by remember { mutableStateOf<DialogConfig?>(null) }
 
         var selectedTab by remember { mutableStateOf(initialTab) }
         var searchQuery by remember { mutableStateOf("") }
@@ -233,7 +240,6 @@ class SubscribersListScreen(
                             val isEmpty = uiState.items.isEmpty()
 
                             when {
-                                // 1. İlk yükleme durumu
                                 uiState.isLoading && isEmpty && !isError -> {
                                     Box(
                                         modifier = Modifier.fillMaxSize(),
@@ -243,7 +249,6 @@ class SubscribersListScreen(
                                     }
                                 }
 
-                                // 2. İnternet/Ağ Hatası durumu
                                 isError && isEmpty -> {
                                     Box(
                                         modifier = Modifier.fillMaxSize(),
@@ -322,6 +327,9 @@ class SubscribersListScreen(
                                             items = filteredList,
                                             key = { it.id }
                                         ) { user ->
+                                            val unfollowTitle = stringResource(Res.string.dialog_unfollow_title)
+                                            val unfollowMessage = stringResource(Res.string.dialog_unfollow_message, user.username)
+                                            val unfollowConfirm = stringResource(Res.string.profile_action_unfollow)
                                             SubscriberUserItem(
                                                 user = user,
                                                 onUserClick = {
@@ -331,13 +339,32 @@ class SubscribersListScreen(
                                                         navigator.push(ProfileScreen(userId = user.id))
                                                     }
                                                 },
+
                                                 onActionClick = {
-                                                    screenModel.handleFollowAction(
-                                                        targetUserId = user.id,
-                                                        currentStatus = user.relationStatus ?: RelationStatus.NOT_FOLLOWING,
-                                                    )
+                                                    val currentStatus = user.relationStatus ?: RelationStatus.NOT_FOLLOWING
+
+                                                    if (currentStatus == RelationStatus.FOLLOWING) {
+                                                        activeDialog = DialogConfig(
+                                                            title = unfollowTitle,
+                                                            message = unfollowMessage,
+                                                            confirmText = unfollowConfirm,
+                                                            isDestructive = true,
+                                                            onConfirm = {
+                                                                screenModel.handleFollowAction(
+                                                                    targetUserId = user.id,
+                                                                    currentStatus = currentStatus
+                                                                )
+                                                            }
+                                                        )
+                                                    } else {
+                                                        screenModel.handleFollowAction(
+                                                            targetUserId = user.id,
+                                                            currentStatus = currentStatus
+                                                        )
+                                                    }
                                                 }
                                             )
+
                                         }
 
                                         if (uiState.isLoadingMore) {
@@ -362,6 +389,12 @@ class SubscribersListScreen(
                     }
                 }
             }
+        }
+        activeDialog?.let { config ->
+            TastyConfirmDialog(
+                config = config,
+                onDismiss = { activeDialog = null }
+            )
         }
     }
 }

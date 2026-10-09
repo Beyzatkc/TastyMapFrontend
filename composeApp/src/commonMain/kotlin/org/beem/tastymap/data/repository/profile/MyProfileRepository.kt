@@ -71,6 +71,21 @@ class MyProfileRepository(
             .flowOn(dispatchers.io)
     }
 
+    @OptIn(ExperimentalCoroutinesApi::class)
+    fun getPrivacyStatus(): Flow<Boolean?> {
+        return userManager.userSession
+            .map { it?.userId }
+            .distinctUntilChanged()
+            .flatMapLatest { userId ->
+                if (userId == null) {
+                    flowOf(null)
+                } else {
+                    localDataSource.getPrivacyStatusFlow(userId)
+                }
+            }
+            .flowOn(dispatchers.io)
+    }
+
     suspend fun refreshMyProfile(): ResultWrapper<UserProfile> {
         return try {
             withContext(dispatchers.io) {

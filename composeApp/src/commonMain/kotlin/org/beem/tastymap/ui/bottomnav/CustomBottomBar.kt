@@ -6,6 +6,7 @@ import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.outlined.AddCircleOutline
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
@@ -53,12 +54,18 @@ object SearchTab : Tab {
 
     @Composable
     override fun Content() {
+        val bottomBarVisibility = LocalNavigationBarVisibility.current
+        val isWideScreen = LocalIsWideScreen.current // Ekran genişliğini oku
+
         Navigator(SearchScreen()) { navigator ->
-            val bottomBarVisibility = LocalBottomBarVisibility.current
-            LaunchedEffect(navigator.lastItem) {
-                val currentScreen = navigator.lastItem
-                val isMyProfile = currentScreen is MyProfileScreen
-                bottomBarVisibility.value = isMyProfile || navigator.items.size == 1
+            LaunchedEffect(navigator.lastItem, isWideScreen) {
+                if (isWideScreen) {
+                    bottomBarVisibility.value = true // Web'de her zaman göster
+                } else {
+                    val currentScreen = navigator.lastItem
+                    val isMyProfile = currentScreen is MyProfileScreen
+                    bottomBarVisibility.value = isMyProfile || navigator.items.size == 1
+                }
             }
             SlideTransition(navigator)
         }
@@ -71,25 +78,30 @@ object UploadTab : Tab {
         @Composable
         get() {
             val title = stringResource(Res.string.nav_upload)
-            val icon = rememberVectorPainter(Icons.Default.AddCircle)
+            val icon = rememberVectorPainter(Icons.Outlined.AddCircleOutline)
             return remember { TabOptions(index = 2u, title = title, icon = icon) }
         }
 
     @Composable
     override fun Content() {
+        val bottomBarVisibility = LocalNavigationBarVisibility.current
+        val isWideScreen = LocalIsWideScreen.current
+
         Navigator(key = "CreatePostNavigator", screen = CreatePostScreen()) { navigator ->
-            val bottomBarVisibility = LocalBottomBarVisibility.current
-            LaunchedEffect(navigator.lastItem) {
-                val currentScreen = navigator.lastItem
-                val isMyProfile = currentScreen is MyProfileScreen
-                bottomBarVisibility.value = isMyProfile || navigator.items.size == 1
+            LaunchedEffect(navigator.lastItem, isWideScreen) {
+                if (isWideScreen) {
+                    bottomBarVisibility.value = true
+                } else {
+                    val currentScreen = navigator.lastItem
+                    val isMyProfile = currentScreen is MyProfileScreen
+                    bottomBarVisibility.value = isMyProfile || navigator.items.size == 1
+                }
             }
             SlideTransition(navigator)
         }
     }
 }
 
-// 4. PROFİL SEKMESİ
 object ProfileTab : Tab {
     override val options: TabOptions
         @Composable
@@ -101,15 +113,21 @@ object ProfileTab : Tab {
 
     @Composable
     override fun Content() {
-        Navigator(MyProfileScreen()) { navigator ->
-            val bottomBarVisibility = LocalBottomBarVisibility.current
+        val bottomBarVisibility = LocalNavigationBarVisibility.current
+        val isWideScreen = LocalIsWideScreen.current
 
-            LaunchedEffect(navigator.lastItem) {
-                val currentScreen = navigator.lastItem
-                if (currentScreen is AccountDeactivatedScreen) {
-                    bottomBarVisibility.value = false
+        Navigator(MyProfileScreen()) { navigator ->
+            LaunchedEffect(navigator.lastItem, isWideScreen) {
+                if (isWideScreen) {
+                    val currentScreen = navigator.lastItem
+                    bottomBarVisibility.value = currentScreen !is AccountDeactivatedScreen
                 } else {
-                    bottomBarVisibility.value = navigator.items.size == 1
+                    val currentScreen = navigator.lastItem
+                    if (currentScreen is AccountDeactivatedScreen) {
+                        bottomBarVisibility.value = false
+                    } else {
+                        bottomBarVisibility.value = navigator.items.size == 1
+                    }
                 }
             }
             SlideTransition(navigator)

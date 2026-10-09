@@ -37,6 +37,7 @@ import org.beem.tastymap.ui.auth.logReg.LogRegScreenModel
 import org.beem.tastymap.ui.splash.SplashScreenModel
 import org.beem.tastymap.ui.auth.verification.email.EmailScreenModel
 import org.beem.tastymap.ui.auth.verification.loginPending.PendingScreenModel
+import org.beem.tastymap.ui.bottomnav.MainScreenModel
 import org.beem.tastymap.ui.common.NotificationBadgeManager
 import org.beem.tastymap.ui.post.create.CreatePostScreenModel
 import org.beem.tastymap.ui.post.detail.PostDetailScreenModel
@@ -84,7 +85,7 @@ val appModule = module {
     single { get<TastyDatabase>().postEntityQueries }
     single { get<TastyDatabase>().healthEntityQueries }
 
-    // Caches
+
     single { ProfileMemoryCache() }
     single { HealthMemoryCache() }
     single { SubscribeMemoryCache() }
@@ -164,7 +165,8 @@ val appModule = module {
             toggleBlockUseCase = get()
         )
     }
-    factory { MyProfileScreenModel(get(), get(), get()) }
+    factory { MyProfileScreenModel(get()) }
+    factory { MainScreenModel(get(),get()) }
     factory { EditProfileScreenModel(get()) }
     factory { SettingsScreenModel(get(), get(), get(), get()) }
     factory { ActiveDevicesScreenModel(get()) }

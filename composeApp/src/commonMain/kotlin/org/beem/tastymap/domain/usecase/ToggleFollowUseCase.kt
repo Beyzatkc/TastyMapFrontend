@@ -26,7 +26,11 @@ class ToggleFollowUseCase(
             is Action.ToggleFollow -> {
                 when (action.currentStatus) {
                     RelationStatus.FOLLOWING, RelationStatus.PENDING -> {
-                        subscribersRepository.unSubscribe(targetUserId = targetUserId, myUserId = myId)
+                        subscribersRepository.unSubscribe(
+                            targetUserId = targetUserId,
+                            myUserId = myId,
+                            previousStatus = action.currentStatus
+                        )
                     }
                     RelationStatus.NOT_FOLLOWING, RelationStatus.FOLLOW_BACK -> {
                         subscribersRepository.subscribe(targetUserId = targetUserId, myUserId = myId)

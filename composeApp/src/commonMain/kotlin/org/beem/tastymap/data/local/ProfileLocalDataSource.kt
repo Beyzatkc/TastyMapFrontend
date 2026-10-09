@@ -50,6 +50,14 @@ class ProfileLocalDataSource(
             .flowOn(dispatchers.io)
     }
 
+    fun getPrivacyStatusFlow(userId: Long): Flow<Boolean?> {
+        return queries.getPrivacyStatus(userId)
+            .asFlow()
+            .mapToOneOrNull(dispatchers.io)
+            .map { it == 1L }
+            .flowOn(dispatchers.io)
+    }
+
     suspend fun updatePartialProfile(
         userId: Long,
         username: String?,

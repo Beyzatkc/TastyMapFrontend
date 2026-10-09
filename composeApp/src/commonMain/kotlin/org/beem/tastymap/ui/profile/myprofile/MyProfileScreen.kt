@@ -51,6 +51,8 @@ import cafe.adriel.voyager.navigator.currentOrThrow
 import coil3.compose.AsyncImage
 import org.beem.tastymap.core.util.ToastManager
 import org.beem.tastymap.data.model.post.PostGridResponse
+import org.beem.tastymap.ui.bottomnav.LocalIsWideScreen
+import org.beem.tastymap.ui.common.NotificationBadgeManager
 import org.beem.tastymap.ui.components.TastyButton
 import org.beem.tastymap.ui.components.TastyPullToRefreshBox
 import org.beem.tastymap.ui.components.responsiveContentWidth
@@ -64,6 +66,7 @@ import org.beem.tastymap.ui.profile.subscribers.SubscribersListScreen
 import org.beem.tastymap.ui.theme.LocalCustomColors
 import org.jetbrains.compose.resources.getString
 import org.jetbrains.compose.resources.stringResource
+import org.koin.compose.koinInject
 import tastymap.composeapp.generated.resources.Res
 import tastymap.composeapp.generated.resources.active_devices_retry
 import tastymap.composeapp.generated.resources.active_devices_retry_cd
@@ -94,13 +97,15 @@ class MyProfileScreen : Screen {
 
         val profileState by profileScreenModel.myProfileState.collectAsState()
         val postState by postScreenModel.uiState.collectAsState()
-        val hasUnread by profileScreenModel.hasUnreadBadge.collectAsState()
+        val badgeManager = koinInject<NotificationBadgeManager>()
+        val hasUnread by badgeManager.hasUnreadBadge.collectAsState()
 
         val navigator = LocalNavigator.currentOrThrow
 
         var isPhotoZoomed by remember { mutableStateOf(false) }
         val customColors = LocalCustomColors.current
         var selectedTab by remember { mutableIntStateOf(0) }
+        val isWideScreen = LocalIsWideScreen.current
 
         val gridState = rememberLazyGridState()
 
@@ -163,6 +168,27 @@ class MyProfileScreen : Screen {
                                 )
                             },
                             actions = {
+                            if (!isWideScreen) {
+                                IconButton(onClick = { navigator.push(NotificationScreen()) }) {
+                                    BadgedBox(
+                                        badge = {
+                                            if (hasUnread) {
+                                                Badge(containerColor = Color.Red, modifier = Modifier.size(8.dp))
+                                            }
+                                        }
+                                    ) {
+                                        Icon(imageVector = Icons.Default.Notifications, contentDescription = null, tint = Color.White)
+                                    }
+                                }
+                                IconButton(onClick = {
+                                    navigator.push(SettingsScreen())
+                                }) {
+                                    Icon(imageVector = Icons.Default.Menu, contentDescription = null, tint = Color.White)
+                                }
+                            }
+                        },
+                            /*
+                            actions = {
                                 IconButton(onClick = { navigator.push(NotificationScreen()) }) {
                                     BadgedBox(
                                         badge = {
@@ -195,6 +221,9 @@ class MyProfileScreen : Screen {
                                     )
                                 }
                             },
+
+                             */
+
                             colors = TopAppBarDefaults.topAppBarColors(
                                 containerColor = customColors.darkHeaderColor
                             )

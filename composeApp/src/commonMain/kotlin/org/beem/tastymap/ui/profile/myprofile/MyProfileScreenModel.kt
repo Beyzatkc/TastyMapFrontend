@@ -2,7 +2,6 @@ package org.beem.tastymap.ui.profile.myprofile
 
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
-import io.github.vinceglb.filekit.core.PlatformFile
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -15,37 +14,12 @@ import org.beem.tastymap.ui.common.NotificationBadgeManager
 
 class MyProfileScreenModel(
     private val repo: MyProfileRepository,
-    private val socialNotificationsRepository: SocialNotificationsRepository,
-    private val badgeManager: NotificationBadgeManager
 ) : ScreenModel {
 
-    val hasUnreadBadge = badgeManager.hasUnreadBadge
     private val _myProfileState = MutableStateFlow(MyProfileUiState())
     val myProfileState = _myProfileState.asStateFlow()
 
     private var profileJob: Job? = null
-
-    init {
-        checkUnreadNotifications()
-    }
-
-    private fun checkUnreadNotifications() {
-        if (badgeManager.hasUnreadBadge.value) {
-            return
-        }
-
-        screenModelScope.launch {
-            when (val result = socialNotificationsRepository.checkHasUnread()) {
-                is ResultWrapper.Success -> {
-                    badgeManager.updateBadge(result.data)
-                }
-
-                is ResultWrapper.Error -> {
-                    println("NOTİFİCATİON " + result.message)
-                }
-            }
-        }
-    }
 
     fun getMyProfile() {
         profileJob?.cancel()
