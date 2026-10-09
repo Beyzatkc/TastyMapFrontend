@@ -509,7 +509,7 @@ data class PostDetailScreen(val postId: Long) : Screen {
 // --- SUB-COMPONENTS ---
 
 @Composable
-private fun PostHeader(
+fun PostHeader(
     post: PostResponse,
     onUserClick: () -> Unit
 ) {
@@ -590,7 +590,7 @@ private fun PostHeader(
 }
 
 @Composable
-private fun PostMediaPager(
+fun PostMediaPager(
     photoUrls: List<String>,
     onDoubleTapLike: () -> Unit
 ) {
@@ -679,7 +679,7 @@ private fun PostMediaPager(
 }
 
 @Composable
-private fun PostActionBar(
+fun PostActionBar(
     post: PostResponse,
     onLikeClick: () -> Unit,
     onLikeCountClick: () -> Unit,
@@ -738,7 +738,7 @@ private fun PostActionBar(
 }
 
 @Composable
-private fun PlaceInfoCard(post: PostResponse) {
+fun PlaceInfoCard(post: PostResponse) {
     val customColors = LocalCustomColors.current
 
     Surface(
@@ -814,8 +814,9 @@ private fun PlaceInfoCard(post: PostResponse) {
     }
 }
 
+
 @Composable
-private fun PostCaptionSection(post: PostResponse) {
+fun PostCaptionSection(post: PostResponse) {
     val customColors = LocalCustomColors.current
 
     Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)) {

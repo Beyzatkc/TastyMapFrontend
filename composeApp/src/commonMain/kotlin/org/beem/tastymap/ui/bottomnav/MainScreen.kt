@@ -12,12 +12,16 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.AddBox
 import androidx.compose.material.icons.filled.AddCircle
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.outlined.Add
+import androidx.compose.material.icons.outlined.AddBox
 import androidx.compose.material.icons.outlined.AddCircle
 import androidx.compose.material.icons.outlined.AddCircleOutline
 import androidx.compose.material.icons.outlined.LocationOn
@@ -159,7 +163,7 @@ private fun NavTabItem(tab: Tab, modifier: Modifier = Modifier) {
     val iconVector = when (tab) {
         MapTab -> if (isSelected) Icons.Default.LocationOn else Icons.Outlined.LocationOn
         SearchTab -> if (isSelected) Icons.Default.Search else Icons.Outlined.Search
-        UploadTab -> if (isSelected) Icons.Default.AddCircle else Icons.Outlined.AddCircleOutline
+        UploadTab -> if (isSelected) Icons.Default.Add else Icons.Outlined.Add
         ProfileTab -> if (isSelected) Icons.Default.Person else Icons.Outlined.Person
         else -> Icons.Default.LocationOn
     }
@@ -379,7 +383,7 @@ private fun RailTabItem(tab: Tab, isExpanded: Boolean, modifier: Modifier = Modi
     val iconVector = when (tab) {
         MapTab -> if (isSelected) Icons.Default.LocationOn else Icons.Outlined.LocationOn
         SearchTab -> if (isSelected) Icons.Default.Search else Icons.Outlined.Search
-        UploadTab -> if (isSelected) Icons.Default.AddCircle else Icons.Outlined.AddCircleOutline
+        UploadTab -> if (isSelected) Icons.Default.Add else Icons.Outlined.Add
         ProfileTab -> if (isSelected) Icons.Default.Person else Icons.Outlined.Person
         else -> Icons.Default.LocationOn
     }

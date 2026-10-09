@@ -6,6 +6,8 @@ import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.outlined.Add
+import androidx.compose.material.icons.outlined.AddBox
 import androidx.compose.material.icons.outlined.AddCircleOutline
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -78,7 +80,7 @@ object UploadTab : Tab {
         @Composable
         get() {
             val title = stringResource(Res.string.nav_upload)
-            val icon = rememberVectorPainter(Icons.Outlined.AddCircleOutline)
+            val icon = rememberVectorPainter(Icons.Outlined.Add)
             return remember { TabOptions(index = 2u, title = title, icon = icon) }
         }
 

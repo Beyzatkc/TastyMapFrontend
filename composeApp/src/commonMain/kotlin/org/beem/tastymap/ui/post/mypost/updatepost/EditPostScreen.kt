@@ -533,7 +533,7 @@ private fun ReadOnlyPhotosSection(
                 AsyncImage(
                     model = photos[page],
                     contentDescription = null,
-                    contentScale = ContentScale.Crop,
+                    contentScale = ContentScale.Fit,
                     modifier = Modifier.fillMaxSize()
                 )
             }

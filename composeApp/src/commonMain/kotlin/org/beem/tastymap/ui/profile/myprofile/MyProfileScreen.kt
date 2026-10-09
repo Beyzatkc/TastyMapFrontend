@@ -57,7 +57,10 @@ import org.beem.tastymap.ui.components.TastyButton
 import org.beem.tastymap.ui.components.TastyPullToRefreshBox
 import org.beem.tastymap.ui.components.responsiveContentWidth
 import org.beem.tastymap.ui.post.detail.PostDetailScreen
+import org.beem.tastymap.ui.post.detail.PostDetailScreenModel
+import org.beem.tastymap.ui.post.detail.WebPostDetailDialog
 import org.beem.tastymap.ui.post.mypost.MyPostScreenModel
+import org.beem.tastymap.ui.post.postlike.PostLikesScreenModel
 import org.beem.tastymap.ui.profile.myprofile.editprofile.EditProfileScreen
 import org.beem.tastymap.ui.profile.myprofile.notification.NotificationScreen
 import org.beem.tastymap.ui.profile.myprofile.settings.SettingsScreen
@@ -94,6 +97,10 @@ class MyProfileScreen : Screen {
     override fun Content() {
         val profileScreenModel = koinScreenModel<MyProfileScreenModel>()
         val postScreenModel = koinScreenModel<MyPostScreenModel>()
+
+        val postDetailScreenModel = koinScreenModel<PostDetailScreenModel>()
+        val postLikesScreenModel = koinScreenModel<PostLikesScreenModel>()
+        var selectedWebPostId by remember { mutableStateOf<Long?>(null) }
 
         val profileState by profileScreenModel.myProfileState.collectAsState()
         val postState by postScreenModel.uiState.collectAsState()
@@ -626,11 +633,12 @@ class MyProfileScreen : Screen {
                                                                         PostGridItem(
                                                                             post = post,
                                                                             onClick = {
-                                                                                navigator.push(
-                                                                                    PostDetailScreen(
-                                                                                        post.postId
-                                                                                    )
-                                                                                )
+                                                                                // EKLENEN KISIM 2: Responsive Yönlendirme
+                                                                                if (isWideScreen) {
+                                                                                    selectedWebPostId = post.postId
+                                                                                } else {
+                                                                                    navigator.push(PostDetailScreen(post.postId))
+                                                                                }
                                                                             }
                                                                         )
                                                                     }
@@ -645,6 +653,7 @@ class MyProfileScreen : Screen {
                                                                 }
                                                             }
                                                         }
+                                                        Spacer(modifier = Modifier.height(40.dp))
                                                     }
                                                 }
                                             }
@@ -733,6 +742,14 @@ class MyProfileScreen : Screen {
                     }
                 }
             }
+        }
+        if (selectedWebPostId != null && isWideScreen) {
+            WebPostDetailDialog(
+                postId = selectedWebPostId!!,
+                screenModel = postDetailScreenModel, // Üstte oluşturduğumuz model
+                likesScreenModel = postLikesScreenModel,
+                onDismiss = { selectedWebPostId = null } // Kapanırken state'i temizle
+            )
         }
         // BÜYÜTÜLMÜŞ FOTOĞRAF OVERLAY
         if (isPhotoZoomed && !profileState.profile?.profilePhoto.isNullOrBlank()) {

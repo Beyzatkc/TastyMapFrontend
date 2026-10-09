@@ -53,13 +53,17 @@ import org.beem.tastymap.core.util.ToastManager
 import org.beem.tastymap.data.model.post.PostGridResponse
 import org.beem.tastymap.domain.model.RelationStatus
 import org.beem.tastymap.ui.animations.shimmerEffect
+import org.beem.tastymap.ui.bottomnav.LocalIsWideScreen
 import org.beem.tastymap.ui.components.DialogConfig
 import org.beem.tastymap.ui.components.TastyButton
 import org.beem.tastymap.ui.components.TastyConfirmDialog
 import org.beem.tastymap.ui.components.TastyPullToRefreshBox
 import org.beem.tastymap.ui.components.responsiveContentWidth
 import org.beem.tastymap.ui.post.detail.PostDetailScreen
+import org.beem.tastymap.ui.post.detail.PostDetailScreenModel
+import org.beem.tastymap.ui.post.detail.WebPostDetailDialog
 import org.beem.tastymap.ui.post.otherpost.PostScreenModel
+import org.beem.tastymap.ui.post.postlike.PostLikesScreenModel
 import org.beem.tastymap.ui.profile.subscribers.SubscriberListType
 import org.beem.tastymap.ui.profile.subscribers.SubscribersListScreen
 import org.beem.tastymap.ui.theme.LocalCustomColors
@@ -118,6 +122,10 @@ class ProfileScreen(private val userId: Long) : Screen {
 
         val postState by postScreenModel.uiState.collectAsState()
         val gridState = rememberLazyGridState()
+        val postDetailScreenModel = koinScreenModel<PostDetailScreenModel>()
+        val isWideScreen = LocalIsWideScreen.current
+        val postLikesScreenModel = koinScreenModel<PostLikesScreenModel>()
+        var selectedWebPostId by remember { mutableStateOf<Long?>(null) }
 
         var showBottomSheet by remember { mutableStateOf(false) }
         var activeDialog by remember { mutableStateOf<DialogConfig?>(null) }
@@ -737,7 +745,6 @@ class ProfileScreen(private val userId: Long) : Screen {
                                                 }
                                             }
                                         } else {
-                                            // POST LİSTESİ (Max 600dp sınırlandırması için chunked ile 600dp içinde sarmalandı)
                                             item(span = { GridItemSpan(maxLineSpan) }) {
                                                 Box(
                                                     modifier = Modifier.fillMaxWidth(),
@@ -767,11 +774,16 @@ class ProfileScreen(private val userId: Long) : Screen {
                                                                             PostGridItem(
                                                                                 post = post,
                                                                                 onClick = {
-                                                                                    navigator.push(
-                                                                                        PostDetailScreen(
+                                                                                    if (isWideScreen) {
+                                                                                        selectedWebPostId =
                                                                                             post.postId
+                                                                                    } else {
+                                                                                        navigator.push(
+                                                                                            PostDetailScreen(
+                                                                                                post.postId
+                                                                                            )
                                                                                         )
-                                                                                    )
+                                                                                    }
                                                                                 }
                                                                             )
                                                                         }
@@ -785,6 +797,7 @@ class ProfileScreen(private val userId: Long) : Screen {
                                                                     }
                                                                 }
                                                             }
+                                                            Spacer(modifier = Modifier.height(40.dp))
                                                         }
                                                     }
                                                 }
@@ -922,6 +935,14 @@ class ProfileScreen(private val userId: Long) : Screen {
             TastyConfirmDialog(
                 config = config,
                 onDismiss = { activeDialog = null }
+            )
+        }
+        if (selectedWebPostId != null && isWideScreen) {
+            WebPostDetailDialog(
+                postId = selectedWebPostId!!,
+                screenModel = postDetailScreenModel,
+                likesScreenModel = postLikesScreenModel,
+                onDismiss = { selectedWebPostId = null }
             )
         }
         if (isPhotoZoomed && !state.profile?.profilePhoto.isNullOrBlank()) {
