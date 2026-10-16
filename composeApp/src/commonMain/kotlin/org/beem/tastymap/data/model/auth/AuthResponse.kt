@@ -5,7 +5,7 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class RefreshTokenResponseDTO(
     val accessToken: String,
-    val refreshToken: String,
+    val refreshtoken: String,
     val message: String,
 )
 @Serializable
@@ -33,6 +33,11 @@ data class NotificationResponse(
 data class CommonRequest(
     val deviceId: String,
     val email: String
+)
+@Serializable
+data class PasswordRequest(
+    val deviceId: String,
+    val identifier: String
 )
 @Serializable
 data class ResetPassword(

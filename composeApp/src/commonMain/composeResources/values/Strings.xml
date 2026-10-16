@@ -1,0 +1,581 @@
+<resources>
+    <!-- Other Profile Screen -->
+    <string name="profile_default_title">Gurme Profili</string>
+    <string name="profile_back_cd">Geri</string>
+    <string name="profile_photo_cd">Profil Fotoğrafı</string>
+    <string name="profile_default_photo_cd">Varsayılan Profil</string>
+    <string name="profile_default_name">Kullanıcı</string>
+    <string name="profile_default_bio">Henüz bir lezzet biyografisi eklenmedi.</string>
+    <string name="profile_subscribe">Takip Et</string>
+    <string name="profile_subscribed">Takip</string>
+    <string name="profile_pending">İstek Gönderildi</string>
+    <string name="profile_follow_back">Sen de Takip Et</string>
+    <string name="profile_share">Paylaş</string>
+    <string name="profile_blocked_message">Bu profilin içeriği görüntülenemiyor.</string>
+    <string name="profile_posts_empty">Henüz gönderi yok</string>
+    <string name="profile_map_empty">Haritada yer bulunamadı</string>
+
+    <!-- Metrics -->
+    <string name="profile_metric_posts">Paylaşım</string>
+    <string name="profile_metric_subscribers">Abone</string>
+    <string name="profile_metric_following">Takip</string>
+
+    <!-- Tabs & Content Placeholder -->
+    <string name="profile_tab_posts">Paylaşımlar</string>
+    <string name="profile_tab_taste_map">Lezzet Haritası</string>
+    <string name="profile_posts_empty_placeholder">Gurmenin Son İncelemeleri ve Fotoğrafları</string>
+    <string name="profile_map_empty_placeholder">Gurmenin İşaretlediği Mekanlar ve İğneler (Map View)</string>
+
+    <!-- My Profile -->
+    <string name="my_profile_settings_cd">Ayarlar</string>
+    <string name="my_profile_notification_cd">Bildirimler</string>
+    <string name="my_profile_photo_cd">Profil Fotoğrafı</string>
+    <string name="my_profile_default_photo_cd">Varsayılan Profil</string>
+    <string name="my_profile_default_name">Benim Adım</string>
+    <string name="my_profile_default_bio">Henüz bir biyografi eklemediniz.</string>
+    <string name="my_profile_edit_button">Profili Düzenle</string>
+
+    <!-- Metrics -->
+    <string name="my_profile_metric_posts">Paylaşımım</string>
+    <string name="my_profile_metric_subscribers">Takipçim</string>
+    <string name="my_profile_metric_following">Takibim</string>
+
+    <!-- Tabs & Empty Placeholders -->
+    <string name="my_profile_tab_posts">Paylaşımlarım</string>
+    <string name="my_profile_tab_map">Haritam</string>
+    <string name="my_profile_posts_empty">Paylaştığınız tüm lezzet incelemeleri burada listelenecek.</string>
+    <string name="my_profile_map_empty">Kaydettiğiniz ve işaretlediğiniz kişisel lezzet haritanız.</string>
+
+    <!-- Settings Screen -->
+    <string name="settings_title">Ayarlar ve Hareketler</string>
+    <string name="settings_back_cd">Geri</string>
+
+    <!-- Section 1: Account & Security -->
+    <string name="settings_section_account_security">Hesabım &amp; Güvenlik</string>
+    <string name="settings_change_password">Şifre Değiştir</string>
+    <string name="settings_active_devices">Aktif Cihazlar</string>
+    <string name="settings_private_account">Gizli Hesap</string>
+    <string name="settings_private_account_sub">Hesabınız gizli olduğunda sadece takipçileriniz içeriklerinizi görebilir.</string>
+
+    <!-- Section 2: Nutrition & Allergens -->
+    <string name="settings_section_nutrition">Beslenme &amp; Alerjenler</string>
+    <string name="settings_nutrition_preferences">Beslenme &amp; Alerjen Tercihleri</string>
+    <string name="settings_nutrition_preferences_sub">AI önerileri, diyabet, alerji ve beslenme kısıtlamalarınızı yönetin.</string>
+
+    <!-- Section 3: App Preferences -->
+    <string name="settings_section_app_preferences">Uygulama Tercihleri</string>
+    <string name="settings_notifications">Bildirim Ayarları</string>
+    <string name="settings_dark_mode">Karanlık Mod</string>
+    <string name="settings_language">Dil Seçimi</string>
+    <string name="settings_language_default">Türkçe</string>
+
+    <!-- Section 4: Support & About -->
+    <string name="settings_section_support_about">Destek &amp; Hakkında</string>
+    <string name="settings_privacy_policy">Gizlilik Politikası &amp; Kullanım Koşulları</string>
+    <string name="settings_contact_us">Bize Ulaşın / Destek</string>
+    <string name="settings_app_version">Uygulama Sürümü</string>
+    <string name="settings_app_version_code">v1.0.0</string>
+
+    <!-- Section 5: Session & Privacy -->
+    <string name="settings_section_session_privacy">Oturum &amp; Gizlilik</string>
+    <string name="settings_logout">Çıkış Yap</string>
+    <string name="settings_delete_account">Hesabımı Sil</string>
+
+    <!-- Logout Dialog -->
+    <string name="settings_logout_dialog_title">Çıkış Yapılsın mı?</string>
+    <string name="settings_logout_dialog_loading_title">Lütfen Bekleyin</string>
+    <string name="settings_logout_dialog_loading_text">Çıkış yapılıyor...</string>
+    <string name="settings_logout_dialog_message">Hesabınızdan çıkış yapmak istediğinize emin misiniz?</string>
+    <string name="settings_cancel">Vazgeç</string>
+
+    <!-- Edit Health Screen -->
+    <string name="edit_health_title">Beslenme &amp; Alerjenler</string>
+    <string name="edit_health_back_cd">Geri</string>
+    <string name="edit_health_save">Kaydet</string>
+    <string name="edit_health_success_toast">Beslenme tercihleriniz güncellendi.</string>
+
+    <!-- Section 1: Health Status -->
+    <string name="edit_health_section_health_status">Sağlık Durumu</string>
+    <string name="edit_health_diabetes_title">Diyabet / Şeker Hassasiyeti</string>
+    <string name="edit_health_diabetes_desc">Yapay zeka tatlı ve şeker içeren önerileri profilinize göre filtrelesin.</string>
+
+    <!-- Section 2: Diet Preference -->
+    <string name="edit_health_section_diet">Beslenme Düzeni</string>
+    <string name="edit_health_diet_normal_title">Standart Beslenme</string>
+    <string name="edit_health_diet_normal_desc">Herhangi bir diyet kısıtlaması uygulamıyorum.</string>
+    <string name="edit_health_diet_vegetarian_title">Vejetaryen</string>
+    <string name="edit_health_diet_vegetarian_desc">Et ve balık ürünleri tüketmiyorum.</string>
+    <string name="edit_health_diet_vegan_title">Vegan</string>
+    <string name="edit_health_diet_vegan_desc">Hayvansal hiçbir gıda tüketmiyorum.</string>
+
+    <!-- Section 3: Allergens -->
+    <string name="edit_health_section_allergens">Alerjenler &amp; Hassasiyetler</string>
+    <string name="edit_health_allergens_desc">Tüketmekten kaçındığınız veya alerjiniz olan gıdaları seçin:</string>
+
+    <!-- Change Password Bottom Sheet -->
+    <string name="change_password_title">Şifre Değiştir</string>
+    <string name="change_password_current">Mevcut Şifre</string>
+    <string name="change_password_new">Yeni Şifre</string>
+    <string name="change_password_new_again">Yeni Şifre (Tekrar)</string>
+    <string name="change_password_submit_btn">Şifreyi Güncelle</string>
+
+    <!-- Active Devices Screen -->
+    <string name="active_devices_title">Aktif Cihazlar</string>
+    <string name="active_devices_back_cd">Geri</string>
+    <string name="active_devices_retry">Yeniden Dene</string>
+    <string name="active_devices_retry_cd">Yeniden Dene</string>
+
+    <!-- Edit Profile Screen -->
+    <string name="edit_profile_title">Profili Düzenle</string>
+    <string name="edit_profile_back_cd">Geri</string>
+    <string name="edit_profile_save">Kaydet</string>
+    <string name="edit_profile_selected_photo_cd">Seçilen Profil Fotoğrafı</string>
+    <string name="edit_profile_photo_cd">Profil Fotoğrafı</string>
+    <string name="edit_profile_change_photo_cd">Fotoğraf Değiştir</string>
+    <string name="edit_profile_section_personal">Kişisel Bilgiler</string>
+    <string name="edit_profile_username">Kullanıcı Adı</string>
+    <string name="edit_profile_name">Ad</string>
+    <string name="edit_profile_surname">Soyad</string>
+    <string name="edit_profile_section_about">Hakkımda</string>
+    <string name="edit_profile_biography">Biyografi</string>
+    <string name="edit_profile_info_note">Kullanıcı adınız ve biyografiniz diğer TastyMap gurmeleri tarafından görülebilir.</string>
+
+    <!-- OnBoarding Screen -->
+    <string name="onboarding_welcome">HOŞ GELDİNİZ</string>
+    <string name="onboarding_tagline">Kişisel lezzet asistanınız</string>
+    <string name="onboarding_subtitle">Yapay zekamız size en doğru restoran ve beslenme önerilerini sunabilmek için sizi tanımak istiyor.</string>
+
+    <!-- Feature 1: Smart -->
+    <string name="onboarding_feature_smart_title">Akıllı</string>
+    <string name="onboarding_feature_smart_desc">Zevklerinizi\nöğrenir</string>
+
+    <!-- Feature 2: Healthy -->
+    <string name="onboarding_feature_healthy_title">Sağlıklı</string>
+    <string name="onboarding_feature_healthy_desc">Size özel\nfiltreler</string>
+
+    <!-- Feature 3: Original -->
+    <string name="onboarding_feature_original_title">Özgün</string>
+    <string name="onboarding_feature_original_desc">Restoran\nönerileri</string>
+
+    <!-- Actions -->
+    <string name="onboarding_start_btn">Başlayalım</string>
+    <string name="onboarding_skip_btn">Şimdilik Atla</string>
+
+    <!-- Health Wizard Screen -->
+    <string name="health_wizard_back_cd">Geri Dön</string>
+    <string name="health_wizard_step_indicator">Adım %1$d / %2$d</string>
+
+    <!-- Health Wizard Summary Step -->
+    <string name="summary_success_badge_cd">Başarı Rozeti</string>
+    <string name="summary_title">Sağlık Profiliniz Hazır</string>
+    <string name="summary_subtitle">Tercihlerinizi analiz ettik.\nArtık size özel restoran ve menü önerileri sunabiliriz.</string>
+
+    <!-- Card 1: Diabetes -->
+    <string name="summary_diabetes_title">Diyabet Durumu</string>
+    <string name="summary_diabetes_yes">Diyabetim Var</string>
+    <string name="summary_diabetes_no">Diyabetim Yok</string>
+
+    <!-- Card 2: Diet Preference -->
+    <string name="summary_diet_title">Beslenme Tercihi</string>
+    <string name="summary_diet_vegan">Vegan</string>
+    <string name="summary_diet_vegetarian">Vejetaryen</string>
+    <string name="summary_diet_normal">Genel / Kısıtlamasız</string>
+    <string name="summary_diet_not_specified">Belirtilmedi</string>
+
+    <!-- Card 3: Allergies -->
+    <string name="summary_allergies_title">Alerjiler</string>
+    <string name="summary_allergies_none">Alerjim Yok</string>
+
+    <!-- Footer & Actions -->
+    <string name="summary_footer_note">Bu bilgileri profilinizden istediğiniz zaman değiştirebilirsiniz.</string>
+    <string name="summary_start_btn">Başlayalım</string>
+    <string name="summary_edit_btn">Bilgileri Düzenle</string>
+
+    <!-- Eat Type Step -->
+    <string name="eat_type_title">Beslenme tercihiniz nedir?</string>
+    <string name="eat_type_description">Size tamamen özel bir lezzet haritası sunabilmemiz için beslenme alışkanlığınızı belirtin.</string>
+    <string name="eat_type_vegetarian">Vejetaryen</string>
+    <string name="eat_type_vegan">Vegan</string>
+    <string name="eat_type_normal">Genel / Kısıtlamasız</string>
+
+    <!-- Diabetes Step -->
+    <string name="diabetes_step_title">Diyabet Durumunuz Nedir?</string>
+    <string name="diabetes_step_description">Sağlığınıza ve beslenme düzeninize en uygun lezzetleri filtrelememize yardımcı olun.</string>
+    <string name="diabetes_step_option_yes">Evet, diyabetim var</string>
+    <string name="diabetes_step_option_no">Hayır, diyabetim yok</string>
+
+    <string name="allergies_step_title">Alerjiniz var mı?</string>
+    <string name="allergies_step_description">Sağlığınızı önemsiyoruz. Size en güvenli restoran ve menü önerilerini sunabilmemiz için alerjiniz olan gıdaları seçin.</string>
+
+    <!-- Base Step Container -->
+    <string name="base_step_next">Sonraki</string>
+    <string name="base_step_back">Geri</string>
+
+    <!-- Password Strength Indicator -->
+    <string name="password_strength_label">Şifre</string>
+    <string name="password_strength_weak">Zayıf</string>
+    <string name="password_strength_medium">Orta</string>
+    <string name="password_strength_strong">Güçlü</string>
+
+    <!-- Password Requirements -->
+    <string name="password_req_min_length">8+ karakter</string>
+    <string name="password_req_uppercase">Büyük harf</string>
+    <string name="password_req_digit">Rakam</string>
+    <string name="password_req_special_char">Özel karakter</string>
+
+    <!-- Back Page Component -->
+    <string name="back_page_content_description">Geri</string>
+
+    <!-- Auth Footer -->
+    <string name="auth_footer_copyright">© 2026 TastyMap</string>
+    <string name="auth_footer_privacy">Gizlilik</string>
+    <string name="auth_footer_terms">Kullanım Koşulları</string>
+    <string name="auth_footer_contact">İletişim</string>
+    <string name="auth_footer_help">Yardım</string>
+
+    <!-- Pending Screen -->
+    <string name="pending_security_title">Güvenlik Doğrulaması</string>
+    <string name="pending_security_desc">Hesabınızın güvenliğini sağlamak için bu giriş denemesi ek doğrulama gerektirmektedir.</string>
+    <string name="pending_email_sent_title">Doğrulama e-postası gönderildi</string>
+    <string name="pending_email_sent_desc">Kayıtlı e-posta adresinize doğrulama bağlantısı gönderildi. Onay işlemi tamamlandığında bu ekran otomatik olarak güncellenecektir.</string>
+    <string name="pending_waiting">Doğrulama bekleniyor...</string>
+    <string name="pending_warning_note">Lütfen bu ekranı kapatmayın. Onay işlemi tamamlandığında giriş işleminiz otomatik olarak devam edecektir.</string>
+    <string name="pending_resend_email">E-posta gelmedi mi? Tekrar gönder</string>
+    <string name="pending_resend_timer">Tekrar gönder: %1$ds</string>
+
+    <!-- Verify Screen -->
+    <string name="verify_header">Hesap Doğrulama</string>
+    <string name="verify_loading_title">Hesabınız Doğrulanıyor</string>
+    <string name="verify_loading_subtitle">Lütfen bekleyiniz.</string>
+    <string name="verify_error_title">Bir Sorun Oluştu</string>
+    <string name="verify_error_default">Beklenmedik bir hata oluştu. Lütfen tekrar deneyiniz.</string>
+
+    <!-- Verification Success Screen -->
+    <string name="verification_success_icon_cd">Başarılı</string>
+    <string name="verification_success_title">E-posta Doğrulandı!</string>
+    <string name="verification_success_desc">Hesabınız başarıyla doğrulandı. Bu sekmeyi kapatıp uygulamadaki giriş ekranına dönerek oturum açabilirsiniz.</string>
+
+    <!-- Email Verification Screen -->
+    <string name="email_verify_header">Doğrulama</string>
+    <string name="email_verify_title">E-postanı Doğrula</string>
+    <string name="email_verify_desc">%1$s adresine bir doğrulama bağlantısı gönderdik. Lütfen e-posta kutunu kontrol et.</string>
+    <string name="email_verify_back_to_login">Giriş Ekranına Dön</string>
+
+    <!-- Security Card Info -->
+    <string name="email_verify_security_title">Güvenlik uyarısı:\n</string>
+    <string name="email_verify_security_desc">Gönderilen doğrulama bağlantısının geçerlilik süresi 10 dakikadır.</string>
+    <string name="email_verify_spam_note">E-posta kutunuzda göremiyorsanız Spam klasörünü kontrol etmeyi unutmayın.</string>
+
+    <!-- Resend Section -->
+    <string name="email_verify_resend_prompt">E-posta gelmedi mi? Tekrar gönder</string>
+    <string name="email_verify_resend_timer">Tekrar gönder: %1$ds</string>
+
+    <!-- LogReg Screen - Header & Tabs -->
+    <string name="auth_app_title">Tasty Map</string>
+    <string name="auth_app_subtitle">Lezzeti Keşfet</string>
+    <string name="auth_tab_login">Giriş</string>
+    <string name="auth_tab_register">Kayıt</string>
+
+    <!-- Login Form -->
+    <string name="login_field_username">Kullanıcı adı</string>
+    <string name="login_field_password">Şifre</string>
+    <string name="login_btn_submit">Giriş Yap</string>
+    <string name="login_btn_forgot_password">Şifreni mi unuttun</string>
+    <string name="login_email_unverified">E-postanız (%1$s) henüz doğrulanmamış.</string>
+
+    <!-- Register Form -->
+    <string name="register_field_name">Ad</string>
+    <string name="register_field_surname">Soyad</string>
+    <string name="register_field_username">Kullanıcı Adı</string>
+    <string name="register_field_email">Email</string>
+    <string name="register_field_password">Şifre</string>
+    <string name="register_btn_next">Devam Et</string>
+    <string name="register_btn_submit">Kayıt Ol</string>
+    <string name="register_btn_back">Geri Dön</string>
+
+    <!-- Common Resend Prompt -->
+    <string name="auth_resend_prompt">E-posta gelmedi mi? Tekrar gönder</string>
+    <string name="auth_resend_timer">Tekrar gönder: %1$ds</string>
+
+    <!-- Reset Screen -->
+    <string name="reset_header">Şifre Sıfırlama</string>
+    <string name="reset_title">Şifrenizi mi Unuttunuz?</string>
+    <string name="reset_field_new_password">Yeni Şifre</string>
+    <string name="reset_field_confirm_password">Yeni Şifre tekrar</string>
+    <string name="reset_btn_submit">Şifreyi değiştir</string>
+    <string name="reset_btn_back_to_login">Giriş ekranına geri dön</string>
+    <string name="reset_info_note">Şifrenizi sıfırladıktan sonra hesabınıza giriş yapabilirsiniz.</string>
+
+    <!-- Forgot Screen -->
+    <string name="forgot_header">Hesabını Bul</string>
+    <string name="forgot_title">Şifrenizi mi Unuttunuz?</string>
+    <string name="forgot_subtitle">Hesabınıza bağlı e-posta adresinizi veya kullanıcı adınızı girin. Size şifre sıfırlama bağlantısı göndereceğiz.</string>
+    <string name="forgot_field_email_or_username">Email veya Kullanıcı Adı</string>
+    <string name="forgot_btn_submit">Şifreyi Sıfırla</string>
+    <string name="forgot_btn_back_to_login">Giriş ekranına geri dön</string>
+
+    <!-- Info Card -->
+    <string name="forgot_info_registered_only">Şifre sıfırlama bağlantısı yalnızca kayıtlı e-posta adreslerine gönderilir.</string>
+    <string name="forgot_info_validity">Gönderilen doğrulama bağlantısının geçerlilik süresi 10 dakikadır.</string>
+    <string name="forgot_info_spam_check">E-posta kutunuzda göremiyorsanız Spam klasörünü kontrol etmeyi unutmayın.</string>
+
+    <string name="change_success_icon_cd">Başarılı</string>
+    <string name="change_success_title">Şifre Değiştirildi!</string>
+    <string name="change_success_desc">Şifreniz başarıyla değiştirildi. Bu sekmeyi kapatıp uygulamadaki giriş ekranına dönerek oturum açabilirsiniz.</string>
+
+    <!-- Email Validation Messages -->
+    <string name="validation_email_empty">Email boş olamaz</string>
+    <string name="validation_email_invalid">Geçerli bir email girin</string>
+
+    <!-- Password Validation Messages -->
+    <string name="validation_password_min_length">Parola en az 8 karakter olmalı</string>
+    <string name="validation_password_uppercase">En az bir büyük harf içermeli</string>
+    <string name="validation_password_lowercase">En az bir küçük harf içermeli</string>
+    <string name="validation_password_digit">En az bir rakam içermeli</string>
+    <string name="validation_password_special_char">En az bir özel karakter içermeli (@, #, !, vb.)</string>
+
+    <!-- Name Validation Messages -->
+    <string name="validation_name_empty">Ad boş olamaz</string>
+    <string name="validation_name_length">Ad 2–50 karakter arasında olmalıdır</string>
+    <string name="validation_name_invalid">Ad sadece harf ve boşluk içerebilir</string>
+
+    <!-- Surname Validation Messages -->
+    <string name="validation_surname_empty">Soyad boş olamaz</string>
+    <string name="validation_surname_length">Soyad 2–50 karakter arasında olmalıdır</string>
+    <string name="validation_surname_invalid">Soyad sadece harf içerebilir</string>
+
+    <!-- Username Validation Messages -->
+    <string name="validation_username_empty">Kullanıcı adı boş olamaz</string>
+    <string name="validation_username_length">Kullanıcı adı 3–20 karakter arasında olmalıdır</string>
+    <string name="validation_username_invalid">Kullanıcı adı sadece harf, rakam, nokta ve alt çizgi içerebilir</string>
+
+    <!-- Splash Screen -->
+    <string name="splash_app_logo_cd">Uygulama Logosu</string>
+
+    <!-- Allergies -->
+    <string name="allergy_dairy">Süt ve Süt Ürünleri</string>
+    <string name="allergy_gluten">Gluten</string>
+    <string name="allergy_peanut">Yer Fıstığı</string>
+    <string name="allergy_egg">Yumurta</string>
+    <string name="allergy_fish">Balık</string>
+    <string name="allergy_other">Diğer</string>
+    <string name="allergy_none">Alerjim yok</string>
+
+    <!-- Error Messages -->
+    <string name="health_error_load_failed">Mevcut bilgiler yüklenemedi: %1$s</string>
+    <string name="health_error_generic">Bir hata oluştu, lütfen tekrar deneyin. %1$s</string>
+
+    <!-- Auth Events -->
+    <string name="auth_session_expired">Oturum süreniz doldu veya şifre değiştirildi, lütfen tekrar giriş yapın.</string>
+    <string name="auth_password_changed">Şifreniz değiştirildiği için oturumunuz kapatıldı.</string>
+    <string name="auth_logged_out">Başarıyla çıkış yapıldı.</string>
+
+    <!-- Profile & Edit Profile Messages -->
+    <string name="edit_profile_success">Profil başarıyla güncellendi.</string>
+    <string name="edit_profile_photo_upload_error">Fotoğraf yüklenirken bir hata oluştu.</string>
+
+    <!-- Change Password Validation Messages -->
+    <string name="change_password_error_old_empty">Mevcut şifrenizi giriniz.</string>
+    <string name="change_password_error_again_empty">Lütfen yeni şifrenizi tekrar giriniz.</string>
+    <string name="change_password_error_mismatch">Yeni şifreler birbiriyle eşleşmiyor.</string>
+    <string name="change_password_success">Şifreniz başarıyla değiştirildi.</string>
+
+    <string name="active_devices_last_seen">Giriş yapıldı: %1$s</string>
+
+    <string name="pending_email_sent">E-posta gönderildi.</string>
+    <string name="pending_login_approved">Giriş onaylandı.</string>
+    <string name="pending_login_rejected">Giriş isteği reddedildi.</string>
+    <string name="pending_login_failed">Giriş başarısız.</string>
+
+    <string name="verify_email_sent">Emailinize doğrulama bağlantısı gönderilmiştir.</string>
+
+    <string name="profile_incoming_request_message">@%1$s size bir takip isteği gönderdi.</string>
+    <string name="profile_action_accept">Onayla</string>
+    <string name="profile_action_reject">Sil</string>
+    <string name="profile_action_remove_follower">Takipçiden çıkar</string>
+    <string name="profile_action_unblock">Engeli kaldır</string>
+    <string name="profile_action_block">Engelle</string>
+    <string name="profile_action_report">Şikayet et</string>
+
+    <string name="profile_connections_title">Bağlantılar</string>
+    <string name="profile_no_results">Kullanıcı bulunamadı.</string>
+    <string name="profile_empty_list">Henüz kimse yok.</string>
+    <string name="common_search_placeholder">Ara...</string>
+    <string name="settings_blocked_users">Engellenenler</string>
+
+    <!-- Notification Screen -->
+    <string name="notification_title">Bildirimler</string>
+    <string name="notification_empty">Henüz hiç bildirimin yok.</string>
+    <string name="notification_retry">Tekrar Dene</string>
+    <string name="notification_action_rejected">Reddedildi</string>
+    <string name="notification_msg_follow_request">seni takip etmek istiyor.</string>
+    <string name="notification_msg_follow_accepted">takip isteğini kabul etti.</string>
+    <string name="notification_msg_new_follower">seni takip etmeye başladı.</string>
+    <string name="notification_msg_post_like">bir gönderini beğendi.</string>
+    <string name="notification_msg_comment">gönderine yorum yaptı.</string>
+
+    <string name="alert_cancel">İptal</string>
+
+    <!-- Block Dialog -->
+    <string name="dialog_block_title">Engelle</string>
+    <string name="dialog_block_message">@%1$s kullanıcısını engellemek istediğinize emin misiniz? Aranızdaki tüm takip bağları koparılacaktır.</string>
+
+    <!-- Unblock Dialog -->
+    <string name="dialog_unblock_title">Engeli Kaldır</string>
+    <string name="dialog_unblock_message">@%1$s kullanıcısının engelini kaldırmak istediğinize emin misiniz?</string>
+
+    <!-- Unfollow Dialog -->
+    <string name="dialog_unfollow_title">Takipten Çık</string>
+    <string name="dialog_unfollow_message">@%1$s kullanıcısını takipten çıkmak istediğinize emin misiniz?</string>
+    <string name="profile_action_unfollow">Takipten Çık</string>
+
+    <!-- Remove Follower Dialog -->
+    <string name="dialog_remove_follower_title">Takipçiyi Çıkar</string>
+    <string name="dialog_remove_follower_message">@%1$s takipçilerinizden çıkarılsın mı?</string>
+    <string name="profile_user_unavailable">Kullanıcıya Erişilemiyor</string>
+
+    <string name="nav_map">Harita</string>
+    <string name="nav_search">Arama</string>
+    <string name="nav_upload">Yükle</string>
+    <string name="nav_profile">Profil</string>
+
+    <string name="search_recent_title">Yakın Zamanda Arananlar</string>
+    <string name="search_remove_from_history">Geçmişten sil</string>
+
+
+    <string name="privacy_policy_title">Gizlilik &amp; Kullanım Koşulları</string>
+    <string name="privacy_policy_last_updated">Son Güncelleme: 14 Eylül 2026</string>
+
+    <!-- Bölüm 1: Genel Bakış ve Kabul -->
+    <string name="privacy_policy_sec1_title">1. Genel Bakış ve Hizmet Şartları</string>
+    <string name="privacy_policy_sec1_body">TastyMap uygulamasını kullanarak bu Gizlilik Politikası ve Kullanım Koşullarını kabul etmiş sayılırsınız. Hizmetlerimiz, kullanıcılarımızın lezzet noktalarını keşfetmesini ve kişiselleştirilmiş bir yemek deneyimi yaşamasını sağlamak amacıyla sunulmaktadır.</string>
+
+    <!-- Bölüm 2: Veri Toplama ve Özel Nitelikli Veriler -->
+    <string name="privacy_policy_sec2_title">2. Toplanan Veriler ve Alerjen Bilgileri</string>
+    <string name="privacy_policy_sec2_body">Hesap bilgileriniz (ad, e-posta), konum verileriniz, uygulama içi tercihleriniz ile belirttiğiniz beslenme ve alerjen tercihleri işlenmektedir. Alerjen ve sağlık tercihleri KVKK/GDPR kapsamında özel nitelikli veri sayılabileceğinden, yalnızca size uygun öneriler sunmak amacıyla açık rızanız doğrultusunda saklanır.</string>
+
+    <!-- Bölüm 3: Alerjen ve Tıbbi Sorumluluk Reddi (KRİTİK MADDE) -->
+    <string name="privacy_policy_sec3_title">3. Önemli: Alerjen ve Tıbbi Sorumluluk Reddi</string>
+    <string name="privacy_policy_sec3_body">TastyMap üzerinde yer alan restoran, menü, içerik ve alerjen bilgileri yalnızca bilgilendirme amaçlıdır. İşletmeler menü içeriğini değiştirebilir veya çapraz bulaşma riski oluşabilir. Ciddi gıda alerjisi veya tıbbi hassasiyeti olan kullanıcıların, tüketim öncesinde içeriği doğrudan işletme ile doğrulaması kendi sorumluluğundadır. TastyMap gıda reaksiyonlarından sorumlu tutulamaz.</string>
+
+    <!-- Bölüm 4: Veri Güvenliği ve Üçüncü Taraflar -->
+    <string name="privacy_policy_sec4_title">4. Veri Güvenliği ve Saklama</string>
+    <string name="privacy_policy_sec4_body">Verileriniz SSL/TLS şifreleme protokolleri ile korunan güvenli sunucularda saklanır. Kişisel verileriniz izniniz olmadan üçüncü taraflara satılmaz. Yasal zorunluluklar veya analitik/harita hizmet sağlayıcıları dışında veri aktarımı yapılmaz.</string>
+
+    <!-- Bölüm 5: Kullanıcı Hakları ve İletişim -->
+    <string name="privacy_policy_sec5_title">5. Kullanıcı Hakları ve İletişim</string>
+    <string name="privacy_policy_sec5_body">KVKK Madde 11 ve GDPR uyarınca; verilerinize erişme, düzeltme, silme (unutulma hakkı) ve işlenmesine itiraz etme hakkına sahipsiniz. Profil ayarları üzerinden hesabınızı ve verilerinizi dilediğiniz zaman silebilir veya destek ekibimizle iletişime geçebilirsiniz.</string>
+
+
+    <string name="delete_account_success_toast">Hesap silme talebiniz alındı.</string>
+    <string name="delete_account_warning_title">Hesabınızı Silmek Üzeresiniz</string>
+    <string name="delete_account_warning_description">Talebiniz alındıktan sonra hesabınız dondurulacaktır. 30 gün içerisinde tekrar giriş yaparsanız silme işlemi iptal edilir. 30 gün sonunda tüm verileriniz kalıcı olarak silinecektir.</string>
+    <string name="delete_account_reason_title">Ayrılma sebebinizi belirtebilir misiniz?</string>
+    <string name="delete_account_custom_reason_title-ops">Açıklamanız (Opsiyonel)</string>
+    <string name="delete_account_custom_reason_title-must">Açıklamanız (Zorunlu)</string>
+    <string name="delete_account_custom_reason_placeholder">Bize deneyiminizi geliştirmek için görüşlerinizi iletin...</string>
+    <string name="delete_account_password_title">Mevcut Şifreniz</string>
+    <string name="delete_account_password_placeholder">Şifrenizi girin</string>
+    <string name="delete_account_button">Hesabımı Kalıcı Olarak Sil</string>
+
+    <!-- Delete Reasons -->
+    <string name="delete_reason_not_using">Artık uygulamayı kullanmıyorum</string>
+    <string name="delete_reason_app_is_slow">Uygulama çok yavaş çalışıyor</string>
+    <string name="delete_reason_technical_issues">Teknik sorunlar yaşıyorum</string>
+    <string name="delete_reason_privacy_concerns">Gizlilik kaygılarım var</string>
+    <string name="delete_reason_poor_recommendations">Mekan önerilerini yetersiz buluyorum</string>
+    <string name="delete_reason_missing_features">Eksik özellikler var</string>
+    <string name="delete_reason_difficult_to_use">Kullanımı zor geliyor</string>
+    <string name="delete_reason_found_an_alternative">Başka bir alternatif buldum</string>
+    <string name="delete_reason_other">Diğer</string>
+    <string name="delete_account_password_helper">Hesap güvenliğiniz için şifre doğrulaması gereklidir.</string>
+
+    <string name="account_deactivated_title">Hesabınız Donduruldu</string>
+    <string name="account_deactivated_subtitle">Hesap silme talebiniz başarıyla işleme alındı.</string>
+    <string name="account_deactivated_info_title">30 Günlük İptal Süresi</string>
+    <string name="account_deactivated_info_desc">Hesabınız şu andan itibaren dondurulmuştur. 30 gün içerisinde tekrar giriş yaparsanız silme talebiniz otomatik olarak iptal edilir. 30 gün sonunda tüm verileriniz kalıcı olarak silinecektir.</string>
+    <string name="account_deactivated_back_to_login">Giriş Ekranına Dön</string>
+
+    <string name="visit_history_title">Ziyaret Geçmişim</string>
+    <string name="visit_history_empty">Henüz bir ziyaret geçmişiniz bulunmuyor.</string>
+
+    <!-- Visit Item -->
+    <string name="visit_item_category_unspecified">Kategori Belirtilmemiş</string>
+    <string name="visit_item_rating_desc">Puan</string>
+    <string name="visit_item_delete_desc">Ziyareti Sil</string>
+
+    <!-- Delete Dialog -->
+    <string name="dialog_delete_visit_message">%1$s ziyaretinizi geçmişten silmek istediğinize emin misiniz?</string>
+
+
+    <string name="settings_section_activity">Aktivite &amp; Geçmiş</string>
+    <string name="settings_visit_history_sub">Gittiğiniz mekanları yönetin ve görüntüleyin</string>
+
+    <string name="connection_error">Bağlantı hatası. Tekrar dene.</string>
+
+    <string name="create_post_title">Yeni Gönderi</string>
+    <string name="share_post">Gönderiyi Paylaş</string>
+
+    <string name="place_about_placeholder">Mekan hakkında ne düşünüyorsunuz?</string>
+
+    <string name="comments">Yorumlar</string>
+    <string name="allow_comments">Kullanıcılar bu gönderiye yorum yapabilsin</string>
+
+    <string name="your_visits">Ziyaretlerin</string>
+    <string name="no_saved_visits">Henüz kaydedilmiş bir ziyaretiniz bulunmuyor.</string>
+
+    <string name="selected_place">Seçili Mekan</string>
+    <string name="select_place">Mekan Seçin</string>
+    <string name="select_visit_to_share">Gönderi paylaşmak için bir ziyaret seçin</string>
+
+    <string name="change">Değiştir</string>
+
+    <string name="add_photo">Fotoğraf Ekle</string>
+    <string name="tap_to_upload_photo">Dokun ve Fotoğraf Yükle</string>
+
+    <string name="share_your_experience">Deneyimini paylaş</string>
+
+    <string name="post_description_hint">Bu mekânla ilgili deneyimini, düşüncelerini veya önerilerini paylaşabilirsin.</string>
+
+    <string name="error_photo_empty">Fotoğraf boş olamaz!</string>
+    <string name="error_explanation_limit">Açıklama alanı en fazla 500 karakter olabilir.</string>
+    <string name="error_photo_max_limit">En fazla 3 fotoğraf seçebilirsiniz.</string>
+
+    <string name="select_photo_source">Gönderin için bir fotoğraf kaynağı seçin</string>
+    <string name="camera">kamera</string>
+    <string name="gallery">galeri</string>
+    <string name="add_photo_count">Fotoğraf Ekle\n(%1$d/3)</string>
+    <string name="profile_private_account_message">Bu hesap gizlidir. Gönderilerini görmek için takip isteği gönderin.</string>
+
+    <string name="post">Gönderi</string>
+    <string name="options">Seçenekler</string>
+    <string name="unpin_post">Sabitlemeyi kaldır</string>
+    <string name="pin_post">Sabitle</string>
+    <string name="edit_post">Güncelle</string>
+    <string name="delete_post">Gönderiyi Sil</string>
+    <string name="view_all_comments">%1$d yorumun tümünü gör</string>
+    <string name="deleting_post">Gönderi siliniyor...</string>
+
+    <string name="delete_post_title">Gönderi silinsin mi?</string>
+    <string name="delete_post_message">Bu gönderiyi silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.</string>
+
+    <string name="like">Beğen</string>
+    <string name="comment">Yorum Yap</string>
+
+    <string name="likes_title">Beğenenler</string>
+
+    <string name="edit_post_success">Post başarıyla güncellendi.</string>
+    <string name="create_post_success">Gönderi Paylaşıldı.</string>
+    <string name="edit_post_title">Gönderiyi Düzenle</string>
+
+    <string name="photos_title">Fotoğraflar</string>
+    <string name="cannot_be_changed">Değiştirilemez</string>
+
+    <string name="comments_title">Yorumlar</string>
+    <string name="be_first_to_comment">İlk yorumu sen yap</string>
+    <string name="reply_action">Yanıtla</string>
+    <string name="hide_replies">Yanıtları gizle</string>
+    <string name="view_replies">Yanıtları gör</string>
+    <string name="view_more_replies">Daha fazla yanıt gör</string>
+    <string name="view_replies_count">%1$d yanıtı gör</string>
+</resources>

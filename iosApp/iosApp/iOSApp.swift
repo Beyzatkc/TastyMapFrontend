@@ -1,16 +1,21 @@
 import SwiftUI
+import FirebaseCore
 
 @main
 struct iOSApp: App {
-init() {
+
+    @UIApplicationDelegateAdaptor(AppDelegate.self) var delegate
+
+    init() {
         FirebaseApp.configure()
     }
+
     var body: some Scene {
         WindowGroup {
             ContentView()
-            .onOpenURL { url in
-               DeepLinkManager.shared.handleLink(url: url.absoluteString)
-            }
+                .onOpenURL { url in
+                    OrgBeemTastymapCoreNavigationDeepLinkManager.shared.handleLink(url: url.absoluteString)
+                }
         }
     }
 }

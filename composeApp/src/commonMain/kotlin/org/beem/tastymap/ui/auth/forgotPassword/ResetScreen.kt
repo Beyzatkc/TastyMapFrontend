@@ -1,6 +1,5 @@
 package org.beem.tastymap.ui.auth.forgotPassword
 
-import TastyButton
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.shrinkVertically
@@ -49,11 +48,22 @@ import org.beem.tastymap.core.util.ToastManager
 import org.beem.tastymap.ui.components.AuthFooter
 import org.beem.tastymap.ui.components.BackPage
 import org.beem.tastymap.ui.components.PasswordStrengthIndicator
+import org.beem.tastymap.ui.components.TastyButton
 import org.beem.tastymap.ui.components.TastyTextField
 import org.beem.tastymap.ui.theme.LocalCustomColors
+import org.jetbrains.compose.resources.getString
+import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.koinInject
+import tastymap.composeapp.generated.resources.Res
+import tastymap.composeapp.generated.resources.reset_btn_back_to_login
+import tastymap.composeapp.generated.resources.reset_btn_submit
+import tastymap.composeapp.generated.resources.reset_field_confirm_password
+import tastymap.composeapp.generated.resources.reset_field_new_password
+import tastymap.composeapp.generated.resources.reset_header
+import tastymap.composeapp.generated.resources.reset_info_note
+import tastymap.composeapp.generated.resources.reset_title
 
-class ResetScreen(val token: String): Screen {
+class ResetScreen(val token: String) : Screen {
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
@@ -70,20 +80,27 @@ class ResetScreen(val token: String): Screen {
 
         LaunchedEffect(screenModel.uiMessage) {
             screenModel.uiMessage.collect { message ->
-                ToastManager.show(message)
+                val text = when (message) {
+                    is ResetScreenModel.UiMessage.Dynamic -> message.message
+                    is ResetScreenModel.UiMessage.Resource -> getString(message.res)
+                }
+                ToastManager.show(text)
             }
         }
 
-        Surface {
+        Surface(
+            modifier = Modifier.fillMaxSize(),
+            color = colors.background
+        ) {
             Column(
                 modifier = Modifier
                     .fillMaxSize()
                     .statusBarsPadding()
                     .navigationBarsPadding()
             ) {
-                BackPage("Şifre Sıfırlama", {
-                   screenModel.backClickReset()
-                   navigator.pop()
+                BackPage(stringResource(Res.string.reset_header), {
+                    screenModel.backClickReset()
+                    navigator.pop()
                 })
                 Box(
                     modifier = Modifier
@@ -105,7 +122,7 @@ class ResetScreen(val token: String): Screen {
                             modifier = Modifier
                                 .size(96.dp)
                                 .background(
-                                    color = colors.navy.copy(alpha = 0.08f),
+                                    color = colors.surfaceVariant,
                                     shape = RoundedCornerShape(28.dp)
                                 ),
                             contentAlignment = Alignment.Center
@@ -114,17 +131,17 @@ class ResetScreen(val token: String): Screen {
                                 imageVector = Icons.Default.LockReset,
                                 contentDescription = null,
                                 modifier = Modifier.size(40.dp),
-                                tint = colors.navy
+                                tint = colors.textPrimary
                             )
                         }
 
                         Spacer(modifier = Modifier.height(24.dp))
 
                         Text(
-                            text = "Şifrenizi mi Unuttunuz?",
+                            text = stringResource(Res.string.reset_title),
                             style = MaterialTheme.typography.headlineSmall,
                             fontWeight = FontWeight.Bold,
-                            color = colors.navy,
+                            color = colors.textPrimary,
                             textAlign = TextAlign.Center
                         )
 
@@ -136,11 +153,12 @@ class ResetScreen(val token: String): Screen {
                             onValueChange = {
                                 screenModel.onPasswordEvent(PasswordEvent.PasswordChanged(it))
                             },
-                            label = "Yeni Şifre",
+                            label = stringResource(Res.string.reset_field_new_password),
                             leadingIcon = {
                                 Icon(Icons.Default.Lock, null)
                             },
-                            error = state.regPasswordError
+
+                            error = state.regPasswordError?.let { stringResource(it) }
                         )
                         AnimatedVisibility(
                             visible = state.regPassword.isNotEmpty(),
@@ -149,7 +167,7 @@ class ResetScreen(val token: String): Screen {
                         ) {
                             Column {
                                 Spacer(modifier = Modifier.height(4.dp))
-                                PasswordStrengthIndicator(state.passwordStrength,colors)
+                                PasswordStrengthIndicator(state.passwordStrength, colors)
                             }
                         }
                         Spacer(modifier = Modifier.height(5.dp))
@@ -159,23 +177,24 @@ class ResetScreen(val token: String): Screen {
                             onValueChange = {
                                 screenModel.onPasswordEvent(PasswordEvent.ConfirmPasswordChanged(it))
                             },
-                            label = "Yeni Şifre tekrar",
+                            label = stringResource(Res.string.reset_field_confirm_password),
                             leadingIcon = {
                                 Icon(Icons.Default.Lock, null)
                             },
-                            error = state.confirmPasswordError
+
+                            error = state.confirmPasswordError?.let { stringResource(it) }
                         )
 
                         Spacer(modifier = Modifier.height(24.dp))
 
                         TastyButton(
-                            text = "Şifreyi değiştir",
+                            text = stringResource(Res.string.reset_btn_submit),
                             onClick = { screenModel.resetPassword(token) },
                             isLoading = state.isLoading,
                             enabled = state.regPassword.isNotBlank() && state.confirmPassword.isNotBlank(),
                             backcolor = colors.navy,
-                            textcolor = Color.White,
-                            strokecolor = colors.navy
+                            textcolor = colors.surface,
+                            strokecolor = Color.Transparent
                         )
 
                         Spacer(modifier = Modifier.height(16.dp))
@@ -187,7 +206,7 @@ class ResetScreen(val token: String): Screen {
                             }
                         ) {
                             Text(
-                                text = "Giriş ekranına geri dön",
+                                text = stringResource(Res.string.reset_btn_back_to_login),
                                 color = colors.navy,
                                 style = MaterialTheme.typography.labelLarge
                             )
@@ -199,7 +218,7 @@ class ResetScreen(val token: String): Screen {
                             modifier = Modifier.fillMaxWidth(),
                             shape = RoundedCornerShape(16.dp),
                             colors = CardDefaults.cardColors(
-                                containerColor = colors.navy.copy(alpha = 0.05f)
+                                containerColor = colors.surfaceVariant
                             )
                         ) {
                             Column(
@@ -207,14 +226,12 @@ class ResetScreen(val token: String): Screen {
                                 verticalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
                                 Text(
-                                    text = "Şifrenizi sıfırladıktan sonra hesabınıza giriş yapabilirsiniz.",
+                                    text = stringResource(Res.string.reset_info_note),
                                     style = MaterialTheme.typography.bodySmall,
-                                    color = Color.Gray
+                                    color = colors.textSecondary
                                 )
-
                             }
                         }
-
                     }
                 }
                 AuthFooter(
@@ -223,5 +240,4 @@ class ResetScreen(val token: String): Screen {
             }
         }
     }
-
 }

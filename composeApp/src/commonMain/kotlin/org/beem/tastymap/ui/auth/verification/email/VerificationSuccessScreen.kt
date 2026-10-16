@@ -19,67 +19,71 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import cafe.adriel.voyager.core.screen.Screen
 import org.beem.tastymap.ui.components.AuthFooter
+import org.beem.tastymap.ui.theme.LocalCustomColors
+import org.jetbrains.compose.resources.stringResource
+import tastymap.composeapp.generated.resources.Res
+import tastymap.composeapp.generated.resources.verification_success_desc
+import tastymap.composeapp.generated.resources.verification_success_icon_cd
+import tastymap.composeapp.generated.resources.verification_success_title
 
-class VerificationSuccessScreen(): Screen {
+class VerificationSuccessScreen : Screen {
     @Composable
     override fun Content() {
+        val colors = LocalCustomColors.current
+
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .background(Color.White)
+                .background(colors.background)
         ) {
-
             Box(
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxWidth(),
                 contentAlignment = Alignment.Center
             ) {
-
                 Column(
                     modifier = Modifier
                         .padding(24.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-
                     Box(
                         modifier = Modifier
                             .size(120.dp)
-                            .background(Color(0xFFE8F5E9), CircleShape),
+                            .background(colors.green.copy(alpha = 0.12f), CircleShape),
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
                             imageVector = Icons.Default.CheckCircle,
-                            contentDescription = "Success",
+                            contentDescription = stringResource(Res.string.verification_success_icon_cd),
                             modifier = Modifier.size(64.dp),
-                            tint = Color(0xFF4CAF50)
+                            tint = colors.green
                         )
                     }
 
                     Spacer(Modifier.height(32.dp))
 
                     Text(
-                        text = "E-posta Doğrulandı!",
+                        text = stringResource(Res.string.verification_success_title),
                         style = MaterialTheme.typography.headlineMedium,
                         fontWeight = FontWeight.ExtraBold,
-                        color = Color(0xFF001970),
+                        color = colors.textPrimary,
                         textAlign = TextAlign.Center
                     )
 
                     Spacer(Modifier.height(16.dp))
 
                     Text(
-                        text = "Hesabınız başarıyla doğrulandı. Bu sekmeyi kapatıp uygulamadaki giriş ekranına dönerek oturum açabilirsiniz.",
+                        text = stringResource(Res.string.verification_success_desc),
                         textAlign = TextAlign.Center,
                         style = MaterialTheme.typography.bodyLarge,
-                        color = Color.Gray,
+                        color = colors.textSecondary,
                         lineHeight = 24.sp,
                         modifier = Modifier.widthIn(max = 350.dp)
                     )

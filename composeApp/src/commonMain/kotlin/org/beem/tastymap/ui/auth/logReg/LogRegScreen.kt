@@ -1,6 +1,5 @@
 package org.beem.tastymap.ui.auth.logReg
-import OnBoardingScreen
-import TastyButton
+
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.SizeTransform
@@ -12,12 +11,24 @@ import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.Password
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Restaurant
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -26,49 +37,61 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.CompositingStrategy
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.clipPath
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import cafe.adriel.voyager.core.screen.Screen
-import org.beem.tastymap.ui.components.TastyTextField
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.shrinkVertically
-import androidx.compose.animation.slideInHorizontally
-import androidx.compose.animation.slideOutHorizontally
-import androidx.compose.animation.togetherWith
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.filled.Email
-import androidx.compose.material.icons.filled.Password
-import androidx.compose.material.icons.filled.Person
-import cafe.adriel.voyager.navigator.Navigator
-import kotlin.math.PI
-import kotlin.math.cos
-import kotlin.math.sin
-import androidx.compose.foundation.layout.imePadding
-import androidx.compose.ui.graphics.CompositingStrategy
-import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.zIndex
+import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.koin.koinScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
+import cafe.adriel.voyager.navigator.Navigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import org.beem.tastymap.core.util.ToastManager
 import org.beem.tastymap.ui.animations.TastyAnimations
 import org.beem.tastymap.ui.auth.common.AuthEffect
-import org.beem.tastymap.ui.auth.verification.email.EmailVerificationScreen
 import org.beem.tastymap.ui.auth.forgotPassword.ForgotScreen
+import org.beem.tastymap.ui.auth.verification.email.EmailVerificationScreen
 import org.beem.tastymap.ui.auth.verification.loginPending.PendingScreen
+import org.beem.tastymap.ui.bottomnav.MainScreen
 import org.beem.tastymap.ui.components.AuthFooter
 import org.beem.tastymap.ui.components.PasswordStrengthIndicator
+import org.beem.tastymap.ui.components.TastyButton
+import org.beem.tastymap.ui.components.TastyTextField
+import org.beem.tastymap.ui.profile.health.OnBoardingScreen
+import org.beem.tastymap.ui.profile.myprofile.MyProfileScreen
 import org.beem.tastymap.ui.theme.CustomColors
 import org.beem.tastymap.ui.theme.LocalCustomColors
+import org.jetbrains.compose.resources.getString
+import org.jetbrains.compose.resources.stringResource
+import tastymap.composeapp.generated.resources.Res
+import tastymap.composeapp.generated.resources.auth_app_subtitle
+import tastymap.composeapp.generated.resources.auth_resend_prompt
+import tastymap.composeapp.generated.resources.auth_resend_timer
+import tastymap.composeapp.generated.resources.auth_tab_login
+import tastymap.composeapp.generated.resources.auth_tab_register
+import tastymap.composeapp.generated.resources.login_btn_forgot_password
+import tastymap.composeapp.generated.resources.login_btn_submit
+import tastymap.composeapp.generated.resources.login_email_unverified
+import tastymap.composeapp.generated.resources.login_field_password
+import tastymap.composeapp.generated.resources.login_field_username
+import tastymap.composeapp.generated.resources.register_btn_back
+import tastymap.composeapp.generated.resources.register_btn_next
+import tastymap.composeapp.generated.resources.register_btn_submit
+import tastymap.composeapp.generated.resources.register_field_email
+import tastymap.composeapp.generated.resources.register_field_name
+import tastymap.composeapp.generated.resources.register_field_password
+import tastymap.composeapp.generated.resources.register_field_surname
+import tastymap.composeapp.generated.resources.register_field_username
+import kotlin.math.PI
+import kotlin.math.cos
+import kotlin.math.sin
 
 class LogRegScreen : Screen {
     @Composable
@@ -79,116 +102,123 @@ class LogRegScreen : Screen {
         val logState by screenModel.loginState.collectAsState()
         val colors = LocalCustomColors.current
 
-        AuthEffectHandler(screenModel,navigator)
+        AuthEffectHandler(screenModel, navigator)
 
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(colors.background)
+        )
 
-        Box(modifier = Modifier.fillMaxSize()
-            .background(colors.backgroundBlue)
-            .imePadding(),)
-        {
+        MapHeaderSection(
+            modifier = Modifier.fillMaxWidth().height(280.dp),
+            bgColor = colors.wave,
+            lineColor = colors.lineAlpha,
+            iconColor = colors.navy
+        )
+        var isLoginTab by remember { mutableStateOf(true) }
 
-            MapHeaderSection(
-                modifier = Modifier.fillMaxWidth().height(280.dp),
-                bgColor = colors.wave,
-                lineColor = colors.lineAlpha,
-                iconColor = colors.navy
-            )
-            var isLoginTab by remember { mutableStateOf(true) }
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .imePadding()
+                .verticalScroll(rememberScrollState())
+                .padding(top = 220.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            HeaderTitles(colors.textPrimary)
 
-            Column(
+            Spacer(modifier = Modifier.height(5.dp))
+
+            Card(
                 modifier = Modifier
-                    .fillMaxSize()
-                    .verticalScroll(rememberScrollState())
-                    .padding(top = 260.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
+                    .widthIn(max = 400.dp)
+                    .fillMaxWidth()
+                    .shadow(
+                        elevation = 12.dp,
+                        shape = RoundedCornerShape(28.dp),
+                        spotColor = colors.navy.copy(alpha = 0.08f)
+                    ),
+                shape = RoundedCornerShape(28.dp),
+                colors = CardDefaults.cardColors(containerColor = colors.surface),
             ) {
-                HeaderTitles(colors.navy)
-
-                Spacer(modifier = Modifier.height(5.dp))
-
-
-                Card(
-                    modifier = Modifier
-                        .widthIn(max = 400.dp)
-                        .fillMaxWidth()
-                        .shadow(
-                            elevation = 12.dp,
-                            shape = RoundedCornerShape(28.dp),
-                            spotColor = colors.navy.copy(alpha = 0.08f)
-                        ),
-
-                    shape = RoundedCornerShape(28.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color.White),
+                Column(
+                    modifier = Modifier.padding(24.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
-                    Column(
-                        modifier = Modifier.padding(24.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(16.dp)
-                    ) {
-                        AuthTabBar(isLoginTab, colors.navy,colors.gray,
-                            onLoginClick = {
-                                isLoginTab = true
-                                screenModel.clearRegisterForm()
-                                screenModel.previousRegisterStep()
-                            },
-                            onRegisterClick = {
-                                isLoginTab = false
-                                screenModel.clearLoginForm()
-                            }
-                        )
+                    AuthTabBar(
+                        isLoginTab = isLoginTab,
+                        activeTabColor = colors.navy,
+                        activeTextColor = colors.surface,
+                        tabContainerColor = colors.surfaceVariant,
+                        inactiveTextColor = colors.textSecondary,
+                        onLoginClick = {
+                            isLoginTab = true
+                            screenModel.clearRegisterForm()
+                            screenModel.previousRegisterStep()
+                        },
+                        onRegisterClick = {
+                            isLoginTab = false
+                            screenModel.clearLoginForm()
+                        }
+                    )
 
-                        AnimatedContent(
-                            targetState = isLoginTab,
-                            transitionSpec = {
-                                if (targetState > initialState) {
-                                    TastyAnimations.slideInBackward()
-                                } else {
-                                    TastyAnimations.slideInForward()
-                                }.using(SizeTransform(clip = false))
-                            },
-                            label = "FormAnim"
-                        ) { targetIsLogin ->
-                            key(targetIsLogin) {
-                                if (targetIsLogin) {
-                                    LoginForm(colors.navy, screenModel,logState,navigator)
-                                } else {
-                                    RegisterForm(colors, screenModel,regState)
-                                }
+                    AnimatedContent(
+                        targetState = isLoginTab,
+                        transitionSpec = {
+                            if (targetState > initialState) {
+                                TastyAnimations.slideInBackward()
+                            } else {
+                                TastyAnimations.slideInForward()
+                            }.using(SizeTransform(clip = false))
+                        },
+                        label = "FormAnim"
+                    ) { targetIsLogin ->
+                        key(targetIsLogin) {
+                            if (targetIsLogin) {
+                                LoginForm(colors, screenModel, logState, navigator)
+                            } else {
+                                RegisterForm(colors, screenModel, regState)
                             }
                         }
                     }
                 }
-                Spacer(modifier = Modifier.weight(1f))
-
-                AuthFooter(modifier = Modifier.fillMaxWidth())
-
             }
-            val currentLoading = if (isLoginTab) logState.isLoading else regState.isLoading
-            FullScreenLoading(isLoading = currentLoading)
+            Spacer(modifier = Modifier.height(25.dp))
+
+            AuthFooter(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 32.dp)
+            )
         }
+        val currentLoading = if (isLoginTab) logState.isLoading else regState.isLoading
+        FullScreenLoading(isLoading = currentLoading, scrimColor = colors.textPrimary.copy(alpha = 0.4f))
     }
 }
 
 @Composable
-fun FullScreenLoading(isLoading: Boolean){
-    if(isLoading){
+fun FullScreenLoading(isLoading: Boolean, scrimColor: Color) {
+    if (isLoading) {
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .pointerInput(Unit){}
-                .background(Color.Black.copy(alpha = 0.4f))
+                .pointerInput(Unit) {}
+                .background(scrimColor)
                 .zIndex(10f),
             contentAlignment = Alignment.Center
-        ){
-        }
+        ) {}
     }
-
 }
+
 @Composable
 fun AuthTabBar(
     isLoginTab: Boolean,
-    navyIcons: Color,
-    bck: Color,
+    activeTabColor: Color,
+    activeTextColor: Color,
+    tabContainerColor: Color,
+    inactiveTextColor: Color,
     onLoginClick: () -> Unit,
     onRegisterClick: () -> Unit
 ) {
@@ -196,28 +226,29 @@ fun AuthTabBar(
         modifier = Modifier
             .fillMaxWidth()
             .height(48.dp)
-            .background(bck, RoundedCornerShape(24.dp))
+            .background(tabContainerColor, RoundedCornerShape(24.dp))
             .padding(4.dp)
     ) {
         Row(modifier = Modifier.fillMaxSize()) {
-            TabButton("Giriş", isLoginTab, Modifier.weight(1f), navyIcons, onLoginClick)
-            TabButton("Kayıt", !isLoginTab, Modifier.weight(1f), navyIcons, onRegisterClick)
+            TabButton(stringResource(Res.string.auth_tab_login), isLoginTab, Modifier.weight(1f), activeTabColor, activeTextColor, inactiveTextColor, onLoginClick)
+            TabButton(stringResource(Res.string.auth_tab_register), !isLoginTab, Modifier.weight(1f), activeTabColor, activeTextColor, inactiveTextColor, onRegisterClick)
         }
     }
 }
+
 @Composable
-fun HeaderTitles(navyIcons: Color) {
+fun HeaderTitles(textColor: Color) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Text(
             text = "Tasty Map",
             style = MaterialTheme.typography.displaySmall.copy(
-                fontWeight = FontWeight.Black, color = navyIcons
+                fontWeight = FontWeight.Black, color = textColor
             )
         )
         Text(
-            text = "Lezzeti Keşfet",
+            text = stringResource(Res.string.auth_app_subtitle) ,
             style = MaterialTheme.typography.titleMedium.copy(
-                color = navyIcons.copy(alpha = 0.6f)
+                color = textColor.copy(alpha = 0.6f)
             )
         )
     }
@@ -236,14 +267,16 @@ fun AuthEffectHandler(
         screenModel.effect.collect { effect ->
             when (effect) {
                 is AuthEffect.NavigateToPending -> {
-                    navigator.replaceAll(
-                        PendingScreen(effect.deviceId))
+                    navigator.replaceAll(PendingScreen(effect.deviceId))
                 }
                 is AuthEffect.NavigateToValidate -> {
-                    navigator.push(EmailVerificationScreen(effect.email,effect.deviceId,effect.userId))
+                    navigator.push(EmailVerificationScreen(effect.email, effect.deviceId, effect.userId))
                 }
                 is AuthEffect.NavigateToWelcome -> {
                     navigator.replaceAll(OnBoardingScreen())
+                }
+                is AuthEffect.NavigateToHome -> {
+                    navigator.replaceAll(MainScreen())
                 }
                 else -> Unit
             }
@@ -252,11 +285,14 @@ fun AuthEffectHandler(
 
     LaunchedEffect(screenModel.uiMessage) {
         screenModel.uiMessage.collect { message ->
-            ToastManager.show(message)
+            val text = when (message) {
+                is LogRegScreenModel.UiMessage.Dynamic -> message.message
+                is LogRegScreenModel.UiMessage.Resource -> getString(message.res)
+            }
+            ToastManager.show(text)
         }
     }
 }
-
 
 @Composable
 fun MapHeaderSection(
@@ -283,7 +319,6 @@ fun MapHeaderSection(
             Canvas(modifier = Modifier.fillMaxSize()) {
                 val amplitude = 45f
 
-
                 val wave1 = sin(waveOffset.toDouble()).toFloat() * amplitude
                 val wave2 = cos(waveOffset.toDouble()).toFloat() * amplitude
 
@@ -300,7 +335,7 @@ fun MapHeaderSection(
                     lineTo(w, 0f)
                     close()
                 }
-                //drawPath(bgPath, bgColor)
+
                 drawPath(
                     path = bgPath,
                     color = bgColor
@@ -371,7 +406,6 @@ fun MapHeaderSection(
                         Offset(w * 0.8f, h),
                         secondaryRoad, 0.2f
                     )
-
                 }
             }
 
@@ -384,6 +418,7 @@ fun MapHeaderSection(
         }
     }
 }
+
 @Composable
 fun BoxScope.IconMarker(
     icon: ImageVector,
@@ -405,10 +440,19 @@ fun BoxScope.IconMarker(
         )
     }
 }
+
 @Composable
-fun TabButton(text: String, isSelected: Boolean, modifier: Modifier, color: Color, onClick: () -> Unit) {
-    val backgroundColor by animateColorAsState(if (isSelected) color else Color.Transparent)
-    val textColor by animateColorAsState(if (isSelected) Color.White else Color.Gray)
+fun TabButton(
+    text: String,
+    isSelected: Boolean,
+    modifier: Modifier,
+    activeColor: Color,
+    activeTextColor: Color,
+    inactiveTextColor: Color,
+    onClick: () -> Unit
+) {
+    val backgroundColor by animateColorAsState(if (isSelected) activeColor else Color.Transparent)
+    val textColor by animateColorAsState(if (isSelected) activeTextColor else inactiveTextColor)
 
     Box(
         modifier = modifier
@@ -420,33 +464,19 @@ fun TabButton(text: String, isSelected: Boolean, modifier: Modifier, color: Colo
         Text(text = text, color = textColor, fontWeight = FontWeight.Bold, fontSize = 14.sp)
     }
 }
-@Composable
-fun FooterLinks(navyIcons: Color) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.Center,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        val linkStyle = MaterialTheme.typography.bodySmall.copy(
-            color = navyIcons.copy(alpha = 0.5f),
-            fontWeight = FontWeight.Medium
-        )
 
-        Text(text = "Gizlilik", modifier = Modifier.padding(horizontal = 8.dp), style = linkStyle)
-        Text(text = "•", color = navyIcons.copy(alpha = 0.3f))
-        Text(text = "Kullanım Şartları", modifier = Modifier.padding(horizontal = 8.dp), style = linkStyle)
-        Text(text = "•", color = navyIcons.copy(alpha = 0.3f))
-        Text(text = "Destek", modifier = Modifier.padding(horizontal = 8.dp), style = linkStyle)
-    }
-}
-@Composable fun LoginForm(color: Color, vm: LogRegScreenModel, state: LoginUiState, navigator: Navigator) {
+@Composable
+fun LoginForm(
+    colors: CustomColors,
+    vm: LogRegScreenModel,
+    state: LoginUiState,
+    navigator: Navigator
+) {
     Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
         TastyTextField(
             value = state.loginUsername,
-            onValueChange = {
-                vm.onLoginEvent(LoginEvent.UsernameChanged(it))
-                            },
-            label = "Kullanıcı adı",
+            onValueChange = { vm.onLoginEvent(LoginEvent.UsernameChanged(it)) },
+            label = stringResource(Res.string.login_field_username),
             leadingIcon = {
                 Icon(
                     imageVector = Icons.Default.Person,
@@ -454,14 +484,13 @@ fun FooterLinks(navyIcons: Color) {
                 )
             },
             isPassword = false,
-            error = state.loginUsernameError
+            error = state.loginUsernameError?.let { stringResource(it) }
         )
 
         TastyTextField(
             value = state.loginPassword,
-            onValueChange = {
-                vm.onLoginEvent(LoginEvent.PasswordChanged(it)) },
-            label = "Şifre",
+            onValueChange = { vm.onLoginEvent(LoginEvent.PasswordChanged(it)) },
+            label = stringResource(Res.string.login_field_password),
             leadingIcon = {
                 Icon(
                     imageVector = Icons.Default.Password,
@@ -469,41 +498,50 @@ fun FooterLinks(navyIcons: Color) {
                 )
             },
             isPassword = true,
-            error = state.logPasswordError
+            error = state.logPasswordError?.let { stringResource(it) }
         )
+
         Spacer(modifier = Modifier.height(5.dp))
+
         TastyButton(
-            text = "Giriş Yap",
+            text = stringResource(Res.string.login_btn_submit),
+            modifier = Modifier.fillMaxWidth(),
             isLoading = state.isLoading,
-            onClick = {
-                vm.login()
-            },
+            onClick = { vm.login() },
             isPrimary = true,
-            backcolor = color,
-            textcolor = Color.White,
-            strokecolor = color
+            backcolor = colors.navy,
+            textcolor = colors.surface,
+            strokecolor = Color.Transparent
         )
+        Spacer(modifier = Modifier.height(3.dp))
+
         ResendSection(
             onResendClick = { vm.resendVerificationEmail() },
-            navyIcons = color,
+            colors = colors,
             screenModel = vm,
             state = state
         )
+
         TastyButton(
-            text = "Şifreni mi unuttun",
+            text = stringResource(Res.string.login_btn_forgot_password),
             onClick = { navigator.push(ForgotScreen()) },
+            modifier = Modifier.fillMaxWidth(),
             isPrimary = false,
-            backcolor = Color.White,
-            textcolor = color,
-            strokecolor = Color.White
+            backcolor = Color.Transparent,
+            textcolor = colors.textPrimary,
+            strokecolor = Color.Transparent
         )
     }
 }
 
 @Composable
-fun ResendSection(onResendClick: () -> Unit,navyIcons: Color, screenModel: LogRegScreenModel,state: LoginUiState) {
+fun ResendSection(
+    onResendClick: () -> Unit,
+    colors: CustomColors,
+    screenModel: LogRegScreenModel,
+    state: LoginUiState
+) {
     val timeLeft by screenModel.timeLeft.collectAsState()
-
     val isButtonEnabled = timeLeft == 0
 
     if (state.isEmailNotVerified) {
@@ -512,44 +550,43 @@ fun ResendSection(onResendClick: () -> Unit,navyIcons: Color, screenModel: LogRe
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(Color.Red.copy(alpha = 0.1f), shape = RoundedCornerShape(8.dp))
+                .background(colors.error.copy(alpha = 0.1f), shape = RoundedCornerShape(8.dp))
                 .padding(12.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
-                text = "E-postanız (${state.unverifiedEmail}) henüz doğrulanmamış.",
-                color = Color.Red,
+                text = stringResource(Res.string.login_email_unverified, state.unverifiedEmail),
+                color = colors.error,
                 style = MaterialTheme.typography.bodyMedium
             )
 
             Spacer(modifier = Modifier.height(8.dp))
-                TextButton(
-                    enabled = isButtonEnabled,
-                    onClick = {
-                        if (isButtonEnabled) {
-                            println("START TIMER")
-                            screenModel.startTimer()
-                            onResendClick()
-                        }
+
+            TextButton(
+                enabled = isButtonEnabled,
+                onClick = {
+                    if (isButtonEnabled) {
+                        screenModel.startTimer()
+                        onResendClick()
                     }
-                ) {
-                    Text(
-                        text = if (isButtonEnabled) {
-                            "E-posta gelmedi mi? Tekrar gönder"
-                        } else {
-                            "Tekrar gönder: ${timeLeft}s"
-                        },
-                        color = if (isButtonEnabled) navyIcons else Color.Gray,
-                        style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.SemiBold)
-                    )
                 }
+            ) {
+                Text(
+                    text = if (isButtonEnabled) {
+                        stringResource(Res.string.auth_resend_prompt)
+                    } else {
+                        stringResource(Res.string.auth_resend_timer, timeLeft)
+                    },
+                    color = if (isButtonEnabled) colors.navy else colors.textSecondary,
+                    style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.SemiBold)
+                )
+            }
         }
     }
 }
 
 @Composable
 fun RegisterForm(color: CustomColors, vm: LogRegScreenModel, state: RegisterUiState) {
-
     AnimatedContent(
         targetState = state.step,
         transitionSpec = {
@@ -575,7 +612,7 @@ fun RegisterForm(color: CustomColors, vm: LogRegScreenModel, state: RegisterUiSt
                             .padding(horizontal = 4.dp)
                             .size(width = 32.dp, height = 4.dp)
                             .background(
-                                if (currentStep > index) color.navy else Color.LightGray,
+                                if (currentStep > index) color.navy else color.borderLight,
                                 RoundedCornerShape(2.dp)
                             )
                     )
@@ -585,74 +622,72 @@ fun RegisterForm(color: CustomColors, vm: LogRegScreenModel, state: RegisterUiSt
             if (currentStep == 1) {
                 TastyTextField(
                     value = state.regName,
-                    onValueChange = {
-                        vm.onRegisterEvent(RegisterEvent.NameChanged(it)) },
-                    label = "Ad",
+                    onValueChange = { vm.onRegisterEvent(RegisterEvent.NameChanged(it)) },
+                    label = stringResource(Res.string.register_field_name),
                     leadingIcon = {
                         Icon(
                             imageVector = Icons.Default.Person,
                             contentDescription = null
                         )
                     },
-                    error = state.regnameError
+                    error = state.regNameError?.let { stringResource(it) }
                 )
+
                 TastyTextField(
                     value = state.regSurname,
-                    onValueChange = {
-                        vm.onRegisterEvent(RegisterEvent.SurnameChanged(it))
-                                    },
-                    label = "Soyad",
+                    onValueChange = { vm.onRegisterEvent(RegisterEvent.SurnameChanged(it)) },
+                    label = stringResource(Res.string.register_field_surname),
                     leadingIcon = {
                         Icon(
                             imageVector = Icons.Default.Person,
                             contentDescription = null
                         )
                     },
-                    error=state.regSurnameError
+                    error = state.regSurnameError?.let { stringResource(it) }
                 )
+
                 TastyTextField(
                     value = state.regUsername,
-                    onValueChange = {
-                        vm.onRegisterEvent(RegisterEvent.UsernameChanged(it))
-                                    },
-                    label = "Kullanıcı Adı",
+                    onValueChange = { vm.onRegisterEvent(RegisterEvent.UsernameChanged(it)) },
+                    label = stringResource(Res.string.register_field_username),
                     leadingIcon = {
                         Icon(
                             imageVector = Icons.Default.Person,
                             contentDescription = null
                         )
                     },
-                    error=state.regusernameError
+                    error = state.regUsernameError?.let { stringResource(it) }
                 )
 
                 Spacer(modifier = Modifier.height(8.dp))
+
                 TastyButton(
-                    text = "Devam Et",
-                    onClick = {
-                        vm.nextRegisterStep() },
+                    text = stringResource(Res.string.register_btn_next),
+                    onClick = { vm.nextRegisterStep() },
+                    modifier = Modifier.fillMaxWidth(),
                     isPrimary = true,
                     backcolor = color.navy,
-                    textcolor = Color.White,
-                    strokecolor = color.navy
+                    textcolor = color.surface,
+                    strokecolor = Color.Transparent
                 )
             } else {
                 TastyTextField(
                     value = state.regEmail,
-                    onValueChange = {
-                        vm.onRegisterEvent(RegisterEvent.EmailChanged(it)) },
-                    label = "Email",
+                    onValueChange = { vm.onRegisterEvent(RegisterEvent.EmailChanged(it)) },
+                    label = stringResource(Res.string.register_field_email),
                     leadingIcon = { Icon(Icons.Default.Email, null) },
-                    error=state.regEmailError
+                    error = state.regEmailError?.let { stringResource(it) }
                 )
+
                 TastyTextField(
                     value = state.regPassword,
-                    onValueChange = {
-                        vm.onRegisterEvent(RegisterEvent.PasswordChanged(it)) },
-                    label = "Şifre",
+                    onValueChange = { vm.onRegisterEvent(RegisterEvent.PasswordChanged(it)) },
+                    label = stringResource(Res.string.register_field_password),
                     leadingIcon = { Icon(Icons.Default.Password, null) },
                     isPassword = true,
-                    error=state.regPasswordError
+                    error = state.regPasswordError?.let { stringResource(it) }
                 )
+
                 AnimatedVisibility(
                     visible = state.regPassword.isNotEmpty(),
                     enter = expandVertically(),
@@ -660,30 +695,31 @@ fun RegisterForm(color: CustomColors, vm: LogRegScreenModel, state: RegisterUiSt
                 ) {
                     Column {
                         Spacer(modifier = Modifier.height(4.dp))
-                        PasswordStrengthIndicator(state.passwordStrength,color)
+                        PasswordStrengthIndicator(state.passwordStrength, color)
                     }
                 }
+
                 Spacer(modifier = Modifier.height(5.dp))
 
                 TastyButton(
-                    text = "Kayıt Ol",
+                    text = stringResource(Res.string.register_btn_submit),
                     isLoading = state.isLoading,
-                    onClick = {
-                        vm.register()
-                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    onClick = { vm.register() },
                     isPrimary = true,
                     backcolor = color.navy,
-                    textcolor = Color.White,
-                    strokecolor = color.navy
+                    textcolor = color.surface,
+                    strokecolor = Color.Transparent
                 )
-
+                Spacer(modifier = Modifier.height(3.dp))
                 TastyButton(
-                    text = "Geri Dön",
+                    text = stringResource(Res.string.register_btn_back),
+                    modifier = Modifier.fillMaxWidth(),
                     onClick = { vm.previousRegisterStep() },
                     isPrimary = false,
-                    backcolor = Color.White,
-                    textcolor = color.navy,
-                    strokecolor = Color.Transparent
+                    backcolor = Color.Transparent,
+                    textcolor = color.textPrimary,
+                    strokecolor = color.borderLight
                 )
             }
         }

@@ -1,3 +1,5 @@
+package org.beem.tastymap.ui.profile.health
+
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.BorderStroke
@@ -24,10 +26,24 @@ import cafe.adriel.voyager.koin.koinScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.Navigator
 import cafe.adriel.voyager.navigator.currentOrThrow
-import org.beem.tastymap.ui.profile.health.HealthScreenModel
-import org.beem.tastymap.ui.profile.health.HealthWizardScreen
+import org.beem.tastymap.core.util.ToastManager
+import org.beem.tastymap.ui.components.TastyButton
+import org.beem.tastymap.ui.profile.myprofile.MyProfileScreen
 import org.beem.tastymap.ui.theme.CustomColors
 import org.beem.tastymap.ui.theme.LocalCustomColors
+import org.jetbrains.compose.resources.stringResource
+import tastymap.composeapp.generated.resources.Res
+import tastymap.composeapp.generated.resources.onboarding_feature_healthy_desc
+import tastymap.composeapp.generated.resources.onboarding_feature_healthy_title
+import tastymap.composeapp.generated.resources.onboarding_feature_original_desc
+import tastymap.composeapp.generated.resources.onboarding_feature_original_title
+import tastymap.composeapp.generated.resources.onboarding_feature_smart_desc
+import tastymap.composeapp.generated.resources.onboarding_feature_smart_title
+import tastymap.composeapp.generated.resources.onboarding_skip_btn
+import tastymap.composeapp.generated.resources.onboarding_start_btn
+import tastymap.composeapp.generated.resources.onboarding_subtitle
+import tastymap.composeapp.generated.resources.onboarding_tagline
+import tastymap.composeapp.generated.resources.onboarding_welcome
 
 class OnBoardingScreen : Screen {
 
@@ -35,71 +51,86 @@ class OnBoardingScreen : Screen {
     override fun Content() {
         var showContent by remember { mutableStateOf(false) }
         val screenModel = koinScreenModel<HealthScreenModel>()
+        val state by screenModel.healthState.collectAsState()
         val navigator = LocalNavigator.currentOrThrow
 
         LaunchedEffect(Unit) {
             showContent = true
         }
 
-    val customColors = LocalCustomColors.current
-    val scrollState = rememberScrollState()
-
-    Box(
-        modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
-    ) {
-        AnimatedVisibility(
-            visible = showContent,
-            enter = fadeIn(animationSpec = tween(800)) +
-                    slideInVertically(
-                        initialOffsetY = { it / 10 },
-                        animationSpec = tween(800, easing = EaseOutCubic)
-                    )
-        ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .statusBarsPadding()
-                    .navigationBarsPadding()
-                    .padding(horizontal = 24.dp)
-                    .widthIn(max = 440.dp)
-                    .verticalScroll(scrollState),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
-            ) {
-                Spacer(modifier = Modifier.height(32.dp))
-
-
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    WelcomeLogo(customColors = customColors)
-
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    Text(
-                        text = "Yapay zekamız size en doğru restoran ve beslenme önerilerini sunabilmek için sizi tanımak istiyor.",
-                        fontSize = 15.sp,
-                        lineHeight = 22.sp,
-                        textAlign = TextAlign.Center,
-                        color = customColors.navy.copy(alpha = 0.75f),
-                        fontWeight = FontWeight.Medium
-                    )
-                }
-
-                Spacer(modifier = Modifier.height(32.dp))
-
-                WelcomeCardContent(
-                    customColors = customColors,
-                    navigator = navigator,
-                    screenModel = screenModel
-                )
-
-                Spacer(modifier = Modifier.height(32.dp))
+        LaunchedEffect(state.isSuccess) {
+            if (state.isSuccess) {
+                navigator.replace(MyProfileScreen())
+                screenModel.resetSuccessState()
             }
         }
-       }
+        LaunchedEffect(screenModel.uiMessage) {
+            screenModel.uiMessage.collect { message ->
+                ToastManager.show(message)
+            }
+        }
+
+        val customColors = LocalCustomColors.current
+        val scrollState = rememberScrollState()
+
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(customColors.background),
+            contentAlignment = Alignment.Center
+        ) {
+            AnimatedVisibility(
+                visible = showContent,
+                enter = fadeIn(animationSpec = tween(800)) +
+                        slideInVertically(
+                            initialOffsetY = { it / 10 },
+                            animationSpec = tween(800, easing = EaseOutCubic)
+                        )
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .statusBarsPadding()
+                        .navigationBarsPadding()
+                        .padding(horizontal = 24.dp)
+                        .widthIn(max = 440.dp)
+                        .verticalScroll(scrollState),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    Spacer(modifier = Modifier.height(32.dp))
+
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        WelcomeLogo(customColors = customColors)
+
+                        Spacer(modifier = Modifier.height(16.dp))
+
+                        Text(
+                            text = stringResource(Res.string.onboarding_subtitle),
+                            fontSize = 15.sp,
+                            lineHeight = 22.sp,
+                            textAlign = TextAlign.Center,
+                            color = customColors.textSecondary,
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(32.dp))
+
+                    WelcomeCardContent(
+                        customColors = customColors,
+                        navigator = navigator,
+                        screenModel = screenModel,
+                        isLoading = state.isActionLoading
+                    )
+
+                    Spacer(modifier = Modifier.height(32.dp))
+                }
+            }
+        }
     }
 }
 
@@ -110,8 +141,8 @@ fun WelcomeLogo(customColors: CustomColors) {
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
-            text = "HOŞ GELDİNİZ",
-            color = customColors.navy.copy(alpha = 0.35f),
+            text = stringResource(Res.string.onboarding_welcome),
+            color = customColors.textTertiary,
             fontSize = 13.sp,
             fontWeight = FontWeight.Bold,
             letterSpacing = 3.sp
@@ -125,7 +156,7 @@ fun WelcomeLogo(customColors: CustomColors) {
         ) {
             Text(
                 text = "TastyMap",
-                color = customColors.navy,
+                color = customColors.textPrimary,
                 fontWeight = FontWeight.Black,
                 fontSize = 40.sp,
                 letterSpacing = (-1).sp
@@ -143,7 +174,7 @@ fun WelcomeLogo(customColors: CustomColors) {
             ) {
                 Text(
                     text = "AI",
-                    color = Color.White,
+                    color = customColors.surface,
                     fontWeight = FontWeight.Bold,
                     fontSize = 13.sp,
                     letterSpacing = 0.5.sp
@@ -172,8 +203,8 @@ fun WelcomeLogo(customColors: CustomColors) {
                 Spacer(modifier = Modifier.width(8.dp))
 
                 Text(
-                    text = "Kişisel lezzet asistanınız",
-                    color = customColors.navy,
+                    text = stringResource(Res.string.onboarding_tagline),
+                    color = customColors.textPrimary,
                     fontSize = 13.sp,
                     fontWeight = FontWeight.Bold
                 )
@@ -186,7 +217,8 @@ fun WelcomeLogo(customColors: CustomColors) {
 fun WelcomeCardContent(
     customColors: CustomColors,
     navigator: Navigator,
-    screenModel: HealthScreenModel
+    screenModel: HealthScreenModel,
+    isLoading: Boolean
 ) {
     Card(
         modifier = Modifier
@@ -196,11 +228,11 @@ fun WelcomeCardContent(
                 elevation = 16.dp,
                 shape = RoundedCornerShape(32.dp),
                 clip = false,
-                ambientColor = customColors.navy.copy(alpha = 0.12f),
-                spotColor = customColors.navy.copy(alpha = 0.22f)
+                ambientColor = customColors.textPrimary.copy(alpha = 0.08f),
+                spotColor = customColors.textPrimary.copy(alpha = 0.12f)
             ),
         shape = RoundedCornerShape(32.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White)
+        colors = CardDefaults.cardColors(containerColor = customColors.surface)
     ) {
         Column(
             modifier = Modifier
@@ -215,22 +247,22 @@ fun WelcomeCardContent(
                 FeatureColumn(
                     customColors = customColors,
                     icon = Icons.Rounded.Psychology,
-                    title = "Akıllı",
-                    description = "Zevklerinizi\nöğrenir",
+                    title = stringResource(Res.string.onboarding_feature_smart_title),
+                    description =stringResource(Res.string.onboarding_feature_smart_desc),
                     modifier = Modifier.weight(1f)
                 )
                 FeatureColumn(
                     customColors = customColors,
                     icon = Icons.Rounded.HealthAndSafety,
-                    title = "Sağlıklı",
-                    description = "Size özel\nfiltreler",
+                    title = stringResource(Res.string.onboarding_feature_healthy_title),
+                    description = stringResource(Res.string.onboarding_feature_healthy_desc),
                     modifier = Modifier.weight(1f)
                 )
                 FeatureColumn(
                     customColors = customColors,
                     icon = Icons.Rounded.Restaurant,
-                    title = "Özgün",
-                    description = "Restoran\nönerileri",
+                    title = stringResource(Res.string.onboarding_feature_original_title),
+                    description = stringResource(Res.string.onboarding_feature_original_desc),
                     modifier = Modifier.weight(1f)
                 )
             }
@@ -238,24 +270,28 @@ fun WelcomeCardContent(
             Spacer(modifier = Modifier.height(36.dp))
 
             TastyButton(
-                text = "Başlayalım",
+                text = stringResource(Res.string.onboarding_start_btn),
                 onClick = { navigator.push(HealthWizardScreen()) },
+                modifier = Modifier.fillMaxWidth(),
                 isPrimary = true,
+                enabled = !isLoading,
                 backcolor = customColors.navy,
-                textcolor = Color.White,
+                textcolor = customColors.surface,
                 strokecolor = Color.Transparent
             )
 
             Spacer(modifier = Modifier.height(12.dp))
 
-
             TastyButton(
-                text = "Şimdilik Atla",
-                onClick = screenModel::skipHealthWizard,// Ana sayfa yonlendırmesı olcak
+                text = stringResource(Res.string.onboarding_skip_btn),
+                onClick = screenModel::skipHealthWizard,
+                modifier = Modifier.fillMaxWidth(),
                 isPrimary = false,
+                isLoading = isLoading,
+                enabled = !isLoading,
                 backcolor = Color.Transparent,
-                textcolor = customColors.navy.copy(alpha = 0.85f),
-                strokecolor = customColors.navy.copy(alpha = 0.15f)
+                textcolor = customColors.textSecondary,
+                strokecolor = customColors.borderLight
             )
         }
     }
@@ -277,7 +313,7 @@ fun FeatureColumn(
             modifier = Modifier
                 .size(48.dp)
                 .background(
-                    color = customColors.navy.copy(alpha = 0.06f),
+                    color = customColors.surfaceVariant,
                     shape = RoundedCornerShape(16.dp)
                 ),
             contentAlignment = Alignment.Center
@@ -296,7 +332,7 @@ fun FeatureColumn(
             text = title,
             fontSize = 14.sp,
             fontWeight = FontWeight.Bold,
-            color = customColors.navy,
+            color = customColors.textPrimary,
             textAlign = TextAlign.Center
         )
 
@@ -306,7 +342,7 @@ fun FeatureColumn(
             text = description,
             fontSize = 13.sp,
             fontWeight = FontWeight.Medium,
-            color = customColors.navy.copy(alpha = 0.88f),
+            color = customColors.textSecondary,
             textAlign = TextAlign.Center,
             lineHeight = 17.sp
         )

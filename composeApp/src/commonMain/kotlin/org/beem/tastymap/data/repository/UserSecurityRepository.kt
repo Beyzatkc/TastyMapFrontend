@@ -1,12 +1,12 @@
 package org.beem.tastymap.data.repository
 
-import org.beem.tastymap.core.local.TokenManager
-import org.beem.tastymap.core.local.UserManager
+
 import org.beem.tastymap.core.network.ResultWrapper
 import org.beem.tastymap.core.network.safeApiCall
 import org.beem.tastymap.core.provider.AuthValidator
 import org.beem.tastymap.data.model.auth.CommonRequest
 import org.beem.tastymap.data.model.auth.NotificationResponse
+import org.beem.tastymap.data.model.auth.PasswordRequest
 import org.beem.tastymap.data.model.auth.ResetPassword
 import org.beem.tastymap.data.model.auth.ResetPasswordResponse
 import org.beem.tastymap.data.remote.UserSecurityDataSource
@@ -38,9 +38,9 @@ class UserSecurityRepository(
         }
     }
 
-    suspend fun forgotPassword(commonRequest: CommonRequest): ResultWrapper<ResetPasswordResponse>{
+    suspend fun forgotPassword(passwordRequest: PasswordRequest): ResultWrapper<ResetPasswordResponse>{
         return safeApiCall {
-            dataSource.forgotPassword(commonRequest)
+            dataSource.forgotPassword(passwordRequest)
         }
     }
     suspend fun resetPassword(passwordRequest: ResetPassword): ResultWrapper<String>{

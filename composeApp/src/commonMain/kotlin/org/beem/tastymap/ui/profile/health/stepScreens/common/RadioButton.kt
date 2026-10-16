@@ -28,16 +28,15 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import org.beem.tastymap.ui.theme.CustomColors
 
-
 @Composable
- fun RadioButton(
+fun RadioButton(
     text: String,
     selected: Boolean,
     customColors: CustomColors,
     onClick: () -> Unit
 ) {
     val borderColor by animateColorAsState(
-        targetValue = if (selected) customColors.gold else customColors.lineAlpha.copy(alpha = 0.6f),
+        targetValue = if (selected) customColors.gold else customColors.borderLight,
         animationSpec = tween(200),
         label = "BorderColorAnimation"
     )
@@ -47,7 +46,7 @@ import org.beem.tastymap.ui.theme.CustomColors
         label = "BackgroundColorAnimation"
     )
     val textColor by animateColorAsState(
-        targetValue = if (selected) customColors.navy else customColors.lineAlpha.copy(alpha = 1f),
+        targetValue = if (selected) customColors.textPrimary else customColors.textSecondary,
         animationSpec = tween(200),
         label = "TextColorAnimation"
     )
@@ -75,7 +74,7 @@ import org.beem.tastymap.ui.theme.CustomColors
             onClick = null,
             colors = RadioButtonDefaults.colors(
                 selectedColor = customColors.gold,
-                unselectedColor = customColors.lineAlpha.copy(alpha = 0.6f),
+                unselectedColor = customColors.borderStrong
             )
         )
         Spacer(modifier = Modifier.width(12.dp))

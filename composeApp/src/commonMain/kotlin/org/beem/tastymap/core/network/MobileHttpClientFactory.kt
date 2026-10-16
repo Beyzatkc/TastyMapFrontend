@@ -8,28 +8,31 @@ import io.ktor.client.plugins.auth.*
 import io.ktor.client.plugins.auth.providers.*
 import io.ktor.client.request.*
 import io.ktor.http.*
+import org.beem.tastymap.core.auth.AuthEventBus
+import org.beem.tastymap.core.local.SettingsManager
 import org.beem.tastymap.core.local.TokenManager
 import org.beem.tastymap.core.local.UserManager
 import org.beem.tastymap.core.provider.HttpClientFactory
+import org.beem.tastymap.data.model.auth.ErrorResponse
 import org.beem.tastymap.data.model.auth.RefreshTokenResponseDTO
 
 class MobileHttpClientFactory(
     private val tokenManager: TokenManager,
-    private val userManager: UserManager
+    private val authEventBus: AuthEventBus,
+    private val settingsManager: SettingsManager
 ) : HttpClientFactory {
 
     override fun createAuthClient(noAuthClient: HttpClient): HttpClient {
         return HttpClient {
-            commonConfig()
+            commonConfig(settingsManager)
 
-            install(DefaultRequest) {
-                tokenManager.getAccessToken()?.let { token ->
-                    header("Authorization", "Bearer $token")
-                }
-            }
 
             install(Auth) {
                 bearer {
+                    sendWithoutRequest { request ->
+                        true
+                    }
+
                     loadTokens {
                         val access = tokenManager.getAccessToken()
                         val refresh = tokenManager.getRefreshToken()
@@ -40,24 +43,53 @@ class MobileHttpClientFactory(
                         val deviceId = tokenManager.getDeviceId() ?: "unknown_device"
                         val refreshToken = tokenManager.getRefreshToken()
 
+                        println("--> [REFRESH DEBUG] 401 Yakalandı! Refresh başlatılıyor. RefreshToken: $refreshToken")
+
+                        if (refreshToken.isNullOrEmpty()) {
+                            println("--> [REFRESH DEBUG] Refresh token boş, yönlendiriliyor.")
+                            authEventBus.emit(AuthEventBus.AuthEvent.OnSessionExpired)
+                            return@refreshTokens null
+                        }
+
                         try {
                             val response = noAuthClient.post("api/users/refresh") {
-                                setBody(mapOf(
-                                    "deviceId" to deviceId,
-                                    "refreshToken" to (refreshToken ?: "")
-                                ))
+                                contentType(ContentType.Application.Json)
+                                setBody(
+                                    mapOf(
+                                        "deviceId" to deviceId,
+                                        "refreshToken" to refreshToken
+                                    )
+                                )
                             }
+
+                            println("--> [REFRESH DEBUG] Refresh Yanıt Kodu: ${response.status}")
 
                             if (response.status == HttpStatusCode.OK) {
                                 val newTokens = response.body<RefreshTokenResponseDTO>()
-                                tokenManager.saveTokens(newTokens.accessToken, newTokens.refreshToken)
-                                BearerTokens(newTokens.accessToken, newTokens.refreshToken)
+                                println("--> [REFRESH DEBUG] Başarılı! Yeni Access Token: ${newTokens.accessToken.take(10)}...")
+
+                                tokenManager.saveTokens(newTokens.accessToken, newTokens.refreshtoken)
+                                BearerTokens(newTokens.accessToken, newTokens.refreshtoken)
                             } else {
-                                tokenManager.clear()
-                                userManager.clear()
+                                // Hatanın ham string halini logla ki backend'in ne döndüğünü kesin gör
+                                val errorBodyString = response.body<String>()
+                                println("--> [REFRESH DEBUG] Refresh Hata Body: $errorBodyString")
+
+                                // String yanıtı manuel kontrol et veya ErrorResponse'a çevir
+                                val isPasswordChanged = errorBodyString.contains("PASSWORD_CHANGED")
+                                val isLoggedOut = errorBodyString.contains("LOGGED_OUT")
+
+                                when {
+                                    isPasswordChanged -> authEventBus.emit(AuthEventBus.AuthEvent.OnPasswordChanged)
+                                    isLoggedOut -> authEventBus.emit(AuthEventBus.AuthEvent.OnLoggedOut)
+                                    else -> authEventBus.emit(AuthEventBus.AuthEvent.OnSessionExpired)
+                                }
                                 null
                             }
                         } catch (e: Exception) {
+                            println("--> [REFRESH DEBUG] Exception Fırlatıldı: ${e.message}")
+                            e.printStackTrace()
+                            authEventBus.emit(AuthEventBus.AuthEvent.OnSessionExpired)
                             null
                         }
                     }

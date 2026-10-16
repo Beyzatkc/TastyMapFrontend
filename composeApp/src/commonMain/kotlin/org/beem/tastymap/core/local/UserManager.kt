@@ -1,19 +1,18 @@
 package org.beem.tastymap.core.local
 
+import kotlinx.coroutines.flow.StateFlow
+
 interface UserManager {
-    fun saveUser(
-       userSession: UserSession
+    val userSession: StateFlow<UserSession?>
+
+    fun saveUser(userSession: UserSession)
+    fun updateProfileSession(
+        username: String?,
+        name: String?,
+        surname: String?,
+        profilePhoto: String?,
+        biography: String?
     )
-    fun getStatus(): String?
-    fun getMessage(): String?
-    fun getUserId(): Long?
-    fun getUsername(): String?
-    fun getName(): String?
-    fun getSurname(): String?
-    fun getProfile(): String?
-    fun getRole(): String?
-    fun getDate(): String?
-    fun getBiography(): String?
-    fun getOnBoardComplete(): Boolean?
+    fun setOnBoardComplete(completed: Boolean)
     fun clear()
 }

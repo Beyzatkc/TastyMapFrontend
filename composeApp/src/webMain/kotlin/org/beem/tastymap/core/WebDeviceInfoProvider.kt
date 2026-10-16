@@ -46,6 +46,10 @@ class WebDeviceInfoProvider: DeviceInfoProvider {
     }
 
     override fun getUserAgent(): String {
+        println("navigator = ${window.navigator}")
+        println("userAgent = ${window.navigator.userAgent}")
+        println("platform = ${window.navigator.platform}")
+        println("language = ${window.navigator.language}")
         return window.navigator.userAgent
     }
 

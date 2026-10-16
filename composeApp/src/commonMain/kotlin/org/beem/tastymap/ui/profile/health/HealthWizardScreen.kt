@@ -1,9 +1,6 @@
 package org.beem.tastymap.ui.profile.health
 
 import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -20,19 +17,23 @@ import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import org.beem.tastymap.core.util.ToastManager
 import org.beem.tastymap.ui.animations.TastyAnimations
-import org.beem.tastymap.ui.components.AuthFooter
 import org.beem.tastymap.ui.profile.health.stepScreens.AllergiesStep
 import org.beem.tastymap.ui.profile.health.stepScreens.DiabetesStep
 import org.beem.tastymap.ui.profile.health.stepScreens.EatTypeStep
 import org.beem.tastymap.ui.profile.health.stepScreens.SummaryStep
-import org.beem.tastymap.ui.theme.CustomColors
+import org.beem.tastymap.ui.profile.myprofile.MyProfileScreen
 import org.beem.tastymap.ui.theme.LocalCustomColors
+import org.jetbrains.compose.resources.stringResource
+import tastymap.composeapp.generated.resources.Res
+import tastymap.composeapp.generated.resources.health_wizard_back_cd
+import tastymap.composeapp.generated.resources.health_wizard_step_indicator
 
 class HealthWizardScreen : Screen {
 
     @OptIn(ExperimentalMaterial3Api::class)
     @Composable
     override fun Content() {
+
         val screenModel = koinScreenModel<HealthScreenModel>()
         val state by screenModel.healthState.collectAsState()
         val customColors = LocalCustomColors.current
@@ -45,6 +46,11 @@ class HealthWizardScreen : Screen {
                 navigator.pop()
             }
         }
+        LaunchedEffect(state.isSuccess) {
+            if (state.isSuccess) {
+                navigator.replace(MyProfileScreen())
+            }
+        }
 
         LaunchedEffect(screenModel.uiMessage) {
             screenModel.uiMessage.collect { message ->
@@ -53,6 +59,7 @@ class HealthWizardScreen : Screen {
         }
 
         Scaffold(
+            containerColor = customColors.background,
             topBar = {
                 Row(
                     modifier = Modifier
@@ -63,16 +70,16 @@ class HealthWizardScreen : Screen {
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
 
-                        IconButton(
-                            onClick = { handleBack() },
-                            modifier = Modifier.size(32.dp)
-                        ) {
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                contentDescription = "Geri Dön",
-                                tint = MaterialTheme.colorScheme.onSurface
-                            )
-                        }
+                    IconButton(
+                        onClick = { handleBack() },
+                        modifier = Modifier.size(32.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = stringResource(Res.string.health_wizard_back_cd),
+                            tint = customColors.textPrimary
+                        )
+                    }
 
                     LinearProgressIndicator(
                         progress = { (state.currentStep + 1).toFloat() / state.totalSteps },
@@ -85,29 +92,22 @@ class HealthWizardScreen : Screen {
                     )
 
                     Text(
-                        text = "Adım ${state.currentStep + 1} / ${state.totalSteps}",
+                        text = stringResource(Res.string.health_wizard_step_indicator, state.currentStep + 1, state.totalSteps),
                         style = MaterialTheme.typography.labelMedium,
-                        color = customColors.navy.copy(alpha = 0.7f),
+                        color = customColors.textSecondary,
                         maxLines = 1
                     )
                 }
-            },
-            bottomBar = {
-                AuthFooter(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .navigationBarsPadding()
-                        .padding(bottom = 10.dp)
-                )
             }
         ) { paddingValues ->
+
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(paddingValues)
-                    .padding(horizontal = 24.dp),
+                    .padding(paddingValues),
                 contentAlignment = Alignment.Center
             ) {
+
                 AnimatedContent(
                     targetState = state.currentStep,
                     transitionSpec = {
@@ -120,30 +120,37 @@ class HealthWizardScreen : Screen {
                     label = "WizardStepTransition",
                     modifier = Modifier.fillMaxWidth()
                 ) { step ->
+
                     when (step) {
+
                         0 -> DiabetesStep(
                             state = state,
                             onDiabetesChanged = screenModel::toggleDiabetes,
-                            onNextClick = { screenModel.nextStep() },
+                            onNextClick = screenModel::nextStep,
                             onBackClick = { handleBack() }
                         )
+
                         1 -> EatTypeStep(
                             state = state,
                             onEatTypeChanged = screenModel::selectEatType,
-                            onNextClick = { screenModel.nextStep() },
+                            onNextClick = screenModel::nextStep,
                             onBackClick = { handleBack() }
                         )
-                         2 -> AllergiesStep(
-                             state = state,
-                             onAllergyToggle = screenModel::toggleAllergy,
-                             onNextClick = {screenModel.nextStep()},
-                             onBackClick = {handleBack()}
-                         )
-                         3 -> SummaryStep(
-                             state = state,
-                             onNextClick = {screenModel.saveHealthProfile()},//ANA sayfa yonlendırmesı olcak
-                             onBackClick = {handleBack()}
-                         )
+
+                        2 -> AllergiesStep(
+                            state = state,
+                            onAllergyToggle = screenModel::toggleAllergy,
+                            onNextClick = screenModel::nextStep,
+                            onBackClick = { handleBack() }
+                        )
+
+                        3 -> SummaryStep(
+                            state = state,
+                            onNextClick = {
+                                screenModel.saveHealthProfile()
+                            },
+                            onBackClick = { handleBack() }
+                        )
                     }
                 }
             }

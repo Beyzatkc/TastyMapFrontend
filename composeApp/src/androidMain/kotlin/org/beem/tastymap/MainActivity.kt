@@ -5,15 +5,11 @@ import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import com.google.firebase.FirebaseApp
 import dev.icerock.moko.permissions.PermissionsController
 import org.beem.tastymap.core.navigation.DeepLinkManager
 import org.koin.android.ext.android.getKoin
-import kotlin.getValue
 
 class MainActivity : ComponentActivity() {
 
@@ -21,19 +17,20 @@ class MainActivity : ComponentActivity() {
         PermissionsController(applicationContext)
     }
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        permissionsController.bind(this)
-        getKoin().declare(permissionsController)
-        Log.d("DEEPLINK", "ONCREATE INTENT: ${intent?.data}")
 
-        enableEdgeToEdge()
+    override fun onCreate(savedInstanceState: Bundle?) {
         installSplashScreen()
         super.onCreate(savedInstanceState)
+        window.setSoftInputMode(
+            android.view.WindowManager.LayoutParams.SOFT_INPUT_ADJUST_NOTHING
+        )
+
+        permissionsController.bind(this)
+        getKoin().declare(permissionsController)
         FirebaseApp.initializeApp(this)
-        intent?.data?.toString()?.let {
-            Log.d("DEEPLINK", "HANDLE LINK CALLED: $it")
-            DeepLinkManager.handleLink(it)
-        }
+
+        // 1. Uygulama Kapalıyken Gelen Linki İşle
+        processDeepLink(intent)
 
         setContent {
             App()
@@ -43,16 +40,36 @@ class MainActivity : ComponentActivity() {
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         setIntent(intent)
-        intent.data?.toString()?.let {
-            Log.d("DEEPLINK", "NEW INTENT: ${intent.data}")
-            DeepLinkManager.handleLink(it)
-        }
+
+        // 2. Uygulama Açık/Arkaplandayken Gelen Linki İşle
+        processDeepLink(intent)
     }
 
-}
+    private fun processDeepLink(intent: Intent?) {
+        // 1. Önce normal web linki (URI) ile mi gelindi ona bakalım
+        val dataUri = intent?.data
+        if (dataUri != null) {
+            Log.d("DEEPLINK_DEBUG", "Gelen Raw Intent Data: $dataUri")
+            DeepLinkManager.handleLink(dataUri.toString())
+            return // İşlem bitti, çık
+        }
 
-@Preview
-@Composable
-fun AppAndroidPreview() {
-    App()
+        // 2. FCM Bildirimine tıklanarak mı gelindi? (Extras kontrolü)
+        val extras = intent?.extras
+        if (extras != null) {
+            val type = extras.getString("type")
+            val userId = extras.getString("userId") // Takip bildirimi için backend'den yolladığımız id
+
+            Log.d("FCM_DEBUG", "Bildirime Tıklandı - Type: $type, UserId: $userId")
+
+            when (type) {
+                "FOLLOW_REQUEST", "NEW_FOLLOWER" -> {
+                    if (userId != null) {
+                        val profileLink = "https://coleman-nonethic-marinda.ngrok-free.dev/profile/$userId"
+                        DeepLinkManager.handleLink(profileLink)
+                    }
+                }
+            }
+        }
+    }
 }

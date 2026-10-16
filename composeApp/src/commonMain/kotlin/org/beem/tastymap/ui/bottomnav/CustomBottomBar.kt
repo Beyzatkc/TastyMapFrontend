@@ -1,0 +1,155 @@
+package org.beem.tastymap.ui.bottomnav
+
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AddCircle
+import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.outlined.Add
+import androidx.compose.material.icons.outlined.AddBox
+import androidx.compose.material.icons.outlined.AddCircleOutline
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
+import cafe.adriel.voyager.navigator.Navigator
+import cafe.adriel.voyager.navigator.tab.Tab
+import cafe.adriel.voyager.navigator.tab.TabOptions
+import cafe.adriel.voyager.transitions.SlideTransition
+import org.beem.tastymap.ui.post.create.CreatePostScreen
+import org.beem.tastymap.ui.profile.myprofile.MyProfileScreen
+import org.beem.tastymap.ui.profile.myprofile.settings.deleteaccount.AccountDeactivatedScreen
+import org.beem.tastymap.ui.search.SearchScreen
+import org.jetbrains.compose.resources.stringResource
+import tastymap.composeapp.generated.resources.Res
+import tastymap.composeapp.generated.resources.nav_map
+import tastymap.composeapp.generated.resources.nav_profile
+import tastymap.composeapp.generated.resources.nav_search
+import tastymap.composeapp.generated.resources.nav_upload
+
+// 1. HARİTA SEKMESİ
+object MapTab : Tab {
+    override val options: TabOptions
+        @Composable
+        get() {
+            val title = stringResource(Res.string.nav_map)
+            val icon = rememberVectorPainter(Icons.Default.LocationOn)
+            return remember { TabOptions(index = 0u, title = title, icon = icon) }
+        }
+
+    @Composable
+    override fun Content() {
+        // MapScreen() buraya gelecek
+    }
+}
+
+// 2. ARAMA SEKMESİ
+object SearchTab : Tab {
+    override val options: TabOptions
+        @Composable
+        get() {
+            val title = stringResource(Res.string.nav_search)
+            val icon = rememberVectorPainter(Icons.Default.Search)
+            return remember { TabOptions(index = 1u, title = title, icon = icon) }
+        }
+
+    @Composable
+    override fun Content() {
+        val bottomBarVisibility = LocalNavigationBarVisibility.current
+        val isWideScreen = LocalIsWideScreen.current // Ekran genişliğini oku
+
+        Navigator(SearchScreen()) { navigator ->
+            LaunchedEffect(navigator.lastItem, isWideScreen) {
+                if (isWideScreen) {
+                    bottomBarVisibility.value = true // Web'de her zaman göster
+                } else {
+                    val currentScreen = navigator.lastItem
+                    val isMyProfile = currentScreen is MyProfileScreen
+                    bottomBarVisibility.value = isMyProfile || navigator.items.size == 1
+                }
+            }
+            SlideTransition(navigator)
+        }
+    }
+}
+
+// 3. YÜKLEME SEKMESİ
+object UploadTab : Tab {
+    override val options: TabOptions
+        @Composable
+        get() {
+            val title = stringResource(Res.string.nav_upload)
+            val icon = rememberVectorPainter(Icons.Outlined.Add)
+            return remember { TabOptions(index = 2u, title = title, icon = icon) }
+        }
+
+    @Composable
+    override fun Content() {
+        val bottomBarVisibility = LocalNavigationBarVisibility.current
+        val isWideScreen = LocalIsWideScreen.current
+
+        Navigator(key = "CreatePostNavigator", screen = CreatePostScreen()) { navigator ->
+            LaunchedEffect(navigator.lastItem, isWideScreen) {
+                if (isWideScreen) {
+                    bottomBarVisibility.value = true
+                } else {
+                    val currentScreen = navigator.lastItem
+                    val isMyProfile = currentScreen is MyProfileScreen
+                    bottomBarVisibility.value = isMyProfile || navigator.items.size == 1
+                }
+            }
+            SlideTransition(navigator)
+        }
+    }
+}
+
+object ProfileTab : Tab {
+    override val options: TabOptions
+        @Composable
+        get() {
+            val title = stringResource(Res.string.nav_profile)
+            val icon = rememberVectorPainter(Icons.Default.Person)
+            return remember { TabOptions(index = 3u, title = title, icon = icon) }
+        }
+
+    @Composable
+    override fun Content() {
+        val bottomBarVisibility = LocalNavigationBarVisibility.current
+        val isWideScreen = LocalIsWideScreen.current
+
+        Navigator(MyProfileScreen()) { navigator ->
+            LaunchedEffect(navigator.lastItem, isWideScreen) {
+                if (isWideScreen) {
+                    val currentScreen = navigator.lastItem
+                    bottomBarVisibility.value = currentScreen !is AccountDeactivatedScreen
+                } else {
+                    val currentScreen = navigator.lastItem
+                    if (currentScreen is AccountDeactivatedScreen) {
+                        bottomBarVisibility.value = false
+                    } else {
+                        bottomBarVisibility.value = navigator.items.size == 1
+                    }
+                }
+            }
+            SlideTransition(navigator)
+        }
+    }
+}
+
+object AITab : Tab {
+    override val options: TabOptions
+        @Composable
+        get() {
+            return TabOptions(
+                index = 2u,
+                title = "AI",
+                icon = rememberVectorPainter(Icons.Default.Star)
+            )
+        }
+
+    @Composable
+    override fun Content() {
+        // AI ekranın
+    }
+}

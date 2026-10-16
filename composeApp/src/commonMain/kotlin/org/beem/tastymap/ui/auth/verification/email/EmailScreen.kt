@@ -1,6 +1,5 @@
 package org.beem.tastymap.ui.auth.verification.email
 
-import TastyButton
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -27,15 +26,29 @@ import cafe.adriel.voyager.navigator.currentOrThrow
 import org.beem.tastymap.core.navigation.VerifyNavigator
 import org.beem.tastymap.core.util.ToastManager
 import org.beem.tastymap.ui.auth.common.AuthLifecycleEvent
+import org.beem.tastymap.ui.auth.forgotPassword.ResetScreenModel
 import org.beem.tastymap.ui.auth.logReg.LogRegScreen
 
 import org.beem.tastymap.ui.common.UnifiedLifecycleObserver
 import org.beem.tastymap.ui.components.AuthFooter
 import org.beem.tastymap.ui.components.BackPage
+import org.beem.tastymap.ui.components.TastyButton
 import org.beem.tastymap.ui.theme.LocalCustomColors
+import org.jetbrains.compose.resources.getString
+import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.koinInject
+import tastymap.composeapp.generated.resources.Res
+import tastymap.composeapp.generated.resources.email_verify_back_to_login
+import tastymap.composeapp.generated.resources.email_verify_desc
+import tastymap.composeapp.generated.resources.email_verify_header
+import tastymap.composeapp.generated.resources.email_verify_resend_prompt
+import tastymap.composeapp.generated.resources.email_verify_resend_timer
+import tastymap.composeapp.generated.resources.email_verify_security_desc
+import tastymap.composeapp.generated.resources.email_verify_security_title
+import tastymap.composeapp.generated.resources.email_verify_spam_note
+import tastymap.composeapp.generated.resources.email_verify_title
 
-class EmailVerificationScreen(val email: String, val deviceId: String,val userId: Long) : Screen {
+class EmailVerificationScreen(val email: String, val deviceId: String, val userId: Long) : Screen {
     @Composable
     override fun Content() {
         val colors = LocalCustomColors.current
@@ -49,14 +62,17 @@ class EmailVerificationScreen(val email: String, val deviceId: String,val userId
                 EmailScreenModel.EmailNavEffect.OnSuccess -> {
                     verifyNavigator.verifyEmailNavigationTwo(navigator)
                 }
-
                 null -> Unit
             }
         }
 
         LaunchedEffect(Unit) {
             screenModel.uiMessage.collect { message ->
-                ToastManager.show(message)
+                val text = when (message) {
+                    is EmailScreenModel.UiMessage.Dynamic -> message.message
+                    is EmailScreenModel.UiMessage.Resource -> getString(message.res)
+                }
+                ToastManager.show(text)
             }
         }
 
@@ -66,6 +82,7 @@ class EmailVerificationScreen(val email: String, val deviceId: String,val userId
                 deviceId
             )
         }
+
         UnifiedLifecycleObserver(
             onActive = {
                 println("LIFECYCLE: Ekran aktif (Resume/Focus/Visible). Model tetikleniyor.")
@@ -77,14 +94,17 @@ class EmailVerificationScreen(val email: String, val deviceId: String,val userId
             }
         )
 
-        Surface {
+        Surface(
+            modifier = Modifier.fillMaxSize(),
+            color = colors.background
+        ) {
             Column(
                 modifier = Modifier
                     .fillMaxSize()
                     .statusBarsPadding()
                     .navigationBarsPadding()
             ) {
-                BackPage("Doğrulama", {
+                BackPage(stringResource(Res.string.email_verify_header), {
                     navigator.pop()
                 })
                 Box(
@@ -93,7 +113,6 @@ class EmailVerificationScreen(val email: String, val deviceId: String,val userId
                         .fillMaxWidth(),
                     contentAlignment = Alignment.TopCenter
                 ) {
-
                     Column(
                         modifier = Modifier
                             .widthIn(max = 480.dp)
@@ -108,7 +127,7 @@ class EmailVerificationScreen(val email: String, val deviceId: String,val userId
                             modifier = Modifier
                                 .size(96.dp)
                                 .background(
-                                    color = colors.navy.copy(alpha = 0.08f),
+                                    color = colors.surfaceVariant,
                                     shape = RoundedCornerShape(28.dp)
                                 ),
                             contentAlignment = Alignment.Center
@@ -117,27 +136,27 @@ class EmailVerificationScreen(val email: String, val deviceId: String,val userId
                                 imageVector = Icons.Default.Email,
                                 contentDescription = null,
                                 modifier = Modifier.size(40.dp),
-                                tint = colors.navy
+                                tint = colors.textPrimary
                             )
                         }
 
                         Spacer(modifier = Modifier.height(24.dp))
 
                         Text(
-                            text = "E-postanı Doğrula",
+                            text = stringResource(Res.string.email_verify_title),
                             style = MaterialTheme.typography.headlineSmall,
                             fontWeight = FontWeight.Bold,
-                            color = colors.navy,
+                            color = colors.textPrimary,
                             textAlign = TextAlign.Center
                         )
 
                         Spacer(modifier = Modifier.height(12.dp))
 
                         Text(
-                            text = "$email adresine bir doğrulama bağlantısı gönderdik. Lütfen e-posta kutunu kontrol et.",
+                            text = stringResource(Res.string.email_verify_desc, email),
                             textAlign = TextAlign.Center,
                             style = MaterialTheme.typography.bodyMedium,
-                            color = Color.Gray
+                            color = colors.textSecondary
                         )
 
                         Spacer(modifier = Modifier.height(32.dp))
@@ -151,7 +170,7 @@ class EmailVerificationScreen(val email: String, val deviceId: String,val userId
                         Spacer(modifier = Modifier.height(16.dp))
 
                         TastyButton(
-                            text = "Giriş Ekranına Dön",
+                            text = stringResource(Res.string.email_verify_back_to_login),
                             onClick = {
                                 if (navigator.canPop) {
                                     navigator.pop()
@@ -160,8 +179,8 @@ class EmailVerificationScreen(val email: String, val deviceId: String,val userId
                                 }
                             },
                             backcolor = colors.navy,
-                            textcolor = Color.White,
-                            strokecolor = colors.navy
+                            textcolor = colors.surface,
+                            strokecolor = Color.Transparent
                         )
 
                         Spacer(modifier = Modifier.height(32.dp))
@@ -170,7 +189,7 @@ class EmailVerificationScreen(val email: String, val deviceId: String,val userId
                             modifier = Modifier.fillMaxWidth(),
                             shape = RoundedCornerShape(16.dp),
                             colors = CardDefaults.cardColors(
-                                containerColor = colors.navy.copy(alpha = 0.05f)
+                                containerColor = colors.surfaceVariant
                             )
                         ) {
                             Column(
@@ -180,25 +199,24 @@ class EmailVerificationScreen(val email: String, val deviceId: String,val userId
                                 Text(
                                     text = buildAnnotatedString {
                                         withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
-                                            append("Güvenlik uyarısı:\n")
+                                            append(stringResource(Res.string.email_verify_security_title))
                                         }
                                         withStyle(style = SpanStyle(fontWeight = FontWeight.Normal)) {
-                                            append("Gönderilen doğrulama bağlantısının geçerlilik süresi 10 dakikadır.")
+                                            append(stringResource(Res.string.email_verify_security_desc))
                                         }
                                     },
                                     style = MaterialTheme.typography.bodySmall,
                                     fontWeight = FontWeight.Medium,
-                                    color = Color.Gray
+                                    color = colors.textSecondary
                                 )
 
                                 Text(
-                                    text = "E-posta kutunuzda göremiyorsanız Spam klasörünü kontrol etmeyi unutmayın.",
+                                    text = stringResource(Res.string.email_verify_spam_note),
                                     style = MaterialTheme.typography.bodySmall,
-                                    color = Color.Gray
+                                    color = colors.textSecondary
                                 )
                             }
                         }
-
                     }
                 }
                 AuthFooter(
@@ -213,6 +231,7 @@ class EmailVerificationScreen(val email: String, val deviceId: String,val userId
 fun ResendSection(onResendClick: () -> Unit, navyIcons: Color, screenModel: EmailScreenModel) {
     val timeLeft by screenModel.timeLeft.collectAsState()
     val isButtonEnabled = timeLeft == 0
+    val customColors = LocalCustomColors.current
 
     Column(
         modifier = Modifier.fillMaxWidth(),
@@ -229,11 +248,11 @@ fun ResendSection(onResendClick: () -> Unit, navyIcons: Color, screenModel: Emai
         ) {
             Text(
                 text = if (isButtonEnabled) {
-                    "E-posta gelmedi mi? Tekrar gönder"
+                    stringResource(Res.string.email_verify_resend_prompt)
                 } else {
-                    "Tekrar gönder: ${timeLeft}s"
+                    stringResource(Res.string.email_verify_resend_timer, timeLeft)
                 },
-                color = if (isButtonEnabled) navyIcons else Color.Gray,
+                color = if (isButtonEnabled) navyIcons else customColors.textSecondary,
                 style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.SemiBold)
             )
         }

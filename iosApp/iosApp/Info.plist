@@ -1,12 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
-<dict>
-	<key>CADisableMinimumFrameDurationOnPhone</key>
-	<true/>
+	<dict>
+		<key>CADisableMinimumFrameDurationOnPhone</key>
+		<true/>
 
-	<key>NSUserNotificationUsageDescription</key>
-	<string>Güvenlik onayları ve hesap hareketlerinizi anlık takip etmek için bildirimlere izin veriyoruz.</string>
+		<key>NSUserNotificationUsageDescription</key>
+		<string>Güvenlik onayları ve hesap hareketlerinizi anlık takip etmek için bildirimlere izin veriyoruz.</string>
 
-</dict>
+		<!-- Galeri İzni -->
+		<key>NSPhotoLibraryUsageDescription</key>
+		<string>Profil fotoğrafınızı değiştirebilmek için galeriye erişim izni gereklidir.</string>
+
+	</dict>
 </plist>

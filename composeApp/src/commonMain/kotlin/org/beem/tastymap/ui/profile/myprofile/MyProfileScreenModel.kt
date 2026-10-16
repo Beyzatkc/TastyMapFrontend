@@ -1,0 +1,107 @@
+package org.beem.tastymap.ui.profile.myprofile
+
+import cafe.adriel.voyager.core.model.ScreenModel
+import cafe.adriel.voyager.core.model.screenModelScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
+import org.beem.tastymap.core.network.ResultWrapper
+import org.beem.tastymap.data.repository.SocialNotificationsRepository
+import org.beem.tastymap.data.repository.profile.MyProfileRepository
+import org.beem.tastymap.ui.common.NotificationBadgeManager
+
+class MyProfileScreenModel(
+    private val repo: MyProfileRepository,
+) : ScreenModel {
+
+    private val _myProfileState = MutableStateFlow(MyProfileUiState())
+    val myProfileState = _myProfileState.asStateFlow()
+
+    private var profileJob: Job? = null
+
+    fun getMyProfile() {
+        profileJob?.cancel()
+
+        profileJob = screenModelScope.launch {
+
+            repo.getMyProfile().collect { profile ->
+
+                _myProfileState.update {
+                    it.copy(
+                        profile = profile,
+                        isLoading = false,
+                        errorMessage = null
+                    )
+                }
+            }
+        }
+    }
+
+    fun fetchRemoteProfile(){
+        screenModelScope.launch {
+            when (val result = repo.refreshMyProfile()) {
+
+                is ResultWrapper.Success -> {
+                    _myProfileState.update {
+                        it.copy(
+                            isRefreshing = false,
+                            isLoading = false,
+                            profile = result.data,
+                            errorMessage = null
+                        )
+                    }
+                }
+
+                is ResultWrapper.Error -> {
+                    _myProfileState.update {
+                        it.copy(
+                            isLoading = false,
+                            isRefreshing = false,
+                            errorMessage = result.message
+                        )
+                    }
+                }
+            }
+        }
+    }
+
+    fun refreshMyProfile() {
+        if (_myProfileState.value.isRefreshing) return
+
+        screenModelScope.launch {
+
+            _myProfileState.update {
+                it.copy(isRefreshing = true)
+            }
+
+            when (val result = repo.refreshMyProfile()) {
+
+                is ResultWrapper.Success -> {
+                    _myProfileState.update {
+                        it.copy(
+                            isRefreshing = false,
+                            profile = result.data,
+                            errorMessage = null
+                        )
+                    }
+                }
+
+                is ResultWrapper.Error -> {
+                    _myProfileState.update {
+                        it.copy(
+                            isRefreshing = false,
+                            errorMessage = result.message
+                        )
+                    }
+                }
+            }
+        }
+    }
+
+    fun clearMessagesProfile() {
+        _myProfileState.update { it.copy(errorMessage = null, successMessageRes = null) }
+    }
+
+}

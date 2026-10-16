@@ -24,10 +24,15 @@ import org.beem.tastymap.ui.auth.common.AuthEffect
 import org.beem.tastymap.ui.auth.common.AuthLifecycleEvent
 import org.beem.tastymap.ui.auth.common.CountdownTimer
 import org.beem.tastymap.ui.auth.verification.RequestState
+import org.beem.tastymap.ui.profile.myprofile.settings.UiMessage
+import tastymap.composeapp.generated.resources.Res
+import tastymap.composeapp.generated.resources.pending_email_sent
+import tastymap.composeapp.generated.resources.pending_login_approved
+import tastymap.composeapp.generated.resources.pending_login_failed
+import tastymap.composeapp.generated.resources.pending_login_rejected
 import kotlin.Boolean
 import kotlin.concurrent.atomics.AtomicBoolean
 import kotlin.concurrent.atomics.ExperimentalAtomicApi
-
 
 class PendingScreenModel(
     private val authRepo: AuthRepository,
@@ -70,7 +75,7 @@ class PendingScreenModel(
     val pendingLogin = _pendingLogin.receiveAsFlow()
 
 
-    private val _uiMessage = Channel<String>()
+    private val _uiMessage = Channel<UiMessage>()
     val uiMessage = _uiMessage.receiveAsFlow()
 
 
@@ -128,10 +133,15 @@ class PendingScreenModel(
 
             when (val result = securityRepo.resendSecurityMail(deviceId)) {
                 is ResultWrapper.Success -> {
-                    _uiMessage.send(result.data ?: "E-posta gönderildi.")
+                    val message = result.data
+                    if (message != null) {
+                        _uiMessage.send(UiMessage.Dynamic(message))
+                    } else {
+                        _uiMessage.send(UiMessage.Resource(Res.string.pending_email_sent))
+                    }
                 }
                 is ResultWrapper.Error -> {
-                    _uiMessage.send(result.message)
+                    _uiMessage.send(UiMessage.Dynamic(result.message))
                 }
             }
             _sendState.update { it.copy(isLoading = false) }
@@ -150,11 +160,11 @@ class PendingScreenModel(
                     println("verifyLogin çağrılıyor")
                     when (val verifyResult =authRepo.verifyLogin(dto)) {
                         is ResultWrapper.Success -> {
-                            _uiMessage.send("Giriş onaylandı.")
+                            _uiMessage.send(UiMessage.Resource(Res.string.pending_login_approved))
                             _pendingLogin.send(AuthEffect.NavigateToHome)
                         }
                         is ResultWrapper.Error -> {
-                            _uiMessage.send(verifyResult.message)
+                            _uiMessage.send(UiMessage.Dynamic(verifyResult.message))
                             _pendingLogin.send(AuthEffect.NavigateToLogin)
                         }
                     }
@@ -162,7 +172,7 @@ class PendingScreenModel(
                     true
                 }
                 else if (result.data.status == Status.REJECTED) {
-                    _uiMessage.send("Giriş isteği reddedildi.")
+                    _uiMessage.send(UiMessage.Resource(Res.string.pending_login_rejected))
                     _pendingLogin.send(AuthEffect.NavigateToLogin)
                     stopWebSocket()
                     true
@@ -172,7 +182,7 @@ class PendingScreenModel(
                 }
             }
             is ResultWrapper.Error ->{
-                _uiMessage.send(result.message)
+                _uiMessage.send(UiMessage.Dynamic(result.message))
                 println("Bildirim durumu kontrol edilirken hata: ${result.message}")
                 false
             }
@@ -234,13 +244,18 @@ class PendingScreenModel(
     ) {
         when (val result = authRepo.verifyLogin(dto)) {
             is ResultWrapper.Success -> {
-                _uiMessage.send("Giriş onaylandı.")
+                _uiMessage.send(UiMessage.Resource(Res.string.pending_login_approved))
                 _pendingLogin.send(AuthEffect.NavigateToHome)
                 stopWebSocket()
             }
 
             is ResultWrapper.Error -> {
-                _uiMessage.send(result.message ?: "Giriş başarısız.")
+                val error = result.message
+                if (error != null) {
+                    _uiMessage.send(UiMessage.Dynamic(error))
+                } else {
+                    _uiMessage.send(UiMessage.Resource(Res.string.pending_login_failed))
+                }
                 _pendingLogin.send(AuthEffect.NavigateToLogin)
                 stopWebSocket()
             }
@@ -250,7 +265,7 @@ class PendingScreenModel(
 
     private suspend fun handleRejected() {
         stopWebSocket()
-        _uiMessage.send("Giriş isteği reddedildi.")
+        _uiMessage.send(UiMessage.Resource(Res.string.pending_login_rejected))
         _pendingLogin.send(AuthEffect.NavigateToLogin)
 
     }

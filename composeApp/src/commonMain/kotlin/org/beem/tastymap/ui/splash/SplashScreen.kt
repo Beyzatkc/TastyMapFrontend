@@ -1,6 +1,5 @@
 package org.beem.tastymap.ui.splash
 
-import OnBoardingScreen
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -20,9 +19,16 @@ import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import kotlinx.coroutines.delay
 import org.beem.tastymap.ui.auth.logReg.LogRegScreen
+import org.beem.tastymap.ui.bottomnav.MainScreen
+import org.beem.tastymap.ui.profile.health.OnBoardingScreen
+import org.beem.tastymap.ui.profile.myprofile.MyProfileScreen
+import org.beem.tastymap.ui.profile.otherprofile.ProfileScreen
+import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.painterResource
+import org.jetbrains.compose.resources.stringResource
 import tastymap.composeapp.generated.resources.Res
 import tastymap.composeapp.generated.resources.app_logo
+import tastymap.composeapp.generated.resources.splash_app_logo_cd
 
 
 class SplashScreen: Screen {
@@ -36,10 +42,21 @@ class SplashScreen: Screen {
             effect?.let {
                 delay(2000)
                 when (it) {
+
                     is SplashEffect.NavigateToDeepLink -> navigator.replaceAll(it.screen)
                     is SplashEffect.NavigateToLogin -> navigator.replaceAll(LogRegScreen())
-                    is SplashEffect.NavigateToHome -> { /* navigator.replaceAll(HomeScreen()) */ }
+                    is SplashEffect.NavigateToHome -> { navigator.replaceAll(MainScreen()) }
+                    //is SplashEffect.NavigateToHome -> { /* navigator.replaceAll(HomeScreen()) */ }
                     is SplashEffect.NavigateToOnBoard -> navigator.replaceAll(OnBoardingScreen())
+
+                     /*
+
+                    is SplashEffect.NavigateToDeepLink -> navigator.replaceAll(MyProfileScreen())
+                    is SplashEffect.NavigateToLogin -> navigator.replaceAll(MyProfileScreen())
+                    is SplashEffect.NavigateToHome -> {  navigator.replaceAll(MyProfileScreen()) }
+                    is SplashEffect.NavigateToOnBoard -> navigator.replaceAll(MyProfileScreen())
+
+                      */
                 }
             }
         }
@@ -53,7 +70,7 @@ class SplashScreen: Screen {
             ) {
                 Image(
                     painter = painterResource(Res.drawable.app_logo),
-                    contentDescription = "App Logo",
+                    contentDescription = stringResource(Res.string.splash_app_logo_cd),
                     modifier = Modifier.size(500.dp)
                 )
             }

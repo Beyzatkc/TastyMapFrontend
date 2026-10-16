@@ -11,8 +11,9 @@ class MobileSessionValidator(
 
     override suspend fun getAuthStatus(): AuthStatus {
         val token = tokenManager.getAccessToken()
-        val userId = userManager.getUserId()
-        val isOnboardingCompleted = userManager.getOnBoardComplete()
+        val session = userManager.userSession.value
+        val userId = session?.userId
+        val isOnboardingCompleted = session?.onBoardComplete
 
         if (token.isNullOrBlank() || userId == null || userId == -1L) {
             return AuthStatus.UNAUTHENTICATED

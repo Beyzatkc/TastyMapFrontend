@@ -1,25 +1,41 @@
 package org.beem.tastymap.core.local
 
-class WebUserManager(): UserManager {
-    private var currentUserSession: UserSession? = null
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+
+class WebUserManager : UserManager {
+
+    private val _userSession = MutableStateFlow<UserSession?>(null)
+    override val userSession: StateFlow<UserSession?> = _userSession.asStateFlow()
 
     override fun saveUser(userSession: UserSession) {
-        this.currentUserSession = userSession
+        _userSession.value = userSession
     }
 
-    override fun getStatus(): String? = currentUserSession?.status
-    override fun getMessage(): String? = currentUserSession?.message
-    override fun getUserId(): Long? = currentUserSession?.userId
-    override fun getUsername(): String? = currentUserSession?.username
-    override fun getName(): String? = currentUserSession?.name
-    override fun getSurname(): String? = currentUserSession?.surname
-    override fun getProfile(): String? = currentUserSession?.profile
-    override fun getRole(): String? = currentUserSession?.role
-    override fun getDate(): String? = currentUserSession?.date
-    override fun getBiography(): String? = currentUserSession?.biography
-    override fun getOnBoardComplete(): Boolean? = currentUserSession?.onBoardComplete
+    override fun updateProfileSession(
+        username: String?,
+        name: String?,
+        surname: String?,
+        profilePhoto: String?,
+        biography: String?
+    ) {
+        val current = _userSession.value ?: return
+        _userSession.value = current.copy(
+            username = username ?: current.username,
+            name = name ?: current.name,
+            surname = surname ?: current.surname,
+            profile = profilePhoto ?: current.profile,
+            biography = biography ?: current.biography
+        )
+    }
+
+    override fun setOnBoardComplete(completed: Boolean) {
+        val current = _userSession.value ?: return
+        _userSession.value = current.copy(onBoardComplete = completed)
+    }
 
     override fun clear() {
-        this.currentUserSession = null
+        _userSession.value = null
     }
 }

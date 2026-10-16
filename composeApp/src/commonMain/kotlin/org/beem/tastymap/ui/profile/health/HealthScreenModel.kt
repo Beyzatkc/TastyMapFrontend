@@ -1,4 +1,5 @@
 package org.beem.tastymap.ui.profile.health
+
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
 import kotlinx.coroutines.channels.Channel
@@ -8,35 +9,98 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import org.beem.tastymap.core.network.ResultWrapper
-import org.beem.tastymap.data.model.health.AllergyInfo
 import org.beem.tastymap.data.model.health.HealthEnum
 import org.beem.tastymap.data.model.health.HealthRequest
+import org.beem.tastymap.data.model.health.HealthResponse
 import org.beem.tastymap.data.repository.HealthRepository
-import kotlin.collections.listOf
-
+import tastymap.composeapp.generated.resources.Res
+import tastymap.composeapp.generated.resources.allergy_dairy
+import tastymap.composeapp.generated.resources.allergy_egg
+import tastymap.composeapp.generated.resources.allergy_fish
+import tastymap.composeapp.generated.resources.allergy_gluten
+import tastymap.composeapp.generated.resources.allergy_none
+import tastymap.composeapp.generated.resources.allergy_other
+import tastymap.composeapp.generated.resources.allergy_peanut
 
 class HealthScreenModel(
     private val repo: HealthRepository
-): ScreenModel{
+) : ScreenModel {
+
     private val _healthState = MutableStateFlow(HealthUiState())
     val healthState = _healthState.asStateFlow()
 
-    private val _uiMessage = Channel<String>()
+    private val _uiMessage = Channel<String>(Channel.BUFFERED)
     val uiMessage = _uiMessage.receiveAsFlow()
+
+    companion object {
+        private const val NO_ALLERGY_ID = 6L
+    }
 
     init {
         val defaultAllergies = listOf(
-            AllergyInfo(id = 1L, name = "Süt ve Süt Ürünleri"),
-            AllergyInfo(id = 2L, name = "Gluten"),
-            AllergyInfo(id = 3L, name = "Yer Fıstığı"),
-            AllergyInfo(id = 4L, name = "Yumurta"),
-            AllergyInfo(id = 5L, name = "Balık"),
-            AllergyInfo(id = 7L , name = "Diğer"),
-            AllergyInfo(id = 6L, name = "Alerjim yok"),
-
+            AllergyUiModel(id = 1L, nameRes = Res.string.allergy_dairy),
+            AllergyUiModel(id = 2L, nameRes = Res.string.allergy_gluten),
+            AllergyUiModel(id = 3L, nameRes = Res.string.allergy_peanut),
+            AllergyUiModel(id = 4L, nameRes = Res.string.allergy_egg),
+            AllergyUiModel(id = 5L, nameRes = Res.string.allergy_fish),
+            AllergyUiModel(id = 7L, nameRes = Res.string.allergy_other),
+            AllergyUiModel(id = 6L, nameRes = Res.string.allergy_none)
         )
-        val NO_ALLERGY_ID = 6L
-        _healthState.update { it.copy(availableAllergies = defaultAllergies, selectedAllergyIds = listOf(NO_ALLERGY_ID)) }
+        _healthState.update {
+            it.copy(
+                availableAllergies = defaultAllergies,
+                selectedAllergyIds = listOf(NO_ALLERGY_ID),
+                isLoading = true
+            )
+        }
+
+        observeLocalHealth()
+    }
+
+    private fun observeLocalHealth() {
+        screenModelScope.launch {
+            repo.observeHealth().collect { userHealth ->
+                if (userHealth != null) {
+                    updateStateFromHealthResponse(userHealth)
+                }
+            }
+        }
+    }
+
+    fun loadUserHealthProfile() {
+        screenModelScope.launch {
+            repo.getHealth().collect { result ->
+                when (result) {
+                    is ResultWrapper.Success -> {
+                    }
+                    is ResultWrapper.Error -> {
+                        _healthState.update { it.copy(isLoading = false) }
+                        _uiMessage.send(result.message)
+                    }
+                }
+            }
+        }
+    }
+
+    private fun updateStateFromHealthResponse(userHealth: HealthResponse) {
+        val parsedEatType = try {
+            userHealth.eatType?.let { HealthEnum.valueOf(it) } ?: HealthEnum.NORMAL
+        } catch (e: IllegalArgumentException) {
+            HealthEnum.NORMAL
+        }
+
+        val allergyIds = userHealth.allergyInfo?.map { it.id } ?: emptyList()
+        val finalAllergyIds = if (allergyIds.isEmpty()) listOf(NO_ALLERGY_ID) else allergyIds
+
+        _healthState.update { state ->
+            state.copy(
+                isLoading = false,
+                hasDiabetes = userHealth.hasDiabetes ?: false,
+                selectedEatType = parsedEatType,
+                selectedAllergyIds = finalAllergyIds,
+                initialHealthProfile = userHealth
+            )
+        }
     }
 
     fun nextStep() {
@@ -56,6 +120,7 @@ class HealthScreenModel(
         }
         return false
     }
+
     fun toggleDiabetes(hasDiabetes: Boolean) {
         _healthState.update { it.copy(hasDiabetes = hasDiabetes) }
     }
@@ -67,32 +132,32 @@ class HealthScreenModel(
     fun toggleAllergy(allergyId: Long) {
         _healthState.update { state ->
             val current = state.selectedAllergyIds.toMutableList()
-            val NONE_ALLERGY_ID = 6L
-            if(allergyId == NONE_ALLERGY_ID){
-                if (current.contains(NONE_ALLERGY_ID)) {
-                    current.clear()
-                } else {
-                    current.clear()
-                    current.add(NONE_ALLERGY_ID)
-                }
-            }else{
-                current.remove(NONE_ALLERGY_ID)
+
+            if (allergyId == NO_ALLERGY_ID) {
+                current.clear()
+                current.add(NO_ALLERGY_ID)
+            } else {
+                current.remove(NO_ALLERGY_ID)
+
                 if (current.contains(allergyId)) {
                     current.remove(allergyId)
-                }else current.add(allergyId)
-
+                } else {
+                    current.add(allergyId)
+                }
                 if (current.isEmpty()) {
-                    current.add(NONE_ALLERGY_ID)
+                    current.add(NO_ALLERGY_ID)
                 }
             }
             state.copy(selectedAllergyIds = current)
         }
     }
+
     fun saveHealthProfile() {
         val currentState = _healthState.value
-        if(currentState.isLoading)return
+        if (currentState.isActionLoading) return
+
         screenModelScope.launch {
-            _healthState.update { it.copy(isLoading = true, error = null) }
+            _healthState.update { it.copy(isActionLoading = true, error = null) }
             val request = HealthRequest(
                 hasDiabetes = currentState.hasDiabetes,
                 eatType = currentState.selectedEatType,
@@ -100,34 +165,91 @@ class HealthScreenModel(
             )
             when (val result = repo.addHealth(request)) {
                 is ResultWrapper.Success -> {
-                    _healthState.update { it.copy(isLoading = false, isSuccess = true) }
+                    _healthState.update { it.copy(isActionLoading = false, isSuccess = true) }
                 }
                 is ResultWrapper.Error -> {
-                    _healthState.update { it.copy(isLoading = false, error = result.message) }
+                    _healthState.update { it.copy(isActionLoading = false, error = result.message) }
                     _uiMessage.send(result.message)
                 }
             }
         }
     }
-    fun skipHealthWizard() {
+
+    fun updateHealthProfile() {
+        val currentState = _healthState.value
+        if (currentState.isActionLoading) return
+
+        val initial = currentState.initialHealthProfile
+
+        val changedDiabetes = if (initial == null || currentState.hasDiabetes != initial.hasDiabetes) {
+            currentState.hasDiabetes
+        } else null
+
+        val initialEatType = initial?.eatType?.let { runCatching { HealthEnum.valueOf(it) }.getOrNull() }
+        val changedEatType = if (initial == null || currentState.selectedEatType != initialEatType) {
+            currentState.selectedEatType
+        } else null
+
+        val currentAllergiesClean = currentState.selectedAllergyIds.filter { it != NO_ALLERGY_ID }.sorted()
+        val initialAllergiesClean = (initial?.allergyInfo?.map { it.id } ?: emptyList())
+            .filter { it != NO_ALLERGY_ID }.sorted()
+
+        val changedAllergies = if (initial == null || currentAllergiesClean != initialAllergiesClean) {
+            currentAllergiesClean
+        } else null
+
+        if (changedDiabetes == null && changedEatType == null && changedAllergies == null) {
+            _healthState.update { it.copy(isSuccess = true) }
+            return
+        }
+
+        val request = HealthRequest(
+            hasDiabetes = changedDiabetes,
+            eatType = changedEatType,
+            allergyIds = changedAllergies
+        )
+
         screenModelScope.launch {
-            _healthState.update { it.copy(isLoading = true) }
+            _healthState.update { it.copy(isActionLoading = true, error = null) }
+
+            when (val result = repo.updateHealth(request)) {
+                is ResultWrapper.Success -> {
+                    _healthState.update { it.copy(isActionLoading = false, isSuccess = true) }
+                }
+                is ResultWrapper.Error -> {
+                    _healthState.update { it.copy(isActionLoading = false, error = result.message) }
+                    _uiMessage.send(result.message)
+                }
+            }
+        }
+    }
+
+    fun skipHealthWizard() {
+        val currentState = _healthState.value
+        if (currentState.isActionLoading) return
+
+        screenModelScope.launch {
+            _healthState.update { it.copy(isActionLoading = true) }
 
             val defaultRequest = HealthRequest(
                 hasDiabetes = false,
                 eatType = HealthEnum.NORMAL,
-                allergyIds = listOf(6L)
+                allergyIds = listOf(NO_ALLERGY_ID)
             )
 
             when (val result = repo.addHealth(defaultRequest)) {
                 is ResultWrapper.Success -> {
-                    _healthState.update { it.copy(isLoading = false, isSuccess = true) }
+                    _healthState.update { it.copy(isActionLoading = false, isSuccess = true) }
                 }
                 is ResultWrapper.Error -> {
-                    _healthState.update { it.copy(isLoading = false) }
-                    _uiMessage.send("Bir hata oluştu, lütfen tekrar deneyin."+result.message)
+                    _healthState.update { it.copy(isActionLoading = false) }
+                    _uiMessage.send(result.message)
                 }
             }
         }
+    }
+
+    fun resetSuccessState() {
+        _healthState.update { it.copy(isSuccess = false) }
     }
 }

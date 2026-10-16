@@ -1,0 +1,154 @@
+CREATE TABLE ProfileEntity (
+    userId INTEGER NOT NULL PRIMARY KEY,
+    username TEXT NOT NULL,
+    name TEXT NOT NULL,
+    surname TEXT NOT NULL,
+    profilePhoto TEXT,
+    role TEXT,
+    biography TEXT,
+    postCount INTEGER NOT NULL DEFAULT 0,
+    subscriberCount INTEGER NOT NULL DEFAULT 0,
+    subscribedCount INTEGER NOT NULL DEFAULT 0,
+    blockedByMe INTEGER NOT NULL DEFAULT 0,
+    blockedMe INTEGER NOT NULL DEFAULT 0,
+    relationStatus TEXT NOT NULL DEFAULT 'NOT_FOLLOWING',
+    hasPendingIncomingRequest INTEGER NOT NULL DEFAULT 0,
+    isFollower INTEGER NOT NULL DEFAULT 0,
+    privateProfile INTEGER NOT NULL DEFAULT 0,
+    updatedAt INTEGER NOT NULL
+);
+
+-- Profil Getir
+getProfileById:
+SELECT * FROM ProfileEntity WHERE userId = ?;
+
+getPrivacyStatus:
+SELECT privateProfile FROM ProfileEntity WHERE userId = ?;
+
+-- Profil Ekle veya Güncelle (Upsert)
+insertOrUpdateProfile:
+INSERT OR REPLACE INTO ProfileEntity(
+    userId, username, name, surname, profilePhoto, role, biography,
+    postCount, subscriberCount, subscribedCount,
+    blockedByMe, blockedMe, relationStatus, hasPendingIncomingRequest, isFollower,privateProfile, updatedAt
+) VALUES (?, ?, ?, ?, ?, ?, ?,?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+
+updatePartialProfile:
+UPDATE ProfileEntity
+SET
+    username = COALESCE(:username, username),
+    name = COALESCE(:name, name),
+    surname = COALESCE(:surname, surname),
+    profilePhoto = COALESCE(:profilePhoto, profilePhoto),
+    biography = COALESCE(:biography, biography)
+WHERE userId = :userId;
+
+updatePrivacyStatus:
+UPDATE ProfileEntity
+SET privateProfile = ?,
+    updatedAt = ?
+WHERE userId = ?;
+-- Profil Önbelleğini Sil (Cache Invalidation)
+deleteProfileById:
+DELETE FROM ProfileEntity WHERE userId = ?;
+
+-- Tüm Önbelleği Temizle (Logout durumunda)
+clearAllProfiles:
+DELETE FROM ProfileEntity;
+
+-- En son ziyaret edilen 5 profili tut, gerisini sil!
+trimOldProfiles:
+DELETE FROM ProfileEntity
+WHERE userId NOT IN (
+    SELECT userId FROM ProfileEntity
+    ORDER BY updatedAt DESC
+    LIMIT 10
+);
+
+updateCounts:
+UPDATE ProfileEntity
+SET subscriberCount = ?,
+    subscribedCount = ?,
+    postCount = ?,
+    updatedAt = ?
+WHERE userId = ?;
+
+-- Takip etme durumunda anlık incremental (artırımlı) güncelleme
+incrementSubscriberCount:
+UPDATE ProfileEntity
+SET subscriberCount = subscriberCount + 1,
+    updatedAt = ?
+WHERE userId = ?;
+
+decrementSubscriberCount:
+UPDATE ProfileEntity
+SET subscriberCount = MAX(0, subscriberCount - 1),
+    updatedAt = ?
+WHERE userId = ?;
+
+-- Takip edilen sayısını azalt (Benim için)
+decrementSubscribedCount:
+UPDATE ProfileEntity
+SET subscribedCount = MAX(0, subscribedCount - 1),
+    updatedAt = ?
+WHERE userId = ?;
+
+updateRelationStatus:
+UPDATE ProfileEntity
+SET relationStatus = ?,
+    hasPendingIncomingRequest = ?,
+    isFollower = ?,
+    updatedAt = ?
+WHERE userId = ?;
+
+-- Gelen isteği kabul ettikten veya reddettikten sonra isteği kaldır
+clearPendingRequest:
+UPDATE ProfileEntity
+SET hasPendingIncomingRequest = 0,
+    updatedAt = ?
+WHERE userId = ?;
+
+-- Takip edilen sayısını artır (Benim için)
+incrementSubscribedCount:
+UPDATE ProfileEntity
+SET subscribedCount = subscribedCount + 1,
+    updatedAt = ?
+WHERE userId = ?;
+
+blockUserUpdate:
+UPDATE ProfileEntity
+SET blockedByMe = 1,
+    subscriberCount = CASE
+        WHEN relationStatus = 'FOLLOWING' THEN MAX(0, subscriberCount - 1)
+        ELSE subscriberCount
+    END,
+    subscribedCount = CASE
+        WHEN isFollower = 1 THEN MAX(0, subscribedCount - 1)
+        ELSE subscribedCount
+    END,
+    relationStatus = 'NOT_FOLLOWING',
+    hasPendingIncomingRequest = 0,
+    isFollower = 0,
+    updatedAt = :updatedAt
+WHERE userId = :userId;
+
+-- 2. Engel Kaldırma Durumu: Sadece engel durumunu kaldır (İlişki ve sayılar değişmez)
+unblockUserUpdate:
+UPDATE ProfileEntity
+SET blockedByMe = 0,
+    updatedAt = :updatedAt
+WHERE userId = :userId;
+
+--arttır postsayısı
+incrementPostCount:
+UPDATE ProfileEntity
+SET postCount = postCount + 1,
+    updatedAt = ?
+WHERE userId = ?;
+
+-- azaltpostsayısı
+decrementPostCount:
+UPDATE ProfileEntity
+SET postCount = MAX(0, postCount - 1),
+    updatedAt = ?
+WHERE userId = ?;

@@ -36,7 +36,7 @@ fun CheckboxOption(
     onCheckedChange: () -> Unit
 ) {
     val borderColor by animateColorAsState(
-        targetValue = if (checked) customColors.gold else customColors.lineAlpha.copy(0.6f),
+        targetValue = if (checked) customColors.gold else customColors.borderLight,
         animationSpec = tween(200),
         label = "BorderColorAnimation"
     )
@@ -48,7 +48,7 @@ fun CheckboxOption(
     )
 
     val textColor by animateColorAsState(
-        targetValue = if (checked) customColors.navy else customColors.lineAlpha.copy(alpha = 1f),
+        targetValue = if (checked) customColors.textPrimary else customColors.textSecondary,
         animationSpec = tween(200),
         label = "TextColorAnimation"
     )
@@ -76,8 +76,8 @@ fun CheckboxOption(
             onCheckedChange = null,
             colors = CheckboxDefaults.colors(
                 checkedColor = customColors.gold,
-                uncheckedColor = customColors.lineAlpha.copy(alpha = 0.6f),
-                checkmarkColor = Color.White
+                uncheckedColor = customColors.borderStrong,
+                checkmarkColor = customColors.surface
             )
         )
 

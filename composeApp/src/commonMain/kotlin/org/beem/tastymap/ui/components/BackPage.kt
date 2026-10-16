@@ -12,16 +12,21 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import org.beem.tastymap.ui.theme.LocalCustomColors
+import org.jetbrains.compose.resources.stringResource
+import tastymap.composeapp.generated.resources.Res
+import tastymap.composeapp.generated.resources.back_page_content_description
 
 @Composable
 fun BackPage(
     header: String,
     onBackClick: () -> Unit,
 ) {
+    val colors = LocalCustomColors.current
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -33,8 +38,8 @@ fun BackPage(
         ) {
             Icon(
                 imageVector = Icons.Default.ArrowBack,
-                contentDescription = "Geri",
-                tint = Color.DarkGray
+                contentDescription = stringResource(Res.string.back_page_content_description),
+                tint = colors.textPrimary
             )
         }
 
@@ -44,7 +49,7 @@ fun BackPage(
                 fontSize = 20.sp,
                 fontWeight = FontWeight.SemiBold
             ),
-            color = Color.DarkGray,
+            color = colors.textPrimary,
             modifier = Modifier.padding(start = 8.dp)
         )
     }

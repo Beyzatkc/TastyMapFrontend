@@ -11,13 +11,18 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
+import org.beem.tastymap.core.network.AuthHttpClientManager
 import org.beem.tastymap.core.util.AppConfig
 import org.beem.tastymap.data.model.domain.SecurityEvent
 import org.beem.tastymap.data.model.domain.toDomain
 import org.beem.tastymap.data.model.remote.SecurityEventDTO
 class AuthWebSocketClient(
+    private val authHttpClientManager: AuthHttpClientManager
+) {
     private val client: HttpClient
-) { private val _events = MutableSharedFlow<SecurityEvent>(
+        get() = authHttpClientManager.getClient()
+
+    private val _events = MutableSharedFlow<SecurityEvent>(
         replay = 0
     )
     val events = _events.asSharedFlow()
