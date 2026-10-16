@@ -23,7 +23,6 @@ class MyPostScreenModel(
     private var observeJob: Job? = null
 
 
-
     fun loadInitialData() {
 
         if (observeJob != null) {

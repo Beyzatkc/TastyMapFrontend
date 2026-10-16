@@ -27,6 +27,20 @@ class PostLocalDataSource(
         return this?.joinToString(",") ?: ""
     }
 
+    suspend fun incrementCommentCount(postId: Long) = withContext(dispatchers.io) {
+        queries.incrementCommentCount(
+            updatedAt = Clock.System.now().toEpochMilliseconds(),
+            postId = postId
+        )
+    }
+
+    suspend fun decrementCommentCount(postId: Long) = withContext(dispatchers.io) {
+        queries.decrementCommentCount(
+            updatedAt = Clock.System.now().toEpochMilliseconds(),
+            postId = postId
+        )
+    }
+
     fun getUserGridPostsFlow(userId: Long): Flow<List<PostGridResponse>> {
         return queries.getUserGridPosts(userId)
             .asFlow()

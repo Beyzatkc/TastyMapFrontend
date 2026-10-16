@@ -60,6 +60,7 @@ import org.beem.tastymap.ui.post.detail.PostDetailScreen
 import org.beem.tastymap.ui.post.detail.PostDetailScreenModel
 import org.beem.tastymap.ui.post.detail.WebPostDetailDialog
 import org.beem.tastymap.ui.post.mypost.MyPostScreenModel
+import org.beem.tastymap.ui.post.postcomment.CommentScreenModel
 import org.beem.tastymap.ui.post.postlike.PostLikesScreenModel
 import org.beem.tastymap.ui.profile.myprofile.editprofile.EditProfileScreen
 import org.beem.tastymap.ui.profile.myprofile.notification.NotificationScreen
@@ -99,6 +100,8 @@ class MyProfileScreen : Screen {
         val postScreenModel = koinScreenModel<MyPostScreenModel>()
 
         val postDetailScreenModel = koinScreenModel<PostDetailScreenModel>()
+        val commentScreenModel = koinScreenModel<CommentScreenModel>()
+
         val postLikesScreenModel = koinScreenModel<PostLikesScreenModel>()
         var selectedWebPostId by remember { mutableStateOf<Long?>(null) }
 
@@ -748,6 +751,7 @@ class MyProfileScreen : Screen {
                 postId = selectedWebPostId!!,
                 screenModel = postDetailScreenModel, // Üstte oluşturduğumuz model
                 likesScreenModel = postLikesScreenModel,
+                commentScreenModel = commentScreenModel,
                 onDismiss = { selectedWebPostId = null } // Kapanırken state'i temizle
             )
         }

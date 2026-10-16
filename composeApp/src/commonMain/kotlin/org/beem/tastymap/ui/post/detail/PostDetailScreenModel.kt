@@ -9,6 +9,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import org.beem.tastymap.core.network.ResultWrapper
 import org.beem.tastymap.data.repository.PostRepository
+import org.beem.tastymap.ui.post.postcomment.CommentListUiState
 
 class PostDetailScreenModel(
     private val postRepository: PostRepository,
@@ -25,6 +26,9 @@ class PostDetailScreenModel(
 
     fun loadPostDetail(postId: Long) {
         observeJob?.cancel()
+        _uiState.update {
+            PostDetailUiState(isLoading = true)
+        }
 
         observeJob = screenModelScope.launch {
 
@@ -40,16 +44,15 @@ class PostDetailScreenModel(
             }
         }
     }
-    fun fetchRemotePost(postId: Long){
+    fun fetchRemotePost(postId: Long) {
         screenModelScope.launch {
-            when (val result =postRepository.refreshPostDetail(postId)) {
+            when (val result = postRepository.refreshPostDetail(postId)) {
 
                 is ResultWrapper.Success -> {
                     _uiState.update {
                         it.copy(
                             isRefreshing = false,
                             isLoading = false,
-                            post = result.data,
                             errorMessage = null
                         )
                     }
@@ -121,7 +124,9 @@ class PostDetailScreenModel(
             }
         }
     }
-
+    fun resetState() {
+        _uiState.update { PostDetailUiState() } // Her şeyi ilk baştaki boş haline döndürür
+    }
     fun clearError() {
         _uiState.update { it.copy(errorMessage = null) }
     }

@@ -554,7 +554,6 @@
     <string name="edit_post">Güncelle</string>
     <string name="delete_post">Gönderiyi Sil</string>
     <string name="view_all_comments">%1$d yorumun tümünü gör</string>
-    <string name="be_first_to_comment">İlk yorumu sen yap...</string>
     <string name="deleting_post">Gönderi siliniyor...</string>
 
     <string name="delete_post_title">Gönderi silinsin mi?</string>
@@ -571,4 +570,12 @@
 
     <string name="photos_title">Fotoğraflar</string>
     <string name="cannot_be_changed">Değiştirilemez</string>
+
+    <string name="comments_title">Yorumlar</string>
+    <string name="be_first_to_comment">İlk yorumu sen yap</string>
+    <string name="reply_action">Yanıtla</string>
+    <string name="hide_replies">Yanıtları gizle</string>
+    <string name="view_replies">Yanıtları gör</string>
+    <string name="view_more_replies">Daha fazla yanıt gör</string>
+    <string name="view_replies_count">%d yanıtı gör</string>
 </resources>

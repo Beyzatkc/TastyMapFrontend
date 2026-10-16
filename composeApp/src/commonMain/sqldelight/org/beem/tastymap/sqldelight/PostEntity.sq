@@ -39,6 +39,22 @@ CREATE INDEX idx_post_updatedAt ON PostEntity(updatedAt DESC);
 
 -- ==================== QUERIES ====================
 
+-- ==================== YORUM SAYISI İŞLEMLERİ ====================
+
+-- 14. Comment Count Artır
+incrementCommentCount:
+UPDATE PostEntity
+SET commentCount = commentCount + 1,
+    updatedAt = :updatedAt
+WHERE postId = :postId;
+
+-- 15. Comment Count Azalt (0'ın altına düşmesini engeller)
+decrementCommentCount:
+UPDATE PostEntity
+SET commentCount = MAX(0, commentCount - 1),
+    updatedAt = :updatedAt
+WHERE postId = :postId;
+
 -- 1. Kullanıcının Grid Postlarını Getir
 getUserGridPosts:
 SELECT postId, photoUrls,createdAt, isPinned

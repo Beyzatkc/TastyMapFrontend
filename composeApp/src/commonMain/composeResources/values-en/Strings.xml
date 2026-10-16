@@ -549,7 +549,6 @@
     <string name="pin_post">Pin</string>
     <string name="delete_post">Delete Post</string>
     <string name="view_all_comments">View all %1$d comments</string>
-    <string name="be_first_to_comment">Be the first to comment...</string>
     <string name="deleting_post">Deleting post...</string>
 
     <string name="delete_post_title">Delete post?</string>
@@ -567,4 +566,12 @@
 
     <string name="photos_title">Photos</string>
     <string name="cannot_be_changed">Cannot be changed</string>
+
+    <string name="comments_title">Comments</string>
+    <string name="be_first_to_comment">Be the first to comment</string>
+    <string name="reply_action">Reply</string>
+    <string name="hide_replies">Hide replies</string>
+    <string name="view_replies">View replies</string>
+    <string name="view_more_replies">View more replies</string>
+    <string name="view_replies_count">View %d replies</string>
 </resources>

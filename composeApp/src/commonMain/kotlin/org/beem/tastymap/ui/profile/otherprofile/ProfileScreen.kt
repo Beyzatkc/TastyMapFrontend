@@ -63,6 +63,7 @@ import org.beem.tastymap.ui.post.detail.PostDetailScreen
 import org.beem.tastymap.ui.post.detail.PostDetailScreenModel
 import org.beem.tastymap.ui.post.detail.WebPostDetailDialog
 import org.beem.tastymap.ui.post.otherpost.PostScreenModel
+import org.beem.tastymap.ui.post.postcomment.CommentScreenModel
 import org.beem.tastymap.ui.post.postlike.PostLikesScreenModel
 import org.beem.tastymap.ui.profile.subscribers.SubscriberListType
 import org.beem.tastymap.ui.profile.subscribers.SubscribersListScreen
@@ -123,6 +124,7 @@ class ProfileScreen(private val userId: Long) : Screen {
         val postState by postScreenModel.uiState.collectAsState()
         val gridState = rememberLazyGridState()
         val postDetailScreenModel = koinScreenModel<PostDetailScreenModel>()
+        val commentScreenModel = koinScreenModel<CommentScreenModel>()
         val isWideScreen = LocalIsWideScreen.current
         val postLikesScreenModel = koinScreenModel<PostLikesScreenModel>()
         var selectedWebPostId by remember { mutableStateOf<Long?>(null) }
@@ -942,6 +944,7 @@ class ProfileScreen(private val userId: Long) : Screen {
                 postId = selectedWebPostId!!,
                 screenModel = postDetailScreenModel,
                 likesScreenModel = postLikesScreenModel,
+                commentScreenModel = commentScreenModel,
                 onDismiss = { selectedWebPostId = null }
             )
         }

@@ -108,6 +108,8 @@ import org.beem.tastymap.ui.components.TastyConfirmDialog
 import org.beem.tastymap.ui.components.TastyPullToRefreshBox
 import org.beem.tastymap.ui.components.responsiveContentWidth
 import org.beem.tastymap.ui.post.mypost.updatepost.EditPostScreen
+import org.beem.tastymap.ui.post.postcomment.CommentBottomSheet
+import org.beem.tastymap.ui.post.postcomment.CommentScreenModel
 import org.beem.tastymap.ui.post.postlike.PostLikesBottomSheet
 import org.beem.tastymap.ui.post.postlike.PostLikesScreenModel
 import org.beem.tastymap.ui.profile.otherprofile.ProfileScreen
@@ -138,6 +140,10 @@ data class PostDetailScreen(val postId: Long) : Screen {
     override fun Content() {
         val screenModel = koinScreenModel<PostDetailScreenModel>()
         val likeScreenModel = koinScreenModel<PostLikesScreenModel>()
+
+        val commentScreenModel = koinScreenModel<CommentScreenModel>()
+        var showCommentSheet by remember { mutableStateOf(false) }
+
         val likeUiState by likeScreenModel.uiState.collectAsState()
         val uiState by screenModel.uiState.collectAsState()
         val tabNavigator = LocalTabNavigator.current
@@ -326,7 +332,6 @@ data class PostDetailScreen(val postId: Long) : Screen {
                                             }
                                         )
 
-                                        // 2. MEDYA PAGER
                                         PostMediaPager(
                                             photoUrls = post.photoUrls,
                                             onDoubleTapLike = {
@@ -335,15 +340,11 @@ data class PostDetailScreen(val postId: Long) : Screen {
                                                 }
                                             }
                                         )
-
-                                        // 3. ETKİLEŞİM BUTONLARI
                                         PostActionBar(
                                             post = post,
                                             onLikeClick = { screenModel.toggleLike(postId) },
                                             onLikeCountClick = { showPostLikeSheet = true },
-                                            onCommentClick = {
-                                                // Yorumlar ekranına yönlendirme
-                                            }
+                                            onCommentClick = { showCommentSheet = true }
                                         )
 
                                         // 4. MEKAN VE DERECELENDİRME KARTI
@@ -488,7 +489,6 @@ data class PostDetailScreen(val postId: Long) : Screen {
             )
         }
 
-        // SİLME ONAY DİALOGU
         if (showDeleteDialog) {
             TastyConfirmDialog(
                 config = DialogConfig(
@@ -501,6 +501,23 @@ data class PostDetailScreen(val postId: Long) : Screen {
                     }
                 ),
                 onDismiss = { showDeleteDialog = false }
+            )
+        }
+        if (showCommentSheet) {
+            CommentBottomSheet(
+                postId = postId,
+                screenModel = commentScreenModel,
+                isCommentEnabled = uiState.post?.isCommentEnabled?: false,
+                onDismiss = { showCommentSheet = false },
+                onUserClick = { selectedUserId ->
+                    showCommentSheet = false
+                    if (screenModel.isMe(selectedUserId)) {
+                        tabNavigator.current = ProfileTab
+                        navigator.popUntilRoot()
+                    } else {
+                        navigator.push(ProfileScreen(userId = selectedUserId))
+                    }
+                }
             )
         }
     }

@@ -44,6 +44,7 @@ import org.beem.tastymap.ui.post.detail.PostDetailScreenModel
 import org.beem.tastymap.ui.post.mypost.MyPostScreenModel
 import org.beem.tastymap.ui.post.mypost.updatepost.EditPostScreenModel
 import org.beem.tastymap.ui.post.otherpost.PostScreenModel
+import org.beem.tastymap.ui.post.postcomment.CommentScreenModel
 import org.beem.tastymap.ui.post.postlike.PostLikesScreenModel
 import org.beem.tastymap.ui.profile.health.HealthScreenModel
 import org.beem.tastymap.ui.profile.myprofile.MyProfileScreenModel
@@ -93,6 +94,7 @@ val appModule = module {
     single { NotificationsMemoryCache() }
     single { BlockedMemoryCache() }
     single { VisitMemoryCache() }
+    single { PostCommentMemoryCache() }
     single { PostMemoryCache() }
     single { CacheManager(get(), get(), get(), get(), get(), get(),get(),get()) }
 
@@ -113,6 +115,7 @@ val appModule = module {
 
 
     single { HealthDataSource(get()) }
+    single { PostCommentDataSource(get()) }
     single { ProfileDataSource(get()) }
     single { MyProfileDataSource(get()) }
     single { FileRemoteDataSource(get()) }
@@ -140,6 +143,7 @@ val appModule = module {
     single { DeleteAccountRepository(get(), get(), get()) }
     single { VisitRepository(get(), get(), get()) }
     single { PostRepository(get(), get(), get(),get(),get(),get()) }
+    factory { PostCommentRepository(get(),get(),get()) }
 
     factory { LogRegScreenModel(get(), get(), get(), get()) }
     factory { PendingScreenModel(get(), get(), get(), get()) }
@@ -153,6 +157,8 @@ val appModule = module {
     factory { MyPostScreenModel(get()) }
     factory { PostScreenModel(get()) }
     factory { PostDetailScreenModel(get()) }
+    factory { CommentScreenModel(get(),get()) }
+
     factory { CreatePostScreenModel(get(),get()) }
     factory { PostLikesScreenModel(get(),get()) }
     factory { EditPostScreenModel(get()) }

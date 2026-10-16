@@ -11,7 +11,11 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -33,6 +37,7 @@ import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -48,6 +53,7 @@ import cafe.adriel.voyager.navigator.currentOrThrow
 import cafe.adriel.voyager.navigator.tab.LocalTabNavigator
 import org.beem.tastymap.core.util.formatToRelativeDateTime
 import org.beem.tastymap.ui.bottomnav.ProfileTab
+import org.beem.tastymap.ui.components.CommentInputBar
 import org.beem.tastymap.ui.post.postlike.PostLikesBottomSheet
 import org.beem.tastymap.ui.post.postlike.PostLikesScreenModel
 import org.beem.tastymap.ui.profile.otherprofile.ProfileScreen
@@ -56,8 +62,11 @@ import org.beem.tastymap.ui.components.TastyConfirmDialog
 import org.beem.tastymap.ui.components.DialogConfig
 import org.beem.tastymap.ui.components.LoadingOverlay
 import org.beem.tastymap.ui.post.mypost.updatepost.EditPostScreen
+import org.beem.tastymap.ui.post.postcomment.CommentItem
+import org.beem.tastymap.ui.post.postcomment.CommentScreenModel
 import org.jetbrains.compose.resources.stringResource
 import tastymap.composeapp.generated.resources.Res
+import tastymap.composeapp.generated.resources.be_first_to_comment
 import tastymap.composeapp.generated.resources.delete_post
 import tastymap.composeapp.generated.resources.delete_post_message
 import tastymap.composeapp.generated.resources.delete_post_title
@@ -73,10 +82,18 @@ fun WebPostDetailDialog(
     postId: Long,
     screenModel: PostDetailScreenModel,
     likesScreenModel: PostLikesScreenModel,
+    commentScreenModel: CommentScreenModel,
     onDismiss: () -> Unit
 ) {
     val uiState by screenModel.uiState.collectAsState()
     val likeUiState by likesScreenModel.uiState.collectAsState()
+    val commentUiState by commentScreenModel.uiState.collectAsState()
+
+    val currentUserProfileUrl = commentScreenModel.getCurrentUserProfileUrl()
+
+    var commentText by remember { mutableStateOf("") }
+    var isSendingComment by remember { mutableStateOf(false) }
+
     val customColors = LocalCustomColors.current
     val tabNavigator = LocalTabNavigator.current
     val navigator = LocalNavigator.currentOrThrow
@@ -85,9 +102,30 @@ fun WebPostDetailDialog(
     var showMenu by remember { mutableStateOf(false) }
     var showDeleteDialog by remember { mutableStateOf(false) }
 
+    val listState = rememberLazyListState()
+
     LaunchedEffect(key1 = postId) {
         screenModel.loadPostDetail(postId)
         screenModel.fetchRemotePost(postId)
+    }
+    LaunchedEffect(key1 = uiState.post?.isCommentEnabled) {
+        if (uiState.post?.isCommentEnabled == true) {
+            commentScreenModel.loadInitialData(postId)
+        }
+    }
+
+    val shouldLoadMoreComments = remember {
+        derivedStateOf {
+            val totalItems = listState.layoutInfo.totalItemsCount
+            val lastVisibleItem = listState.layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: 0
+            !commentUiState.isLoading && commentUiState.errorMessage == null && totalItems > 0 && lastVisibleItem >= totalItems - 2
+        }
+    }
+
+    LaunchedEffect(shouldLoadMoreComments.value) {
+        if (shouldLoadMoreComments.value) {
+            commentScreenModel.loadNextPage(postId)
+        }
     }
 
     LaunchedEffect(uiState.isDeletedSuccessfully) {
@@ -97,7 +135,10 @@ fun WebPostDetailDialog(
     }
 
     Dialog(
-        onDismissRequest = onDismiss,
+        onDismissRequest = {
+            screenModel.resetState()
+            onDismiss()
+        },
         properties = DialogProperties(usePlatformDefaultWidth = false)
     ) {
         Surface(
@@ -108,15 +149,13 @@ fun WebPostDetailDialog(
             color = customColors.background,
             shadowElevation = 8.dp
         ) {
-            if (uiState.isLoading && uiState.post == null) {
+            if (uiState.isLoading && uiState.post == null || uiState.post?.postId != postId) {
                 Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
                     CircularProgressIndicator(color = customColors.gourmetOrange)
                 }
             } else {
                 uiState.post?.let { post ->
                     Row(modifier = Modifier.fillMaxSize()) {
-
-                        // SOL TARAF: MEDYA
                         Box(
                             modifier = Modifier
                                 .weight(1.2f)
@@ -139,7 +178,6 @@ fun WebPostDetailDialog(
                             thickness = 1.dp
                         )
 
-                        // SAĞ TARAF: DETAYLAR VE MENÜ
                         Column(
                             modifier = Modifier
                                 .width(380.dp)
@@ -147,11 +185,7 @@ fun WebPostDetailDialog(
                                 .background(customColors.background),
                             verticalArrangement = Arrangement.SpaceBetween
                         ) {
-                            Column(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .weight(1f, fill = false)
-                            ) {
+                            Column {
                                 Row(
                                     modifier = Modifier.fillMaxWidth(),
                                     verticalAlignment = Alignment.CenterVertically
@@ -250,53 +284,146 @@ fun WebPostDetailDialog(
                                         }
                                     }
                                 }
-
-                                HorizontalDivider(
-                                    color = customColors.surfaceVariant.copy(alpha = 0.5f)
-                                )
-
-                                Column(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .verticalScroll(rememberScrollState())
-                                ) {
+                                HorizontalDivider(color = customColors.surfaceVariant.copy(alpha = 0.5f))
+                            }
+                            LazyColumn(
+                                state = listState,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .weight(1f)
+                            ) {
+                                item {
                                     if (!post.placeName.isNullOrBlank()) {
                                         PlaceInfoCard(post = post)
                                     }
                                     PostCaptionSection(post = post)
+                                    Spacer(modifier = Modifier.height(16.dp))
+                                }
+                                if (!post.isCommentEnabled) {
+                                    item {
+                                        Column(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .padding(vertical = 48.dp, horizontal = 32.dp),
+                                            horizontalAlignment = Alignment.CenterHorizontally,
+                                            verticalArrangement = Arrangement.Center
+                                        ) {
+                                            Text(
+                                                // Not: Bunu çoklu dil destekliyorsanız resources'a ekleyebilirsiniz: stringResource(Res.string.comments_disabled)
+                                                text = "Yorumlar Kapalı",
+                                                style = MaterialTheme.typography.titleSmall.copy(color = customColors.textPrimary)
+                                            )
+                                            Spacer(modifier = Modifier.height(4.dp))
+                                            Text(
+                                                text = "Bu gönderi yorumlara kapatılmıştır.",
+                                                style = MaterialTheme.typography.bodyMedium.copy(color = customColors.textSecondary)
+                                            )
+                                        }
+                                    }
+                                }
+                                // 2. KONTROL: Yorumlar yükleniyorsa
+                                else if (commentUiState.isLoading && commentUiState.items.isEmpty()) {
+                                    item {
+                                        Box(
+                                            modifier = Modifier.fillMaxWidth().padding(32.dp),
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            CircularProgressIndicator(color = customColors.gourmetOrange)
+                                        }
+                                    }
+                                } else if (commentUiState.items.isEmpty()) {
+                                    item {
+                                        Box(
+                                            modifier = Modifier.fillMaxWidth().padding(32.dp),
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            Text(
+                                                text = stringResource(Res.string.be_first_to_comment),
+                                                style = MaterialTheme.typography.bodyMedium.copy(color = customColors.textSecondary)
+                                            )
+                                        }
+                                    }
+                                } else {
+                                    items(commentUiState.items, key = { it.id }) { comment ->
+                                        // CommentItem fonksiyonunun public olduğundan veya aynı dosyada olduğundan emin olun
+                                        CommentItem(
+                                            comment = comment,
+                                            uiState = commentUiState,
+                                            onUserClick = {
+                                                onDismiss()
+                                                if (screenModel.isMe(comment.userId)) {
+                                                    tabNavigator.current = ProfileTab
+                                                    navigator.popUntilRoot()
+                                                } else {
+                                                    navigator.push(ProfileScreen(userId = comment.userId))
+                                                }
+                                            },
+                                            onToggleReplies = { commentScreenModel.toggleReplies(postId, comment.id) },
+                                            onLoadMoreReplies = { commentScreenModel.loadNextRepliesPage(postId, comment.id) }
+                                        )
+                                    }
+                                }
+
+                                if (post.isCommentEnabled && commentUiState.isLoadingMore) {
+                                    item {
+                                        Box(
+                                            modifier = Modifier.fillMaxWidth().padding(16.dp),
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            CircularProgressIndicator(
+                                                modifier = Modifier.size(24.dp),
+                                                color = customColors.gourmetOrange
+                                            )
+                                        }
+                                    }
                                 }
                             }
+
 
                             Column(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .background(customColors.background)
                             ) {
-                                HorizontalDivider(
-                                    color = customColors.surfaceVariant.copy(alpha = 0.5f)
-                                )
+                                HorizontalDivider(color = customColors.surfaceVariant.copy(alpha = 0.5f))
 
                                 PostActionBar(
                                     post = post,
                                     onLikeClick = { screenModel.toggleLike(postId) },
                                     onLikeCountClick = { showPostLikeSheet = true },
-                                    onCommentClick = { }
+                                    onCommentClick = { /* Odaklanmayı input box'a yönlendir */ }
                                 )
 
                                 Text(
                                     text = formatToRelativeDateTime(post.createdAt),
                                     style = MaterialTheme.typography.labelSmall.copy(
-                                        color = customColors.textSecondary.copy(
-                                            alpha = 0.6f
-                                        )
+                                        color = customColors.textSecondary.copy(alpha = 0.6f)
                                     ),
-                                    modifier = Modifier.padding(
-                                        horizontal = 16.dp,
-                                        vertical = 4.dp
-                                    )
+                                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
                                 )
 
                                 Spacer(modifier = Modifier.height(8.dp))
+                                HorizontalDivider(
+                                    color = customColors.surfaceVariant,
+                                    thickness = 1.2.dp
+                                )
+                                if (post.isCommentEnabled) {
+                                    CommentInputBar(
+                                        text = commentText,
+                                        onTextChange = { commentText = it },
+                                        onSendClick = {
+                                            isSendingComment = true
+                                            commentScreenModel.addComment(
+                                                postId, commentText,
+                                                onSuccess = {
+                                                    commentText = ""
+                                                    isSendingComment = false
+                                                })
+                                        },
+                                        isLoading = isSendingComment,
+                                        profilePhotoUrl = currentUserProfileUrl
+                                    )
+                                }
                             }
                         }
                     }
