@@ -573,5 +573,5 @@
     <string name="hide_replies">Hide replies</string>
     <string name="view_replies">View replies</string>
     <string name="view_more_replies">View more replies</string>
-    <string name="view_replies_count">View %d replies</string>
+    <string name="view_replies_count">View %1$d replies</string>
 </resources>

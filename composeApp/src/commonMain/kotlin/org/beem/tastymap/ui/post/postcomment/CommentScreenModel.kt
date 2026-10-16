@@ -59,7 +59,7 @@ class CommentScreenModel(
                         val updatedReplyMap = currentState.repliesState.toMutableMap()
 
                         updatedReplyMap[parentCommentId] = currentReplyState.copy(
-                            items = currentReplyState.items + newReply
+                            items = listOf(newReply) + currentReplyState.items
                         )
 
                         val updatedItems = currentState.items.map { comment ->
@@ -99,7 +99,7 @@ class CommentScreenModel(
         val currentState = _uiState.value
         if (currentState.isLoading || currentState.isLoadingMore || currentState.isLastPage) return
 
-        _uiState.update { it.copy(isLoadingMore = true) }
+        _uiState.update { it.copy(isLoadingMore = true, loadingMoreError = false) }
         fetchPage(postId, page = currentState.currentPage + 1, isRefresh = false)
     }
 
@@ -121,12 +121,19 @@ class CommentScreenModel(
                             isLoadingMore = false,
                             currentPage = page,
                             isLastPage = isLast,
-                            errorMessage = null
+                            errorMessage = null,
+                            loadingMoreError = false
                         )
                     }
                 }
                 is ResultWrapper.Error -> {
-                    _uiState.update { it.copy(isLoading = false, isLoadingMore = false, errorMessage = result.message) }
+                    _uiState.update {
+                        if (page == 0) {
+                            it.copy(isLoading = false, isLoadingMore = false, errorMessage = result.message)
+                        } else {
+                            it.copy(isLoadingMore = false, loadingMoreError = true)
+                        }
+                    }
                 }
             }
         }
@@ -141,7 +148,8 @@ class CommentScreenModel(
         } else {
             _uiState.update { it.copy(expandedComments = it.expandedComments + parentCommentId) }
 
-            if (!currentState.repliesState.containsKey(parentCommentId)) {
+            val replyState = currentState.repliesState[parentCommentId]
+            if (replyState == null || replyState.items.isEmpty()) {
                 fetchReplies(postId, parentCommentId, page = 0)
             }
         }
@@ -162,7 +170,8 @@ class CommentScreenModel(
             updatedReplyMap[parentCommentId] = currentReplyState.copy(
                 isLoading = page == 0,
                 isLoadingMore = page > 0,
-                errorMessage = null
+                errorMessage = null,
+                loadingMoreErrorReply = false
             )
             currentState.copy(repliesState = updatedReplyMap)
         }
@@ -185,15 +194,23 @@ class CommentScreenModel(
                             currentPage = page,
                             isLastPage = isLast,
                             isLoading = false,
-                            isLoadingMore = false
+                            isLoadingMore = false,
+                            loadingMoreErrorReply = false
                         )
                     }
                     is ResultWrapper.Error -> {
-                        updatedReplyMap[parentCommentId] = currentReplyState.copy(
-                            isLoading = false,
-                            isLoadingMore = false,
-                            errorMessage = result.message
-                        )
+                        if (page == 0) {
+                            updatedReplyMap[parentCommentId] = currentReplyState.copy(
+                                isLoading = false,
+                                isLoadingMore = false,
+                                errorMessage = result.message
+                            )
+                        } else {
+                            updatedReplyMap[parentCommentId] = currentReplyState.copy(
+                                isLoadingMore = false,
+                                loadingMoreErrorReply = true
+                            )
+                        }
                     }
                 }
                 currentState.copy(repliesState = updatedReplyMap)

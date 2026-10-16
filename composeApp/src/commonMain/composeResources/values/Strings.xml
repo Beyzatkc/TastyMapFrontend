@@ -577,5 +577,5 @@
     <string name="hide_replies">Yanıtları gizle</string>
     <string name="view_replies">Yanıtları gör</string>
     <string name="view_more_replies">Daha fazla yanıt gör</string>
-    <string name="view_replies_count">%d yanıtı gör</string>
+    <string name="view_replies_count">%1$d yanıtı gör</string>
 </resources>

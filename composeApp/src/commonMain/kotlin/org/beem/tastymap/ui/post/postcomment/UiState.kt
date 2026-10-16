@@ -8,7 +8,8 @@ data class ReplyState(
     val isLastPage: Boolean = false,
     val isLoading: Boolean = false,
     val isLoadingMore: Boolean = false,
-    val errorMessage: String? = null
+    val errorMessage: String? = null,
+    val loadingMoreErrorReply: Boolean = false
 )
 
 data class CommentListUiState(

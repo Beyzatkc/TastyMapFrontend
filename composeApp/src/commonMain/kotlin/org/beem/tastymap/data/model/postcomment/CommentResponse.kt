@@ -12,13 +12,13 @@ data class CommentRequest(
 data class CommentsResponse(
     val id: Long,
     val parentCommentId: Long?,
-    val replyCount: Int = 0,
     @SerialName("post_id")
     val postId: Long,
     val contents: String,
     val date: String,
     val updateDate: String?,
     val numberOfLikes: Int,
+    val replyCount: Int = 0,
     val userId: Long,
     val username: String,
     val profilePhotoUrl: String?,

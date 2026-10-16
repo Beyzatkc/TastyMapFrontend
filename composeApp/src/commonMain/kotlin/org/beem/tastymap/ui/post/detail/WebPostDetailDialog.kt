@@ -1,5 +1,9 @@
 package org.beem.tastymap.ui.post.detail
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -24,9 +28,12 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.PushPin
+import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -41,16 +48,19 @@ import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import cafe.adriel.voyager.navigator.tab.LocalTabNavigator
+import kotlinx.coroutines.launch
 import org.beem.tastymap.core.util.formatToRelativeDateTime
 import org.beem.tastymap.ui.bottomnav.ProfileTab
 import org.beem.tastymap.ui.components.CommentInputBar
@@ -66,6 +76,8 @@ import org.beem.tastymap.ui.post.postcomment.CommentItem
 import org.beem.tastymap.ui.post.postcomment.CommentScreenModel
 import org.jetbrains.compose.resources.stringResource
 import tastymap.composeapp.generated.resources.Res
+import tastymap.composeapp.generated.resources.active_devices_retry
+import tastymap.composeapp.generated.resources.active_devices_retry_cd
 import tastymap.composeapp.generated.resources.be_first_to_comment
 import tastymap.composeapp.generated.resources.delete_post
 import tastymap.composeapp.generated.resources.delete_post_message
@@ -91,8 +103,13 @@ fun WebPostDetailDialog(
 
     val currentUserProfileUrl = commentScreenModel.getCurrentUserProfileUrl()
 
+    val coroutineScope = rememberCoroutineScope()
+
     var commentText by remember { mutableStateOf("") }
     var isSendingComment by remember { mutableStateOf(false) }
+
+    var replyingToCommentId by remember { mutableStateOf<Long?>(null) }
+    var replyingToUsername by remember { mutableStateOf<String?>(null) }
 
     val customColors = LocalCustomColors.current
     val tabNavigator = LocalTabNavigator.current
@@ -299,71 +316,138 @@ fun WebPostDetailDialog(
                                     PostCaptionSection(post = post)
                                     Spacer(modifier = Modifier.height(16.dp))
                                 }
-                                if (!post.isCommentEnabled) {
-                                    item {
-                                        Column(
-                                            modifier = Modifier
-                                                .fillMaxWidth()
-                                                .padding(vertical = 48.dp, horizontal = 32.dp),
-                                            horizontalAlignment = Alignment.CenterHorizontally,
-                                            verticalArrangement = Arrangement.Center
-                                        ) {
-                                            Text(
-                                                // Not: Bunu çoklu dil destekliyorsanız resources'a ekleyebilirsiniz: stringResource(Res.string.comments_disabled)
-                                                text = "Yorumlar Kapalı",
-                                                style = MaterialTheme.typography.titleSmall.copy(color = customColors.textPrimary)
-                                            )
-                                            Spacer(modifier = Modifier.height(4.dp))
-                                            Text(
-                                                text = "Bu gönderi yorumlara kapatılmıştır.",
-                                                style = MaterialTheme.typography.bodyMedium.copy(color = customColors.textSecondary)
-                                            )
-                                        }
-                                    }
-                                }
-                                // 2. KONTROL: Yorumlar yükleniyorsa
-                                else if (commentUiState.isLoading && commentUiState.items.isEmpty()) {
-                                    item {
-                                        Box(
-                                            modifier = Modifier.fillMaxWidth().padding(32.dp),
-                                            contentAlignment = Alignment.Center
-                                        ) {
-                                            CircularProgressIndicator(color = customColors.gourmetOrange)
-                                        }
-                                    }
-                                } else if (commentUiState.items.isEmpty()) {
-                                    item {
-                                        Box(
-                                            modifier = Modifier.fillMaxWidth().padding(32.dp),
-                                            contentAlignment = Alignment.Center
-                                        ) {
-                                            Text(
-                                                text = stringResource(Res.string.be_first_to_comment),
-                                                style = MaterialTheme.typography.bodyMedium.copy(color = customColors.textSecondary)
-                                            )
-                                        }
-                                    }
-                                } else {
-                                    items(commentUiState.items, key = { it.id }) { comment ->
-                                        // CommentItem fonksiyonunun public olduğundan veya aynı dosyada olduğundan emin olun
-                                        CommentItem(
-                                            comment = comment,
-                                            uiState = commentUiState,
-                                            onUserClick = {
-                                                onDismiss()
-                                                if (screenModel.isMe(comment.userId)) {
-                                                    tabNavigator.current = ProfileTab
-                                                    navigator.popUntilRoot()
-                                                } else {
-                                                    navigator.push(ProfileScreen(userId = comment.userId))
-                                                }
-                                            },
-                                            onToggleReplies = { commentScreenModel.toggleReplies(postId, comment.id) },
-                                            onLoadMoreReplies = { commentScreenModel.loadNextRepliesPage(postId, comment.id) }
-                                        )
-                                    }
-                                }
 
+                                val isError = !commentUiState.errorMessage.isNullOrBlank()
+                                val isEmpty = commentUiState.items.isEmpty()
+
+                                when {
+                                    !post.isCommentEnabled -> {
+                                        item {
+                                            Column(
+                                                modifier = Modifier
+                                                    .fillMaxWidth()
+                                                    .padding(vertical = 48.dp, horizontal = 32.dp),
+                                                horizontalAlignment = Alignment.CenterHorizontally,
+                                                verticalArrangement = Arrangement.Center
+                                            ) {
+                                                Text(
+                                                    text = "Yorumlar Kapalı",
+                                                    style = MaterialTheme.typography.titleSmall.copy(color = customColors.textPrimary)
+                                                )
+                                                Spacer(modifier = Modifier.height(4.dp))
+                                                Text(
+                                                    text = "Bu gönderi yorumlara kapatılmıştır.",
+                                                    style = MaterialTheme.typography.bodyMedium.copy(color = customColors.textSecondary)
+                                                )
+                                            }
+                                        }
+                                    }
+                                    commentUiState.isLoading && isEmpty && !isError -> {
+                                        item {
+                                            Box(
+                                                modifier = Modifier.fillMaxWidth().padding(32.dp),
+                                                contentAlignment = Alignment.Center
+                                            ) {
+                                                CircularProgressIndicator(color = customColors.gourmetOrange)
+                                            }
+                                        }
+                                    }
+                                    isError && isEmpty -> {
+                                        item {
+                                            Box(
+                                                modifier = Modifier.fillMaxWidth().padding(32.dp),
+                                                contentAlignment = Alignment.Center
+                                            ) {
+                                                FilledTonalButton(
+                                                    onClick = { commentScreenModel.loadInitialData(postId) },
+                                                    enabled = !commentUiState.isLoading,
+                                                    modifier = Modifier.height(48.dp),
+                                                    colors = ButtonDefaults.filledTonalButtonColors(
+                                                        containerColor = customColors.surfaceVariant,
+                                                        contentColor = customColors.textPrimary
+                                                    )
+                                                ) {
+                                                    AnimatedContent(
+                                                        targetState = commentUiState.isLoading,
+                                                        transitionSpec = { fadeIn() togetherWith fadeOut() },
+                                                        label = "ButtonLoadingTransition"
+                                                    ) { loading ->
+                                                        if (loading) {
+                                                            CircularProgressIndicator(
+                                                                modifier = Modifier.size(24.dp),
+                                                                strokeWidth = 2.5.dp,
+                                                                color = customColors.textPrimary
+                                                            )
+                                                        } else {
+                                                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                                                Icon(
+                                                                    imageVector = Icons.Default.Refresh,
+                                                                    contentDescription = stringResource(Res.string.active_devices_retry_cd),
+                                                                    modifier = Modifier.size(24.dp),
+                                                                    tint = customColors.textSecondary
+                                                                )
+                                                                Spacer(modifier = Modifier.width(8.dp))
+                                                                Text(
+                                                                    text = stringResource(Res.string.active_devices_retry),
+                                                                    style = MaterialTheme.typography.titleSmall.copy(
+                                                                        fontWeight = FontWeight.Bold,
+                                                                        color = customColors.textSecondary
+                                                                    )
+                                                                )
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                    isEmpty -> {
+                                        item {
+                                            Box(
+                                                modifier = Modifier.fillMaxWidth().padding(32.dp),
+                                                contentAlignment = Alignment.Center
+                                            ) {
+                                                Text(
+                                                    text = stringResource(Res.string.be_first_to_comment),
+                                                    style = MaterialTheme.typography.bodyMedium.copy(color = customColors.textSecondary)
+                                                )
+                                            }
+                                        }
+                                    }
+                                    else -> {
+                                        items(commentUiState.items, key = { it.id }) { comment ->
+                                            CommentItem(
+                                                comment = comment,
+                                                uiState = commentUiState,
+                                                onUserClick = {
+                                                    onDismiss()
+                                                    if (screenModel.isMe(comment.userId)) {
+                                                        tabNavigator.current = ProfileTab
+                                                        navigator.popUntilRoot()
+                                                    } else {
+                                                        navigator.push(ProfileScreen(userId = comment.userId))
+                                                    }
+                                                },
+                                                onToggleReplies = {
+                                                    commentScreenModel.toggleReplies(
+                                                        postId,
+                                                        comment.id
+                                                    )
+                                                },
+                                                onLoadMoreReplies = {
+                                                    commentScreenModel.loadNextRepliesPage(
+                                                        postId,
+                                                        comment.id
+                                                    )
+                                                },
+                                                onReplyClick = { parentId, username ->
+                                                    replyingToCommentId = parentId
+                                                    replyingToUsername = username
+                                                }
+                                            )
+                                        }
+                                    }
+                                }
                                 if (post.isCommentEnabled && commentUiState.isLoadingMore) {
                                     item {
                                         Box(
@@ -411,14 +495,40 @@ fun WebPostDetailDialog(
                                     CommentInputBar(
                                         text = commentText,
                                         onTextChange = { commentText = it },
+                                        replyingToUsername = replyingToUsername,
+                                        onCancelReply = {
+                                            replyingToCommentId = null
+                                            replyingToUsername = null
+                                        },
                                         onSendClick = {
                                             isSendingComment = true
-                                            commentScreenModel.addComment(
-                                                postId, commentText,
-                                                onSuccess = {
-                                                    commentText = ""
-                                                    isSendingComment = false
-                                                })
+
+                                            if (replyingToCommentId != null) {
+                                                val finalReplyText = "@$replyingToUsername $commentText"
+
+                                                commentScreenModel.addReply(
+                                                    postId = postId,
+                                                    parentCommentId = replyingToCommentId!!,
+                                                    contents = finalReplyText,
+                                                    onSuccess = {
+                                                        commentText = ""
+                                                        replyingToCommentId = null
+                                                        replyingToUsername = null
+                                                        isSendingComment = false
+                                                    }
+                                                )
+                                            }else {
+                                                commentScreenModel.addComment(
+                                                    postId, commentText,
+                                                    onSuccess = {
+                                                        commentText = ""
+                                                        isSendingComment = false
+                                                        coroutineScope.launch {
+                                                            listState.animateScrollToItem(0)
+                                                        }
+                                                    }
+                                                )
+                                            }
                                         },
                                         isLoading = isSendingComment,
                                         profilePhotoUrl = currentUserProfileUrl

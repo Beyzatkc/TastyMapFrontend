@@ -1,6 +1,10 @@
 package org.beem.tastymap.ui.post.postcomment
 
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -13,6 +17,8 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -23,16 +29,20 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material3.BottomSheetDefaults
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -40,6 +50,7 @@ import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -49,12 +60,16 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
+import kotlinx.coroutines.launch
 import org.beem.tastymap.core.util.formatToRelativeDateTime
 import org.beem.tastymap.data.model.postcomment.CommentsResponse
 import org.beem.tastymap.ui.components.CommentInputBar
+import org.beem.tastymap.ui.components.MentionFormattedText
 import org.beem.tastymap.ui.theme.LocalCustomColors
 import org.jetbrains.compose.resources.stringResource
 import tastymap.composeapp.generated.resources.Res
+import tastymap.composeapp.generated.resources.active_devices_retry
+import tastymap.composeapp.generated.resources.active_devices_retry_cd
 import tastymap.composeapp.generated.resources.be_first_to_comment
 import tastymap.composeapp.generated.resources.comments_title
 import tastymap.composeapp.generated.resources.hide_replies
@@ -75,10 +90,18 @@ fun CommentBottomSheet(
     val uiState by screenModel.uiState.collectAsState()
     val customColors = LocalCustomColors.current
     val listState = rememberLazyListState()
+    val coroutineScope = rememberCoroutineScope()
 
     var commentText by remember { mutableStateOf("") }
     var isSendingComment by remember { mutableStateOf(false) }
     val currentUserProfileUrl = screenModel.getCurrentUserProfileUrl()
+
+    var replyingToCommentId by remember { mutableStateOf<Long?>(null) }
+    var replyingToUsername by remember { mutableStateOf<String?>(null) }
+
+    val sheetState = rememberModalBottomSheetState(
+        skipPartiallyExpanded = true
+    )
 
     LaunchedEffect(postId) {
         if(isCommentEnabled) {
@@ -102,14 +125,17 @@ fun CommentBottomSheet(
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
+        sheetState = sheetState,
         containerColor = customColors.background,
-        dragHandle = { BottomSheetDefaults.DragHandle(color = customColors.placeHolderIcon) },
-        modifier = Modifier.fillMaxHeight(0.9f)
+        dragHandle = { BottomSheetDefaults.DragHandle(color = customColors.placeHolderIcon) }
     ) {
         Column(
-            modifier = Modifier.fillMaxSize()
-        ) {
-            // BAŞLIK (HEADER)
+            modifier = Modifier
+                .fillMaxWidth()
+                .fillMaxHeight(0.75f)
+                .navigationBarsPadding()
+                .imePadding()
+        ){
             Text(
                 text = stringResource(Res.string.comments_title),
                 style = MaterialTheme.typography.titleMedium.copy(
@@ -129,65 +155,144 @@ fun CommentBottomSheet(
                     .fillMaxWidth()
                     .weight(1f)
             ) {
-                if (!isCommentEnabled) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(vertical = 48.dp, horizontal = 32.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.Center
-                    ) {
-                        Text(
-                            text = "Yorumlar Kapalı",
-                            style = MaterialTheme.typography.titleMedium.copy(
-                                fontWeight = FontWeight.Bold,
-                                color = customColors.textPrimary
+                val isError = !uiState.errorMessage.isNullOrBlank()
+                val isEmpty = uiState.items.isEmpty()
+
+                when {
+                    !isCommentEnabled -> {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(vertical = 48.dp, horizontal = 32.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.Center
+                        ) {
+                            Text(
+                                text = "Yorumlar Kapalı",
+                                style = MaterialTheme.typography.titleMedium.copy(
+                                    fontWeight = FontWeight.Bold,
+                                    color = customColors.textPrimary
+                                )
                             )
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text(
-                            text = "Bu gönderi yorumlara kapatılmıştır.",
-                            style = MaterialTheme.typography.bodyMedium.copy(color = customColors.textSecondary)
-                        )
-                    }
-                } else if (uiState.isLoading && uiState.items.isEmpty()) {
-                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        CircularProgressIndicator(color = customColors.gourmetOrange)
-                    }
-                } else if (uiState.items.isEmpty()) {
-                    // BOŞ LİSTE UI
-                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        Text(
-                            text = stringResource(Res.string.be_first_to_comment),
-                            style = MaterialTheme.typography.bodyMedium.copy(color = customColors.textSecondary)
-                        )
-                    }
-                } else {
-                    LazyColumn(
-                        state = listState,
-                        modifier = Modifier.fillMaxSize(),
-                        contentPadding = PaddingValues(bottom = 80.dp)
-                    ) {
-                        items(uiState.items, key = { it.id }) { comment ->
-                            CommentItem(
-                                comment = comment,
-                                uiState = uiState,
-                                onUserClick = { onUserClick(comment.userId) },
-                                onToggleReplies = { screenModel.toggleReplies(postId, comment.id) },
-                                onLoadMoreReplies = { screenModel.loadNextRepliesPage(postId, comment.id) }
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text(
+                                text = "Bu gönderi yorumlara kapatılmıştır.",
+                                style = MaterialTheme.typography.bodyMedium.copy(color = customColors.textSecondary)
                             )
                         }
+                    }
 
-                        if (uiState.isLoadingMore) {
-                            item {
-                                Box(
-                                    modifier = Modifier.fillMaxWidth().padding(16.dp),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    CircularProgressIndicator(
-                                        modifier = Modifier.size(24.dp),
-                                        color = customColors.gourmetOrange
-                                    )
+                    uiState.isLoading && isEmpty && !isError -> {
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            CircularProgressIndicator(color = customColors.gourmetOrange)
+                        }
+                    }
+
+                    isError && isEmpty -> {
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            FilledTonalButton(
+                                onClick = { screenModel.loadInitialData(postId) },
+                                enabled = !uiState.isLoading,
+                                modifier = Modifier.height(48.dp),
+                                colors = ButtonDefaults.filledTonalButtonColors(
+                                    containerColor = customColors.surfaceVariant,
+                                    contentColor = customColors.textPrimary
+                                )
+                            ) {
+                                AnimatedContent(
+                                    targetState = uiState.isLoading,
+                                    transitionSpec = { fadeIn() togetherWith fadeOut() },
+                                    label = "ButtonLoadingTransition"
+                                ) { loading ->
+                                    if (loading) {
+                                        CircularProgressIndicator(
+                                            modifier = Modifier.size(24.dp),
+                                            strokeWidth = 2.5.dp,
+                                            color = customColors.textPrimary
+                                        )
+                                    } else {
+                                        Row(verticalAlignment = Alignment.CenterVertically) {
+                                            Icon(
+                                                imageVector = Icons.Default.Refresh,
+                                                contentDescription = stringResource(Res.string.active_devices_retry_cd),
+                                                modifier = Modifier.size(24.dp),
+                                                tint = customColors.textSecondary
+                                            )
+                                            Spacer(modifier = Modifier.width(8.dp))
+                                            Text(
+                                                text = stringResource(Res.string.active_devices_retry),
+                                                style = MaterialTheme.typography.titleSmall.copy(
+                                                    fontWeight = FontWeight.Bold,
+                                                    color = customColors.textSecondary
+                                                )
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    isEmpty -> {
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = stringResource(Res.string.be_first_to_comment),
+                                style = MaterialTheme.typography.bodyMedium.copy(color = customColors.textSecondary)
+                            )
+                        }
+                    }
+
+                    else -> {
+                        LazyColumn(
+                            state = listState,
+                            modifier = Modifier.fillMaxSize(),
+                            contentPadding = PaddingValues(bottom = 80.dp)
+                        ) {
+                            items(uiState.items, key = { it.id }) { comment ->
+                                CommentItem(
+                                    comment = comment,
+                                    uiState = uiState,
+                                    onUserClick = { onUserClick(comment.userId) },
+                                    onToggleReplies = {
+                                        screenModel.toggleReplies(
+                                            postId,
+                                            comment.id
+                                        )
+                                    },
+                                    onLoadMoreReplies = {
+                                        screenModel.loadNextRepliesPage(
+                                            postId,
+                                            comment.id
+                                        )
+                                    },
+                                    onReplyClick = { parentId, username ->
+                                        replyingToCommentId = parentId
+                                        replyingToUsername = username
+                                    }
+                                )
+                            }
+
+
+                            if (uiState.isLoadingMore) {
+                                item {
+                                    Box(
+                                        modifier = Modifier.fillMaxWidth().padding(16.dp),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        CircularProgressIndicator(
+                                            modifier = Modifier.size(24.dp),
+                                            color = customColors.gourmetOrange
+                                        )
+                                    }
                                 }
                             }
                         }
@@ -198,14 +303,41 @@ fun CommentBottomSheet(
                 CommentInputBar(
                     text = commentText,
                     onTextChange = { commentText = it },
+                    replyingToUsername = replyingToUsername,
+                    onCancelReply = {
+                        replyingToCommentId = null
+                        replyingToUsername = null
+                    },
                     onSendClick = {
                         isSendingComment = true
-                        screenModel.addComment(
-                            postId, commentText,
-                            onSuccess = {
-                                commentText = ""
-                                isSendingComment = false
-                            })
+
+                        if (replyingToCommentId != null) {
+                            val finalReplyText = "@$replyingToUsername $commentText"
+
+                            screenModel.addReply(
+                                postId = postId,
+                                parentCommentId = replyingToCommentId!!,
+                                contents = finalReplyText, // Buraya formatlı metni verdik
+                                onSuccess = {
+                                    commentText = ""
+                                    replyingToCommentId = null
+                                    replyingToUsername = null
+                                    isSendingComment = false
+                                }
+                            )
+                        }else {
+                            screenModel.addComment(
+                                postId = postId,
+                                contents = commentText,
+                                onSuccess = {
+                                    commentText = ""
+                                    isSendingComment = false
+                                    coroutineScope.launch {
+                                        listState.animateScrollToItem(0)
+                                    }
+                                }
+                            )
+                        }
                     },
                     isLoading = isSendingComment,
                     profilePhotoUrl = currentUserProfileUrl
@@ -214,14 +346,14 @@ fun CommentBottomSheet(
         }
     }
 }
-
 @Composable
 fun CommentItem(
     comment: CommentsResponse,
     uiState: CommentListUiState,
     onUserClick: () -> Unit,
     onToggleReplies: () -> Unit,
-    onLoadMoreReplies: () -> Unit
+    onLoadMoreReplies: () -> Unit,
+    onReplyClick: (Long, String) -> Unit
 ) {
     val customColors = LocalCustomColors.current
     val isRepliesExpanded = uiState.expandedComments.contains(comment.id)
@@ -292,7 +424,9 @@ fun CommentItem(
                             fontWeight = FontWeight.Bold,
                             color = customColors.textSecondary
                         ),
-                        modifier = Modifier.clickable { /* TODO */ }
+                        modifier = Modifier.clickable {
+                            onReplyClick(comment.id, comment.username)
+                        }
                     )
                 }
 
@@ -356,7 +490,11 @@ fun CommentItem(
                     )
                 } else {
                     replyState?.items?.forEach { reply ->
-                        ReplyItem(reply = reply, onUserClick = { onUserClick() })
+                        ReplyItem(
+                            reply = reply,
+                            onUserClick = { onUserClick() },
+                            onReplyClick = { onReplyClick(comment.id, reply.username) }
+                        )
                         Spacer(modifier = Modifier.height(12.dp))
                     }
 
@@ -381,7 +519,8 @@ fun CommentItem(
 @Composable
 private fun ReplyItem(
     reply: CommentsResponse,
-    onUserClick: () -> Unit
+    onUserClick: () -> Unit,
+    onReplyClick: () -> Unit
 ) {
     val customColors = LocalCustomColors.current
     Row(verticalAlignment = Alignment.Top) {
@@ -424,15 +563,42 @@ private fun ReplyItem(
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
-                    text = reply.date,
+                    text = formatToRelativeDateTime(reply.date),
                     style = MaterialTheme.typography.labelSmall.copy(color = customColors.textSecondary)
                 )
             }
             Spacer(modifier = Modifier.height(2.dp))
+            MentionFormattedText(text = reply.contents)
+
+            Spacer(modifier = Modifier.height(4.dp))
             Text(
-                text = reply.contents,
-                style = MaterialTheme.typography.bodyMedium.copy(color = customColors.textPrimary)
+                text = stringResource(Res.string.reply_action),
+                style = MaterialTheme.typography.labelMedium.copy(
+                    fontWeight = FontWeight.Bold,
+                    color = customColors.textSecondary
+                ),
+                modifier = Modifier.clickable { onReplyClick() }
             )
+        }
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            IconButton(
+                onClick = { /* TODO: Toggle Like işlemi */ },
+                modifier = Modifier.size(24.dp)
+            ) {
+                Icon(
+                    imageVector = if (reply.isLiked) Icons.Default.Favorite else Icons.Outlined.FavoriteBorder,
+                    contentDescription = null,
+                    tint = if (reply.isLiked) customColors.red else customColors.textSecondary,
+                    modifier = Modifier.size(16.dp)
+                )
+            }
+            if (reply.numberOfLikes > 0) {
+                Text(
+                    text = reply.numberOfLikes.toString(),
+                    style = MaterialTheme.typography.labelSmall.copy(color = customColors.textSecondary)
+                )
+
+            }
         }
     }
 }

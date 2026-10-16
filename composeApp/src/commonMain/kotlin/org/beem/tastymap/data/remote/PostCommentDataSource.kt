@@ -35,7 +35,7 @@ class PostCommentDataSource(private val authHttpClientManager: AuthHttpClientMan
         }.body()
     }
     suspend fun getReply(postId: Long,parentCommentId:Long, page:Int = 0, size: Int = 30): PageResponse<CommentsResponse> {
-        return client.get("api/comments/get-comments/$postId/$parentCommentId") {
+        return client.get("api/comments/get-replys/$postId/$parentCommentId") {
             parameter("page", page)
             parameter("size", size)
         }.body()
