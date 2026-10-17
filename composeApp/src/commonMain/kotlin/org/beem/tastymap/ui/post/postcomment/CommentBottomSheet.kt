@@ -282,7 +282,7 @@ fun CommentBottomSheet(
                             }
 
 
-                            if (uiState.isLoadingMore) {
+                            if (isCommentEnabled && uiState.isLoadingMore) {
                                 item {
                                     Box(
                                         modifier = Modifier.fillMaxWidth().padding(16.dp),
@@ -291,6 +291,35 @@ fun CommentBottomSheet(
                                         CircularProgressIndicator(
                                             modifier = Modifier.size(24.dp),
                                             color = customColors.gourmetOrange
+                                        )
+                                    }
+                                }
+                            }else if (isCommentEnabled && uiState.loadingMoreError){
+                                item {
+                                    Column(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(vertical = 12.dp),
+                                        horizontalAlignment = Alignment.CenterHorizontally
+                                    ) {
+                                        IconButton(
+                                            onClick = {
+                                                screenModel.loadNextPage(postId)
+                                            }
+                                        ) {
+                                            Icon(
+                                                imageVector = Icons.Default.Refresh,
+                                                contentDescription = stringResource(Res.string.active_devices_retry),
+                                                tint = customColors.textSecondary,
+                                                modifier = Modifier.size(28.dp)
+                                            )
+                                        }
+                                        Text(
+                                            text = stringResource(Res.string.active_devices_retry),
+                                            style = MaterialTheme.typography.bodySmall.copy(
+                                                color = customColors.textSecondary,
+                                                fontWeight = FontWeight.Medium
+                                            )
                                         )
                                     }
                                 }
@@ -483,11 +512,16 @@ fun CommentItem(
                     .padding(top = 12.dp, start = 52.dp)
             ) {
                 if (replyState?.isLoading == true && replyState.items.isEmpty()) {
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(20.dp),
-                        color = customColors.gourmetOrange,
-                        strokeWidth = 2.dp
-                    )
+                    Box(
+                        modifier = Modifier.fillMaxWidth().padding(8.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(20.dp),
+                            color = customColors.gourmetOrange,
+                            strokeWidth = 2.dp
+                        )
+                    }
                 } else {
                     replyState?.items?.forEach { reply ->
                         ReplyItem(
@@ -498,17 +532,76 @@ fun CommentItem(
                         Spacer(modifier = Modifier.height(12.dp))
                     }
 
-                    if (replyState?.isLastPage == false) {
-                        Text(
-                            text = stringResource(Res.string.view_more_replies),
-                            style = MaterialTheme.typography.labelMedium.copy(
-                                fontWeight = FontWeight.Bold,
-                                color = customColors.textSecondary
-                            ),
-                            modifier = Modifier
-                                .clickable { onLoadMoreReplies() }
-                                .padding(vertical = 4.dp)
-                        )
+                    if (!replyState?.errorMessage.isNullOrBlank() && replyState?.items?.isEmpty() == true) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth().clickable { onToggleReplies() },
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Refresh,
+                                contentDescription = null,
+                                tint = customColors.textSecondary,
+                                modifier = Modifier.size(16.dp)
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(
+                                text = stringResource(Res.string.active_devices_retry),
+                                style = MaterialTheme.typography.labelMedium.copy(color = customColors.textSecondary)
+                            )
+                        }
+                    }
+
+                    if (replyState?.isLastPage == false && replyState.items.isNotEmpty()) {
+                        when {
+                            replyState.isLoadingMore -> {
+                                Box(
+                                    modifier = Modifier.fillMaxWidth().padding(8.dp),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    CircularProgressIndicator(
+                                        modifier = Modifier.size(20.dp),
+                                        color = customColors.gourmetOrange,
+                                        strokeWidth = 2.dp
+                                    )
+                                }
+                            }
+                            replyState.loadingMoreErrorReply -> {
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clickable { onLoadMoreReplies() }
+                                        .padding(vertical = 4.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Refresh,
+                                        contentDescription = stringResource(Res.string.active_devices_retry_cd),
+                                        tint = customColors.textSecondary,
+                                        modifier = Modifier.size(18.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(4.dp))
+                                    Text(
+                                        text = stringResource(Res.string.active_devices_retry),
+                                        style = MaterialTheme.typography.labelMedium.copy(
+                                            fontWeight = FontWeight.Bold,
+                                            color = customColors.textSecondary
+                                        )
+                                    )
+                                }
+                            }
+                            else -> {
+                                Text(
+                                    text = stringResource(Res.string.view_more_replies),
+                                    style = MaterialTheme.typography.labelMedium.copy(
+                                        fontWeight = FontWeight.Bold,
+                                        color = customColors.textSecondary
+                                    ),
+                                    modifier = Modifier
+                                        .clickable { onLoadMoreReplies() }
+                                        .padding(vertical = 4.dp)
+                                )
+                            }
+                        }
                     }
                 }
             }

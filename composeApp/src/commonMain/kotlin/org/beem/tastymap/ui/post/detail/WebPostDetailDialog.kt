@@ -460,6 +460,35 @@ fun WebPostDetailDialog(
                                             )
                                         }
                                     }
+                                }else if (post.isCommentEnabled && commentUiState.loadingMoreError){
+                                    item {
+                                        Column(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .padding(vertical = 12.dp),
+                                            horizontalAlignment = Alignment.CenterHorizontally
+                                        ) {
+                                            IconButton(
+                                                onClick = {
+                                                    commentScreenModel.loadNextPage(postId)
+                                                }
+                                            ) {
+                                                Icon(
+                                                    imageVector = Icons.Default.Refresh,
+                                                    contentDescription = stringResource(Res.string.active_devices_retry),
+                                                    tint = customColors.textSecondary,
+                                                    modifier = Modifier.size(28.dp)
+                                                )
+                                            }
+                                            Text(
+                                                text = stringResource(Res.string.active_devices_retry),
+                                                style = MaterialTheme.typography.bodySmall.copy(
+                                                    color = customColors.textSecondary,
+                                                    fontWeight = FontWeight.Medium
+                                                )
+                                            )
+                                        }
+                                    }
                                 }
                             }
 
