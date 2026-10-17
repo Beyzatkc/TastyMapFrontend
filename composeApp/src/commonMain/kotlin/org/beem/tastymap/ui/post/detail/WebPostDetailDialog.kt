@@ -122,6 +122,7 @@ fun WebPostDetailDialog(
     val listState = rememberLazyListState()
 
     LaunchedEffect(key1 = postId) {
+        commentScreenModel.clearState()
         screenModel.loadPostDetail(postId)
         screenModel.fetchRemotePost(postId)
     }
@@ -443,6 +444,9 @@ fun WebPostDetailDialog(
                                                 onReplyClick = { parentId, username ->
                                                     replyingToCommentId = parentId
                                                     replyingToUsername = username
+                                                },
+                                                onToggleLike = { id ->
+                                                    commentScreenModel.toggleLike(id)
                                                 }
                                             )
                                         }

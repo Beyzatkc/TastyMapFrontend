@@ -217,4 +217,52 @@ class CommentScreenModel(
             }
         }
     }
+    fun toggleLike(commentId: Long) {
+        screenModelScope.launch {
+
+            val result = repository.toggleLike(commentId)
+
+            if (result is ResultWrapper.Success) {
+                val backendResponse = result.data
+                val isLikedByServer = backendResponse.liked
+                val totalLikesByServer = backendResponse.totalLikes.toInt()
+
+                _uiState.update { state ->
+                    val updatedItems = state.items.map { comment ->
+                        if (comment.id == commentId) {
+                            comment.copy(
+                                isLiked = isLikedByServer,
+                                numberOfLikes = totalLikesByServer
+                            )
+                        } else {
+                            comment
+                        }
+                    }
+
+                    val updatedRepliesState = state.repliesState.toMutableMap()
+                    updatedRepliesState.forEach { (parentId, replyState) ->
+                        val updatedReplyItems = replyState.items.map { reply ->
+                            if (reply.id == commentId) {
+                                reply.copy(
+                                    isLiked = isLikedByServer,
+                                    numberOfLikes = totalLikesByServer
+                                )
+                            } else {
+                                reply
+                            }
+                        }
+                        updatedRepliesState[parentId] = replyState.copy(items = updatedReplyItems)
+                    }
+
+                    state.copy(
+                        items = updatedItems,
+                        repliesState = updatedRepliesState
+                    )
+                }
+            }
+        }
+    }
+    fun clearState() {
+        _uiState.update { CommentListUiState() }
+    }
 }

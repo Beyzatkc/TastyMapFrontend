@@ -7,6 +7,7 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -105,6 +106,7 @@ fun CommentBottomSheet(
 
     LaunchedEffect(postId) {
         if(isCommentEnabled) {
+            screenModel.clearState()
             screenModel.loadInitialData(postId)
         }
     }
@@ -277,6 +279,9 @@ fun CommentBottomSheet(
                                     onReplyClick = { parentId, username ->
                                         replyingToCommentId = parentId
                                         replyingToUsername = username
+                                    },
+                                    onToggleLike = { id ->
+                                        screenModel.toggleLike(id)
                                     }
                                 )
                             }
@@ -382,15 +387,21 @@ fun CommentItem(
     onUserClick: () -> Unit,
     onToggleReplies: () -> Unit,
     onLoadMoreReplies: () -> Unit,
+    onToggleLike: (Long) -> Unit,
     onReplyClick: (Long, String) -> Unit
 ) {
     val customColors = LocalCustomColors.current
     val isRepliesExpanded = uiState.expandedComments.contains(comment.id)
     val replyState = uiState.repliesState[comment.id]
+    var showMenu by remember { mutableStateOf(false) }
 
     Column(
         modifier = Modifier
             .fillMaxWidth()
+            .combinedClickable(
+                onLongClick = { showMenu = true },
+                onClick = {}
+            )
             .padding(horizontal = 16.dp, vertical = 12.dp)
     ) {
         Row(verticalAlignment = Alignment.Top) {
@@ -484,9 +495,10 @@ fun CommentItem(
                 }
             }
 
+            println("LIKE BILGIIS\n"+comment.isLiked)
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 IconButton(
-                    onClick = { /* TODO: Toggle Like işlemi */ },
+                    onClick = { onToggleLike(comment.id) },
                     modifier = Modifier.size(24.dp)
                 ) {
                     Icon(
@@ -527,7 +539,8 @@ fun CommentItem(
                         ReplyItem(
                             reply = reply,
                             onUserClick = { onUserClick() },
-                            onReplyClick = { onReplyClick(comment.id, reply.username) }
+                            onReplyClick = { onReplyClick(comment.id, reply.username) },
+                            onToggleLike = { onToggleLike(reply.id)}
                         )
                         Spacer(modifier = Modifier.height(12.dp))
                     }
@@ -613,7 +626,8 @@ fun CommentItem(
 private fun ReplyItem(
     reply: CommentsResponse,
     onUserClick: () -> Unit,
-    onReplyClick: () -> Unit
+    onReplyClick: () -> Unit,
+    onToggleLike: (Long) -> Unit,
 ) {
     val customColors = LocalCustomColors.current
     Row(verticalAlignment = Alignment.Top) {
@@ -675,7 +689,7 @@ private fun ReplyItem(
         }
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             IconButton(
-                onClick = { /* TODO: Toggle Like işlemi */ },
+                onClick = { onToggleLike(reply.id) },
                 modifier = Modifier.size(24.dp)
             ) {
                 Icon(
