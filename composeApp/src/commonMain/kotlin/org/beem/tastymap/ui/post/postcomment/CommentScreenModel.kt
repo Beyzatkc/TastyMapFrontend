@@ -19,6 +19,10 @@ class CommentScreenModel(
     private val _uiState = MutableStateFlow(CommentListUiState())
     val uiState = _uiState.asStateFlow()
 
+    fun isMe(userId: Long): Boolean {
+        return repository.isMe(userId)
+    }
+
     //YORUMUN UZUNLUK KONTROLU EKLENCEK
     fun addComment(postId: Long, contents: String, onSuccess: () -> Unit) {
         if (contents.isBlank()) return
@@ -217,10 +221,65 @@ class CommentScreenModel(
             }
         }
     }
-    fun toggleLike(commentId: Long) {
+    fun delete(commentId: Long, postId: Long) {
+        _uiState.update { it.copy(isActionLoadingDelete = true) }
+        screenModelScope.launch {
+            val result = repository.deleteComment(postId, commentId)
+
+            when (result) {
+                is ResultWrapper.Success -> {
+                    _uiState.update { state ->
+                        val isTopLevelComment = state.items.any { it.id == commentId }
+
+                        var parentIdOfDeletedReply: Long? = null
+
+                        val updatedRepliesState = state.repliesState.mapValues { (parentId, replyState) ->
+                            val hasReply = replyState.items.any { it.id == commentId }
+                            if (hasReply) {
+                                parentIdOfDeletedReply = parentId
+                                replyState.copy(items = replyState.items.filterNot { it.id == commentId })
+                            } else {
+                                replyState
+                            }
+                        }.toMutableMap()
+
+                        val updatedItems = state.items.mapNotNull { comment ->
+                            when {
+                                comment.id == commentId -> null
+                                comment.id == parentIdOfDeletedReply -> {
+                                    val newReplyCount = maxOf(0, comment.replyCount - 1)
+                                    comment.copy(replyCount = newReplyCount)
+                                }
+
+                                else -> comment
+                            }
+                        }
+
+                        val updatedExpandedComments = if (isTopLevelComment) {
+                            updatedRepliesState.remove(commentId)
+                            state.expandedComments - commentId
+                        } else {
+                            state.expandedComments
+                        }
+
+                        state.copy(
+                            items = updatedItems,
+                            repliesState = updatedRepliesState,
+                            expandedComments = updatedExpandedComments,
+                            isActionLoadingDelete = false
+                        )
+                    }
+                }
+                is ResultWrapper.Error -> {
+                    _uiState.update { it.copy(errorMessage = result.message,isActionLoadingDelete = false) }
+                }
+            }
+        }
+    }
+    fun toggleLike(commentId: Long, postId: Long) {
         screenModelScope.launch {
 
-            val result = repository.toggleLike(commentId)
+            val result = repository.toggleLike(commentId,postId)
 
             if (result is ResultWrapper.Success) {
                 val backendResponse = result.data

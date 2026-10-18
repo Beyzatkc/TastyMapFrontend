@@ -1,5 +1,6 @@
 package org.beem.tastymap.data.repository
 
+import org.beem.tastymap.core.local.UserManager
 import org.beem.tastymap.core.network.ResultWrapper
 import org.beem.tastymap.core.network.safeApiCall
 import org.beem.tastymap.data.cache.PostCommentMemoryCache
@@ -13,8 +14,17 @@ import org.beem.tastymap.data.remote.PostCommentDataSource
 class PostCommentRepository(
     private val remoteDataSource: PostCommentDataSource,
     private val postLocalDataSource: PostLocalDataSource,
-    private val memoryCache: PostCommentMemoryCache
+    private val memoryCache: PostCommentMemoryCache,
+    private val userManager: UserManager
 ) {
+
+    val myId: Long
+        get() = userManager.userSession.value?.userId ?: 0L
+
+
+    fun isMe(userId: Long): Boolean {
+        return userId == myId
+    }
     suspend fun addComment(postId: Long, request: CommentRequest): ResultWrapper<CommentsResponse>{
         val result = safeApiCall {
             remoteDataSource.addComment(postId, request)
@@ -70,16 +80,24 @@ class PostCommentRepository(
         return result
     }
 
-    suspend fun updateComment(commentId: Long): ResultWrapper<CommentsResponse> {
-        return safeApiCall {
+    suspend fun updateComment(commentId: Long,postId:Long): ResultWrapper<CommentsResponse> {
+        val result= safeApiCall {
             remoteDataSource.updateComment(commentId)
         }
+        if (result is ResultWrapper.Success) {
+            memoryCache.invalidatePostCache(postId)
+        }
+        return result
     }
 
-    suspend fun toggleLike(commentId: Long): ResultWrapper<CommentLikeResponse> {
-        return safeApiCall {
+    suspend fun toggleLike(commentId: Long,postId: Long): ResultWrapper<CommentLikeResponse> {
+        val result = safeApiCall {
             remoteDataSource.toggleLike(commentId)
         }
+        if (result is ResultWrapper.Success) {
+            memoryCache.invalidatePostCache(postId)
+        }
+        return result
     }
 
     suspend fun togglePin(commentId: Long, postId: Long): ResultWrapper<CommentsResponse> {

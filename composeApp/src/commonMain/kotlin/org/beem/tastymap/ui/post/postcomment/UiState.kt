@@ -22,5 +22,6 @@ data class CommentListUiState(
     val currentPage: Int = 0,
     val isLastPage: Boolean = false,
     val errorMessage: String? = null,
-    val loadingMoreError: Boolean = false
+    val loadingMoreError: Boolean = false,
+    val isActionLoadingDelete: Boolean = false,
 )

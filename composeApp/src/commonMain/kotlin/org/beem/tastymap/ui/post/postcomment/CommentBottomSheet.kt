@@ -5,9 +5,13 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.hoverable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsHoveredAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -28,13 +32,20 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.PushPin
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.HorizontalDivider
@@ -65,7 +76,10 @@ import kotlinx.coroutines.launch
 import org.beem.tastymap.core.util.formatToRelativeDateTime
 import org.beem.tastymap.data.model.postcomment.CommentsResponse
 import org.beem.tastymap.ui.components.CommentInputBar
+import org.beem.tastymap.ui.components.DialogConfig
+import org.beem.tastymap.ui.components.LoadingOverlay
 import org.beem.tastymap.ui.components.MentionFormattedText
+import org.beem.tastymap.ui.components.TastyConfirmDialog
 import org.beem.tastymap.ui.theme.LocalCustomColors
 import org.jetbrains.compose.resources.stringResource
 import tastymap.composeapp.generated.resources.Res
@@ -73,7 +87,10 @@ import tastymap.composeapp.generated.resources.active_devices_retry
 import tastymap.composeapp.generated.resources.active_devices_retry_cd
 import tastymap.composeapp.generated.resources.be_first_to_comment
 import tastymap.composeapp.generated.resources.comments_title
+import tastymap.composeapp.generated.resources.delete_post_message
+import tastymap.composeapp.generated.resources.delete_post_title
 import tastymap.composeapp.generated.resources.hide_replies
+import tastymap.composeapp.generated.resources.profile_action_reject
 import tastymap.composeapp.generated.resources.reply_action
 import tastymap.composeapp.generated.resources.view_more_replies
 import tastymap.composeapp.generated.resources.view_replies
@@ -93,6 +110,7 @@ fun CommentBottomSheet(
     val listState = rememberLazyListState()
     val coroutineScope = rememberCoroutineScope()
 
+    var commentToDelete by remember { mutableStateOf<Long?>(null) }
     var commentText by remember { mutableStateOf("") }
     var isSendingComment by remember { mutableStateOf(false) }
     val currentUserProfileUrl = screenModel.getCurrentUserProfileUrl()
@@ -264,6 +282,8 @@ fun CommentBottomSheet(
                                     comment = comment,
                                     uiState = uiState,
                                     onUserClick = { onUserClick(comment.userId) },
+                                    isWeb = false,
+                                    checkIsOwnComment = { userId -> screenModel.isMe(userId) },
                                     onToggleReplies = {
                                         screenModel.toggleReplies(
                                             postId,
@@ -281,7 +301,16 @@ fun CommentBottomSheet(
                                         replyingToUsername = username
                                     },
                                     onToggleLike = { id ->
-                                        screenModel.toggleLike(id)
+                                        screenModel.toggleLike(id,postId)
+                                    },
+                                    onDeleteClick = { commentId ->
+                                        commentToDelete = commentId
+                                    },
+                                    onPinClick = {
+                                        // TODO: screenModel.togglePin(comment.id, postId)
+                                    },
+                                    onUpdateClick = {
+                                        // TODO: Yorum güncelleme state'ini/ui'ını aktifleştir
                                     }
                                 )
                             }
@@ -333,6 +362,25 @@ fun CommentBottomSheet(
                     }
                 }
             }
+            if (commentToDelete != null) {
+                TastyConfirmDialog(
+                    config = DialogConfig(
+                        title = "Yorumu Sil", // stringResource(Res.string.delete_comment_title)
+                        message = "Bu yorumu silmek istediğinize emin misiniz?",
+                        confirmText = stringResource(Res.string.profile_action_reject),
+                        isDestructive = true,
+                        onConfirm = {
+                            // ID'yi kullanarak ScreenModel'daki delete metodunu çağırıyoruz
+                            screenModel.delete(commentId = commentToDelete!!, postId = postId)
+                            commentToDelete = null // Dialogu kapat
+                        }
+                    ),
+                    onDismiss = { commentToDelete = null } // Vazgeçilirse null yap
+                )
+            }
+            if (uiState.isActionLoadingDelete) {
+                LoadingOverlay(message = "Yorum siliniyor...") // stringResource ile de verebilirsin
+            }
             if (isCommentEnabled) {
                 CommentInputBar(
                     text = commentText,
@@ -380,42 +428,320 @@ fun CommentBottomSheet(
         }
     }
 }
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun CommentItem(
     comment: CommentsResponse,
     uiState: CommentListUiState,
+    isWeb: Boolean,
+    checkIsOwnComment: (Long) -> Boolean,
     onUserClick: () -> Unit,
     onToggleReplies: () -> Unit,
     onLoadMoreReplies: () -> Unit,
     onToggleLike: (Long) -> Unit,
+    onDeleteClick: (Long) -> Unit,
+    onPinClick: () -> Unit,
+    onUpdateClick: () -> Unit,
     onReplyClick: (Long, String) -> Unit
 ) {
     val customColors = LocalCustomColors.current
     val isRepliesExpanded = uiState.expandedComments.contains(comment.id)
     val replyState = uiState.repliesState[comment.id]
+
+    var showMenu by remember { mutableStateOf(false) }
+    val isOwnComment = checkIsOwnComment(comment.userId)
+
+    // --- HOVER (Mouse ile üzerine gelme) KONTROLÜ ---
+    val interactionSource = remember { MutableInteractionSource() }
+    val isHovered by interactionSource.collectIsHoveredAsState()
+
+    var baseModifier = Modifier.fillMaxWidth()
+    if (!isWeb) {
+        baseModifier = baseModifier.combinedClickable(
+            onLongClick = { showMenu = true },
+            onClick = {}
+        )
+    } else {
+        baseModifier = baseModifier.hoverable(interactionSource)
+    }
+    Box(modifier = Modifier.fillMaxWidth()) {
+        Column(
+            modifier = baseModifier.padding(horizontal = 16.dp, vertical = 12.dp)
+        ) {
+            Row(verticalAlignment = Alignment.Top) {
+                // ... Profil Fotoğrafı (Eski kodla aynı) ...
+                Box(
+                    modifier = Modifier.size(40.dp).clip(CircleShape).background(customColors.surfaceVariant).clickable { onUserClick() },
+                    contentAlignment = Alignment.Center
+                ) {
+                    if (!comment.profilePhotoUrl.isNullOrBlank()) { AsyncImage(model = comment.profilePhotoUrl, contentDescription = null, modifier = Modifier.fillMaxSize().clip(CircleShape), contentScale = ContentScale.Crop) } else { Icon(imageVector = Icons.Default.Person, contentDescription = null, tint = customColors.placeHolderIcon, modifier = Modifier.size(24.dp)) }
+                }
+
+                Spacer(modifier = Modifier.width(12.dp))
+
+                Column(modifier = Modifier.weight(1f)) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text(text = comment.username, style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold, color = customColors.textPrimary), modifier = Modifier.clickable { onUserClick() })
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(text = formatToRelativeDateTime(comment.date), style = MaterialTheme.typography.labelSmall.copy(color = customColors.textSecondary))
+
+                        if (isWeb && isHovered) {
+                            Spacer(modifier = Modifier.weight(1f))
+                            IconButton(
+                                onClick = { showMenu = true },
+                                modifier = Modifier.size(24.dp)
+                            ) {
+                                Icon(Icons.Default.MoreVert, contentDescription = "Seçenekler", tint = customColors.textSecondary, modifier = Modifier.size(16.dp))
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(4.dp))
+
+                    Text(
+                        text = comment.contents,
+                        style = MaterialTheme.typography.bodyMedium.copy(color = customColors.textPrimary)
+                    )
+
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            text = stringResource(Res.string.reply_action),
+                            style = MaterialTheme.typography.labelMedium.copy(
+                                fontWeight = FontWeight.Bold,
+                                color = customColors.textSecondary
+                            ),
+                            modifier = Modifier.clickable {
+                                onReplyClick(comment.id, comment.username)
+                            }
+                        )
+                    }
+
+                    if (comment.replyCount > 0) {
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Row(
+                            modifier = Modifier.clickable { onToggleReplies() },
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            HorizontalDivider(
+                                modifier = Modifier.width(24.dp).padding(end = 8.dp),
+                                color = customColors.textSecondary.copy(alpha = 0.5f)
+                            )
+                            Text(
+                                text = if (isRepliesExpanded) {
+                                    stringResource(Res.string.hide_replies)
+                                } else {
+                                    stringResource(
+                                        Res.string.view_replies_count,
+                                        comment.replyCount
+                                    )
+                                },
+                                style = MaterialTheme.typography.labelMedium.copy(
+                                    fontWeight = FontWeight.Bold,
+                                    color = customColors.textSecondary
+                                )
+                            )
+                        }
+                    }
+                }
+
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    IconButton(
+                        onClick = { onToggleLike(comment.id) },
+                        modifier = Modifier.size(24.dp)
+                    ) {
+                        Icon(
+                            imageVector = if (comment.isLiked) Icons.Default.Favorite else Icons.Outlined.FavoriteBorder,
+                            contentDescription = null,
+                            tint = if (comment.isLiked) customColors.red else customColors.textSecondary,
+                            modifier = Modifier.size(16.dp)
+                        )
+                    }
+                    if (comment.numberOfLikes > 0) {
+                        Text(
+                            text = comment.numberOfLikes.toString(),
+                            style = MaterialTheme.typography.labelSmall.copy(color = customColors.textSecondary)
+                        )
+                    }
+                }
+            }
+
+            AnimatedVisibility(visible = isRepliesExpanded) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 12.dp, start = 52.dp)
+                ) {
+                    if (replyState?.isLoading == true && replyState.items.isEmpty()) {
+                        Box(
+                            modifier = Modifier.fillMaxWidth().padding(8.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(20.dp),
+                                color = customColors.gourmetOrange,
+                                strokeWidth = 2.dp
+                            )
+                        }
+                    } else {
+                        replyState?.items?.forEach { reply ->
+                            ReplyItem(
+                                reply = reply,
+                                isWeb = isWeb,
+                                checkIsOwnComment = checkIsOwnComment,
+                                onUserClick = { onUserClick() },
+                                onReplyClick = { onReplyClick(comment.id, reply.username) },
+                                onDeleteClick = { onDeleteClick(reply.id) },
+                                onUpdateClick = { /* TODO: Yanıt güncelleme */ },
+                                onToggleLike = { /* TODO: Yanıt beğenme */ }
+                            )
+                            Spacer(modifier = Modifier.height(12.dp))
+                        }
+
+                        if (!replyState?.errorMessage.isNullOrBlank() && replyState?.items?.isEmpty() == true) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth().clickable { onToggleReplies() },
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Refresh,
+                                    contentDescription = null,
+                                    tint = customColors.textSecondary,
+                                    modifier = Modifier.size(16.dp)
+                                )
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text(
+                                    text = stringResource(Res.string.active_devices_retry),
+                                    style = MaterialTheme.typography.labelMedium.copy(color = customColors.textSecondary)
+                                )
+                            }
+                        }
+
+                        if (replyState?.isLastPage == false && replyState.items.isNotEmpty()) {
+                            when {
+                                replyState.isLoadingMore -> {
+                                    Box(
+                                        modifier = Modifier.fillMaxWidth().padding(8.dp),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        CircularProgressIndicator(
+                                            modifier = Modifier.size(20.dp),
+                                            color = customColors.gourmetOrange,
+                                            strokeWidth = 2.dp
+                                        )
+                                    }
+                                }
+
+                                replyState.loadingMoreErrorReply -> {
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .clickable { onLoadMoreReplies() }
+                                            .padding(vertical = 4.dp),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.Refresh,
+                                            contentDescription = stringResource(Res.string.active_devices_retry_cd),
+                                            tint = customColors.textSecondary,
+                                            modifier = Modifier.size(18.dp)
+                                        )
+                                        Spacer(modifier = Modifier.width(4.dp))
+                                        Text(
+                                            text = stringResource(Res.string.active_devices_retry),
+                                            style = MaterialTheme.typography.labelMedium.copy(
+                                                fontWeight = FontWeight.Bold,
+                                                color = customColors.textSecondary
+                                            )
+                                        )
+                                    }
+                                }
+
+                                else -> {
+                                    Text(
+                                        text = stringResource(Res.string.view_more_replies),
+                                        style = MaterialTheme.typography.labelMedium.copy(
+                                            fontWeight = FontWeight.Bold,
+                                            color = customColors.textSecondary
+                                        ),
+                                        modifier = Modifier
+                                            .clickable { onLoadMoreReplies() }
+                                            .padding(vertical = 4.dp)
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        CommentActionDropdownMenu(
+            expanded = showMenu,
+            isOwnComment = isOwnComment,
+            onDismissRequest = { showMenu = false },
+            onPinClick = onPinClick,
+            onUpdateClick = onUpdateClick,
+            onDeleteClick = {
+                showMenu = false
+                onDeleteClick(comment.id)
+            },
+            onReportClick = {
+                showMenu = false
+                // TODO: Şikayet etme dialogu / API isteği eklenecek
+            }
+        )
+    }
+}
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+private fun ReplyItem(
+    reply: CommentsResponse,
+    isWeb: Boolean,
+    checkIsOwnComment: (Long) -> Boolean,
+    onUserClick: () -> Unit,
+    onReplyClick: () -> Unit,
+    onDeleteClick: () -> Unit,
+    onUpdateClick: () -> Unit,
+    onToggleLike: () -> Unit
+) {
+    val customColors = LocalCustomColors.current
     var showMenu by remember { mutableStateOf(false) }
 
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .combinedClickable(
-                onLongClick = { showMenu = true },
-                onClick = {}
-            )
-            .padding(horizontal = 16.dp, vertical = 12.dp)
-    ) {
-        Row(verticalAlignment = Alignment.Top) {
+    val isOwnReply = checkIsOwnComment(reply.userId)
+
+    val interactionSource = remember { MutableInteractionSource() }
+    val isHovered by interactionSource.collectIsHoveredAsState()
+
+    // 1. Modifiye ediciyi platforma göre ayarlıyoruz
+    var baseModifier = Modifier.fillMaxWidth()
+    if (!isWeb) {
+        baseModifier = baseModifier.combinedClickable(
+            onLongClick = { showMenu = true },
+            onClick = {}
+        )
+    } else {
+        baseModifier = baseModifier.hoverable(interactionSource)
+    }
+
+    Box(modifier = Modifier.fillMaxWidth()) {
+        Row(
+            verticalAlignment = Alignment.Top,
+            modifier = baseModifier // HATA BURADAYDI: baseModifier olarak güncellendi!
+        ) {
             Box(
                 modifier = Modifier
-                    .size(40.dp)
+                    .size(32.dp)
                     .clip(CircleShape)
                     .background(customColors.surfaceVariant)
                     .clickable { onUserClick() },
                 contentAlignment = Alignment.Center
             ) {
-                if (!comment.profilePhotoUrl.isNullOrBlank()) {
+                if (!reply.profilePhotoUrl.isNullOrBlank()) {
                     AsyncImage(
-                        model = comment.profilePhotoUrl,
+                        model = reply.profilePhotoUrl,
                         contentDescription = null,
                         modifier = Modifier.fillMaxSize().clip(CircleShape),
                         contentScale = ContentScale.Crop
@@ -425,287 +751,142 @@ fun CommentItem(
                         imageVector = Icons.Default.Person,
                         contentDescription = null,
                         tint = customColors.placeHolderIcon,
-                        modifier = Modifier.size(24.dp)
+                        modifier = Modifier.size(20.dp)
                     )
                 }
             }
 
-            Spacer(modifier = Modifier.width(12.dp))
+            Spacer(modifier = Modifier.width(8.dp))
 
             Column(modifier = Modifier.weight(1f)) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(
-                        text = comment.username,
-                        style = MaterialTheme.typography.bodyMedium.copy(
-                            fontWeight = FontWeight.Bold,
-                            color = customColors.textPrimary
-                        ),
-                        modifier = Modifier.clickable { onUserClick() }
-                    )
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(text = reply.username, style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold, color = customColors.textPrimary), modifier = Modifier.clickable { onUserClick() })
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = formatToRelativeDateTime(comment.date),
-                        style = MaterialTheme.typography.labelSmall.copy(color = customColors.textSecondary)
-                    )
-                }
+                    Text(text = formatToRelativeDateTime(reply.date), style = MaterialTheme.typography.labelSmall.copy(color = customColors.textSecondary))
 
-                Spacer(modifier = Modifier.height(4.dp))
-
-                Text(
-                    text = comment.contents,
-                    style = MaterialTheme.typography.bodyMedium.copy(color = customColors.textPrimary)
-                )
-
-                Spacer(modifier = Modifier.height(4.dp))
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(
-                        text = stringResource(Res.string.reply_action),
-                        style = MaterialTheme.typography.labelMedium.copy(
-                            fontWeight = FontWeight.Bold,
-                            color = customColors.textSecondary
-                        ),
-                        modifier = Modifier.clickable {
-                            onReplyClick(comment.id, comment.username)
+                    // FARE YANITIN ÜZERİNDEYSE 3 NOKTAYI GÖSTER (Yanıt kimin olursa olsun çıkar)
+                    if (isWeb && isHovered) {
+                        Spacer(modifier = Modifier.weight(1f))
+                        IconButton(
+                            onClick = { showMenu = true },
+                            modifier = Modifier.size(24.dp)
+                        ) {
+                            Icon(Icons.Default.MoreVert, contentDescription = "Seçenekler", tint = customColors.textSecondary, modifier = Modifier.size(16.dp))
                         }
-                    )
-                }
-
-                if (comment.replyCount > 0) {
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Row(
-                        modifier = Modifier.clickable { onToggleReplies() },
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        HorizontalDivider(
-                            modifier = Modifier.width(24.dp).padding(end = 8.dp),
-                            color = customColors.textSecondary.copy(alpha = 0.5f)
-                        )
-                        Text(
-                            text = if (isRepliesExpanded) {
-                                stringResource(Res.string.hide_replies)
-                            } else {
-                                stringResource(Res.string.view_replies_count, comment.replyCount)
-                            },
-                            style = MaterialTheme.typography.labelMedium.copy(
-                                fontWeight = FontWeight.Bold,
-                                color = customColors.textSecondary
-                            )
-                        )
                     }
                 }
-            }
+                Spacer(modifier = Modifier.height(2.dp))
+                MentionFormattedText(text = reply.contents)
 
-            println("LIKE BILGIIS\n"+comment.isLiked)
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = stringResource(Res.string.reply_action),
+                    style = MaterialTheme.typography.labelMedium.copy(
+                        fontWeight = FontWeight.Bold,
+                        color = customColors.textSecondary
+                    ),
+                    modifier = Modifier.clickable { onReplyClick() }
+                )
+            }
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 IconButton(
-                    onClick = { onToggleLike(comment.id) },
+                    onClick = { onToggleLike() },
                     modifier = Modifier.size(24.dp)
                 ) {
                     Icon(
-                        imageVector = if (comment.isLiked) Icons.Default.Favorite else Icons.Outlined.FavoriteBorder,
+                        imageVector = if (reply.isLiked) Icons.Default.Favorite else Icons.Outlined.FavoriteBorder,
                         contentDescription = null,
-                        tint = if (comment.isLiked) customColors.red else customColors.textSecondary,
+                        tint = if (reply.isLiked) customColors.red else customColors.textSecondary,
                         modifier = Modifier.size(16.dp)
                     )
                 }
-                if (comment.numberOfLikes > 0) {
+                if (reply.numberOfLikes > 0) {
                     Text(
-                        text = comment.numberOfLikes.toString(),
+                        text = reply.numberOfLikes.toString(),
                         style = MaterialTheme.typography.labelSmall.copy(color = customColors.textSecondary)
                     )
+
                 }
             }
         }
 
-        AnimatedVisibility(visible = isRepliesExpanded) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 12.dp, start = 52.dp)
-            ) {
-                if (replyState?.isLoading == true && replyState.items.isEmpty()) {
-                    Box(
-                        modifier = Modifier.fillMaxWidth().padding(8.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        CircularProgressIndicator(
-                            modifier = Modifier.size(20.dp),
-                            color = customColors.gourmetOrange,
-                            strokeWidth = 2.dp
-                        )
-                    }
-                } else {
-                    replyState?.items?.forEach { reply ->
-                        ReplyItem(
-                            reply = reply,
-                            onUserClick = { onUserClick() },
-                            onReplyClick = { onReplyClick(comment.id, reply.username) },
-                            onToggleLike = { onToggleLike(reply.id)}
-                        )
-                        Spacer(modifier = Modifier.height(12.dp))
-                    }
-
-                    if (!replyState?.errorMessage.isNullOrBlank() && replyState?.items?.isEmpty() == true) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth().clickable { onToggleReplies() },
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Refresh,
-                                contentDescription = null,
-                                tint = customColors.textSecondary,
-                                modifier = Modifier.size(16.dp)
-                            )
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Text(
-                                text = stringResource(Res.string.active_devices_retry),
-                                style = MaterialTheme.typography.labelMedium.copy(color = customColors.textSecondary)
-                            )
-                        }
-                    }
-
-                    if (replyState?.isLastPage == false && replyState.items.isNotEmpty()) {
-                        when {
-                            replyState.isLoadingMore -> {
-                                Box(
-                                    modifier = Modifier.fillMaxWidth().padding(8.dp),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    CircularProgressIndicator(
-                                        modifier = Modifier.size(20.dp),
-                                        color = customColors.gourmetOrange,
-                                        strokeWidth = 2.dp
-                                    )
-                                }
-                            }
-                            replyState.loadingMoreErrorReply -> {
-                                Row(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .clickable { onLoadMoreReplies() }
-                                        .padding(vertical = 4.dp),
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Default.Refresh,
-                                        contentDescription = stringResource(Res.string.active_devices_retry_cd),
-                                        tint = customColors.textSecondary,
-                                        modifier = Modifier.size(18.dp)
-                                    )
-                                    Spacer(modifier = Modifier.width(4.dp))
-                                    Text(
-                                        text = stringResource(Res.string.active_devices_retry),
-                                        style = MaterialTheme.typography.labelMedium.copy(
-                                            fontWeight = FontWeight.Bold,
-                                            color = customColors.textSecondary
-                                        )
-                                    )
-                                }
-                            }
-                            else -> {
-                                Text(
-                                    text = stringResource(Res.string.view_more_replies),
-                                    style = MaterialTheme.typography.labelMedium.copy(
-                                        fontWeight = FontWeight.Bold,
-                                        color = customColors.textSecondary
-                                    ),
-                                    modifier = Modifier
-                                        .clickable { onLoadMoreReplies() }
-                                        .padding(vertical = 4.dp)
-                                )
-                            }
-                        }
-                    }
-                }
+        // Menü çağrıldığında kimin yorumu ise ona göre Butonları Gösterir
+        CommentActionDropdownMenu(
+            expanded = showMenu,
+            isOwnComment = isOwnReply,
+            showPinOption = false,
+            onDismissRequest = { showMenu = false },
+            onUpdateClick = onUpdateClick,
+            onDeleteClick = {
+                showMenu = false
+                onDeleteClick()
+            },
+            onReportClick = {
+                showMenu = false
+                // TODO: Şikayet et
             }
-        }
+        )
     }
 }
-
 @Composable
-private fun ReplyItem(
-    reply: CommentsResponse,
-    onUserClick: () -> Unit,
-    onReplyClick: () -> Unit,
-    onToggleLike: (Long) -> Unit,
+fun CommentActionDropdownMenu(
+    expanded: Boolean,
+    isOwnComment: Boolean,
+    showPinOption: Boolean = true,
+    onDismissRequest: () -> Unit,
+    onPinClick: () -> Unit = {},
+    onUpdateClick: () -> Unit,
+    onDeleteClick: () -> Unit,
+    onReportClick: () -> Unit
 ) {
     val customColors = LocalCustomColors.current
-    Row(verticalAlignment = Alignment.Top) {
-        Box(
-            modifier = Modifier
-                .size(32.dp)
-                .clip(CircleShape)
-                .background(customColors.surfaceVariant)
-                .clickable { onUserClick() },
-            contentAlignment = Alignment.Center
-        ) {
-            if (!reply.profilePhotoUrl.isNullOrBlank()) {
-                AsyncImage(
-                    model = reply.profilePhotoUrl,
-                    contentDescription = null,
-                    modifier = Modifier.fillMaxSize().clip(CircleShape),
-                    contentScale = ContentScale.Crop
-                )
-            } else {
-                Icon(
-                    imageVector = Icons.Default.Person,
-                    contentDescription = null,
-                    tint = customColors.placeHolderIcon,
-                    modifier = Modifier.size(20.dp)
+
+    DropdownMenu(
+        expanded = expanded,
+        onDismissRequest = onDismissRequest,
+        containerColor = customColors.background
+    ) {
+        if (isOwnComment) {
+            // SADECE showPinOption TRUE İSE PİN BUTONU ÇIKAR
+            if (showPinOption) {
+                DropdownMenuItem(
+                    text = { Text("Pinle", color = customColors.textPrimary) },
+                    leadingIcon = { Icon(Icons.Default.PushPin, contentDescription = null, tint = customColors.textPrimary) },
+                    onClick = {
+                        onDismissRequest()
+                        onPinClick()
+                    }
                 )
             }
-        }
 
-        Spacer(modifier = Modifier.width(8.dp))
-
-        Column(modifier = Modifier.weight(1f)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(
-                    text = reply.username,
-                    style = MaterialTheme.typography.bodyMedium.copy(
-                        fontWeight = FontWeight.Bold,
-                        color = customColors.textPrimary
-                    ),
-                    modifier = Modifier.clickable { onUserClick() }
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(
-                    text = formatToRelativeDateTime(reply.date),
-                    style = MaterialTheme.typography.labelSmall.copy(color = customColors.textSecondary)
-                )
-            }
-            Spacer(modifier = Modifier.height(2.dp))
-            MentionFormattedText(text = reply.contents)
-
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(
-                text = stringResource(Res.string.reply_action),
-                style = MaterialTheme.typography.labelMedium.copy(
-                    fontWeight = FontWeight.Bold,
-                    color = customColors.textSecondary
-                ),
-                modifier = Modifier.clickable { onReplyClick() }
+            DropdownMenuItem(
+                text = { Text("Güncelle", color = customColors.textPrimary) },
+                leadingIcon = { Icon(Icons.Default.Edit, contentDescription = null, tint = customColors.textPrimary) },
+                onClick = {
+                    onDismissRequest()
+                    onUpdateClick()
+                }
             )
-        }
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            IconButton(
-                onClick = { onToggleLike(reply.id) },
-                modifier = Modifier.size(24.dp)
-            ) {
-                Icon(
-                    imageVector = if (reply.isLiked) Icons.Default.Favorite else Icons.Outlined.FavoriteBorder,
-                    contentDescription = null,
-                    tint = if (reply.isLiked) customColors.red else customColors.textSecondary,
-                    modifier = Modifier.size(16.dp)
-                )
-            }
-            if (reply.numberOfLikes > 0) {
-                Text(
-                    text = reply.numberOfLikes.toString(),
-                    style = MaterialTheme.typography.labelSmall.copy(color = customColors.textSecondary)
-                )
-
-            }
+            DropdownMenuItem(
+                text = { Text("Sil", color = customColors.red) },
+                leadingIcon = { Icon(Icons.Default.Delete, contentDescription = null, tint = customColors.red) },
+                onClick = {
+                    onDismissRequest()
+                    onDeleteClick()
+                }
+            )
+        } else {
+            DropdownMenuItem(
+                text = { Text("Şikayet Et", color = customColors.red) },
+                leadingIcon = { Icon(Icons.Default.Warning, contentDescription = null, tint = customColors.red) },
+                onClick = {
+                    onDismissRequest()
+                    onReportClick()
+                }
+            )
         }
     }
 }

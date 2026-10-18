@@ -100,6 +100,7 @@ fun WebPostDetailDialog(
     val uiState by screenModel.uiState.collectAsState()
     val likeUiState by likesScreenModel.uiState.collectAsState()
     val commentUiState by commentScreenModel.uiState.collectAsState()
+    var commentToDelete by remember { mutableStateOf<Long?>(null) }
 
     val currentUserProfileUrl = commentScreenModel.getCurrentUserProfileUrl()
 
@@ -126,7 +127,7 @@ fun WebPostDetailDialog(
         screenModel.loadPostDetail(postId)
         screenModel.fetchRemotePost(postId)
     }
-    LaunchedEffect(key1 = uiState.post?.isCommentEnabled) {
+    LaunchedEffect(key1 = postId, key2 = uiState.post?.isCommentEnabled) {
         if (uiState.post?.isCommentEnabled == true) {
             commentScreenModel.loadInitialData(postId)
         }
@@ -420,6 +421,8 @@ fun WebPostDetailDialog(
                                             CommentItem(
                                                 comment = comment,
                                                 uiState = commentUiState,
+                                                isWeb = true,
+                                                checkIsOwnComment = { userId -> screenModel.isMe(userId) },
                                                 onUserClick = {
                                                     onDismiss()
                                                     if (screenModel.isMe(comment.userId)) {
@@ -446,7 +449,16 @@ fun WebPostDetailDialog(
                                                     replyingToUsername = username
                                                 },
                                                 onToggleLike = { id ->
-                                                    commentScreenModel.toggleLike(id)
+                                                    commentScreenModel.toggleLike(id,postId)
+                                                },
+                                                onDeleteClick = { commentId ->
+                                                    commentToDelete = commentId
+                                                },
+                                                onPinClick = {
+                                                    // TODO: screenModel.togglePin(comment.id, postId)
+                                                },
+                                                onUpdateClick = {
+                                                    // TODO: Yorum güncelleme state'ini/ui'ını aktifleştir
                                                 }
                                             )
                                         }
@@ -618,11 +630,30 @@ fun WebPostDetailDialog(
             onDismiss = { showDeleteDialog = false }
         )
     }
+    if (commentToDelete != null) {
+        TastyConfirmDialog(
+            config = DialogConfig(
+                title = "Yorumu Sil",
+                message = "Bu yorumu silmek istediğinize emin misiniz?",
+                confirmText = stringResource(Res.string.profile_action_reject),
+                isDestructive = true,
+                onConfirm = {
+                    commentScreenModel.delete(commentId = commentToDelete!!, postId = postId)
+                    commentToDelete = null
+                }
+            ),
+            onDismiss = { commentToDelete = null }
+        )
+    }
 
     if (uiState.isActionLoadingDelete) {
         LoadingOverlay(message = stringResource(Res.string.deleting_post))
     }
     if (uiState.isActionLoadingPin) {
         LoadingOverlay(message = null)
+    }
+
+    if (commentUiState.isActionLoadingDelete) {
+        LoadingOverlay(message = "Yorum siliniyor...")
     }
 }
