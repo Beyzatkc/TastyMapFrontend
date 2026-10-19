@@ -1,8 +1,11 @@
 package org.beem.tastymap.ui.post.detail
 
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -60,8 +63,11 @@ import androidx.compose.ui.window.DialogProperties
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import cafe.adriel.voyager.navigator.tab.LocalTabNavigator
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import org.beem.tastymap.core.util.ToastManager
 import org.beem.tastymap.core.util.formatToRelativeDateTime
+import org.beem.tastymap.data.model.postcomment.CommentRequest
 import org.beem.tastymap.ui.bottomnav.ProfileTab
 import org.beem.tastymap.ui.components.CommentInputBar
 import org.beem.tastymap.ui.post.postlike.PostLikesBottomSheet
@@ -71,9 +77,10 @@ import org.beem.tastymap.ui.theme.LocalCustomColors
 import org.beem.tastymap.ui.components.TastyConfirmDialog
 import org.beem.tastymap.ui.components.DialogConfig
 import org.beem.tastymap.ui.components.LoadingOverlay
+import org.beem.tastymap.ui.components.TastyInputDialog
 import org.beem.tastymap.ui.post.mypost.updatepost.EditPostScreen
-import org.beem.tastymap.ui.post.postcomment.CommentItem
 import org.beem.tastymap.ui.post.postcomment.CommentScreenModel
+import org.beem.tastymap.ui.post.postcomment.components.CommentItem
 import org.jetbrains.compose.resources.stringResource
 import tastymap.composeapp.generated.resources.Res
 import tastymap.composeapp.generated.resources.active_devices_retry
@@ -101,6 +108,7 @@ fun WebPostDetailDialog(
     val likeUiState by likesScreenModel.uiState.collectAsState()
     val commentUiState by commentScreenModel.uiState.collectAsState()
     var commentToDelete by remember { mutableStateOf<Long?>(null) }
+    var commentToUpdate by remember { mutableStateOf<Long?>(null) }
 
     val currentUserProfileUrl = commentScreenModel.getCurrentUserProfileUrl()
 
@@ -127,17 +135,41 @@ fun WebPostDetailDialog(
         screenModel.loadPostDetail(postId)
         screenModel.fetchRemotePost(postId)
     }
-    LaunchedEffect(key1 = postId, key2 = uiState.post?.isCommentEnabled) {
-        if (uiState.post?.isCommentEnabled == true) {
-            commentScreenModel.loadInitialData(postId)
+    LaunchedEffect(commentUiState.errorMessage) {
+        if (!commentUiState.errorMessage.isNullOrBlank()) {
+            delay(2000L)
+            commentScreenModel.clearError()
         }
     }
 
-    val shouldLoadMoreComments = remember {
+
+    LaunchedEffect(uiState.post, uiState.isLoading, uiState.isRemoteFetchCompleted) {
+        val currentPost = uiState.post
+
+        if (!uiState.isLoading && currentPost != null && currentPost.postId == postId && uiState.isRemoteFetchCompleted) {
+            if (currentPost.isCommentEnabled) {
+                commentScreenModel.syncCommentsForPost(postId = postId, isCommentEnabled = true)
+            } else {
+                commentScreenModel.syncCommentsForPost(postId = postId, isCommentEnabled = false)
+            }
+        }
+    }
+
+
+    val shouldLoadMoreComments = remember(uiState.post?.isCommentEnabled, commentUiState.isLoading) {
         derivedStateOf {
+            val isCommentEnabled = uiState.post?.isCommentEnabled == true
             val totalItems = listState.layoutInfo.totalItemsCount
             val lastVisibleItem = listState.layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: 0
-            !commentUiState.isLoading && commentUiState.errorMessage == null && totalItems > 0 && lastVisibleItem >= totalItems - 2
+
+            isCommentEnabled &&
+                    uiState.isRemoteFetchCompleted &&
+                    !commentUiState.isLoading &&
+                    !commentUiState.isLoadingMore &&
+                    !commentUiState.isLastPage &&
+                    commentUiState.errorMessage == null &&
+                    totalItems > 0 &&
+                    lastVisibleItem >= totalItems - 2
         }
     }
 
@@ -168,418 +200,481 @@ fun WebPostDetailDialog(
             color = customColors.background,
             shadowElevation = 8.dp
         ) {
-            if (uiState.isLoading && uiState.post == null || uiState.post?.postId != postId) {
-                Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
-                    CircularProgressIndicator(color = customColors.gourmetOrange)
-                }
-            } else {
-                uiState.post?.let { post ->
-                    Row(modifier = Modifier.fillMaxSize()) {
-                        Box(
-                            modifier = Modifier
-                                .weight(1.2f)
-                                .fillMaxHeight()
-                                .background(Color.Black),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            PostMediaPager(
-                                photoUrls = post.photoUrls,
-                                onDoubleTapLike = {
-                                    if (!post.isLiked) {
-                                        screenModel.toggleLike(postId)
-                                    }
-                                }
-                            )
-                        }
-
-                        VerticalDivider(
-                            color = customColors.surfaceVariant.copy(alpha = 0.5f),
-                            thickness = 1.dp
-                        )
-
-                        Column(
-                            modifier = Modifier
-                                .width(380.dp)
-                                .fillMaxHeight()
-                                .background(customColors.background),
-                            verticalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            Column {
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Box(modifier = Modifier.weight(1f)) {
-                                        PostHeader(
-                                            post = post,
-                                            onUserClick = {
-                                                onDismiss()
-                                                if (screenModel.isMe(post.userId)) {
-                                                    tabNavigator.current = ProfileTab
-                                                    navigator.popUntilRoot()
-                                                } else {
-                                                    navigator.push(ProfileScreen(userId = post.userId))
-                                                }
-                                            }
-                                        )
-                                    }
-
-                                    if (uiState.isOwnPost && !post.username.isNullOrEmpty()) {
-                                        Box(modifier = Modifier.padding(end = 8.dp)) {
-                                            IconButton(onClick = { showMenu = true }) {
-                                                Icon(
-                                                    imageVector = Icons.Default.MoreVert,
-                                                    contentDescription = stringResource(Res.string.options),
-                                                    tint = customColors.textPrimary,
-                                                )
-                                            }
-                                            DropdownMenu(
-                                                expanded = showMenu,
-                                                containerColor = customColors.background,
-                                                onDismissRequest = { showMenu = false }
-                                            ) {
-                                                DropdownMenuItem(
-                                                    text = {
-                                                        Text(
-                                                            if (post.isPinned) stringResource(Res.string.unpin_post)
-                                                            else stringResource(Res.string.pin_post),
-                                                            color = customColors.textPrimary
-                                                        )
-                                                    },
-                                                    leadingIcon = {
-                                                        Icon(
-                                                            imageVector = Icons.Default.PushPin,
-                                                            contentDescription = null,
-                                                            tint = customColors.textPrimary
-                                                        )
-                                                    },
-                                                    onClick = {
-                                                        showMenu = false
-                                                        screenModel.togglePin(postId)
-                                                    }
-                                                )
-
-                                                DropdownMenuItem(
-                                                    text = {
-                                                        Text(
-                                                            stringResource(Res.string.edit_post),
-                                                            color = customColors.textPrimary
-                                                        )
-                                                    },
-                                                    leadingIcon = {
-                                                        Icon(
-                                                            imageVector = Icons.Default.Edit,
-                                                            contentDescription = null,
-                                                            tint = customColors.textPrimary
-                                                        )
-                                                    },
-                                                    onClick = {
-                                                        showMenu = false
-                                                        onDismiss()
-                                                        navigator.push(EditPostScreen(postId))
-                                                    }
-                                                )
-
-                                                DropdownMenuItem(
-                                                    text = {
-                                                        Text(
-                                                            stringResource(Res.string.delete_post),
-                                                            color = customColors.red
-                                                        )
-                                                    },
-                                                    leadingIcon = {
-                                                        Icon(
-                                                            imageVector = Icons.Default.Delete,
-                                                            contentDescription = null,
-                                                            tint = customColors.red
-                                                        )
-                                                    },
-                                                    onClick = {
-                                                        showMenu = false
-                                                        showDeleteDialog = true
-                                                    }
-                                                )
-                                            }
-                                        }
-                                    }
-                                }
-                                HorizontalDivider(color = customColors.surfaceVariant.copy(alpha = 0.5f))
-                            }
-                            LazyColumn(
-                                state = listState,
+            Box(modifier = Modifier.fillMaxSize()) {
+                if (uiState.isLoading && uiState.post == null || uiState.post?.postId != postId) {
+                    Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
+                        CircularProgressIndicator(color = customColors.gourmetOrange)
+                    }
+                } else {
+                    uiState.post?.let { post ->
+                        Row(modifier = Modifier.fillMaxSize()) {
+                            Box(
                                 modifier = Modifier
-                                    .fillMaxWidth()
-                                    .weight(1f)
+                                    .weight(1.2f)
+                                    .fillMaxHeight()
+                                    .background(Color.Black),
+                                contentAlignment = Alignment.Center
                             ) {
-                                item {
-                                    if (!post.placeName.isNullOrBlank()) {
-                                        PlaceInfoCard(post = post)
-                                    }
-                                    PostCaptionSection(post = post)
-                                    Spacer(modifier = Modifier.height(16.dp))
-                                }
-
-                                val isError = !commentUiState.errorMessage.isNullOrBlank()
-                                val isEmpty = commentUiState.items.isEmpty()
-
-                                when {
-                                    !post.isCommentEnabled -> {
-                                        item {
-                                            Column(
-                                                modifier = Modifier
-                                                    .fillMaxWidth()
-                                                    .padding(vertical = 48.dp, horizontal = 32.dp),
-                                                horizontalAlignment = Alignment.CenterHorizontally,
-                                                verticalArrangement = Arrangement.Center
-                                            ) {
-                                                Text(
-                                                    text = "Yorumlar Kapalı",
-                                                    style = MaterialTheme.typography.titleSmall.copy(color = customColors.textPrimary)
-                                                )
-                                                Spacer(modifier = Modifier.height(4.dp))
-                                                Text(
-                                                    text = "Bu gönderi yorumlara kapatılmıştır.",
-                                                    style = MaterialTheme.typography.bodyMedium.copy(color = customColors.textSecondary)
-                                                )
-                                            }
+                                PostMediaPager(
+                                    photoUrls = post.photoUrls,
+                                    onDoubleTapLike = {
+                                        if (!post.isLiked) {
+                                            screenModel.toggleLike(postId)
                                         }
                                     }
-                                    commentUiState.isLoading && isEmpty && !isError -> {
-                                        item {
-                                            Box(
-                                                modifier = Modifier.fillMaxWidth().padding(32.dp),
-                                                contentAlignment = Alignment.Center
-                                            ) {
-                                                CircularProgressIndicator(color = customColors.gourmetOrange)
-                                            }
+                                )
+                            }
+
+                            VerticalDivider(
+                                color = customColors.surfaceVariant.copy(alpha = 0.5f),
+                                thickness = 1.dp
+                            )
+
+                            Column(
+                                modifier = Modifier
+                                    .width(380.dp)
+                                    .fillMaxHeight()
+                                    .background(customColors.background),
+                                verticalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Column {
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Box(modifier = Modifier.weight(1f)) {
+                                            PostHeader(
+                                                post = post,
+                                                onUserClick = {
+                                                    onDismiss()
+                                                    if (screenModel.isMe(post.userId)) {
+                                                        tabNavigator.current = ProfileTab
+                                                        navigator.popUntilRoot()
+                                                    } else {
+                                                        navigator.push(ProfileScreen(userId = post.userId))
+                                                    }
+                                                }
+                                            )
                                         }
-                                    }
-                                    isError && isEmpty -> {
-                                        item {
-                                            Box(
-                                                modifier = Modifier.fillMaxWidth().padding(32.dp),
-                                                contentAlignment = Alignment.Center
-                                            ) {
-                                                FilledTonalButton(
-                                                    onClick = { commentScreenModel.loadInitialData(postId) },
-                                                    enabled = !commentUiState.isLoading,
-                                                    modifier = Modifier.height(48.dp),
-                                                    colors = ButtonDefaults.filledTonalButtonColors(
-                                                        containerColor = customColors.surfaceVariant,
-                                                        contentColor = customColors.textPrimary
+
+                                        if (uiState.isOwnPost && !post.username.isNullOrEmpty()) {
+                                            Box(modifier = Modifier.padding(end = 8.dp)) {
+                                                IconButton(onClick = { showMenu = true }) {
+                                                    Icon(
+                                                        imageVector = Icons.Default.MoreVert,
+                                                        contentDescription = stringResource(Res.string.options),
+                                                        tint = customColors.textPrimary,
                                                     )
+                                                }
+                                                DropdownMenu(
+                                                    expanded = showMenu,
+                                                    containerColor = customColors.background,
+                                                    onDismissRequest = { showMenu = false }
                                                 ) {
-                                                    AnimatedContent(
-                                                        targetState = commentUiState.isLoading,
-                                                        transitionSpec = { fadeIn() togetherWith fadeOut() },
-                                                        label = "ButtonLoadingTransition"
-                                                    ) { loading ->
-                                                        if (loading) {
-                                                            CircularProgressIndicator(
-                                                                modifier = Modifier.size(24.dp),
-                                                                strokeWidth = 2.5.dp,
+                                                    DropdownMenuItem(
+                                                        text = {
+                                                            Text(
+                                                                if (post.isPinned) stringResource(
+                                                                    Res.string.unpin_post
+                                                                )
+                                                                else stringResource(Res.string.pin_post),
                                                                 color = customColors.textPrimary
                                                             )
-                                                        } else {
-                                                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                                                Icon(
-                                                                    imageVector = Icons.Default.Refresh,
-                                                                    contentDescription = stringResource(Res.string.active_devices_retry_cd),
+                                                        },
+                                                        leadingIcon = {
+                                                            Icon(
+                                                                imageVector = Icons.Default.PushPin,
+                                                                contentDescription = null,
+                                                                tint = customColors.textPrimary
+                                                            )
+                                                        },
+                                                        onClick = {
+                                                            showMenu = false
+                                                            screenModel.togglePin(postId)
+                                                        }
+                                                    )
+
+                                                    DropdownMenuItem(
+                                                        text = {
+                                                            Text(
+                                                                stringResource(Res.string.edit_post),
+                                                                color = customColors.textPrimary
+                                                            )
+                                                        },
+                                                        leadingIcon = {
+                                                            Icon(
+                                                                imageVector = Icons.Default.Edit,
+                                                                contentDescription = null,
+                                                                tint = customColors.textPrimary
+                                                            )
+                                                        },
+                                                        onClick = {
+                                                            showMenu = false
+                                                            onDismiss()
+                                                            navigator.push(EditPostScreen(postId))
+                                                        }
+                                                    )
+
+                                                    DropdownMenuItem(
+                                                        text = {
+                                                            Text(
+                                                                stringResource(Res.string.delete_post),
+                                                                color = customColors.red
+                                                            )
+                                                        },
+                                                        leadingIcon = {
+                                                            Icon(
+                                                                imageVector = Icons.Default.Delete,
+                                                                contentDescription = null,
+                                                                tint = customColors.red
+                                                            )
+                                                        },
+                                                        onClick = {
+                                                            showMenu = false
+                                                            showDeleteDialog = true
+                                                        }
+                                                    )
+                                                }
+                                            }
+                                        }
+                                    }
+                                    HorizontalDivider(color = customColors.surfaceVariant.copy(alpha = 0.5f))
+                                }
+                                LazyColumn(
+                                    state = listState,
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .weight(1f)
+                                ) {
+                                    item {
+                                        if (!post.placeName.isNullOrBlank()) {
+                                            PlaceInfoCard(post = post)
+                                        }
+                                        PostCaptionSection(post = post)
+                                        Spacer(modifier = Modifier.height(16.dp))
+                                    }
+
+                                    val isError = !commentUiState.errorMessage.isNullOrBlank()
+                                    val isEmpty = commentUiState.items.isEmpty()
+
+                                    when {
+                                        !post.isCommentEnabled -> {
+                                            item {
+                                                Column(
+                                                    modifier = Modifier
+                                                        .fillMaxWidth()
+                                                        .padding(
+                                                            vertical = 48.dp,
+                                                            horizontal = 32.dp
+                                                        ),
+                                                    horizontalAlignment = Alignment.CenterHorizontally,
+                                                    verticalArrangement = Arrangement.Center
+                                                ) {
+                                                    Text(
+                                                        text = "Yorumlar Kapalı",
+                                                        style = MaterialTheme.typography.titleSmall.copy(
+                                                            color = customColors.textPrimary
+                                                        )
+                                                    )
+                                                    Spacer(modifier = Modifier.height(4.dp))
+                                                    Text(
+                                                        text = "Bu gönderi yorumlara kapatılmıştır.",
+                                                        style = MaterialTheme.typography.bodyMedium.copy(
+                                                            color = customColors.textSecondary
+                                                        )
+                                                    )
+                                                }
+                                            }
+                                        }
+
+                                        commentUiState.isLoading && isEmpty && !isError -> {
+                                            item {
+                                                Box(
+                                                    modifier = Modifier.fillMaxWidth()
+                                                        .padding(32.dp),
+                                                    contentAlignment = Alignment.Center
+                                                ) {
+                                                    CircularProgressIndicator(color = customColors.gourmetOrange)
+                                                }
+                                            }
+                                        }
+
+                                        isError && isEmpty -> {
+                                            item {
+                                                Box(
+                                                    modifier = Modifier.fillMaxWidth()
+                                                        .padding(32.dp),
+                                                    contentAlignment = Alignment.Center
+                                                ) {
+                                                    FilledTonalButton(
+                                                        onClick = {
+                                                            commentScreenModel.loadInitialData(
+                                                                postId
+                                                            )
+                                                        },
+                                                        enabled = !commentUiState.isLoading,
+                                                        modifier = Modifier.height(48.dp),
+                                                        colors = ButtonDefaults.filledTonalButtonColors(
+                                                            containerColor = customColors.surfaceVariant,
+                                                            contentColor = customColors.textPrimary
+                                                        )
+                                                    ) {
+                                                        AnimatedContent(
+                                                            targetState = commentUiState.isLoading,
+                                                            transitionSpec = { fadeIn() togetherWith fadeOut() },
+                                                            label = "ButtonLoadingTransition"
+                                                        ) { loading ->
+                                                            if (loading) {
+                                                                CircularProgressIndicator(
                                                                     modifier = Modifier.size(24.dp),
-                                                                    tint = customColors.textSecondary
+                                                                    strokeWidth = 2.5.dp,
+                                                                    color = customColors.textPrimary
                                                                 )
-                                                                Spacer(modifier = Modifier.width(8.dp))
-                                                                Text(
-                                                                    text = stringResource(Res.string.active_devices_retry),
-                                                                    style = MaterialTheme.typography.titleSmall.copy(
-                                                                        fontWeight = FontWeight.Bold,
-                                                                        color = customColors.textSecondary
+                                                            } else {
+                                                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                                                    Icon(
+                                                                        imageVector = Icons.Default.Refresh,
+                                                                        contentDescription = stringResource(
+                                                                            Res.string.active_devices_retry_cd
+                                                                        ),
+                                                                        modifier = Modifier.size(24.dp),
+                                                                        tint = customColors.textSecondary
                                                                     )
-                                                                )
+                                                                    Spacer(
+                                                                        modifier = Modifier.width(
+                                                                            8.dp
+                                                                        )
+                                                                    )
+                                                                    Text(
+                                                                        text = stringResource(Res.string.active_devices_retry),
+                                                                        style = MaterialTheme.typography.titleSmall.copy(
+                                                                            fontWeight = FontWeight.Bold,
+                                                                            color = customColors.textSecondary
+                                                                        )
+                                                                    )
+                                                                }
                                                             }
                                                         }
                                                     }
                                                 }
                                             }
                                         }
+
+                                        isEmpty && !isError -> {
+                                            item {
+                                                Box(
+                                                    modifier = Modifier.fillMaxWidth()
+                                                        .padding(32.dp),
+                                                    contentAlignment = Alignment.Center
+                                                ) {
+                                                    Text(
+                                                        text = stringResource(Res.string.be_first_to_comment),
+                                                        style = MaterialTheme.typography.bodyMedium.copy(
+                                                            color = customColors.textSecondary
+                                                        )
+                                                    )
+                                                }
+                                            }
+                                        }
+
+                                        else -> {
+                                            items(
+                                                commentUiState.items,
+                                                key = { it.id }) { comment ->
+                                                CommentItem(
+                                                    comment = comment,
+                                                    uiState = commentUiState,
+                                                    isWeb = true,
+                                                    checkIsOwnComment = { userId ->
+                                                        screenModel.isMe(
+                                                            userId
+                                                        )
+                                                    },
+                                                    onUserClick = {
+                                                        onDismiss()
+                                                        if (screenModel.isMe(comment.userId)) {
+                                                            tabNavigator.current = ProfileTab
+                                                            navigator.popUntilRoot()
+                                                        } else {
+                                                            navigator.push(ProfileScreen(userId = comment.userId))
+                                                        }
+                                                    },
+                                                    onToggleReplies = {
+                                                        commentScreenModel.toggleReplies(
+                                                            postId,
+                                                            comment.id
+                                                        )
+                                                    },
+                                                    onLoadMoreReplies = {
+                                                        commentScreenModel.loadNextRepliesPage(
+                                                            postId,
+                                                            comment.id
+                                                        )
+                                                    },
+                                                    onReplyClick = { parentId, username ->
+                                                        replyingToCommentId = parentId
+                                                        replyingToUsername = username
+                                                    },
+                                                    onToggleLike = { id ->
+                                                        commentScreenModel.toggleLike(id, postId)
+                                                    },
+                                                    onDeleteClick = { commentId ->
+                                                        commentToDelete = commentId
+                                                    },
+                                                    onPinClick = { id ->
+                                                        commentScreenModel.togglePin(id, postId)
+                                                    },
+                                                    onUpdateClick = { commentId ->
+                                                        commentToUpdate = commentId
+                                                    }
+                                                )
+                                            }
+                                        }
                                     }
-                                    isEmpty -> {
+                                    if (post.isCommentEnabled && commentUiState.isLoadingMore) {
                                         item {
                                             Box(
-                                                modifier = Modifier.fillMaxWidth().padding(32.dp),
+                                                modifier = Modifier.fillMaxWidth().padding(16.dp),
                                                 contentAlignment = Alignment.Center
                                             ) {
-                                                Text(
-                                                    text = stringResource(Res.string.be_first_to_comment),
-                                                    style = MaterialTheme.typography.bodyMedium.copy(color = customColors.textSecondary)
+                                                CircularProgressIndicator(
+                                                    modifier = Modifier.size(24.dp),
+                                                    color = customColors.gourmetOrange
                                                 )
                                             }
                                         }
-                                    }
-                                    else -> {
-                                        items(commentUiState.items, key = { it.id }) { comment ->
-                                            CommentItem(
-                                                comment = comment,
-                                                uiState = commentUiState,
-                                                isWeb = true,
-                                                checkIsOwnComment = { userId -> screenModel.isMe(userId) },
-                                                onUserClick = {
-                                                    onDismiss()
-                                                    if (screenModel.isMe(comment.userId)) {
-                                                        tabNavigator.current = ProfileTab
-                                                        navigator.popUntilRoot()
-                                                    } else {
-                                                        navigator.push(ProfileScreen(userId = comment.userId))
-                                                    }
-                                                },
-                                                onToggleReplies = {
-                                                    commentScreenModel.toggleReplies(
-                                                        postId,
-                                                        comment.id
-                                                    )
-                                                },
-                                                onLoadMoreReplies = {
-                                                    commentScreenModel.loadNextRepliesPage(
-                                                        postId,
-                                                        comment.id
-                                                    )
-                                                },
-                                                onReplyClick = { parentId, username ->
-                                                    replyingToCommentId = parentId
-                                                    replyingToUsername = username
-                                                },
-                                                onToggleLike = { id ->
-                                                    commentScreenModel.toggleLike(id,postId)
-                                                },
-                                                onDeleteClick = { commentId ->
-                                                    commentToDelete = commentId
-                                                },
-                                                onPinClick = {
-                                                    // TODO: screenModel.togglePin(comment.id, postId)
-                                                },
-                                                onUpdateClick = {
-                                                    // TODO: Yorum güncelleme state'ini/ui'ını aktifleştir
-                                                }
-                                            )
-                                        }
-                                    }
-                                }
-                                if (post.isCommentEnabled && commentUiState.isLoadingMore) {
-                                    item {
-                                        Box(
-                                            modifier = Modifier.fillMaxWidth().padding(16.dp),
-                                            contentAlignment = Alignment.Center
-                                        ) {
-                                            CircularProgressIndicator(
-                                                modifier = Modifier.size(24.dp),
-                                                color = customColors.gourmetOrange
-                                            )
-                                        }
-                                    }
-                                }else if (post.isCommentEnabled && commentUiState.loadingMoreError){
-                                    item {
-                                        Column(
-                                            modifier = Modifier
-                                                .fillMaxWidth()
-                                                .padding(vertical = 12.dp),
-                                            horizontalAlignment = Alignment.CenterHorizontally
-                                        ) {
-                                            IconButton(
-                                                onClick = {
-                                                    commentScreenModel.loadNextPage(postId)
-                                                }
+                                    } else if (post.isCommentEnabled && commentUiState.loadingMoreError) {
+                                        item {
+                                            Column(
+                                                modifier = Modifier
+                                                    .fillMaxWidth()
+                                                    .padding(vertical = 12.dp),
+                                                horizontalAlignment = Alignment.CenterHorizontally
                                             ) {
-                                                Icon(
-                                                    imageVector = Icons.Default.Refresh,
-                                                    contentDescription = stringResource(Res.string.active_devices_retry),
-                                                    tint = customColors.textSecondary,
-                                                    modifier = Modifier.size(28.dp)
+                                                IconButton(
+                                                    onClick = {
+                                                        commentScreenModel.loadNextPage(postId)
+                                                    }
+                                                ) {
+                                                    Icon(
+                                                        imageVector = Icons.Default.Refresh,
+                                                        contentDescription = stringResource(Res.string.active_devices_retry),
+                                                        tint = customColors.textSecondary,
+                                                        modifier = Modifier.size(28.dp)
+                                                    )
+                                                }
+                                                Text(
+                                                    text = stringResource(Res.string.active_devices_retry),
+                                                    style = MaterialTheme.typography.bodySmall.copy(
+                                                        color = customColors.textSecondary,
+                                                        fontWeight = FontWeight.Medium
+                                                    )
                                                 )
                                             }
-                                            Text(
-                                                text = stringResource(Res.string.active_devices_retry),
-                                                style = MaterialTheme.typography.bodySmall.copy(
-                                                    color = customColors.textSecondary,
-                                                    fontWeight = FontWeight.Medium
-                                                )
-                                            )
                                         }
                                     }
                                 }
-                            }
 
 
-                            Column(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .background(customColors.background)
-                            ) {
-                                HorizontalDivider(color = customColors.surfaceVariant.copy(alpha = 0.5f))
+                                Column(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .background(customColors.background)
+                                ) {
+                                    HorizontalDivider(color = customColors.surfaceVariant.copy(alpha = 0.5f))
 
-                                PostActionBar(
-                                    post = post,
-                                    onLikeClick = { screenModel.toggleLike(postId) },
-                                    onLikeCountClick = { showPostLikeSheet = true },
-                                    onCommentClick = { /* Odaklanmayı input box'a yönlendir */ }
-                                )
-
-                                Text(
-                                    text = formatToRelativeDateTime(post.createdAt),
-                                    style = MaterialTheme.typography.labelSmall.copy(
-                                        color = customColors.textSecondary.copy(alpha = 0.6f)
-                                    ),
-                                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
-                                )
-
-                                Spacer(modifier = Modifier.height(8.dp))
-                                HorizontalDivider(
-                                    color = customColors.surfaceVariant,
-                                    thickness = 1.2.dp
-                                )
-                                if (post.isCommentEnabled) {
-                                    CommentInputBar(
-                                        text = commentText,
-                                        onTextChange = { commentText = it },
-                                        replyingToUsername = replyingToUsername,
-                                        onCancelReply = {
-                                            replyingToCommentId = null
-                                            replyingToUsername = null
-                                        },
-                                        onSendClick = {
-                                            isSendingComment = true
-
-                                            if (replyingToCommentId != null) {
-                                                val finalReplyText = "@$replyingToUsername $commentText"
-
-                                                commentScreenModel.addReply(
-                                                    postId = postId,
-                                                    parentCommentId = replyingToCommentId!!,
-                                                    contents = finalReplyText,
-                                                    onSuccess = {
-                                                        commentText = ""
-                                                        replyingToCommentId = null
-                                                        replyingToUsername = null
-                                                        isSendingComment = false
-                                                    }
-                                                )
-                                            }else {
-                                                commentScreenModel.addComment(
-                                                    postId, commentText,
-                                                    onSuccess = {
-                                                        commentText = ""
-                                                        isSendingComment = false
-                                                        coroutineScope.launch {
-                                                            listState.animateScrollToItem(0)
-                                                        }
-                                                    }
-                                                )
-                                            }
-                                        },
-                                        isLoading = isSendingComment,
-                                        profilePhotoUrl = currentUserProfileUrl
+                                    PostActionBar(
+                                        post = post,
+                                        onLikeClick = { screenModel.toggleLike(postId) },
+                                        onLikeCountClick = { showPostLikeSheet = true },
+                                        onCommentClick = { /* Odaklanmayı input box'a yönlendir */ }
                                     )
+
+                                    Text(
+                                        text = formatToRelativeDateTime(post.createdAt),
+                                        style = MaterialTheme.typography.labelSmall.copy(
+                                            color = customColors.textSecondary.copy(alpha = 0.6f)
+                                        ),
+                                        modifier = Modifier.padding(
+                                            horizontal = 16.dp,
+                                            vertical = 4.dp
+                                        )
+                                    )
+
+                                    Spacer(modifier = Modifier.height(8.dp))
+                                    HorizontalDivider(
+                                        color = customColors.surfaceVariant,
+                                        thickness = 1.2.dp
+                                    )
+                                    if (post.isCommentEnabled) {
+                                        CommentInputBar(
+                                            text = commentText,
+                                            onTextChange = { commentText = it },
+                                            replyingToUsername = replyingToUsername,
+                                            onCancelReply = {
+                                                replyingToCommentId = null
+                                                replyingToUsername = null
+                                            },
+                                            onSendClick = {
+                                                isSendingComment = true
+
+                                                if (replyingToCommentId != null) {
+                                                    val finalReplyText =
+                                                        "@$replyingToUsername $commentText"
+
+                                                    commentScreenModel.addReply(
+                                                        postId = postId,
+                                                        parentCommentId = replyingToCommentId!!,
+                                                        contents = finalReplyText,
+                                                        onSuccess = {
+                                                            commentText = ""
+                                                            replyingToCommentId = null
+                                                            replyingToUsername = null
+                                                            isSendingComment = false
+                                                        }
+                                                    )
+                                                } else {
+                                                    commentScreenModel.addComment(
+                                                        postId, commentText,
+                                                        onSuccess = {
+                                                            commentText = ""
+                                                            isSendingComment = false
+                                                            coroutineScope.launch {
+                                                                listState.animateScrollToItem(0)
+                                                            }
+                                                        }
+                                                    )
+                                                }
+                                            },
+                                            isLoading = isSendingComment,
+                                            profilePhotoUrl = currentUserProfileUrl
+                                        )
+                                    }
                                 }
                             }
+                        }
+                    }
+                }
+                AnimatedVisibility(
+                    visible = !commentUiState.errorMessage.isNullOrBlank(),
+                    enter = fadeIn() + slideInVertically(initialOffsetY = { it / 2 }),
+                    exit = fadeOut() + slideOutVertically(targetOffsetY = { it / 2 }),
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .padding(bottom = 24.dp, start = 16.dp, end = 16.dp)
+                ) {
+                    commentUiState.errorMessage?.let { msg ->
+                        Surface(
+                            color = Color(0xFF323232),
+                            shape = RoundedCornerShape(8.dp),
+                            shadowElevation = 8.dp
+                        ) {
+                            Text(
+                                text = msg,
+                                color = Color.White,
+                                style = MaterialTheme.typography.bodyMedium,
+                                modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp)
+                            )
                         }
                     }
                 }
@@ -645,6 +740,41 @@ fun WebPostDetailDialog(
             onDismiss = { commentToDelete = null }
         )
     }
+    if (commentToUpdate != null) {
+
+        val initialText = remember(commentToUpdate, commentUiState) {
+            val id = commentToUpdate
+
+            val mainComment = commentUiState.items.find { it.id == id }
+            if (mainComment != null) return@remember mainComment.contents
+
+            var replyText = ""
+            for (replyState in commentUiState.repliesState.values) {
+                val reply = replyState.items.find { it.id == id }
+                if (reply != null) {
+                    replyText = reply.contents
+                    break
+                }
+            }
+            replyText
+        }
+
+        TastyInputDialog(
+            title = "Yorumu Güncelle",
+            initialText = initialText,
+            confirmText = "Güncelle",
+            onConfirm = { newText ->
+                val request = CommentRequest(newText)
+                commentScreenModel.update(
+                    commentId = commentToUpdate!!,
+                    postId = postId,
+                    request = request
+                )
+                commentToUpdate = null
+            },
+            onDismiss = { commentToUpdate = null }
+        )
+    }
 
     if (uiState.isActionLoadingDelete) {
         LoadingOverlay(message = stringResource(Res.string.deleting_post))
@@ -655,5 +785,8 @@ fun WebPostDetailDialog(
 
     if (commentUiState.isActionLoadingDelete) {
         LoadingOverlay(message = "Yorum siliniyor...")
+    }
+    if (commentUiState.isActionLoadingEdit) {
+        LoadingOverlay(message = "Yorum güncelleniyor...")
     }
 }

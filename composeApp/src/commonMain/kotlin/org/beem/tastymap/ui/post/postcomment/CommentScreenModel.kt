@@ -2,6 +2,7 @@ package org.beem.tastymap.ui.post.postcomment
 
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
@@ -19,11 +20,29 @@ class CommentScreenModel(
     private val _uiState = MutableStateFlow(CommentListUiState())
     val uiState = _uiState.asStateFlow()
 
+    private var fetchJob: Job? = null
+
     fun isMe(userId: Long): Boolean {
         return repository.isMe(userId)
     }
 
-    //YORUMUN UZUNLUK KONTROLU EKLENCEK
+    fun syncCommentsForPost(postId: Long, isCommentEnabled: Boolean) {
+        _uiState.update { it.copy(isCommentEnabled = isCommentEnabled) }
+
+        if (!isCommentEnabled) {
+            fetchJob?.cancel()
+            clearState()
+            return
+        }
+
+        val currentState = _uiState.value
+        if (currentState.isLoading || (currentState.items.isNotEmpty() && currentState.errorMessage == null)) {
+            return
+        }
+
+        loadInitialData(postId)
+    }
+
     fun addComment(postId: Long, contents: String, onSuccess: () -> Unit) {
         if (contents.isBlank()) return
 
@@ -88,18 +107,31 @@ class CommentScreenModel(
             }
         }
     }
+
     fun getCurrentUserProfileUrl(): String? {
         return userManager.userSession.value?.profile
     }
 
     fun loadInitialData(postId: Long) {
-        _uiState.update {
-            CommentListUiState(isLoading = true)
+        if (!_uiState.value.isCommentEnabled) {
+            clearState()
+            return
+        }
+        _uiState.update { currentState ->
+            currentState.copy(
+                isLoading = true,
+                errorMessage = null
+            )
         }
         fetchPage(postId, page = 0, isRefresh = false)
     }
 
     fun loadNextPage(postId: Long) {
+        if (!_uiState.value.isCommentEnabled) {
+            clearState()
+            return
+        }
+
         val currentState = _uiState.value
         if (currentState.isLoading || currentState.isLoadingMore || currentState.isLastPage) return
 
@@ -108,6 +140,10 @@ class CommentScreenModel(
     }
 
     private fun fetchPage(postId: Long, page: Int, isRefresh: Boolean) {
+        if (!_uiState.value.isCommentEnabled) {
+            return
+        }
+        if (page == 0) fetchJob?.cancel()
         screenModelScope.launch {
             val result = repository.getComments(postId, page, pageSize)
 
@@ -221,6 +257,56 @@ class CommentScreenModel(
             }
         }
     }
+
+    fun update(commentId: Long, request: CommentRequest, postId: Long) {
+        _uiState.update { it.copy(isActionLoadingEdit = true) }
+
+        screenModelScope.launch {
+            val result = repository.updateComment(commentId, request, postId)
+
+            when (result) {
+                is ResultWrapper.Success -> {
+                    val updatedCommentObj = result.data
+                    _uiState.update { state ->
+                        val updatedItems = state.items.map { comment ->
+                            if (comment.id == commentId) {
+                                updatedCommentObj
+                            } else {
+                                comment
+                            }
+                        }
+                        val updatedRepliesState = state.repliesState.mapValues { (_, replyState) ->
+                            replyState.copy(
+                                items = replyState.items.map { reply ->
+                                    if (reply.id == commentId) {
+                                        updatedCommentObj
+                                    } else {
+                                        reply
+                                    }
+                                }
+                            )
+                        }
+
+                        state.copy(
+                            items = updatedItems,
+                            repliesState = updatedRepliesState,
+                            isActionLoadingEdit = false
+                        )
+                    }
+                }
+
+                is ResultWrapper.Error -> {
+                    _uiState.update {
+                        it.copy(
+                            errorMessage = result.message,
+                            isActionLoadingEdit = false
+                        )
+                    }
+                }
+            }
+        }
+    }
+
     fun delete(commentId: Long, postId: Long) {
         _uiState.update { it.copy(isActionLoadingDelete = true) }
         screenModelScope.launch {
@@ -271,15 +357,44 @@ class CommentScreenModel(
                     }
                 }
                 is ResultWrapper.Error -> {
-                    _uiState.update { it.copy(errorMessage = result.message,isActionLoadingDelete = false) }
+                    _uiState.update { it.copy(errorMessage = result.message, isActionLoadingDelete = false) }
                 }
             }
         }
     }
+
+    fun togglePin(commentId: Long, postId: Long) {
+        screenModelScope.launch {
+            _uiState.update { it.copy(isActionLoadingPin = true) }
+            val result = repository.togglePin(commentId, postId)
+
+            when (result) {
+                is ResultWrapper.Success -> {
+                    _uiState.update { state ->
+                        val updatedItems = state.items.map { comment ->
+                            if (comment.id == commentId) {
+                                comment.copy(isPinned = !comment.isPinned)
+                            } else {
+                                comment
+                            }
+                        }
+                            .sortedByDescending {it.isPinned  }
+                        state.copy(
+                            items = updatedItems,
+                            isActionLoadingPin = false
+                        )
+                    }
+                }
+                is ResultWrapper.Error -> {
+                    _uiState.update { it.copy(errorMessage = result.message, isActionLoadingPin = false) }
+                }
+            }
+        }
+    }
+
     fun toggleLike(commentId: Long, postId: Long) {
         screenModelScope.launch {
-
-            val result = repository.toggleLike(commentId,postId)
+            val result = repository.toggleLike(commentId, postId)
 
             if (result is ResultWrapper.Success) {
                 val backendResponse = result.data
@@ -321,7 +436,12 @@ class CommentScreenModel(
             }
         }
     }
+    fun clearError() {
+        _uiState.update { it.copy(errorMessage = null) }
+    }
     fun clearState() {
-        _uiState.update { CommentListUiState() }
+        _uiState.update { currentState ->
+            CommentListUiState(isCommentEnabled = currentState.isCommentEnabled)
+        }
     }
 }

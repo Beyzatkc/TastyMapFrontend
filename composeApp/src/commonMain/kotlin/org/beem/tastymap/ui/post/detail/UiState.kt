@@ -4,6 +4,7 @@ import org.beem.tastymap.data.model.post.PostResponse
 
 data class PostDetailUiState(
     val isLoading: Boolean = true,
+    val isRemoteFetchCompleted: Boolean = false,
     val isActionLoadingDelete: Boolean = false,
     val isActionLoadingPin: Boolean = false,
     val isRefreshing: Boolean = false,

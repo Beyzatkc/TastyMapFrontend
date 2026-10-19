@@ -56,13 +56,23 @@ actual fun formatToShortRelativeTime(dateString: String?): String {
         val hour = if (isTurkish) "sa" else "h"
         val day = if (isTurkish) "g" else "d"
         val week = if (isTurkish) "h" else "w"
+        val year = "y" // Hem İngilizce (year) hem Türkçe (yıl) için "y" kullanabiliriz.
+
+        val secondsInMinute = 60L
+        val secondsInHour = 3600L
+        val secondsInDay = 86400L
+        val secondsInWeek = 604800L
+        val secondsInYear = 31536000L // 365 gün
 
         when {
-            diffInSeconds < 60 -> "$diffInSeconds$sec"
-            diffInSeconds < 3600 -> "${diffInSeconds / 60}$min"
-            diffInSeconds < 86400 -> "${diffInSeconds / 3600}$hour"
-            diffInSeconds < 604800 -> "${diffInSeconds / 86400}$day"
-            else -> "${diffInSeconds / 604800}$week"
+            diffInSeconds < secondsInMinute -> "$diffInSeconds$sec"
+            diffInSeconds < secondsInHour -> "${diffInSeconds / secondsInMinute}$min"
+            diffInSeconds < secondsInDay -> "${diffInSeconds / secondsInHour}$hour"
+            diffInSeconds < secondsInYear -> {
+                val diffInWeeks = diffInSeconds / secondsInWeek
+                if (diffInWeeks > 0) "$diffInWeeks$week" else "${diffInSeconds / secondsInDay}$day"
+            }
+            else -> "${diffInSeconds / secondsInYear}$year"
         }
     } catch (e: Exception) {
         ""

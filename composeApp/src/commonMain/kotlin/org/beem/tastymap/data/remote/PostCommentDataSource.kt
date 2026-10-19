@@ -6,6 +6,7 @@ import io.ktor.client.request.delete
 import io.ktor.client.request.get
 import io.ktor.client.request.parameter
 import io.ktor.client.request.post
+import io.ktor.client.request.put
 import io.ktor.client.request.setBody
 import org.beem.tastymap.core.network.AuthHttpClientManager
 import org.beem.tastymap.data.model.PageResponse
@@ -44,8 +45,10 @@ class PostCommentDataSource(private val authHttpClientManager: AuthHttpClientMan
         return client.delete("api/comments/delete-comment/$postId/$commentId").body()
     }
 
-    suspend fun updateComment(commentId: Long): CommentsResponse{
-        return client.delete("api/comments/update-comments/$commentId").body()
+    suspend fun updateComment(commentId: Long, request:CommentRequest): CommentsResponse{
+        return client.put("api/comments/update-comments/$commentId"){
+            setBody(request)
+        }.body()
     }
 
     suspend fun toggleLike(commentId: Long): CommentLikeResponse{
@@ -53,7 +56,7 @@ class PostCommentDataSource(private val authHttpClientManager: AuthHttpClientMan
     }
 
     suspend fun togglePin(commentId: Long,postId: Long): CommentsResponse{
-        return client.post("api/comments/toggle-pin/$postId/$commentId").body()
+        return client.put("api/comments/toggle-pin/$postId/$commentId").body()
     }
 
 

@@ -606,14 +606,12 @@ class MyProfileScreen : Screen {
                                             }
                                         }
                                     } else {
-                                        // POST LİSTESİ: Grid'in tamamı ekrana yayılmasın diye post grid alanını 600dp'lik bir item içinde toplamak
                                         item(span = { GridItemSpan(maxLineSpan) }) {
                                             Box(
                                                 modifier = Modifier.fillMaxWidth(),
                                                 contentAlignment = Alignment.Center
                                             ) {
                                                 Box(modifier = Modifier.responsiveContentWidth()) {
-                                                    // 3'lü sütun grid mantığını 600dp kapsayıcı içinde kurmak
                                                     val chunkedPosts = postState.items.chunked(3)
                                                     Column(
                                                         verticalArrangement = Arrangement.spacedBy(
@@ -646,7 +644,6 @@ class MyProfileScreen : Screen {
                                                                         )
                                                                     }
                                                                 }
-                                                                // Eğer son satırda 3'ten az eleman varsa boşlukları koru
                                                                 repeat(3 - rowItems.size) {
                                                                     Spacer(
                                                                         modifier = Modifier.weight(

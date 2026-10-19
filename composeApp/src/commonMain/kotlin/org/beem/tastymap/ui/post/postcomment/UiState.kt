@@ -17,6 +17,7 @@ data class CommentListUiState(
     val repliesState: Map<Long, ReplyState> = emptyMap(),
     val expandedComments: Set<Long> = emptySet(),
 
+    val isCommentEnabled: Boolean = true,
     val isLoading: Boolean = false,
     val isLoadingMore: Boolean = false,
     val currentPage: Int = 0,
@@ -24,4 +25,6 @@ data class CommentListUiState(
     val errorMessage: String? = null,
     val loadingMoreError: Boolean = false,
     val isActionLoadingDelete: Boolean = false,
+    val isActionLoadingEdit: Boolean = false,
+    val isActionLoadingPin: Boolean = false
 )

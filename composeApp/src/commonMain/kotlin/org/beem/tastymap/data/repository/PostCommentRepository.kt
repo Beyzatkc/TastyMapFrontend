@@ -80,9 +80,9 @@ class PostCommentRepository(
         return result
     }
 
-    suspend fun updateComment(commentId: Long,postId:Long): ResultWrapper<CommentsResponse> {
+    suspend fun updateComment(commentId: Long, request: CommentRequest, postId:Long): ResultWrapper<CommentsResponse> {
         val result= safeApiCall {
-            remoteDataSource.updateComment(commentId)
+            remoteDataSource.updateComment(commentId,request)
         }
         if (result is ResultWrapper.Success) {
             memoryCache.invalidatePostCache(postId)
