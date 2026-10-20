@@ -225,7 +225,7 @@ data class PostDetailScreen(val postId: Long) : Screen {
                                         }
                                         DropdownMenu(
                                             expanded = showMenu,
-                                            containerColor = customColors.background,
+                                            containerColor = customColors.surface,
                                             onDismissRequest = { showMenu = false }
                                         ) {
                                             DropdownMenuItem(
@@ -467,6 +467,7 @@ data class PostDetailScreen(val postId: Long) : Screen {
             }
             PostLikesBottomSheet(
                 onDismiss = { showPostLikeSheet = false },
+                onClear = { likeScreenModel.clearError()},
                 onUserClick = { selectedUserId ->
                     showPostLikeSheet = false
                     if (likeScreenModel.isMe(selectedUserId)) {

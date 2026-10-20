@@ -53,8 +53,8 @@ class PostDetailScreenModel(
                         it.copy(
                             isRefreshing = false,
                             isLoading = false,
+                            isFetchPost = true,
                             errorMessage = null,
-                            isRemoteFetchCompleted = true
                         )
                     }
                 }
@@ -64,8 +64,8 @@ class PostDetailScreenModel(
                         it.copy(
                             isLoading = false,
                             isRefreshing = false,
-                            errorMessage = result.message,
-                            isRemoteFetchCompleted = true
+                            isFetchPost = false,
+                            errorMessage = result.message
                         )
                     }
                 }

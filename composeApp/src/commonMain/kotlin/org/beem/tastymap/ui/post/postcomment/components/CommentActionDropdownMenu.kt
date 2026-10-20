@@ -30,7 +30,7 @@ fun CommentActionDropdownMenu(
     DropdownMenu(
         expanded = expanded,
         onDismissRequest = onDismissRequest,
-        containerColor = customColors.background
+        containerColor = customColors.surface
     ) {
         if (isOwnComment) {
             if (showPinOption) {

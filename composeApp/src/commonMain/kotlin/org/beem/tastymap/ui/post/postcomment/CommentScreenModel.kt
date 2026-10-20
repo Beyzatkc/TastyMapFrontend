@@ -54,8 +54,12 @@ class CommentScreenModel(
                 is ResultWrapper.Success -> {
                     val newComment = result.data
                     _uiState.update { currentState ->
+                        val (pinnedComments, unpinnedComments) = currentState.items.partition { it.isPinned }
+
+                        val updatedList = pinnedComments + listOf(newComment) + unpinnedComments
+
                         currentState.copy(
-                            items = listOf(newComment) + currentState.items
+                            items = updatedList
                         )
                     }
                     onSuccess()
@@ -434,6 +438,9 @@ class CommentScreenModel(
                     )
                 }
             }
+            if( result is ResultWrapper.Error) {
+            _uiState.update { it.copy(errorMessage = result.message) }
+        }
         }
     }
     fun clearError() {

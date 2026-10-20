@@ -1,5 +1,11 @@
 package org.beem.tastymap.ui.post.postlike
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -23,7 +29,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
-import org.beem.tastymap.core.util.ToastManager
+import kotlinx.coroutines.delay
 import org.beem.tastymap.data.model.post.PostLikeUserResponse
 import org.beem.tastymap.domain.model.RelationStatus
 import org.beem.tastymap.ui.components.TastyButton
@@ -39,6 +45,7 @@ fun PostLikesBottomSheet(
     onUserClick: (Long) -> Unit,
     uiState: PostLikesUiState,
     onActionClick: (Long, RelationStatus) -> Unit,
+    onClear: ()-> Unit,
     onLoadNextPage: () -> Unit,
     onRetry: () -> Unit
 ) {
@@ -52,12 +59,13 @@ fun PostLikesBottomSheet(
         if (searchQuery.isBlank()) uiState.items
         else uiState.items.filter { it.username.contains(searchQuery, ignoreCase = true) }
     }
-
     LaunchedEffect(uiState.errorMessage) {
-        uiState.errorMessage?.let { message ->
-            ToastManager.show(message)
+        if (!uiState.errorMessage.isNullOrBlank()) {
+            delay(2000L)
+            onClear()
         }
     }
+
 
     val shouldLoadMore = remember {
         derivedStateOf {
@@ -75,7 +83,7 @@ fun PostLikesBottomSheet(
 
     LaunchedEffect(shouldLoadMore.value) {
         if (shouldLoadMore.value) {
-             onLoadNextPage()
+            onLoadNextPage()
         }
     }
 
@@ -85,141 +93,147 @@ fun PostLikesBottomSheet(
         containerColor = customColors.background,
         dragHandle = { BottomSheetDefaults.DragHandle(color = customColors.placeHolderIcon) }
     ) {
-        Column(
+        // Overlay ve Floating Toast için Box ile sarmalıyoruz
+        Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .fillMaxHeight(0.85f)
-                .background(customColors.background),
-            horizontalAlignment = Alignment.CenterHorizontally
+                .background(customColors.background)
         ) {
-            // BAŞLIK
-            Text(
-                text = stringResource(Res.string.likes_title), // "Beğenenler"
-                style = MaterialTheme.typography.titleMedium.copy(
-                    fontWeight = FontWeight.Bold,
-                    color = customColors.textPrimary
-                ),
-                modifier = Modifier.padding(bottom = 12.dp)
-            )
-
-            HorizontalDivider(color = customColors.surfaceVariant)
-
-            // ARAMA ÇUBUĞU
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                LikerSearchBar(
-                    query = searchQuery,
-                    onQueryChange = { searchQuery = it }
-                )
-            }
-
-            // İÇERİK DURUMLARI (Loading, Error, Empty, List)
-            Box(
+            Column(
                 modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.TopCenter
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                val isError = !uiState.errorMessage.isNullOrBlank()
-                val isEmpty = uiState.items.isEmpty()
+                // BAŞLIK
+                Text(
+                    text = stringResource(Res.string.likes_title), // "Beğenenler"
+                    style = MaterialTheme.typography.titleMedium.copy(
+                        fontWeight = FontWeight.Bold,
+                        color = customColors.textPrimary
+                    ),
+                    modifier = Modifier.padding(bottom = 12.dp)
+                )
 
-                when {
-                    uiState.isLoading && isEmpty && !isError -> {
-                        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                            CircularProgressIndicator(color = customColors.gourmetOrange)
+                HorizontalDivider(color = customColors.surfaceVariant)
+
+                // ARAMA ÇUBUĞU
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    LikerSearchBar(
+                        query = searchQuery,
+                        onQueryChange = { searchQuery = it }
+                    )
+                }
+
+                // İÇERİK DURUMLARI (Loading, Error, Empty, List)
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.TopCenter
+                ) {
+                    val isError = !uiState.errorMessage.isNullOrBlank()
+                    val isEmpty = uiState.items.isEmpty()
+
+                    when {
+                        uiState.isLoading && isEmpty && !isError -> {
+                            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                                CircularProgressIndicator(color = customColors.gourmetOrange)
+                            }
                         }
-                    }
 
-                    isError && isEmpty -> {
-                        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                            FilledTonalButton(
-                                onClick = {  onRetry()  },
-                                colors = ButtonDefaults.filledTonalButtonColors(
-                                    containerColor = customColors.surfaceVariant,
-                                    contentColor = customColors.textPrimary
+                        isError && isEmpty -> {
+                            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                                FilledTonalButton(
+                                    onClick = { onRetry() },
+                                    colors = ButtonDefaults.filledTonalButtonColors(
+                                        containerColor = customColors.surfaceVariant,
+                                        contentColor = customColors.textPrimary
+                                    )
+                                ) {
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Icon(Icons.Default.Refresh, contentDescription = null)
+                                        Spacer(Modifier.width(8.dp))
+                                        Text(stringResource(Res.string.active_devices_retry))
+                                    }
+                                }
+                            }
+                        }
+
+                        filteredList.isEmpty() -> {
+                            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                                Text(
+                                    text = if (searchQuery.isNotBlank()) stringResource(Res.string.profile_no_results)
+                                    else stringResource(Res.string.profile_empty_list),
+                                    style = MaterialTheme.typography.bodyMedium.copy(color = customColors.textSecondary)
                                 )
+                            }
+                        }
+
+                        else -> {
+                            LazyColumn(
+                                state = listState,
+                                modifier = Modifier.fillMaxSize(),
+                                contentPadding = PaddingValues(bottom = 32.dp)
                             ) {
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Icon(Icons.Default.Refresh, contentDescription = null)
-                                    Spacer(Modifier.width(8.dp))
-                                    Text(stringResource(Res.string.active_devices_retry))
-                                }
-                            }
-                        }
-                    }
-
-                    filteredList.isEmpty() -> {
-                        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                            Text(
-                                text = if (searchQuery.isNotBlank()) stringResource(Res.string.profile_no_results)
-                                else stringResource(Res.string.profile_empty_list),
-                                style = MaterialTheme.typography.bodyMedium.copy(color = customColors.textSecondary)
-                            )
-                        }
-                    }
-
-                    else -> {
-                        LazyColumn(
-                            state = listState,
-                            modifier = Modifier.fillMaxSize(),
-                            contentPadding = PaddingValues(bottom = 32.dp)
-                        ) {
-                            items(filteredList, key = { it.userId }) { user ->
-                                LikerUserItem(
-                                    user = user,
-                                    onUserClick = {
-                                        onDismiss()
-                                        onUserClick(user.userId)
-                                    },
-                                    onActionClick = {
-                                         onActionClick(user.userId, user.relationStatus ?: RelationStatus.NOT_FOLLOWING,)
-                                    }
-                                )
-                            }
-
-                            if (uiState.isLoadingMore) {
-                                item {
-                                    Box(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .padding(16.dp),
-                                        contentAlignment = Alignment.Center
-                                    ) {
-                                        CircularProgressIndicator(
-                                            modifier = Modifier.size(24.dp),
-                                            color = customColors.gourmetOrange
-                                        )
-                                    }
-                                }
-                            } else if (uiState.isLoadingMoreError) {
-                                item {
-                                    Column(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .padding(vertical = 16.dp),
-                                        horizontalAlignment = Alignment.CenterHorizontally
-                                    ) {
-                                        IconButton(
-                                            onClick = {
-                                                onLoadNextPage()
-                                            }
-                                        ) {
-                                            Icon(
-                                                imageVector = Icons.Default.Refresh,
-                                                contentDescription = stringResource(Res.string.active_devices_retry),
-                                                tint = customColors.textSecondary,
-                                                modifier = Modifier.size(28.dp)
+                                items(filteredList, key = { it.userId }) { user ->
+                                    LikerUserItem(
+                                        user = user,
+                                        onUserClick = {
+                                            onDismiss()
+                                            onUserClick(user.userId)
+                                        },
+                                        onActionClick = {
+                                            onActionClick(
+                                                user.userId,
+                                                user.relationStatus ?: RelationStatus.NOT_FOLLOWING
                                             )
                                         }
-                                        Text(
-                                            text = stringResource(Res.string.active_devices_retry),
-                                            style = MaterialTheme.typography.bodySmall.copy(
-                                                color = customColors.textSecondary,
-                                                fontWeight = FontWeight.Medium
+                                    )
+                                }
+
+                                if (uiState.isLoadingMore) {
+                                    item {
+                                        Box(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .padding(16.dp),
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            CircularProgressIndicator(
+                                                modifier = Modifier.size(24.dp),
+                                                color = customColors.gourmetOrange
                                             )
-                                        )
+                                        }
+                                    }
+                                } else if (uiState.isLoadingMoreError) {
+                                    item {
+                                        Column(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .padding(vertical = 16.dp),
+                                            horizontalAlignment = Alignment.CenterHorizontally
+                                        ) {
+                                            IconButton(
+                                                onClick = { onLoadNextPage() }
+                                            ) {
+                                                Icon(
+                                                    imageVector = Icons.Default.Refresh,
+                                                    contentDescription = stringResource(Res.string.active_devices_retry),
+                                                    tint = customColors.textSecondary,
+                                                    modifier = Modifier.size(28.dp)
+                                                )
+                                            }
+                                            Text(
+                                                text = stringResource(Res.string.active_devices_retry),
+                                                style = MaterialTheme.typography.bodySmall.copy(
+                                                    color = customColors.textSecondary,
+                                                    fontWeight = FontWeight.Medium
+                                                )
+                                            )
+                                        }
                                     }
                                 }
                             }
@@ -227,9 +241,38 @@ fun PostLikesBottomSheet(
                     }
                 }
             }
+
+            // HATA MESAJI (Takip etme/çıkarma hataları vb. için Floating Toast)
+            this@ModalBottomSheet.AnimatedVisibility(
+                visible = !uiState.errorMessage.isNullOrBlank() && uiState.items.isNotEmpty(),
+                enter = fadeIn() + slideInVertically(initialOffsetY = { it / 2 }),
+                exit = fadeOut() + slideOutVertically(targetOffsetY = { it / 2 }),
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(bottom = 24.dp, start = 16.dp, end = 16.dp)
+            ) {
+                uiState.errorMessage?.let { msg ->
+                    Surface(
+                        color = customColors.surface,
+                        shape = RoundedCornerShape(8.dp),
+                        shadowElevation = 8.dp,
+                        border = BorderStroke(1.dp, customColors.borderLight)
+                    ) {
+                        Text(
+                            text = msg,
+                            color = customColors.textPrimary,
+                            style = MaterialTheme.typography.bodyMedium.copy(
+                                fontWeight = FontWeight.Medium
+                            ),
+                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp)
+                        )
+                    }
+                }
+            }
         }
     }
 }
+
 @Composable
 private fun LikerSearchBar(
     query: String,
@@ -274,7 +317,6 @@ private fun LikerUserItem(
     onUserClick: () -> Unit,
     onActionClick: () -> Unit
 ) {
-
     val customColors = LocalCustomColors.current
 
     val actionStyle: ActionStyle? = when (user.relationStatus) {
@@ -374,6 +416,7 @@ private fun LikerUserItem(
         }
     }
 }
+
 private data class ActionStyle(
     val text: String,
     val backColor: Color,
