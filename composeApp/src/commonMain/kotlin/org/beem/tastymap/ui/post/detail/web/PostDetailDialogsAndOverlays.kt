@@ -8,19 +8,25 @@ import org.beem.tastymap.ui.components.DialogConfig
 import org.beem.tastymap.ui.components.LoadingOverlay
 import org.beem.tastymap.ui.components.TastyConfirmDialog
 import org.beem.tastymap.ui.components.TastyInputDialog
-import org.beem.tastymap.ui.post.detail.PostDetailScreenModel
+import org.beem.tastymap.ui.post.detail.PostDetailViewModel
 import org.beem.tastymap.ui.post.detail.PostDetailUiState
 import org.beem.tastymap.ui.post.postcomment.CommentListUiState
-import org.beem.tastymap.ui.post.postcomment.CommentScreenModel
+import org.beem.tastymap.ui.post.postcomment.CommentViewModel
 import org.beem.tastymap.ui.post.postlike.PostLikesBottomSheet
-import org.beem.tastymap.ui.post.postlike.PostLikesScreenModel
+import org.beem.tastymap.ui.post.postlike.PostLikesViewModel
 import org.beem.tastymap.ui.post.postlike.PostLikesUiState
 import org.jetbrains.compose.resources.stringResource
 import tastymap.composeapp.generated.resources.Res
+import tastymap.composeapp.generated.resources.delete_comment_confirmation
+import tastymap.composeapp.generated.resources.delete_comment_title
 import tastymap.composeapp.generated.resources.delete_post_message
 import tastymap.composeapp.generated.resources.delete_post_title
 import tastymap.composeapp.generated.resources.deleting_post
+import tastymap.composeapp.generated.resources.edit_post
+import tastymap.composeapp.generated.resources.loading_deleting_comment
+import tastymap.composeapp.generated.resources.loading_updating_comment
 import tastymap.composeapp.generated.resources.profile_action_reject
+import tastymap.composeapp.generated.resources.update_comment_action_en
 
 
 @Composable
@@ -33,9 +39,9 @@ import tastymap.composeapp.generated.resources.profile_action_reject
     uiState: PostDetailUiState,
     likeUiState: PostLikesUiState,
     commentUiState: CommentListUiState,
-    likesScreenModel: PostLikesScreenModel,
-    screenModel: PostDetailScreenModel,
-    commentScreenModel: CommentScreenModel,
+    likesScreenModel: PostLikesViewModel,
+    screenModel: PostDetailViewModel,
+    commentViewModel: CommentViewModel,
     onDismissLikeSheet: () -> Unit,
     onDismissDeleteDialog: () -> Unit,
     onDismissCommentDelete: () -> Unit,
@@ -82,12 +88,12 @@ import tastymap.composeapp.generated.resources.profile_action_reject
     if (commentToDelete != null) {
         TastyConfirmDialog(
             config = DialogConfig(
-                title = "Yorumu Sil",
-                message = "Bu yorumu silmek istediğinize emin misiniz?",
+                title = stringResource(Res.string.delete_comment_title),
+                message =stringResource(Res.string.delete_comment_confirmation),
                 confirmText = stringResource(Res.string.profile_action_reject),
                 isDestructive = true,
                 onConfirm = {
-                    commentScreenModel.delete(commentId = commentToDelete, postId = postId)
+                    commentViewModel.delete(commentId = commentToDelete, postId = postId)
                     onDismissCommentDelete()
                 }
             ),
@@ -113,12 +119,12 @@ import tastymap.composeapp.generated.resources.profile_action_reject
         }
 
         TastyInputDialog(
-            title = "Yorumu Güncelle",
+            title = stringResource(Res.string.update_comment_action_en),
             initialText = initialText,
-            confirmText = "Güncelle",
+            confirmText = stringResource(Res.string.edit_post),
             onConfirm = { newText ->
                 val request = CommentRequest(newText)
-                commentScreenModel.update(
+                commentViewModel.update(
                     commentId = commentToUpdate,
                     postId = postId,
                     request = request
@@ -136,9 +142,9 @@ import tastymap.composeapp.generated.resources.profile_action_reject
         LoadingOverlay(message = null)
     }
     if (commentUiState.isActionLoadingDelete) {
-        LoadingOverlay(message = "Yorum siliniyor...")
+        LoadingOverlay(message = stringResource(Res.string.loading_deleting_comment))
     }
     if (commentUiState.isActionLoadingEdit) {
-        LoadingOverlay(message = "Yorum güncelleniyor...")
+        LoadingOverlay(message = stringResource(Res.string.loading_updating_comment))
     }
 }

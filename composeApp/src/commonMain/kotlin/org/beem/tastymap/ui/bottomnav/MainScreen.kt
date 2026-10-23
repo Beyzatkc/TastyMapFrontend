@@ -12,22 +12,8 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.AddBox
-import androidx.compose.material.icons.filled.AddCircle
-import androidx.compose.material.icons.filled.LocationOn
-import androidx.compose.material.icons.filled.Menu
-import androidx.compose.material.icons.filled.Notifications
-import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.outlined.Add
-import androidx.compose.material.icons.outlined.AddBox
-import androidx.compose.material.icons.outlined.AddCircle
-import androidx.compose.material.icons.outlined.AddCircleOutline
-import androidx.compose.material.icons.outlined.LocationOn
-import androidx.compose.material.icons.outlined.Notifications
-import androidx.compose.material.icons.outlined.Person
-import androidx.compose.material.icons.outlined.Search
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.outlined.*
 import androidx.compose.material.icons.rounded.AutoAwesome
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -41,77 +27,110 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import cafe.adriel.voyager.core.screen.Screen
-import cafe.adriel.voyager.koin.koinScreenModel
-import cafe.adriel.voyager.navigator.Navigator
-import cafe.adriel.voyager.navigator.LocalNavigator
-import cafe.adriel.voyager.navigator.currentOrThrow
-import cafe.adriel.voyager.navigator.tab.LocalTabNavigator
-import cafe.adriel.voyager.navigator.tab.Tab
-import cafe.adriel.voyager.navigator.tab.TabNavigator
+import androidx.navigation.NavController
+import androidx.navigation.NavDestination.Companion.hierarchy
+import androidx.navigation.NavGraph.Companion.findStartDestination
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.navigation.compose.rememberNavController
 import org.beem.tastymap.ui.common.NotificationBadgeManager
-import org.beem.tastymap.ui.profile.myprofile.notification.NotificationScreen
+import org.beem.tastymap.ui.post.create.CreatePostScreen
+import org.beem.tastymap.ui.profile.NotificationRoute
+import org.beem.tastymap.ui.profile.SettingsRoute
+import org.beem.tastymap.ui.profile.myprofile.MyProfileScreen
+import org.beem.tastymap.ui.search.SearchScreen
 import org.beem.tastymap.ui.theme.LocalCustomColors
 import org.beem.tastymap.ui.theme.getAppFontFamily
-import org.beem.tastymap.ui.profile.myprofile.settings.SettingsScreen
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.koinInject
+import org.koin.compose.viewmodel.koinViewModel // YENİ: KMP ViewModel
+// NOT: Kendi oluşturduğun Rota dosyalarından import etmen gerekenler (Route yollarını kendi projene göre ayarla):
+// import org.beem.tastymap.ui.bottomnav.MapTabRoute
+// import org.beem.tastymap.ui.bottomnav.SearchTabRoute
+// import org.beem.tastymap.ui.bottomnav.AITabRoute
+// import org.beem.tastymap.ui.bottomnav.UploadTabRoute
+// import org.beem.tastymap.ui.bottomnav.ProfileTabRoute
+// import org.beem.tastymap.ui.profile.NotificationRoute
+// import org.beem.tastymap.ui.profile.SettingsRoute
 import tastymap.composeapp.generated.resources.Res
-import tastymap.composeapp.generated.resources.app_logo
-import tastymap.composeapp.generated.resources.my_profile_notification_cd
-import tastymap.composeapp.generated.resources.my_profile_settings_cd
+import tastymap.composeapp.generated.resources.*
 
 val LocalNavigationBarVisibility = compositionLocalOf<MutableState<Boolean>> { error("NavigationBarVisibility not provided") }
 val LocalIsWideScreen = compositionLocalOf { false }
 
-class MainScreen : Screen {
-    @Composable
-    override fun Content() {
-        val isNavVisible = remember { mutableStateOf(true) }
-        val badgeManager = koinInject<NotificationBadgeManager>()
-        val mainScreenModel = koinScreenModel<MainScreenModel>()
-        val hasUnread by badgeManager.hasUnreadBadge.collectAsState()
-        val rootNavigator = LocalNavigator.currentOrThrow
+@Composable
+fun MainScreen(rootNavController: NavController) {
+    val isNavVisible = remember { mutableStateOf(true) }
+    val badgeManager = koinInject<NotificationBadgeManager>()
+    val viewModel = koinViewModel<MainViewModel>()
+    val hasUnread by badgeManager.hasUnreadBadge.collectAsState()
 
-        LaunchedEffect(Unit) {
-            mainScreenModel.checkUnreadNotifications()
+    val bottomNavController = rememberNavController()
+
+    LaunchedEffect(Unit) {
+        viewModel.checkUnreadNotifications()
+    }
+
+    BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
+        val isWideScreen = maxWidth >= 600.dp
+        val navBackStackEntry by bottomNavController.currentBackStackEntryAsState()
+        val currentDestination = navBackStackEntry?.destination
+
+        val bottomBarRoutes = listOf(
+            MapTabRoute::class.qualifiedName,
+            SearchTabRoute::class.qualifiedName,
+            AITabRoute::class.qualifiedName,
+            UploadTabRoute::class.qualifiedName,
+            ProfileTabRoute::class.qualifiedName
+        )
+
+        val isMainScreen = bottomBarRoutes.contains(currentDestination?.route)
+
+        LaunchedEffect(currentDestination, isWideScreen) {
+            if (isWideScreen) {
+                isNavVisible.value = true
+            } else {
+                isNavVisible.value = isMainScreen
+            }
         }
-
-        BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
-            val isWideScreen = maxWidth >= 600.dp
-
-            CompositionLocalProvider(
-                LocalNavigationBarVisibility provides isNavVisible,
-                LocalIsWideScreen provides isWideScreen
-            ) {
-                TabNavigator(ProfileTab) {
-                    if (isWideScreen) {
-                        Row(modifier = Modifier.fillMaxSize()) {
-                            if (isNavVisible.value) {
-                                AppNavigationRail(rootNavigator = rootNavigator, hasUnreadBadge = hasUnread)
-                            }
-                            ScaffoldContent(
-                                modifier = Modifier.weight(1f),
-                                contentWindowInsets = WindowInsets.safeDrawing.only(
-                                    WindowInsetsSides.Horizontal + WindowInsetsSides.Top
-                                )
-                            )
-                        }
-                    } else {
-                        Scaffold(
-                            contentWindowInsets = WindowInsets.safeDrawing.only(
-                                WindowInsetsSides.Horizontal + WindowInsetsSides.Top
-                            ),
-                            bottomBar = {
-                                if (isNavVisible.value) {
-                                    AppBottomBar()
-                                }
-                            }
-                        ) { innerPadding ->
-                            ScaffoldContent(modifier = Modifier.padding(innerPadding))
+        CompositionLocalProvider(
+            LocalNavigationBarVisibility provides isNavVisible,
+            LocalIsWideScreen provides isWideScreen
+        ) {
+            if (isWideScreen) {
+                Row(modifier = Modifier.fillMaxSize()) {
+                    if (isNavVisible.value) {
+                        AppNavigationRail(
+                            rootNavController = rootNavController,
+                            bottomNavController = bottomNavController,
+                            hasUnreadBadge = hasUnread
+                        )
+                    }
+                    ScaffoldContent(
+                        bottomNavController = bottomNavController,
+                        modifier = Modifier.weight(1f),
+                        contentWindowInsets = WindowInsets.safeDrawing.only(
+                            WindowInsetsSides.Horizontal + WindowInsetsSides.Top
+                        )
+                    )
+                }
+            } else {
+                Scaffold(
+                    contentWindowInsets = WindowInsets.safeDrawing.only(
+                        WindowInsetsSides.Horizontal + WindowInsetsSides.Top
+                    ),
+                    bottomBar = {
+                        if (isNavVisible.value) {
+                            AppBottomBar(bottomNavController = bottomNavController)
                         }
                     }
+                ) { innerPadding ->
+                    ScaffoldContent(
+                        bottomNavController = bottomNavController,
+                        modifier = Modifier.padding(innerPadding)
+                    )
                 }
             }
         }
@@ -119,8 +138,41 @@ class MainScreen : Screen {
 }
 
 @Composable
-private fun AppBottomBar() {
+private fun ScaffoldContent(
+    bottomNavController: androidx.navigation.NavHostController,
+    modifier: Modifier = Modifier,
+    contentWindowInsets: WindowInsets = WindowInsets(0.dp)
+) {
+    Box(modifier = modifier.fillMaxSize().windowInsetsPadding(contentWindowInsets)) {
+        NavHost(
+            navController = bottomNavController,
+            startDestination = MapTabRoute // İlk açılacak sekme
+        ) {
+            composable<MapTabRoute> {
+                // MapScreen(bottomNavController)
+            }
+            composable<SearchTabRoute> {
+                SearchScreen(bottomNavController)
+            }
+            composable<AITabRoute> {
+                //AIScreen(bottomNavController)
+            }
+            composable<UploadTabRoute> {
+                CreatePostScreen(bottomNavController)
+            }
+            composable<ProfileTabRoute> {
+                MyProfileScreen(bottomNavController)
+            }
+        }
+    }
+}
+
+@Composable
+private fun AppBottomBar(bottomNavController: NavController) {
     val customColors = LocalCustomColors.current
+
+    val navBackStackEntry by bottomNavController.currentBackStackEntryAsState()
+    val currentDestination = navBackStackEntry?.destination
 
     Column {
         HorizontalDivider(thickness = 0.5.dp, color = customColors.borderLight)
@@ -137,39 +189,88 @@ private fun AppBottomBar() {
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceAround
             ) {
-                NavTabItem(tab = MapTab, modifier = Modifier.weight(1f))
-                NavTabItem(tab = SearchTab, modifier = Modifier.weight(1f))
-                AITabItem(tab = AITab, modifier = Modifier.weight(1f))
-                NavTabItem(tab = UploadTab, modifier = Modifier.weight(1f))
-                NavTabItem(tab = ProfileTab, modifier = Modifier.weight(1f))
+                NavTabItem(
+                    title = stringResource(Res.string.nav_map),
+                    iconFilled = Icons.Default.LocationOn,
+                    iconOutlined = Icons.Outlined.LocationOn,
+                    route = MapTabRoute::class.qualifiedName!!,
+                    currentDestination = currentDestination,
+                    navController = bottomNavController,
+                    modifier = Modifier.weight(1f)
+                )
+                NavTabItem(
+                    title = stringResource(Res.string.nav_search),
+                    iconFilled = Icons.Default.Search,
+                    iconOutlined = Icons.Outlined.Search,
+                    route = SearchTabRoute::class.qualifiedName!!,
+                    currentDestination = currentDestination,
+                    navController = bottomNavController,
+                    modifier = Modifier.weight(1f)
+                )
+                AITabItem(
+                    route = AITabRoute::class.qualifiedName!!,
+                    currentDestination = currentDestination,
+                    navController = bottomNavController,
+                    modifier = Modifier.weight(1f)
+                )
+                NavTabItem(
+                    title = stringResource(Res.string.nav_upload),
+                    iconFilled = Icons.Default.Add,
+                    iconOutlined = Icons.Outlined.Add,
+                    route = UploadTabRoute::class.qualifiedName!!,
+                    currentDestination = currentDestination,
+                    navController = bottomNavController,
+                    modifier = Modifier.weight(1f)
+                )
+                NavTabItem(
+                    title = stringResource(Res.string.nav_profile),
+                    iconFilled = Icons.Default.Person,
+                    iconOutlined = Icons.Outlined.Person,
+                    route = ProfileTabRoute::class.qualifiedName!!,
+                    currentDestination = currentDestination,
+                    navController = bottomNavController,
+                    modifier = Modifier.weight(1f)
+                )
             }
         }
     }
 }
 
 @Composable
-private fun NavTabItem(tab: Tab, modifier: Modifier = Modifier) {
-    val tabNavigator = LocalTabNavigator.current
+private fun NavTabItem(
+    title: String,
+    iconFilled: ImageVector,
+    iconOutlined: ImageVector,
+    route: String,
+    currentDestination: androidx.navigation.NavDestination?,
+    navController: NavController,
+    modifier: Modifier = Modifier
+) {
     val customColors = LocalCustomColors.current
     val fontFamily = getAppFontFamily()
-    val isSelected = tabNavigator.current == tab
+
+    val isSelected = currentDestination?.hierarchy?.any { it.route == route } == true
 
     val iconColor by animateColorAsState(targetValue = customColors.blackWhite, animationSpec = tween(300))
     val backgroundColor by animateColorAsState(targetValue = if (isSelected) customColors.blackWhite.copy(alpha = 0.12f) else Color.Transparent, animationSpec = tween(300))
     val iconSize by animateDpAsState(targetValue = 22.dp, animationSpec = tween(300))
     val textFont = if (isSelected) FontWeight.Bold else FontWeight.Medium
 
-    // Seçiliyse dolu (Filled), değilse çizgisel (Outlined) ikon seçimi
-    val iconVector = when (tab) {
-        MapTab -> if (isSelected) Icons.Default.LocationOn else Icons.Outlined.LocationOn
-        SearchTab -> if (isSelected) Icons.Default.Search else Icons.Outlined.Search
-        UploadTab -> if (isSelected) Icons.Default.Add else Icons.Outlined.Add
-        ProfileTab -> if (isSelected) Icons.Default.Person else Icons.Outlined.Person
-        else -> Icons.Default.LocationOn
-    }
+    val iconVector = if (isSelected) iconFilled else iconOutlined
 
     Column(
-        modifier = modifier.fillMaxHeight().clickable(interactionSource = remember { MutableInteractionSource() }, indication = null) { tabNavigator.current = tab },
+        modifier = modifier.fillMaxHeight().clickable(
+            interactionSource = remember { MutableInteractionSource() },
+            indication = null
+        ) {
+            navController.navigate(route) {
+                popUpTo(navController.graph.findStartDestination().route!!) {
+                    saveState = true
+                }
+                launchSingleTop = true
+                restoreState = true
+            }
+        },
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
@@ -179,27 +280,42 @@ private fun NavTabItem(tab: Tab, modifier: Modifier = Modifier) {
         ) {
             Icon(
                 imageVector = iconVector,
-                contentDescription = tab.options.title,
+                contentDescription = title,
                 tint = iconColor,
                 modifier = Modifier.size(iconSize)
             )
         }
         Spacer(modifier = Modifier.height(4.dp))
-        Text(text = tab.options.title, color = iconColor, fontSize = 10.sp, fontFamily = fontFamily, fontWeight = textFont)
+        Text(text = title, color = iconColor, fontSize = 10.sp, fontFamily = fontFamily, fontWeight = textFont)
     }
 }
 
 @Composable
-private fun AITabItem(tab: Tab, modifier: Modifier = Modifier) {
-    val tabNavigator = LocalTabNavigator.current
+private fun AITabItem(
+    route: String,
+    currentDestination: androidx.navigation.NavDestination?,
+    navController: NavController,
+    modifier: Modifier = Modifier
+) {
     val customColors = LocalCustomColors.current
-    val isSelected = tabNavigator.current == tab
+    val isSelected = currentDestination?.hierarchy?.any { it.route == route } == true
 
     val bgColor by animateColorAsState(targetValue = if (isSelected) customColors.navy else customColors.gourmetOrange, animationSpec = tween(300))
     val scale by animateFloatAsState(targetValue = if (isSelected) 1.05f else 1.0f, animationSpec = tween(300))
 
     Column(
-        modifier = modifier.fillMaxHeight().clickable(interactionSource = remember { MutableInteractionSource() }, indication = null) { tabNavigator.current = tab },
+        modifier = modifier.fillMaxHeight().clickable(
+            interactionSource = remember { MutableInteractionSource() },
+            indication = null
+        ) {
+            navController.navigate(route) {
+                popUpTo(navController.graph.findStartDestination().route!!) {
+                    saveState = true
+                }
+                launchSingleTop = true
+                restoreState = true
+            }
+        },
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
@@ -216,13 +332,17 @@ private fun AITabItem(tab: Tab, modifier: Modifier = Modifier) {
 
 @Composable
 private fun AppNavigationRail(
-    rootNavigator: Navigator,
+    rootNavController: NavController,
+    bottomNavController: NavController,
     hasUnreadBadge: Boolean
 ) {
     val customColors = LocalCustomColors.current
     val interactionSource = remember { MutableInteractionSource() }
     val fontFamily = getAppFontFamily()
     val isHovered by interactionSource.collectIsHoveredAsState()
+
+    val navBackStackEntry by bottomNavController.currentBackStackEntryAsState()
+    val currentDestination = navBackStackEntry?.destination
 
     val railWidth by animateDpAsState(
         targetValue = if (isHovered) 220.dp else 80.dp,
@@ -277,12 +397,48 @@ private fun AppNavigationRail(
 
                 Spacer(modifier = Modifier.height(8.dp))
 
-                // Menü Öğeleri
-                RailTabItem(tab = MapTab, isExpanded = isHovered)
-                RailTabItem(tab = SearchTab, isExpanded = isHovered)
-                RailAITabItem(tab = AITab, isExpanded = isHovered)
-                RailTabItem(tab = UploadTab, isExpanded = isHovered)
-                RailTabItem(tab = ProfileTab, isExpanded = isHovered)
+                RailTabItem(
+                    title = stringResource(Res.string.nav_map),
+                    iconFilled = Icons.Default.LocationOn,
+                    iconOutlined = Icons.Outlined.LocationOn,
+                    route = MapTabRoute::class.qualifiedName!!,
+                    currentDestination = currentDestination,
+                    navController = bottomNavController,
+                    isExpanded = isHovered
+                )
+                RailTabItem(
+                    title = stringResource(Res.string.nav_search),
+                    iconFilled = Icons.Default.Search,
+                    iconOutlined = Icons.Outlined.Search,
+                    route = SearchTabRoute::class.qualifiedName!!,
+                    currentDestination = currentDestination,
+                    navController = bottomNavController,
+                    isExpanded = isHovered
+                )
+                RailAITabItem(
+                    route = AITabRoute::class.qualifiedName!!,
+                    currentDestination = currentDestination,
+                    navController = bottomNavController,
+                    isExpanded = isHovered
+                )
+                RailTabItem(
+                    title = stringResource(Res.string.nav_upload),
+                    iconFilled = Icons.Default.Add,
+                    iconOutlined = Icons.Outlined.Add,
+                    route = UploadTabRoute::class.qualifiedName!!,
+                    currentDestination = currentDestination,
+                    navController = bottomNavController,
+                    isExpanded = isHovered
+                )
+                RailTabItem(
+                    title = stringResource(Res.string.nav_profile),
+                    iconFilled = Icons.Default.Person,
+                    iconOutlined = Icons.Outlined.Person,
+                    route = ProfileTabRoute::class.qualifiedName!!,
+                    currentDestination = currentDestination,
+                    navController = bottomNavController,
+                    isExpanded = isHovered
+                )
 
                 Spacer(modifier = Modifier.weight(1f))
 
@@ -291,7 +447,7 @@ private fun AppNavigationRail(
                     icon =  Icons.Outlined.Notifications,
                     isExpanded = isHovered,
                     hasBadge = hasUnreadBadge,
-                    onClick = { rootNavigator.push(NotificationScreen()) }
+                    onClick = { rootNavController.navigate(NotificationRoute) }
                 )
 
                 RailActionItem(
@@ -299,7 +455,7 @@ private fun AppNavigationRail(
                     icon = Icons.Default.Menu,
                     isExpanded = isHovered,
                     hasBadge = false,
-                    onClick = { rootNavigator.push(SettingsScreen()) }
+                    onClick = { rootNavController.navigate(SettingsRoute) }
                 )
             }
         }
@@ -368,25 +524,27 @@ private fun RailActionItem(
 }
 
 @Composable
-private fun RailTabItem(tab: Tab, isExpanded: Boolean, modifier: Modifier = Modifier) {
-    val tabNavigator = LocalTabNavigator.current
+private fun RailTabItem(
+    title: String,
+    iconFilled: ImageVector,
+    iconOutlined: ImageVector,
+    route: String,
+    currentDestination: androidx.navigation.NavDestination?,
+    navController: NavController,
+    isExpanded: Boolean,
+    modifier: Modifier = Modifier
+) {
     val customColors = LocalCustomColors.current
     val fontFamily = getAppFontFamily()
-    val isSelected = tabNavigator.current == tab
+
+    val isSelected = currentDestination?.hierarchy?.any { it.route == route } == true
 
     val iconColor by animateColorAsState(targetValue = customColors.blackWhite, animationSpec = tween(300))
     val backgroundColor by animateColorAsState(targetValue = if (isSelected) customColors.blackWhite.copy(alpha = 0.12f) else Color.Transparent, animationSpec = tween(300))
     val iconSize by animateDpAsState(targetValue = 26.dp, animationSpec = tween(300))
     val textFont = if (isSelected) FontWeight.Bold else FontWeight.Medium
 
-    // Seçiliyse dolu (Filled), değilse çizgisel (Outlined) ikon seçimi
-    val iconVector = when (tab) {
-        MapTab -> if (isSelected) Icons.Default.LocationOn else Icons.Outlined.LocationOn
-        SearchTab -> if (isSelected) Icons.Default.Search else Icons.Outlined.Search
-        UploadTab -> if (isSelected) Icons.Default.Add else Icons.Outlined.Add
-        ProfileTab -> if (isSelected) Icons.Default.Person else Icons.Outlined.Person
-        else -> Icons.Default.LocationOn
-    }
+    val iconVector = if (isSelected) iconFilled else iconOutlined
 
     Row(
         modifier = modifier
@@ -397,7 +555,15 @@ private fun RailTabItem(tab: Tab, isExpanded: Boolean, modifier: Modifier = Modi
             .clickable(
                 interactionSource = remember { MutableInteractionSource() },
                 indication = null
-            ) { tabNavigator.current = tab }
+            ) {
+                navController.navigate(route) {
+                    popUpTo(navController.graph.findStartDestination().route!!) {
+                        saveState = true
+                    }
+                    launchSingleTop = true
+                    restoreState = true
+                }
+            }
             .then(if (isExpanded) Modifier.padding(horizontal = 12.dp) else Modifier),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = if (isExpanded) Arrangement.Start else Arrangement.Center
@@ -405,13 +571,13 @@ private fun RailTabItem(tab: Tab, isExpanded: Boolean, modifier: Modifier = Modi
         if (isExpanded) {
             Icon(
                 imageVector = iconVector,
-                contentDescription = tab.options.title,
+                contentDescription = title,
                 tint = iconColor,
                 modifier = Modifier.size(iconSize)
             )
             Spacer(modifier = Modifier.width(16.dp))
             Text(
-                text = tab.options.title,
+                text = title,
                 color = iconColor,
                 fontSize = 15.sp,
                 fontFamily = fontFamily,
@@ -429,7 +595,7 @@ private fun RailTabItem(tab: Tab, isExpanded: Boolean, modifier: Modifier = Modi
             ) {
                 Icon(
                     imageVector = iconVector,
-                    contentDescription = tab.options.title,
+                    contentDescription = title,
                     tint = iconColor,
                     modifier = Modifier.size(iconSize)
                 )
@@ -439,16 +605,32 @@ private fun RailTabItem(tab: Tab, isExpanded: Boolean, modifier: Modifier = Modi
 }
 
 @Composable
-private fun RailAITabItem(tab: Tab, isExpanded: Boolean, modifier: Modifier = Modifier) {
-    val tabNavigator = LocalTabNavigator.current
+private fun RailAITabItem(
+    route: String,
+    currentDestination: androidx.navigation.NavDestination?,
+    navController: NavController,
+    isExpanded: Boolean,
+    modifier: Modifier = Modifier
+) {
     val customColors = LocalCustomColors.current
-    val isSelected = tabNavigator.current == tab
+    val isSelected = currentDestination?.hierarchy?.any { it.route == route } == true
 
     val bgColor by animateColorAsState(targetValue = if (isSelected) customColors.navy else customColors.gourmetOrange, animationSpec = tween(300))
     val scale by animateFloatAsState(targetValue = if (isSelected) 1.05f else 1.0f, animationSpec = tween(300))
 
     Row(
-        modifier = modifier.fillMaxWidth().height(56.dp).clickable(interactionSource = remember { MutableInteractionSource() }, indication = null) { tabNavigator.current = tab }.padding(horizontal = if (isExpanded) 20.dp else 0.dp),
+        modifier = modifier.fillMaxWidth().height(56.dp).clickable(
+            interactionSource = remember { MutableInteractionSource() },
+            indication = null
+        ) {
+            navController.navigate(route) {
+                popUpTo(navController.graph.findStartDestination().route!!) {
+                    saveState = true
+                }
+                launchSingleTop = true
+                restoreState = true
+            }
+        }.padding(horizontal = if (isExpanded) 20.dp else 0.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = if (isExpanded) Arrangement.Start else Arrangement.Center
     ) {
@@ -460,16 +642,6 @@ private fun RailAITabItem(tab: Tab, isExpanded: Boolean, modifier: Modifier = Mo
             AnimatedVisibility(visible = isExpanded, enter = fadeIn() + expandHorizontally(), exit = fadeOut() + shrinkHorizontally()) {
                 Text(text = "AI", color = Color.White, fontSize = 15.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(start = 8.dp))
             }
-        }
-    }
-}
-
-@Composable
-private fun ScaffoldContent(modifier: Modifier = Modifier, contentWindowInsets: WindowInsets = WindowInsets(0.dp)) {
-    Box(modifier = modifier.fillMaxSize().windowInsetsPadding(contentWindowInsets)) {
-        val tabNavigator = LocalTabNavigator.current
-        Crossfade(targetState = tabNavigator.current, animationSpec = tween(durationMillis = 250), label = "TabCrossfadeTransition") { targetTab ->
-            targetTab.Content()
         }
     }
 }

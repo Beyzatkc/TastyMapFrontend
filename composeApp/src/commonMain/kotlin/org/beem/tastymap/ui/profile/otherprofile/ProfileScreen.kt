@@ -14,7 +14,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -29,9 +28,6 @@ import androidx.compose.material.icons.filled.PushPin
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.*
-import androidx.compose.material3.pulltorefresh.PullToRefreshBox
-import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults
-import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -44,31 +40,28 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
-import cafe.adriel.voyager.core.screen.Screen
-import cafe.adriel.voyager.koin.koinScreenModel
-import cafe.adriel.voyager.navigator.LocalNavigator
-import cafe.adriel.voyager.navigator.currentOrThrow
+import androidx.navigation.NavController
 import coil3.compose.AsyncImage
 import org.beem.tastymap.core.util.ToastManager
 import org.beem.tastymap.data.model.post.PostGridResponse
 import org.beem.tastymap.domain.model.RelationStatus
-import org.beem.tastymap.ui.animations.shimmerEffect
 import org.beem.tastymap.ui.bottomnav.LocalIsWideScreen
 import org.beem.tastymap.ui.components.DialogConfig
 import org.beem.tastymap.ui.components.TastyButton
 import org.beem.tastymap.ui.components.TastyConfirmDialog
 import org.beem.tastymap.ui.components.TastyPullToRefreshBox
 import org.beem.tastymap.ui.components.responsiveContentWidth
-import org.beem.tastymap.ui.post.detail.PostDetailScreen
-import org.beem.tastymap.ui.post.detail.PostDetailScreenModel
+import org.beem.tastymap.ui.post.PostDetailRoute
+import org.beem.tastymap.ui.post.detail.PostDetailViewModel
 import org.beem.tastymap.ui.post.detail.WebPostDetailDialog
-import org.beem.tastymap.ui.post.otherpost.PostScreenModel
-import org.beem.tastymap.ui.post.postcomment.CommentScreenModel
-import org.beem.tastymap.ui.post.postlike.PostLikesScreenModel
+import org.beem.tastymap.ui.post.otherpost.PostViewModel
+import org.beem.tastymap.ui.post.postcomment.CommentViewModel
+import org.beem.tastymap.ui.post.postlike.PostLikesViewModel
+import org.beem.tastymap.ui.profile.SubscribersListRoute
 import org.beem.tastymap.ui.profile.subscribers.SubscriberListType
-import org.beem.tastymap.ui.profile.subscribers.SubscribersListScreen
 import org.beem.tastymap.ui.theme.LocalCustomColors
 import org.jetbrains.compose.resources.stringResource
+import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.parameter.parametersOf
 import tastymap.composeapp.generated.resources.Res
 import tastymap.composeapp.generated.resources.active_devices_retry
@@ -102,7 +95,6 @@ import tastymap.composeapp.generated.resources.profile_metric_posts
 import tastymap.composeapp.generated.resources.profile_metric_subscribers
 import tastymap.composeapp.generated.resources.profile_pending
 import tastymap.composeapp.generated.resources.profile_photo_cd
-import tastymap.composeapp.generated.resources.profile_posts_empty
 import tastymap.composeapp.generated.resources.profile_private_account_message
 import tastymap.composeapp.generated.resources.profile_subscribe
 import tastymap.composeapp.generated.resources.profile_subscribed
@@ -110,56 +102,56 @@ import tastymap.composeapp.generated.resources.profile_tab_posts
 import tastymap.composeapp.generated.resources.profile_tab_taste_map
 import tastymap.composeapp.generated.resources.profile_user_unavailable
 
-class ProfileScreen(private val userId: Long) : Screen {
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun ProfileScreen(
+    userId: Long,
+    navController: NavController
+) {
+    val screenModel = koinViewModel<ProfileViewModel> { parametersOf(userId) }
+    val postViewModel = koinViewModel<PostViewModel>()
+    val state by screenModel.profileState.collectAsState()
+    var isPhotoZoomed by remember { mutableStateOf(false) }
 
-    @OptIn(ExperimentalMaterial3Api::class)
-    @Composable
-    override fun Content() {
-        val screenModel = koinScreenModel<ProfileScreenModel> { parametersOf(userId) }
-        val postScreenModel = koinScreenModel<PostScreenModel>()
-        val state by screenModel.profileState.collectAsState()
-        val navigator = LocalNavigator.currentOrThrow
-        var isPhotoZoomed by remember { mutableStateOf(false) }
+    val postState by postViewModel.uiState.collectAsState()
+    val gridState = rememberLazyGridState()
+    val postDetailViewModel = koinViewModel<PostDetailViewModel>()
+    val commentViewModel = koinViewModel<CommentViewModel>()
+    val isWideScreen = LocalIsWideScreen.current
+    val postLikesViewModel = koinViewModel<PostLikesViewModel>()
+    var selectedWebPostId by remember { mutableStateOf<Long?>(null) }
 
-        val postState by postScreenModel.uiState.collectAsState()
-        val gridState = rememberLazyGridState()
-        val postDetailScreenModel = koinScreenModel<PostDetailScreenModel>()
-        val commentScreenModel = koinScreenModel<CommentScreenModel>()
-        val isWideScreen = LocalIsWideScreen.current
-        val postLikesScreenModel = koinScreenModel<PostLikesScreenModel>()
-        var selectedWebPostId by remember { mutableStateOf<Long?>(null) }
+    var showBottomSheet by remember { mutableStateOf(false) }
+    var activeDialog by remember { mutableStateOf<DialogConfig?>(null) }
 
-        var showBottomSheet by remember { mutableStateOf(false) }
-        var activeDialog by remember { mutableStateOf<DialogConfig?>(null) }
+    val customColors = LocalCustomColors.current
+    var selectedTab by remember { mutableIntStateOf(0) }
 
-        val customColors = LocalCustomColors.current
-        var selectedTab by remember { mutableIntStateOf(0) }
+    val blockTitle = stringResource(Res.string.dialog_block_title)
+    val blockMessage = stringResource(Res.string.dialog_block_message, state.profile?.username ?: "")
+    val blockConfirm = stringResource(Res.string.profile_action_block)
 
-        val blockTitle = stringResource(Res.string.dialog_block_title,)
-        val blockMessage = stringResource(Res.string.dialog_block_message,state.profile?.username ?: "")
-        val blockConfirm = stringResource(Res.string.profile_action_block)
+    val unblockTitle = stringResource(Res.string.dialog_unblock_title)
+    val unblockMessage = stringResource(Res.string.dialog_unblock_message, state.profile?.username ?: "")
+    val unblockConfirm = stringResource(Res.string.profile_action_unblock)
 
-        val unblockTitle = stringResource(Res.string.dialog_unblock_title)
-        val unblockMessage = stringResource(Res.string.dialog_unblock_message, state.profile?.username ?: "")
-        val unblockConfirm = stringResource(Res.string.profile_action_unblock)
+    val unfollowTitle = stringResource(Res.string.dialog_unfollow_title)
+    val unfollowMessage = stringResource(Res.string.dialog_unfollow_message, state.profile?.username ?: "")
+    val unfollowConfirm = stringResource(Res.string.profile_action_unfollow)
 
-        val unfollowTitle = stringResource(Res.string.dialog_unfollow_title)
-        val unfollowMessage = stringResource(Res.string.dialog_unfollow_message, state.profile?.username ?: "")
-        val unfollowConfirm = stringResource(Res.string.profile_action_unfollow)
+    val removeFollowerTitle = stringResource(Res.string.dialog_remove_follower_title)
+    val removeFollowerMessage = stringResource(Res.string.dialog_remove_follower_message, state.profile?.username ?: "")
+    val removeFollowerConfirm = stringResource(Res.string.profile_action_remove_follower)
 
-        val removeFollowerTitle = stringResource(Res.string.dialog_remove_follower_title)
-        val removeFollowerMessage = stringResource(Res.string.dialog_remove_follower_message, state.profile?.username ?: "")
-        val removeFollowerConfirm = stringResource(Res.string.profile_action_remove_follower)
-
-        LaunchedEffect(state.errorMessage) {
-            state.errorMessage?.let { message ->
-                ToastManager.show(message)
-                screenModel.clearError()
-            }
+    LaunchedEffect(state.errorMessage) {
+        state.errorMessage?.let { message ->
+            ToastManager.show(message)
+            screenModel.clearError()
         }
-        LaunchedEffect(Unit){
-            postScreenModel.loadInitialData(userId)
-        }
+    }
+    LaunchedEffect(Unit){
+        postViewModel.loadInitialData(userId)
+    }
 
         val shouldLoadMore = remember {
             derivedStateOf {
@@ -171,7 +163,7 @@ class ProfileScreen(private val userId: Long) : Screen {
 
         LaunchedEffect(shouldLoadMore.value) {
             if (shouldLoadMore.value && selectedTab == 0) {
-                postScreenModel.loadNextPage(userId)
+                postViewModel.loadNextPage(userId)
             }
         }
 
@@ -195,7 +187,7 @@ class ProfileScreen(private val userId: Long) : Screen {
                     topBar = {
                         TopAppBar(
                             navigationIcon = {
-                                IconButton(onClick = { navigator.pop() }) {
+                                IconButton(onClick = { navController.popBackStack() }) {
                                     Icon(
                                         imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                                         contentDescription = stringResource(Res.string.profile_back_cd),
@@ -232,7 +224,7 @@ class ProfileScreen(private val userId: Long) : Screen {
                         modifier = Modifier
                             .fillMaxSize()
                             .padding(innerPadding)
-                            .background(customColors.placeHolderBack)
+                            .background(customColors.bottomBackground)
                     ){
                         val profile = state.profile
 
@@ -533,10 +525,10 @@ class ProfileScreen(private val userId: Long) : Screen {
                                                     enabled = isClickable,
                                                     onClick = {
                                                         state.profile?.userId?.let { uId ->
-                                                            navigator.push(
-                                                                SubscribersListScreen(
+                                                            navController.navigate(
+                                                                SubscribersListRoute(
                                                                     userId = uId,
-                                                                    initialTab = SubscriberListType.SUBSCRIBERS
+                                                                    initialTab = SubscriberListType.SUBSCRIBERS,
                                                                 )
                                                             )
                                                         }
@@ -551,8 +543,8 @@ class ProfileScreen(private val userId: Long) : Screen {
                                                     enabled = isClickable,
                                                     onClick = {
                                                         state.profile?.userId?.let { uId ->
-                                                            navigator.push(
-                                                                SubscribersListScreen(
+                                                            navController.navigate(
+                                                                SubscribersListRoute(
                                                                     userId = uId,
                                                                     initialTab = SubscriberListType.SUBSCRIBES
                                                                 )
@@ -568,7 +560,6 @@ class ProfileScreen(private val userId: Long) : Screen {
                                     }
                                 }
 
-                                // 3. İÇERİK SEÇİMİ VE GİZLİLİK KONTROLLERİ
                                 if (isBlocked) {
                                     item(span = { GridItemSpan(maxLineSpan) }) {
                                         Box(
@@ -701,7 +692,7 @@ class ProfileScreen(private val userId: Long) : Screen {
                                                     ) {
                                                         IconButton(
                                                             onClick = {
-                                                                postScreenModel.loadInitialData(
+                                                                postViewModel.loadInitialData(
                                                                     userId
                                                                 )
                                                             }
@@ -777,11 +768,10 @@ class ProfileScreen(private val userId: Long) : Screen {
                                                                                 post = post,
                                                                                 onClick = {
                                                                                     if (isWideScreen) {
-                                                                                        selectedWebPostId =
-                                                                                            post.postId
+                                                                                        selectedWebPostId = post.postId
                                                                                     } else {
-                                                                                        navigator.push(
-                                                                                            PostDetailScreen(
+                                                                                        navController.navigate(
+                                                                                            PostDetailRoute(
                                                                                                 post.postId
                                                                                             )
                                                                                         )
@@ -840,7 +830,7 @@ class ProfileScreen(private val userId: Long) : Screen {
                                                         ) {
                                                             IconButton(
                                                                 onClick = {
-                                                                    postScreenModel.loadNextPage(
+                                                                    postViewModel.loadNextPage(
                                                                         userId
                                                                     )
                                                                 }
@@ -942,9 +932,10 @@ class ProfileScreen(private val userId: Long) : Screen {
         if (selectedWebPostId != null && isWideScreen) {
             WebPostDetailDialog(
                 postId = selectedWebPostId!!,
-                screenModel = postDetailScreenModel,
-                likesScreenModel = postLikesScreenModel,
-                commentScreenModel = commentScreenModel,
+                screenModel = postDetailViewModel,
+                likesScreenModel = postLikesViewModel,
+                commentViewModel = commentViewModel,
+                navController = navController,
                 onDismiss = { selectedWebPostId = null }
             )
         }
@@ -977,7 +968,6 @@ class ProfileScreen(private val userId: Long) : Screen {
                 )
             }
         }
-    }
 
 }
 
@@ -1240,7 +1230,7 @@ private fun PostGridItem(
             Box(
                 modifier = Modifier
                     .align(alignment = Alignment.TopEnd)
-                    .size(30.dp) // Yuvarlağın toplam boyutu
+                    .size(30.dp)
                     .clip(CircleShape)
                     .background(Color.Gray.copy(alpha = 0.7f)),
                 contentAlignment = Alignment.Center

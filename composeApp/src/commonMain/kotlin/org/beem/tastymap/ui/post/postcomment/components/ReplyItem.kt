@@ -44,6 +44,8 @@ import org.beem.tastymap.ui.components.MentionFormattedText
 import org.beem.tastymap.ui.theme.LocalCustomColors
 import org.jetbrains.compose.resources.stringResource
 import tastymap.composeapp.generated.resources.Res
+import tastymap.composeapp.generated.resources.comment_edited
+import tastymap.composeapp.generated.resources.options
 import tastymap.composeapp.generated.resources.reply_action
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -51,6 +53,7 @@ import tastymap.composeapp.generated.resources.reply_action
 fun ReplyItem(
     reply: CommentsResponse,
     isWeb: Boolean,
+    isOwnPost: Boolean,
     checkIsOwnComment: (Long) -> Boolean,
     onUserClick: () -> Unit,
     onReplyClick: () -> Unit,
@@ -120,7 +123,7 @@ fun ReplyItem(
                     if (reply.updateDate != null) {
                         Spacer(modifier = Modifier.width(4.dp))
                         Text(
-                            text = "(Düzenlendi)",
+                            text = stringResource(Res.string.comment_edited),
                             style = MaterialTheme.typography.labelSmall.copy(color = customColors.textSecondary),
                             maxLines = 1
                         )
@@ -132,7 +135,7 @@ fun ReplyItem(
                             onClick = { showMenu = true },
                             modifier = Modifier.size(24.dp)
                         ) {
-                            Icon(Icons.Default.MoreVert, contentDescription = "Seçenekler", tint = customColors.textSecondary, modifier = Modifier.size(16.dp))
+                            Icon(Icons.Default.MoreVert, contentDescription = stringResource(Res.string.options), tint = customColors.textSecondary, modifier = Modifier.size(16.dp))
                         }
                     }
                 }
@@ -174,6 +177,7 @@ fun ReplyItem(
         CommentActionDropdownMenu(
             expanded = showMenu,
             isOwnComment = isOwnReply,
+            isOwnPost = isOwnPost,
             showPinOption = false,
             onDismissRequest = { showMenu = false },
             onUpdateClick = {

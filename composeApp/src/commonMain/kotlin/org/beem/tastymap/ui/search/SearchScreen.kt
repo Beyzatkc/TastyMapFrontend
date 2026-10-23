@@ -1,12 +1,6 @@
 package org.beem.tastymap.ui.search
 
-import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.expandHorizontally
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.shrinkHorizontally
-import androidx.compose.animation.togetherWith
+import androidx.compose.animation.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.Orientation
@@ -35,276 +29,270 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import cafe.adriel.voyager.core.screen.Screen
-import cafe.adriel.voyager.koin.koinScreenModel
-import cafe.adriel.voyager.navigator.LocalNavigator
-import cafe.adriel.voyager.navigator.currentOrThrow
-import cafe.adriel.voyager.navigator.tab.LocalTabNavigator
+import androidx.navigation.NavController // YENİ: NavController
+import androidx.navigation.NavGraph.Companion.findStartDestination // YENİ: Tab değişimi için
 import coil3.compose.AsyncImage
 import org.beem.tastymap.core.util.ToastManager
 import org.beem.tastymap.data.model.search.UserSearchResponse
-import org.beem.tastymap.ui.bottomnav.ProfileTab
+import org.beem.tastymap.ui.bottomnav.ProfileTabRoute // YENİ: Profil sekmesi rotası
 import org.beem.tastymap.ui.components.responsiveContentWidth
-import org.beem.tastymap.ui.profile.myprofile.MyProfileScreen
-import org.beem.tastymap.ui.profile.otherprofile.ProfileScreen
+import org.beem.tastymap.ui.profile.ProfileRoute
+// import org.beem.tastymap.ui.profile.ProfileRoute // Kendi profil rota importun
 import org.beem.tastymap.ui.theme.LocalCustomColors
 import org.jetbrains.compose.resources.stringResource
+import org.koin.compose.viewmodel.koinViewModel // YENİ: KMP ViewModel
 import tastymap.composeapp.generated.resources.Res
-import tastymap.composeapp.generated.resources.active_devices_retry
-import tastymap.composeapp.generated.resources.active_devices_retry_cd
-import tastymap.composeapp.generated.resources.common_search_placeholder
-import tastymap.composeapp.generated.resources.profile_empty_list
-import tastymap.composeapp.generated.resources.profile_no_results
-import tastymap.composeapp.generated.resources.search_recent_title
-import tastymap.composeapp.generated.resources.search_remove_from_history
-import tastymap.composeapp.generated.resources.settings_back_cd
-class SearchScreen : Screen {
+import tastymap.composeapp.generated.resources.*
 
-    @OptIn(ExperimentalMaterial3Api::class)
-    @Composable
-    override fun Content() {
-        val screenModel = koinScreenModel<SearchScreenModel>()
-        val uiState by screenModel.uiState.collectAsState()
-        val navigator = LocalNavigator.currentOrThrow
-        val customColors = LocalCustomColors.current
-        val listState = rememberLazyListState()
-        val tabNavigator = LocalTabNavigator.current
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun SearchScreen(navController: NavController) {
+    val screenModel = koinViewModel<SearchViewModel>()
+    val uiState by screenModel.uiState.collectAsState()
+    val customColors = LocalCustomColors.current
+    val listState = rememberLazyListState()
 
-        val outerScrollState = rememberScrollableState { delta ->
-            listState.dispatchRawDelta(-delta)
+    val outerScrollState = rememberScrollableState { delta ->
+        listState.dispatchRawDelta(-delta)
+    }
+
+    LaunchedEffect(uiState.errorMessage) {
+        uiState.errorMessage?.let { message ->
+            ToastManager.show(message)
         }
+    }
 
-        LaunchedEffect(uiState.errorMessage) {
-            uiState.errorMessage?.let { message ->
-                ToastManager.show(message)
-            }
+    val shouldLoadMore = remember {
+        derivedStateOf {
+            val totalItems = listState.layoutInfo.totalItemsCount
+            val lastVisibleItem = listState.layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: 0
+            !uiState.isLoading && uiState.errorMessage == null && totalItems > 0 && lastVisibleItem >= totalItems - 2
         }
+    }
 
-        val shouldLoadMore = remember {
-            derivedStateOf {
-                val totalItems = listState.layoutInfo.totalItemsCount
-                val lastVisibleItem = listState.layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: 0
-                !uiState.isLoading && uiState.errorMessage == null && totalItems > 0 && lastVisibleItem >= totalItems - 2
-            }
+    LaunchedEffect(shouldLoadMore.value) {
+        if (shouldLoadMore.value) {
+            screenModel.loadNextPage()
         }
+    }
 
-        LaunchedEffect(shouldLoadMore.value) {
-            if (shouldLoadMore.value) {
-                screenModel.loadNextPage()
-            }
-        }
-
-        Scaffold(
-            topBar = {
-                TopAppBar(
-                    navigationIcon = {
-                        AnimatedVisibility(
-                            visible = uiState.query.isNotEmpty(),
-                            enter = fadeIn() + expandHorizontally(expandFrom = Alignment.Start),
-                            exit = fadeOut() + shrinkHorizontally(shrinkTowards = Alignment.Start)
-                        ) {
-                            IconButton(
-                                onClick = {
-                                    screenModel.clearQuery()
-                                }
-                            ) {
-                                Icon(
-                                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                    contentDescription = stringResource(Res.string.settings_back_cd),
-                                    tint = customColors.textPrimary
-                                )
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                navigationIcon = {
+                    AnimatedVisibility(
+                        visible = uiState.query.isNotEmpty(),
+                        enter = fadeIn() + expandHorizontally(expandFrom = Alignment.Start),
+                        exit = fadeOut() + shrinkHorizontally(shrinkTowards = Alignment.Start)
+                    ) {
+                        IconButton(
+                            onClick = {
+                                screenModel.clearQuery()
                             }
+                        ) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = stringResource(Res.string.settings_back_cd),
+                                tint = customColors.textPrimary
+                            )
                         }
-                    },
-                    title = {
-                        SearchBarInput(
-                            query = uiState.query,
-                            onQueryChange = { screenModel.onQueryChanged(it) },
-                            onClearClick = { screenModel.clearQuery() }
-                        )
-                    },
-                    colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = customColors.background
+                    }
+                },
+                title = {
+                    SearchBarInput(
+                        query = uiState.query,
+                        onQueryChange = { screenModel.onQueryChanged(it) },
+                        onClearClick = { screenModel.clearQuery() }
                     )
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = customColors.background
                 )
-            }
-        ) { innerPadding ->
-            val boxShape = RoundedCornerShape(16.dp)
+            )
+        }
+    ) { innerPadding ->
+        val boxShape = RoundedCornerShape(16.dp)
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+                .background(customColors.background)
+                .scrollable(
+                    state = outerScrollState,
+                    orientation = Orientation.Vertical
+                ),
+            contentAlignment = Alignment.TopCenter
+        ) {
             Box(
                 modifier = Modifier
-                    .fillMaxSize()
-                    .padding(innerPadding)
-                    .background(customColors.background)
-                    .scrollable(
-                        state = outerScrollState,
-                        orientation = Orientation.Vertical
-                    ),
-                contentAlignment = Alignment.TopCenter
+                    .responsiveContentWidth()
+                    .fillMaxHeight()
+                    .padding(horizontal = 16.dp, vertical = 12.dp)
+                    .shadow(
+                        elevation = 8.dp,
+                        shape = boxShape,
+                        spotColor = Color.Black.copy(alpha = 0.35f),
+                        ambientColor = Color.Black.copy(alpha = 0.20f)
+                    )
+                    .background(
+                        color = customColors.background,
+                        shape = boxShape
+                    )
+                    .clip(boxShape)
             ) {
-                Box(
-                    modifier = Modifier
-                        .responsiveContentWidth()
-                        .fillMaxHeight()
-                        .padding(horizontal = 16.dp, vertical = 12.dp)
-                        .shadow(
-                            elevation = 8.dp,
-                            shape = boxShape,
-                            spotColor = Color.Black.copy(alpha = 0.35f),
-                            ambientColor = Color.Black.copy(alpha = 0.20f)
-                        )
-                        .background(
-                            color = customColors.background,
-                            shape = boxShape
-                        )
-                        .clip(boxShape)
-                ) {
-                    val isError = !uiState.errorMessage.isNullOrBlank()
-                    val currentList =
-                        if (uiState.isHistoryMode) uiState.historyResults else uiState.searchResults
-                    val isEmpty = currentList.isEmpty()
+                val isError = !uiState.errorMessage.isNullOrBlank()
+                val currentList =
+                    if (uiState.isHistoryMode) uiState.historyResults else uiState.searchResults
+                val isEmpty = currentList.isEmpty()
 
-                    when {
-                        uiState.isLoading && isEmpty && !isError -> {
-                            Box(
-                                modifier = Modifier.fillMaxSize(),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                CircularProgressIndicator(color = customColors.gourmetOrange)
-                            }
+                when {
+                    uiState.isLoading && isEmpty && !isError -> {
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            CircularProgressIndicator(color = customColors.gourmetOrange)
                         }
+                    }
 
-                        isError && isEmpty -> {
-                            Box(
-                                modifier = Modifier.fillMaxSize(),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                FilledTonalButton(
-                                    onClick = { screenModel.refresh() },
-                                    enabled = !uiState.isLoading,
-                                    modifier = Modifier.height(48.dp),
-                                    colors = ButtonDefaults.filledTonalButtonColors(
-                                        containerColor = customColors.surfaceVariant,
-                                        contentColor = customColors.textPrimary
-                                    )
-                                ) {
-                                    AnimatedContent(
-                                        targetState = uiState.isLoading,
-                                        transitionSpec = { fadeIn() togetherWith fadeOut() },
-                                        label = "ButtonLoadingTransition"
-                                    ) { loading ->
-                                        if (loading) {
-                                            CircularProgressIndicator(
-                                                modifier = Modifier.size(24.dp),
-                                                strokeWidth = 2.5.dp,
-                                                color = customColors.textPrimary
-                                            )
-                                        } else {
-                                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                                Icon(
-                                                    imageVector = Icons.Default.Refresh,
-                                                    contentDescription = stringResource(Res.string.active_devices_retry_cd),
-                                                    modifier = Modifier.size(24.dp),
-                                                    tint = customColors.textSecondary
-                                                )
-                                                Spacer(modifier = Modifier.width(8.dp))
-                                                Text(
-                                                    text = stringResource(Res.string.active_devices_retry),
-                                                    style = MaterialTheme.typography.titleSmall.copy(
-                                                        fontWeight = FontWeight.Bold,
-                                                        color = customColors.textSecondary
-                                                    )
-                                                )
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-
-                        isEmpty && !uiState.isLoading -> {
-                            Box(
-                                modifier = Modifier.fillMaxSize(),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Text(
-                                    text = if (uiState.isHistoryMode) {
-                                        stringResource(Res.string.profile_empty_list)
-                                    } else {
-                                        stringResource(Res.string.profile_no_results)
-                                    },
-                                    style = MaterialTheme.typography.bodyMedium.copy(color = customColors.textSecondary)
+                    isError && isEmpty -> {
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            FilledTonalButton(
+                                onClick = { screenModel.refresh() },
+                                enabled = !uiState.isLoading,
+                                modifier = Modifier.height(48.dp),
+                                colors = ButtonDefaults.filledTonalButtonColors(
+                                    containerColor = customColors.surfaceVariant,
+                                    contentColor = customColors.textPrimary
                                 )
-                            }
-                        }
-
-                        else -> {
-                            LazyColumn(
-                                state = listState,
-                                modifier = Modifier
-                                    .responsiveContentWidth()
-                                    .fillMaxHeight(),
-                                contentPadding = PaddingValues(bottom = 16.dp, top = 8.dp)
                             ) {
-                                if (uiState.isHistoryMode && !isEmpty) {
-                                    item {
-                                        Row(
-                                            modifier = Modifier
-                                                .fillMaxWidth()
-                                                .padding(horizontal = 16.dp, vertical = 8.dp),
-                                            verticalAlignment = Alignment.CenterVertically
-                                        ) {
+                                AnimatedContent(
+                                    targetState = uiState.isLoading,
+                                    transitionSpec = { fadeIn() togetherWith fadeOut() },
+                                    label = "ButtonLoadingTransition"
+                                ) { loading ->
+                                    if (loading) {
+                                        CircularProgressIndicator(
+                                            modifier = Modifier.size(24.dp),
+                                            strokeWidth = 2.5.dp,
+                                            color = customColors.textPrimary
+                                        )
+                                    } else {
+                                        Row(verticalAlignment = Alignment.CenterVertically) {
                                             Icon(
-                                                imageVector = Icons.Default.History,
-                                                contentDescription = null,
-                                                tint = customColors.textSecondary,
-                                                modifier = Modifier.size(20.dp)
+                                                imageVector = Icons.Default.Refresh,
+                                                contentDescription = stringResource(Res.string.active_devices_retry_cd),
+                                                modifier = Modifier.size(24.dp),
+                                                tint = customColors.textSecondary
                                             )
                                             Spacer(modifier = Modifier.width(8.dp))
                                             Text(
-                                                text = stringResource(Res.string.search_recent_title),
+                                                text = stringResource(Res.string.active_devices_retry),
                                                 style = MaterialTheme.typography.titleSmall.copy(
-                                                    color = customColors.textSecondary,
-                                                    fontWeight = FontWeight.Bold
+                                                    fontWeight = FontWeight.Bold,
+                                                    color = customColors.textSecondary
                                                 )
                                             )
                                         }
                                     }
                                 }
+                            }
+                        }
+                    }
 
-                                items(
-                                    items = currentList,
-                                    key = { it.id }
-                                ) { user ->
-                                    SearchUserItem(
-                                        user = user,
-                                        isHistoryItem = uiState.isHistoryMode,
-                                        onUserClick = {
-                                            screenModel.onUserClicked(user)
-                                            if (screenModel.isMe(user.id)) {
-                                                tabNavigator.current = ProfileTab
-                                            } else {
-                                                navigator.push(ProfileScreen(userId = user.id))
-                                            }
-                                        },
-                                        onDeleteHistoryClick = {
-                                            screenModel.deleteHistoryItem(user.id)
-                                        }
-                                    )
-                                }
+                    isEmpty && !uiState.isLoading -> {
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = if (uiState.isHistoryMode) {
+                                    stringResource(Res.string.profile_empty_list)
+                                } else {
+                                    stringResource(Res.string.profile_no_results)
+                                },
+                                style = MaterialTheme.typography.bodyMedium.copy(color = customColors.textSecondary)
+                            )
+                        }
+                    }
 
-                                if (uiState.isLoadingMore && !uiState.isHistoryMode) {
-                                    item {
-                                        Box(
-                                            modifier = Modifier
-                                                .fillMaxWidth()
-                                                .padding(16.dp),
-                                            contentAlignment = Alignment.Center
-                                        ) {
-                                            CircularProgressIndicator(
-                                                modifier = Modifier.size(24.dp),
-                                                color = customColors.gourmetOrange
+                    else -> {
+                        LazyColumn(
+                            state = listState,
+                            modifier = Modifier
+                                .responsiveContentWidth()
+                                .fillMaxHeight(),
+                            contentPadding = PaddingValues(bottom = 16.dp, top = 8.dp)
+                        ) {
+                            if (uiState.isHistoryMode && !isEmpty) {
+                                item {
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(horizontal = 16.dp, vertical = 8.dp),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.History,
+                                            contentDescription = null,
+                                            tint = customColors.textSecondary,
+                                            modifier = Modifier.size(20.dp)
+                                        )
+                                        Spacer(modifier = Modifier.width(8.dp))
+                                        Text(
+                                            text = stringResource(Res.string.search_recent_title),
+                                            style = MaterialTheme.typography.titleSmall.copy(
+                                                color = customColors.textSecondary,
+                                                fontWeight = FontWeight.Bold
                                             )
+                                        )
+                                    }
+                                }
+                            }
+
+                            items(
+                                items = currentList,
+                                key = { it.id }
+                            ) { user ->
+                                SearchUserItem(
+                                    user = user,
+                                    isHistoryItem = uiState.isHistoryMode,
+                                    onUserClick = {
+                                        screenModel.onUserClicked(user)
+                                        if (screenModel.isMe(user.id)) {
+                                            navController.navigate(ProfileTabRoute) {
+                                                popUpTo(navController.graph.findStartDestination().route!!) {
+                                                    saveState = true
+                                                }
+                                                launchSingleTop = true
+                                                restoreState = true
+                                            }
+                                        } else {
+                                            // YENİ: Başka bir kullanıcı ise navigator.push yerine navController.navigate kullanıyoruz
+                                            navController.navigate(ProfileRoute(userId = user.id))
                                         }
+                                    },
+                                    onDeleteHistoryClick = {
+                                        screenModel.deleteHistoryItem(user.id)
+                                    }
+                                )
+                            }
+
+                            if (uiState.isLoadingMore && !uiState.isHistoryMode) {
+                                item {
+                                    Box(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(16.dp),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        CircularProgressIndicator(
+                                            modifier = Modifier.size(24.dp),
+                                            color = customColors.gourmetOrange
+                                        )
                                     }
                                 }
                             }

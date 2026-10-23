@@ -18,15 +18,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
-
-import cafe.adriel.voyager.core.screen.Screen
-import cafe.adriel.voyager.koin.koinScreenModel
-import cafe.adriel.voyager.navigator.LocalNavigator
-import cafe.adriel.voyager.navigator.currentOrThrow
+import androidx.navigation.NavController
 import org.beem.tastymap.core.navigation.VerifyNavigator
 import org.beem.tastymap.core.util.ToastManager
+import org.beem.tastymap.ui.auth.LogRegRoute
 import org.beem.tastymap.ui.auth.common.AuthLifecycleEvent
-import org.beem.tastymap.ui.auth.forgotPassword.ResetScreenModel
 import org.beem.tastymap.ui.auth.logReg.LogRegScreen
 
 import org.beem.tastymap.ui.common.UnifiedLifecycleObserver
@@ -37,6 +33,7 @@ import org.beem.tastymap.ui.theme.LocalCustomColors
 import org.jetbrains.compose.resources.getString
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.koinInject
+import org.koin.compose.viewmodel.koinViewModel
 import tastymap.composeapp.generated.resources.Res
 import tastymap.composeapp.generated.resources.email_verify_back_to_login
 import tastymap.composeapp.generated.resources.email_verify_desc
@@ -47,52 +44,52 @@ import tastymap.composeapp.generated.resources.email_verify_security_desc
 import tastymap.composeapp.generated.resources.email_verify_security_title
 import tastymap.composeapp.generated.resources.email_verify_spam_note
 import tastymap.composeapp.generated.resources.email_verify_title
+@Composable
+fun EmailVerificationScreen(
+    email: String,
+    deviceId: String,
+    userId: Long,
+    navController: NavController
+) {
+    val colors = LocalCustomColors.current
+    val viewModel = koinViewModel<EmailViewModel>()
+    val navigationEffect by viewModel.navigationState.collectAsState(initial = null)
+    val verifyNavigator = koinInject<VerifyNavigator>()
 
-class EmailVerificationScreen(val email: String, val deviceId: String, val userId: Long) : Screen {
-    @Composable
-    override fun Content() {
-        val colors = LocalCustomColors.current
-        val navigator = LocalNavigator.currentOrThrow
-        val screenModel = koinScreenModel<EmailScreenModel>()
-        val navigationEffect by screenModel.navigationState.collectAsState(initial = null)
-        val verifyNavigator = koinInject<VerifyNavigator>()
-
-        LaunchedEffect(navigationEffect) {
-            when (navigationEffect) {
-                EmailScreenModel.EmailNavEffect.OnSuccess -> {
-                    verifyNavigator.verifyEmailNavigationTwo(navigator)
-                }
-                null -> Unit
+    LaunchedEffect(navigationEffect) {
+        when (navigationEffect) {
+            EmailViewModel.EmailNavEffect.OnSuccess -> {
+                verifyNavigator.verifyEmailNavigationTwo(navController)
             }
+            null -> Unit
         }
+    }
 
         LaunchedEffect(Unit) {
-            screenModel.uiMessage.collect { message ->
+            viewModel.uiMessage.collect { message ->
                 val text = when (message) {
-                    is EmailScreenModel.UiMessage.Dynamic -> message.message
-                    is EmailScreenModel.UiMessage.Resource -> getString(message.res)
+                    is EmailViewModel.UiMessage.Dynamic -> message.message
+                    is EmailViewModel.UiMessage.Resource -> getString(message.res)
                 }
                 ToastManager.show(text)
             }
         }
 
-        LaunchedEffect(userId, deviceId) {
-            screenModel.setVerificationContext(
-                userId,
-                deviceId
-            )
-        }
+    LaunchedEffect(userId, deviceId) {
+        viewModel.setVerificationContext(userId, deviceId)
+    }
 
-        UnifiedLifecycleObserver(
-            onActive = {
-                println("LIFECYCLE: Ekran aktif (Resume/Focus/Visible). Model tetikleniyor.")
-                screenModel.handleLifecycleEvent(AuthLifecycleEvent.Resume)
-            },
-            onInactive = {
-                println("LIFECYCLE: Ekran pasif (Stop/Blur/Hidden). Model temizleniyor.")
-                screenModel.handleLifecycleEvent(AuthLifecycleEvent.Stop)
-            }
-        )
+    UnifiedLifecycleObserver(
+        onActive = {
+            println("LIFECYCLE: Ekran aktif (Resume/Focus/Visible). Model tetikleniyor.")
+            viewModel.handleLifecycleEvent(AuthLifecycleEvent.Resume)
+        },
+        onInactive = {
+            println("LIFECYCLE: Ekran pasif (Stop/Blur/Hidden). Model temizleniyor.")
+            viewModel.handleLifecycleEvent(AuthLifecycleEvent.Stop)
+        }
+    )
+
 
         Surface(
             modifier = Modifier.fillMaxSize(),
@@ -105,7 +102,7 @@ class EmailVerificationScreen(val email: String, val deviceId: String, val userI
                     .navigationBarsPadding()
             ) {
                 BackPage(stringResource(Res.string.email_verify_header), {
-                    navigator.pop()
+                    navController.popBackStack()
                 })
                 Box(
                     modifier = Modifier
@@ -163,8 +160,8 @@ class EmailVerificationScreen(val email: String, val deviceId: String, val userI
 
                         ResendSection(
                             navyIcons = colors.navy,
-                            screenModel = screenModel,
-                            onResendClick = { screenModel.resendMail(deviceId, email) }
+                            viewModel = viewModel,
+                            onResendClick = { viewModel.resendMail(deviceId, email) }
                         )
 
                         Spacer(modifier = Modifier.height(16.dp))
@@ -172,10 +169,12 @@ class EmailVerificationScreen(val email: String, val deviceId: String, val userI
                         TastyButton(
                             text = stringResource(Res.string.email_verify_back_to_login),
                             onClick = {
-                                if (navigator.canPop) {
-                                    navigator.pop()
+                                if (navController.previousBackStackEntry != null) {
+                                    navController.popBackStack()
                                 } else {
-                                    navigator.replaceAll(LogRegScreen())
+                                    navController.navigate(LogRegRoute) {
+                                        popUpTo(0) { inclusive = true }
+                                    }
                                 }
                             },
                             backcolor = colors.navy,
@@ -225,11 +224,14 @@ class EmailVerificationScreen(val email: String, val deviceId: String, val userI
             }
         }
     }
-}
 
 @Composable
-fun ResendSection(onResendClick: () -> Unit, navyIcons: Color, screenModel: EmailScreenModel) {
-    val timeLeft by screenModel.timeLeft.collectAsState()
+fun ResendSection(
+    onResendClick: () -> Unit,
+    navyIcons: Color,
+    viewModel: EmailViewModel
+) {
+    val timeLeft by viewModel.timeLeft.collectAsState()
     val isButtonEnabled = timeLeft == 0
     val customColors = LocalCustomColors.current
 
@@ -241,7 +243,7 @@ fun ResendSection(onResendClick: () -> Unit, navyIcons: Color, screenModel: Emai
             enabled = isButtonEnabled,
             onClick = {
                 if (isButtonEnabled) {
-                    screenModel.startTimer()
+                    viewModel.startTimer()
                     onResendClick()
                 }
             }

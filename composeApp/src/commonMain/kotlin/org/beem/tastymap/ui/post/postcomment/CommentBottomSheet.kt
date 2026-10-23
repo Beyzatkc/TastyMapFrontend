@@ -8,7 +8,6 @@ import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -54,7 +53,6 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -73,15 +71,24 @@ import tastymap.composeapp.generated.resources.Res
 import tastymap.composeapp.generated.resources.active_devices_retry
 import tastymap.composeapp.generated.resources.active_devices_retry_cd
 import tastymap.composeapp.generated.resources.be_first_to_comment
+import tastymap.composeapp.generated.resources.comments_disabled_label_tr
+import tastymap.composeapp.generated.resources.comments_disabled_msg_tr
 import tastymap.composeapp.generated.resources.comments_title
+import tastymap.composeapp.generated.resources.delete_comment_confirmation
+import tastymap.composeapp.generated.resources.delete_comment_title
+import tastymap.composeapp.generated.resources.edit_post
+import tastymap.composeapp.generated.resources.loading_deleting_comment
+import tastymap.composeapp.generated.resources.loading_updating_comment
 import tastymap.composeapp.generated.resources.profile_action_reject
+import tastymap.composeapp.generated.resources.update_comment_action_tr
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CommentBottomSheet(
     postId: Long,
+    isOwnPost: Boolean = false,
     isCommentEnabled: Boolean,
-    screenModel: CommentScreenModel,
+    screenModel: CommentViewModel,
     onDismiss: () -> Unit,
     onUserClick: (Long) -> Unit
 ) {
@@ -141,14 +148,12 @@ fun CommentBottomSheet(
         containerColor = customColors.background,
         dragHandle = { BottomSheetDefaults.DragHandle(color = customColors.placeHolderIcon) }
     ) {
-        // EN DIŞ KAPSAYICI (Root BoxScope)
         Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .navigationBarsPadding()
                 .fillMaxHeight(0.75f)
         ) {
-            // 1. DÜŞEY AKIŞ KATMANI (Title, Divider, Content, InputBar)
             Column(
                 modifier = Modifier
                     .fillMaxSize()
@@ -186,7 +191,7 @@ fun CommentBottomSheet(
                                 verticalArrangement = Arrangement.Center
                             ) {
                                 Text(
-                                    text = "Yorumlar Kapalı",
+                                    text = stringResource(Res.string.comments_disabled_label_tr),
                                     style = MaterialTheme.typography.titleMedium.copy(
                                         fontWeight = FontWeight.Bold,
                                         color = customColors.textPrimary
@@ -194,7 +199,7 @@ fun CommentBottomSheet(
                                 )
                                 Spacer(modifier = Modifier.height(8.dp))
                                 Text(
-                                    text = "Bu gönderi yorumlara kapatılmıştır.",
+                                    text = stringResource(Res.string.comments_disabled_msg_tr),
                                     style = MaterialTheme.typography.bodyMedium.copy(color = customColors.textSecondary)
                                 )
                             }
@@ -285,7 +290,9 @@ fun CommentBottomSheet(
                                         uiState = uiState,
                                         onUserClick = { onUserClick(comment.userId) },
                                         isWeb = false,
+                                        isOwnPost = isOwnPost,
                                         checkIsOwnComment = { userId -> screenModel.isMe(userId) },
+
                                         onToggleReplies = {
                                             screenModel.toggleReplies(postId, comment.id)
                                         },
@@ -433,8 +440,8 @@ fun CommentBottomSheet(
             if (commentToDelete != null) {
                 TastyConfirmDialog(
                     config = DialogConfig(
-                        title = "Yorumu Sil",
-                        message = "Bu yorumu silmek istediğinize emin misiniz?",
+                        title = stringResource(Res.string.delete_comment_title),
+                        message = stringResource(Res.string.delete_comment_confirmation),
                         confirmText = stringResource(Res.string.profile_action_reject),
                         isDestructive = true,
                         onConfirm = {
@@ -464,9 +471,9 @@ fun CommentBottomSheet(
                 }
 
                 TastyInputDialog(
-                    title = "Yorumu Güncelle",
+                    title = stringResource(Res.string.update_comment_action_tr),
                     initialText = initialText,
-                    confirmText = "Güncelle",
+                    confirmText =stringResource(Res.string.edit_post),
                     onConfirm = { newText ->
                         val request = CommentRequest(newText)
                         screenModel.update(
@@ -481,11 +488,11 @@ fun CommentBottomSheet(
             }
 
             if (uiState.isActionLoadingDelete) {
-                LoadingOverlay(message = "Yorum siliniyor...")
+                LoadingOverlay(message = stringResource(Res.string.loading_deleting_comment))
             }
 
             if (uiState.isActionLoadingEdit) {
-                LoadingOverlay(message = "Yorum güncelleniyor...")
+                LoadingOverlay(message = stringResource(Res.string.loading_updating_comment))
             }
         }
     }

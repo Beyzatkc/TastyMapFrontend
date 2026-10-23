@@ -6,6 +6,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -24,6 +25,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -42,6 +44,14 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import org.beem.tastymap.ui.theme.LocalCustomColors
+import org.jetbrains.compose.resources.stringResource
+import tastymap.composeapp.generated.resources.Res
+import tastymap.composeapp.generated.resources.add_comment_placeholder
+import tastymap.composeapp.generated.resources.add_reply_placeholder
+import tastymap.composeapp.generated.resources.cancel_reply_content_desc
+import tastymap.composeapp.generated.resources.profile_share
+import tastymap.composeapp.generated.resources.replying_to_label
+import tastymap.composeapp.generated.resources.share_post
 
 @Composable
 fun CommentInputBar(
@@ -64,13 +74,23 @@ fun CommentInputBar(
         }
     }
 
-    val dynamicPlaceholder = if (replyingToUsername != null) "Yanıt ekle..." else "Yorum ekle..."
+    val dynamicPlaceholder = if (replyingToUsername != null) {
+        stringResource(Res.string.add_reply_placeholder)
+    } else {
+        stringResource(Res.string.add_comment_placeholder)
+    }
 
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .background(customColors.background)
+            .background(customColors.surface)
     ) {
+
+        HorizontalDivider(
+            color = customColors.borderLight,
+            thickness = 1.dp
+        )
+
         AnimatedVisibility(
             visible = replyingToUsername != null,
             enter = fadeIn() + expandVertically(),
@@ -79,13 +99,13 @@ fun CommentInputBar(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(customColors.surfaceVariant.copy(alpha = 0.4f))
+                    .background(customColors.surfaceVariant.copy(alpha = 0.5f))
                     .padding(horizontal = 16.dp, vertical = 8.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
-                    text = "Yanıtlanıyor: @$cachedUsername",
+                    text = stringResource(Res.string.replying_to_label, "@$cachedUsername"),
                     style = MaterialTheme.typography.labelMedium.copy(
                         fontWeight = FontWeight.SemiBold,
                         color = customColors.textSecondary
@@ -94,7 +114,7 @@ fun CommentInputBar(
 
                 Icon(
                     imageVector = Icons.Default.Close,
-                    contentDescription = "Yanıtlamayı İptal Et",
+                    contentDescription = stringResource(Res.string.cancel_reply_content_desc),
                     modifier = Modifier
                         .size(16.dp)
                         .clip(CircleShape)
@@ -104,11 +124,10 @@ fun CommentInputBar(
             }
         }
 
-        // Mevcut Text Giriş Alanı
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 12.dp),
+                .padding(horizontal = 16.dp, vertical = 10.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Box(
@@ -122,7 +141,9 @@ fun CommentInputBar(
                     AsyncImage(
                         model = profilePhotoUrl,
                         contentDescription = null,
-                        modifier = Modifier.fillMaxSize().clip(CircleShape),
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .clip(CircleShape),
                         contentScale = ContentScale.Crop
                     )
                 } else {
@@ -141,7 +162,12 @@ fun CommentInputBar(
                 modifier = Modifier
                     .weight(1f)
                     .background(
-                        color = customColors.surfaceVariant,
+                        color = customColors.surfaceVariant.copy(alpha = 0.6f),
+                        shape = RoundedCornerShape(20.dp)
+                    )
+                    .border(
+                        width = 1.dp,
+                        color = customColors.borderLight,
                         shape = RoundedCornerShape(20.dp)
                     )
                     .padding(horizontal = 16.dp, vertical = 10.dp),
@@ -150,7 +176,7 @@ fun CommentInputBar(
                 if (text.isEmpty()) {
                     Text(
                         text = dynamicPlaceholder,
-                        style = MaterialTheme.typography.bodyMedium.copy(color = customColors.textSecondary)
+                        style = MaterialTheme.typography.bodyMedium.copy(color = customColors.textTertiary)
                     )
                 }
 
@@ -170,18 +196,19 @@ fun CommentInputBar(
                 CircularProgressIndicator(
                     modifier = Modifier
                         .size(24.dp)
-                        .padding(end = 8.dp),
+                        .padding(end = 4.dp),
                     color = customColors.gourmetOrange,
                     strokeWidth = 2.5.dp
                 )
             } else {
                 Text(
-                    text = "Paylaş",
+                    text = stringResource(Res.string.profile_share),
                     style = MaterialTheme.typography.labelLarge.copy(
                         fontWeight = FontWeight.Bold,
-                        color = if (text.isNotBlank()) customColors.gourmetOrange else customColors.textSecondary.copy(alpha = 0.5f)
+                        color = if (text.isNotBlank()) customColors.gourmetOrange else customColors.textTertiary
                     ),
                     modifier = Modifier
+                        .clip(RoundedCornerShape(8.dp))
                         .clickable(enabled = text.isNotBlank()) { onSendClick() }
                         .padding(vertical = 8.dp, horizontal = 4.dp)
                 )

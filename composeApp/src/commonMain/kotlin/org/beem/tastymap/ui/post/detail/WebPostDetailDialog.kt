@@ -7,7 +7,6 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -23,17 +22,12 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -47,44 +41,51 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.Dialog
-import androidx.compose.ui.window.DialogProperties
-import cafe.adriel.voyager.navigator.LocalNavigator
-import cafe.adriel.voyager.navigator.currentOrThrow
-import cafe.adriel.voyager.navigator.tab.LocalTabNavigator
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import org.beem.tastymap.ui.bottomnav.ProfileTab
-import org.beem.tastymap.ui.post.postlike.PostLikesScreenModel
-import org.beem.tastymap.ui.profile.otherprofile.ProfileScreen
+import org.beem.tastymap.ui.post.postlike.PostLikesViewModel
 import org.beem.tastymap.ui.theme.LocalCustomColors
 import org.beem.tastymap.ui.post.detail.web.PostCommentsSection
 import org.beem.tastymap.ui.post.detail.web.PostDetailDialogsAndOverlays
 import org.beem.tastymap.ui.post.detail.web.PostFooterSection
 import org.beem.tastymap.ui.post.detail.web.PostHeaderWithOptions
-import org.beem.tastymap.ui.post.mypost.updatepost.EditPostScreen
-import org.beem.tastymap.ui.post.postcomment.CommentScreenModel
+import org.beem.tastymap.ui.post.postcomment.CommentViewModel
 import org.jetbrains.compose.resources.stringResource
 import tastymap.composeapp.generated.resources.Res
 import tastymap.composeapp.generated.resources.active_devices_retry
 import tastymap.composeapp.generated.resources.active_devices_retry_cd
+import androidx.compose.animation.*
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
+import androidx.navigation.NavController
+import androidx.navigation.NavGraph.Companion.findStartDestination
+import org.beem.tastymap.ui.bottomnav.ProfileTabRoute
+import org.beem.tastymap.ui.post.EditPostRoute
+import org.beem.tastymap.ui.profile.ProfileRoute
+import tastymap.composeapp.generated.resources.*
 
 @Composable
 fun WebPostDetailDialog(
     postId: Long,
-    screenModel: PostDetailScreenModel,
-    likesScreenModel: PostLikesScreenModel,
-    commentScreenModel: CommentScreenModel,
+    screenModel: PostDetailViewModel,
+    likesScreenModel: PostLikesViewModel,
+    commentViewModel: CommentViewModel,
+    navController: NavController,
     onDismiss: () -> Unit
 ) {
     val uiState by screenModel.uiState.collectAsState()
     val likeUiState by likesScreenModel.uiState.collectAsState()
-    val commentUiState by commentScreenModel.uiState.collectAsState()
+    val commentUiState by commentViewModel.uiState.collectAsState()
 
     var showPostLikeSheet by remember { mutableStateOf(false) }
     var showMenu by remember { mutableStateOf(false) }
@@ -98,19 +99,22 @@ fun WebPostDetailDialog(
     var replyingToUsername by remember { mutableStateOf<String?>(null) }
 
     val customColors = LocalCustomColors.current
-    val tabNavigator = LocalTabNavigator.current
-    val navigator = LocalNavigator.currentOrThrow
     val coroutineScope = rememberCoroutineScope()
     val listState = rememberLazyListState()
-    val currentUserProfileUrl = commentScreenModel.getCurrentUserProfileUrl()
+    val currentUserProfileUrl = commentViewModel.getCurrentUserProfileUrl()
 
     val navigateToProfile: (Long) -> Unit = { targetUserId ->
         onDismiss()
         if (screenModel.isMe(targetUserId)) {
-            tabNavigator.current = ProfileTab
-            navigator.popUntilRoot()
+            navController.navigate(ProfileTabRoute) {
+                popUpTo(navController.graph.findStartDestination().route!!) {
+                    saveState = true
+                }
+                launchSingleTop = true
+                restoreState = true
+            }
         } else {
-            navigator.push(ProfileScreen(userId = targetUserId))
+            navController.navigate(ProfileRoute(userId = targetUserId))
         }
     }
 
@@ -121,7 +125,7 @@ fun WebPostDetailDialog(
             val lastVisibleItem = listState.layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: 0
 
             isCommentEnabled &&
-                    !uiState.isFetchPost
+                    !uiState.isFetchPost &&
                     !commentUiState.isLoading &&
                     !commentUiState.isLoadingMore &&
                     !commentUiState.isLastPage &&
@@ -132,7 +136,7 @@ fun WebPostDetailDialog(
     }
 
     LaunchedEffect(key1 = postId) {
-        commentScreenModel.clearState()
+        commentViewModel.clearState()
         screenModel.loadPostDetail(postId)
         screenModel.fetchRemotePost(postId)
     }
@@ -140,7 +144,7 @@ fun WebPostDetailDialog(
         val currentPost = uiState.post
         if (uiState.isFetchPost) {
             currentPost?.let {
-                commentScreenModel.syncCommentsForPost(
+                commentViewModel.syncCommentsForPost(
                     postId = postId,
                     isCommentEnabled = it.isCommentEnabled
                 )
@@ -151,7 +155,7 @@ fun WebPostDetailDialog(
     LaunchedEffect(commentUiState.errorMessage) {
         if (!commentUiState.errorMessage.isNullOrBlank()) {
             delay(2000L)
-            commentScreenModel.clearError()
+            commentViewModel.clearError()
         }
     }
     LaunchedEffect(likeUiState.errorMessage) {
@@ -170,10 +174,9 @@ fun WebPostDetailDialog(
 
     LaunchedEffect(shouldLoadMoreComments.value && uiState.isFetchPost) {
         if (shouldLoadMoreComments.value) {
-            commentScreenModel.loadNextPage(postId)
+            commentViewModel.loadNextPage(postId)
         }
     }
-
 
     LaunchedEffect(uiState.isDeletedSuccessfully) {
         if (uiState.isDeletedSuccessfully) {
@@ -190,7 +193,7 @@ fun WebPostDetailDialog(
     ) {
         Surface(
             modifier = Modifier
-                .widthIn(max =1200.dp)
+                .widthIn(max = 1200.dp)
                 .fillMaxWidth(0.8f)
                 .fillMaxHeight(0.85f),
             shape = RoundedCornerShape(16.dp),
@@ -251,7 +254,8 @@ fun WebPostDetailDialog(
                                     onPinClick = { screenModel.togglePin(postId) },
                                     onEditClick = {
                                         onDismiss()
-                                        navigator.push(EditPostScreen(postId))
+                                        // YENİ: navigator.push yerine navigate
+                                        navController.navigate(EditPostRoute(postId))
                                     },
                                     onDeleteClick = { showDeleteDialog = true }
                                 )
@@ -265,7 +269,7 @@ fun WebPostDetailDialog(
                                     commentUiState = commentUiState,
                                     customColors = customColors,
                                     screenModel = screenModel,
-                                    commentScreenModel = commentScreenModel,
+                                    commentViewModel = commentViewModel,
                                     postId = postId,
                                     onUserClick = navigateToProfile,
                                     onReplyClick = { parentId, username ->
@@ -294,7 +298,7 @@ fun WebPostDetailDialog(
                                         isSendingComment = true
                                         if (replyingToCommentId != null) {
                                             val finalReplyText = "@$replyingToUsername $commentText"
-                                            commentScreenModel.addReply(
+                                            commentViewModel.addReply(
                                                 postId = postId,
                                                 parentCommentId = replyingToCommentId!!,
                                                 contents = finalReplyText,
@@ -306,7 +310,7 @@ fun WebPostDetailDialog(
                                                 }
                                             )
                                         } else {
-                                            commentScreenModel.addComment(
+                                            commentViewModel.addComment(
                                                 postId = postId,
                                                 contents = commentText,
                                                 onSuccess = {
@@ -420,7 +424,7 @@ fun WebPostDetailDialog(
         commentUiState = commentUiState,
         likesScreenModel = likesScreenModel,
         screenModel = screenModel,
-        commentScreenModel = commentScreenModel,
+        commentViewModel = commentViewModel,
         onDismissLikeSheet = { showPostLikeSheet = false },
         onDismissDeleteDialog = { showDeleteDialog = false },
         onDismissCommentDelete = { commentToDelete = null },
@@ -428,4 +432,3 @@ fun WebPostDetailDialog(
         onNavigateToUser = navigateToProfile
     )
 }
-

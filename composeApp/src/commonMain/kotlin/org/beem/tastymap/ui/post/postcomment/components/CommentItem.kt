@@ -52,7 +52,10 @@ import org.jetbrains.compose.resources.stringResource
 import tastymap.composeapp.generated.resources.Res
 import tastymap.composeapp.generated.resources.active_devices_retry
 import tastymap.composeapp.generated.resources.active_devices_retry_cd
+import tastymap.composeapp.generated.resources.comment_edited
+import tastymap.composeapp.generated.resources.content_desc_pinned
 import tastymap.composeapp.generated.resources.hide_replies
+import tastymap.composeapp.generated.resources.options
 import tastymap.composeapp.generated.resources.reply_action
 import tastymap.composeapp.generated.resources.view_more_replies
 import tastymap.composeapp.generated.resources.view_replies_count
@@ -63,6 +66,7 @@ fun CommentItem(
     comment: CommentsResponse,
     uiState: CommentListUiState,
     isWeb: Boolean,
+    isOwnPost: Boolean = false,
     checkIsOwnComment: (Long) -> Boolean,
     onUserClick: () -> Unit,
     onToggleReplies: () -> Unit,
@@ -118,7 +122,7 @@ fun CommentItem(
                         if (comment.updateDate != null) {
                             Spacer(modifier = Modifier.width(4.dp))
                             Text(
-                                text = "(Düzenlendi)",
+                                text = stringResource(Res.string.comment_edited),
                                 style = MaterialTheme.typography.labelSmall.copy(color = customColors.textSecondary),
                                 maxLines = 1
                             )
@@ -130,7 +134,7 @@ fun CommentItem(
                                 onClick = { showMenu = true },
                                 modifier = Modifier.size(24.dp)
                             ) {
-                                Icon(Icons.Default.MoreVert, contentDescription = "Seçenekler", tint = customColors.textSecondary, modifier = Modifier.size(16.dp))
+                                Icon(Icons.Default.MoreVert, contentDescription = stringResource(Res.string.options), tint = customColors.textSecondary, modifier = Modifier.size(16.dp))
                             }
                         }
                     }
@@ -188,7 +192,7 @@ fun CommentItem(
                     if (comment.isPinned) {
                         Icon(
                             imageVector = Icons.Default.PushPin,
-                            contentDescription = "Sabitlendi",
+                            contentDescription = stringResource(Res.string.content_desc_pinned),
                             tint = customColors.textSecondary,
                             modifier = Modifier.size(16.dp)
                         )
@@ -236,6 +240,7 @@ fun CommentItem(
                             ReplyItem(
                                 reply = reply,
                                 isWeb = isWeb,
+                                isOwnPost = isOwnPost,
                                 checkIsOwnComment = checkIsOwnComment,
                                 onUserClick = { onUserClick() },
                                 onReplyClick = { onReplyClick(comment.id, reply.username) },
@@ -326,6 +331,7 @@ fun CommentItem(
         CommentActionDropdownMenu(
             expanded = showMenu,
             isOwnComment = isOwnComment,
+            isOwnPost = isOwnPost,
             isPinned = comment.isPinned,
             onDismissRequest = { showMenu = false },
             onPinClick = {

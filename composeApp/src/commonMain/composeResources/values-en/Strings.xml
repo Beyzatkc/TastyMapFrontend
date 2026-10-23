@@ -574,4 +574,22 @@
     <string name="view_replies">View replies</string>
     <string name="view_more_replies">View more replies</string>
     <string name="view_replies_count">View %1$d replies</string>
+
+    <string name="comments_disabled_label_en">Comments Disabled</string>
+    <string name="comments_disabled_msg_en">Comments have been turned off for this post.</string>
+
+    <string name="delete_comment_title">Delete Comment</string>
+    <string name="delete_comment_confirmation">Are you sure you want to delete this comment?</string>
+
+    <string name="update_comment_action_en">Update Comment</string>
+
+    <string name="loading_deleting_comment">Deleting comment...</string>
+    <string name="loading_updating_comment">Updating comment...</string>
+    <string name="comment_edited">(Edited)</string>
+    <string name="content_desc_pinned">Pinned</string>
+
+    <string name="add_reply_placeholder">Add a reply...</string>
+    <string name="add_comment_placeholder">Add a comment...</string>
+    <string name="replying_to_label">Replying to %1$s</string>
+    <string name="cancel_reply_content_desc">Cancel reply</string>
 </resources>

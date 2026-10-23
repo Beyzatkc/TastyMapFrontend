@@ -1,16 +1,18 @@
 package org.beem.tastymap.core.navigation
-import cafe.adriel.voyager.core.screen.Screen
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.receiveAsFlow
+import org.beem.tastymap.ui.auth.ResetRoute
+import org.beem.tastymap.ui.auth.VerifyRoute
 import org.beem.tastymap.ui.auth.forgotPassword.ResetScreen
 import org.beem.tastymap.ui.auth.verification.email.VerifyScreen
+import org.beem.tastymap.ui.profile.ProfileRoute
 import org.beem.tastymap.ui.profile.otherprofile.ProfileScreen
 
 object DeepLinkManager {
-    private val _navigationEvents = Channel<Screen>(Channel.BUFFERED)
+    private val _navigationEvents = Channel<Any>(Channel.BUFFERED)
     val navigationEvents = _navigationEvents.receiveAsFlow()
 
-    var pendingInitialScreen: Screen? = null
+    var pendingInitialRoute: Any? = null
 
 
 /*
@@ -34,10 +36,11 @@ object DeepLinkManager {
                         println("DEEPLINK_MGR: HATA - Verify için Token bulunamadı!")
                         return
                     }
-                    val screen = VerifyScreen(token)
-                    pendingInitialScreen = screen
-                    val result = _navigationEvents.trySend(screen)
-                    println("DEEPLINK_MGR: VerifyScreen Event Gönderildi mi? -> ${result.isSuccess}")
+                    // YENİ: Screen yerine VerifyRoute nesnesi oluşturuluyor
+                    val route = VerifyRoute(token)
+                    pendingInitialRoute = route
+                    val result = _navigationEvents.trySend(route)
+                    println("DEEPLINK_MGR: VerifyRoute Event Gönderildi mi? -> ${result.isSuccess}")
                 }
 
                 basePath.contains("/auth/resetPassword/validate") -> {
@@ -46,10 +49,11 @@ object DeepLinkManager {
                         println("DEEPLINK_MGR: HATA - Reset için Token bulunamadı!")
                         return
                     }
-                    val screen = ResetScreen(token)
-                    pendingInitialScreen = screen
-                    val result = _navigationEvents.trySend(screen)
-                    println("DEEPLINK_MGR: ResetScreen Event Gönderildi mi? -> ${result.isSuccess}")
+                    // YENİ: Screen yerine ResetRoute nesnesi oluşturuluyor
+                    val route = ResetRoute(token)
+                    pendingInitialRoute = route
+                    val result = _navigationEvents.trySend(route)
+                    println("DEEPLINK_MGR: ResetRoute Event Gönderildi mi? -> ${result.isSuccess}")
                 }
 
                 basePath.contains("/profile/") -> {
@@ -60,10 +64,11 @@ object DeepLinkManager {
                     println("DEEPLINK_MGR: Profil ID yakalandı -> $userId")
 
                     if (userId != null) {
-                        val screen = ProfileScreen(userId = userId)
-                        pendingInitialScreen = screen
-                        val result = _navigationEvents.trySend(screen)
-                        println("DEEPLINK_MGR: ProfileScreen Event Gönderildi mi? -> ${result.isSuccess}")
+                        // YENİ: Screen yerine ProfileRoute nesnesi oluşturuluyor
+                        val route = ProfileRoute(userId = userId)
+                        pendingInitialRoute = route
+                        val result = _navigationEvents.trySend(route)
+                        println("DEEPLINK_MGR: ProfileRoute Event Gönderildi mi? -> ${result.isSuccess}")
                     } else {
                         println("DEEPLINK_MGR: HATA - Geçersiz Profil ID!")
                     }
@@ -80,44 +85,40 @@ object DeepLinkManager {
 
  */
 
+
     fun handleLink(url: String) {
         when {
             url.contains("#verify") -> {
                 println("E-posta doğrulama linki yakalandı")
                 val token = extractToken(url)
                 if (!token.isNullOrEmpty()) {
-                    val screen = VerifyScreen(token)
-                    pendingInitialScreen = screen
-                    _navigationEvents.trySend(screen)
+                    val route = VerifyRoute(token)
+                    pendingInitialRoute = route
+                    _navigationEvents.trySend(route)
                 }
             }
             url.contains("#reset") -> {
                 println("Şifre sıfırlama linki yakalandı")
                 val token = extractToken(url)
                 if (!token.isNullOrEmpty()) {
-                    val screen = ResetScreen(token)
-                    pendingInitialScreen = screen
-                    _navigationEvents.trySend(screen)
+                    val route = ResetRoute(token)
+                    pendingInitialRoute = route
+                    _navigationEvents.trySend(route)
                 }
             }
             url.contains("/profile/") -> {
                 println("DEEPLINK_MGR: Profil yönlendirmesi yakalandı")
                 val userIdStr = extractPathParameter(url, "/profile/")
-
-                // userId Long olarak bekliyorsan toLongOrNull kullanıyoruz
                 val userId = userIdStr?.toLongOrNull()
 
                 if (userId != null) {
-                    val screen = ProfileScreen(userId = userId)
-                     pendingInitialScreen = screen
-                    _navigationEvents.trySend(screen)
+                    val route = ProfileRoute(userId = userId)
+                    pendingInitialRoute = route
+                    _navigationEvents.trySend(route)
                 }
             }
         }
     }
-
-
-
 
     private fun extractPathParameter(url: String, pathPrefix: String): String? {
 
@@ -137,7 +138,7 @@ object DeepLinkManager {
     }
 
     fun clear() {
-        pendingInitialScreen = null
+        pendingInitialRoute = null
     }
 
 }

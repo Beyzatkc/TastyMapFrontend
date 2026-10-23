@@ -34,9 +34,9 @@ import androidx.compose.ui.unit.dp
 import org.beem.tastymap.data.model.post.PostResponse
 import org.beem.tastymap.ui.post.detail.PlaceInfoCard
 import org.beem.tastymap.ui.post.detail.PostCaptionSection
-import org.beem.tastymap.ui.post.detail.PostDetailScreenModel
+import org.beem.tastymap.ui.post.detail.PostDetailViewModel
 import org.beem.tastymap.ui.post.postcomment.CommentListUiState
-import org.beem.tastymap.ui.post.postcomment.CommentScreenModel
+import org.beem.tastymap.ui.post.postcomment.CommentViewModel
 import org.beem.tastymap.ui.post.postcomment.components.CommentItem
 import org.beem.tastymap.ui.theme.CustomColors
 import org.jetbrains.compose.resources.stringResource
@@ -44,8 +44,8 @@ import tastymap.composeapp.generated.resources.Res
 import tastymap.composeapp.generated.resources.active_devices_retry
 import tastymap.composeapp.generated.resources.active_devices_retry_cd
 import tastymap.composeapp.generated.resources.be_first_to_comment
-
-
+import tastymap.composeapp.generated.resources.comments_disabled_label_tr
+import tastymap.composeapp.generated.resources.comments_disabled_msg_tr
 @Composable
  fun PostCommentsSection(
     modifier: Modifier = Modifier,
@@ -53,8 +53,8 @@ import tastymap.composeapp.generated.resources.be_first_to_comment
     post: PostResponse,
     commentUiState: CommentListUiState,
     customColors: CustomColors,
-    screenModel: PostDetailScreenModel,
-    commentScreenModel: CommentScreenModel,
+    screenModel: PostDetailViewModel,
+    commentViewModel: CommentViewModel,
     postId: Long,
     onUserClick: (Long) -> Unit,
     onReplyClick: (Long, String) -> Unit,
@@ -87,14 +87,14 @@ import tastymap.composeapp.generated.resources.be_first_to_comment
                         verticalArrangement = Arrangement.Center
                     ) {
                         Text(
-                            text = "Yorumlar Kapalı",
+                            text =stringResource(Res.string.comments_disabled_label_tr),
                             style = MaterialTheme.typography.titleSmall.copy(
                                 color = customColors.textPrimary
                             )
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
-                            text = "Bu gönderi yorumlara kapatılmıştır.",
+                            text = stringResource(Res.string.comments_disabled_msg_tr),
                             style = MaterialTheme.typography.bodyMedium.copy(
                                 color = customColors.textSecondary
                             )
@@ -126,7 +126,7 @@ import tastymap.composeapp.generated.resources.be_first_to_comment
                     ) {
                         FilledTonalButton(
                             onClick = {
-                                commentScreenModel.loadInitialData(postId)
+                                commentViewModel.loadInitialData(postId)
                             },
                             enabled = !commentUiState.isLoading,
                             modifier = Modifier.height(48.dp),
@@ -197,14 +197,15 @@ import tastymap.composeapp.generated.resources.be_first_to_comment
                         comment = comment,
                         uiState = commentUiState,
                         isWeb = true,
+                        isOwnPost = screenModel.isMe(post.userId),
                         checkIsOwnComment = { userId -> screenModel.isMe(userId) },
                         onUserClick = { onUserClick(comment.userId) },
-                        onToggleReplies = { commentScreenModel.toggleReplies(postId, comment.id) },
-                        onLoadMoreReplies = { commentScreenModel.loadNextRepliesPage(postId, comment.id) },
+                        onToggleReplies = { commentViewModel.toggleReplies(postId, comment.id) },
+                        onLoadMoreReplies = { commentViewModel.loadNextRepliesPage(postId, comment.id) },
                         onReplyClick = onReplyClick,
-                        onToggleLike = { id -> commentScreenModel.toggleLike(id, postId) },
+                        onToggleLike = { id -> commentViewModel.toggleLike(id, postId) },
                         onDeleteClick = onDeleteClick,
-                        onPinClick = { id -> commentScreenModel.togglePin(id, postId) },
+                        onPinClick = { id -> commentViewModel.togglePin(id, postId) },
                         onUpdateClick = onUpdateClick
                     )
                 }
@@ -235,7 +236,7 @@ import tastymap.composeapp.generated.resources.be_first_to_comment
                 ) {
                     IconButton(
                         onClick = {
-                            commentScreenModel.loadNextPage(postId)
+                            commentViewModel.loadNextPage(postId)
                         }
                     ) {
                         Icon(

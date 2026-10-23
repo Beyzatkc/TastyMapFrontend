@@ -30,35 +30,35 @@ import org.beem.tastymap.database.TastyDatabase
 import org.beem.tastymap.domain.auth.ClearSessionUseCase
 import org.beem.tastymap.domain.usecase.ToggleBlockUseCase
 import org.beem.tastymap.domain.usecase.ToggleFollowUseCase
-import org.beem.tastymap.ui.auth.forgotPassword.ForgotScreenModel
+import org.beem.tastymap.ui.auth.forgotPassword.ForgotViewModel
 import org.beem.tastymap.ui.auth.forgotPassword.PasswordResetSessionManager
-import org.beem.tastymap.ui.auth.forgotPassword.ResetScreenModel
-import org.beem.tastymap.ui.auth.logReg.LogRegScreenModel
-import org.beem.tastymap.ui.splash.SplashScreenModel
-import org.beem.tastymap.ui.auth.verification.email.EmailScreenModel
-import org.beem.tastymap.ui.auth.verification.loginPending.PendingScreenModel
-import org.beem.tastymap.ui.bottomnav.MainScreenModel
+import org.beem.tastymap.ui.auth.forgotPassword.ResetViewModel
+import org.beem.tastymap.ui.auth.logReg.LogRegViewModel
+import org.beem.tastymap.ui.splash.SplashViewModel
+import org.beem.tastymap.ui.auth.verification.email.EmailViewModel
+import org.beem.tastymap.ui.auth.verification.loginPending.PendingViewModel
+import org.beem.tastymap.ui.bottomnav.MainViewModel
 import org.beem.tastymap.ui.common.NotificationBadgeManager
-import org.beem.tastymap.ui.post.create.CreatePostScreenModel
-import org.beem.tastymap.ui.post.detail.PostDetailScreenModel
-import org.beem.tastymap.ui.post.mypost.MyPostScreenModel
-import org.beem.tastymap.ui.post.mypost.updatepost.EditPostScreenModel
-import org.beem.tastymap.ui.post.otherpost.PostScreenModel
-import org.beem.tastymap.ui.post.postcomment.CommentScreenModel
-import org.beem.tastymap.ui.post.postlike.PostLikesScreenModel
-import org.beem.tastymap.ui.profile.health.HealthScreenModel
-import org.beem.tastymap.ui.profile.myprofile.MyProfileScreenModel
-import org.beem.tastymap.ui.profile.myprofile.editprofile.EditProfileScreenModel
-import org.beem.tastymap.ui.profile.myprofile.notification.NotificationScreenModel
-import org.beem.tastymap.ui.profile.myprofile.settings.SettingsScreenModel
-import org.beem.tastymap.ui.profile.myprofile.settings.activedevices.ActiveDevicesScreenModel
-import org.beem.tastymap.ui.profile.myprofile.settings.blockedusers.BlockedScreenModel
-import org.beem.tastymap.ui.profile.myprofile.settings.changepassword.ChangePasswordScreenModel
-import org.beem.tastymap.ui.profile.myprofile.settings.deleteaccount.DeleteAccountScreenModel
-import org.beem.tastymap.ui.profile.myprofile.visit.VisitScreenModel
-import org.beem.tastymap.ui.profile.otherprofile.ProfileScreenModel
-import org.beem.tastymap.ui.profile.subscribers.SubscribersListScreenModel
-import org.beem.tastymap.ui.search.SearchScreenModel
+import org.beem.tastymap.ui.post.create.CreatePostViewModel
+import org.beem.tastymap.ui.post.detail.PostDetailViewModel
+import org.beem.tastymap.ui.post.mypost.MyPostViewModel
+import org.beem.tastymap.ui.post.mypost.updatepost.EditPostViewModel
+import org.beem.tastymap.ui.post.otherpost.PostViewModel
+import org.beem.tastymap.ui.post.postcomment.CommentViewModel
+import org.beem.tastymap.ui.post.postlike.PostLikesViewModel
+import org.beem.tastymap.ui.profile.health.HealthViewModel
+import org.beem.tastymap.ui.profile.myprofile.MyProfileViewModel
+import org.beem.tastymap.ui.profile.myprofile.editprofile.EditProfileViewModel
+import org.beem.tastymap.ui.profile.myprofile.notification.NotificationViewModel
+import org.beem.tastymap.ui.profile.myprofile.settings.SettingsViewModel
+import org.beem.tastymap.ui.profile.myprofile.settings.activedevices.ActiveDevicesViewModel
+import org.beem.tastymap.ui.profile.myprofile.settings.blockedusers.BlockedViewModel
+import org.beem.tastymap.ui.profile.myprofile.settings.changepassword.ChangePasswordViewModel
+import org.beem.tastymap.ui.profile.myprofile.settings.deleteaccount.DeleteAccountViewModel
+import org.beem.tastymap.ui.profile.myprofile.visit.VisitViewModel
+import org.beem.tastymap.ui.profile.otherprofile.ProfileViewModel
+import org.beem.tastymap.ui.profile.subscribers.SubscribersListViewModel
+import org.beem.tastymap.ui.search.SearchViewModel
 import org.koin.core.qualifier.named
 
 val appModule = module {
@@ -145,42 +145,42 @@ val appModule = module {
     single { PostRepository(get(), get(), get(),get(),get(),get()) }
     factory { PostCommentRepository(get(),get(),get(),get()) }
 
-    factory { LogRegScreenModel(get(), get(), get(), get()) }
-    factory { PendingScreenModel(get(), get(), get(), get()) }
-    factory { EmailScreenModel(get(), get()) }
-    factory { SplashScreenModel(get()) }
-    factory { ForgotScreenModel(get(), get(), get(), get()) }
-    factory { ResetScreenModel(get()) }
-    factory { HealthScreenModel(get()) }
-    factory { SubscribersListScreenModel(get(), get()) }
-    factory { VisitScreenModel(get()) }
-    factory { MyPostScreenModel(get()) }
-    factory { PostScreenModel(get()) }
-    factory { PostDetailScreenModel(get()) }
-    factory { CommentScreenModel(get(),get()) }
+    factory { LogRegViewModel(get(), get(), get(), get()) }
+    factory { PendingViewModel(get(), get(), get(), get()) }
+    factory { EmailViewModel(get(), get()) }
+    factory { SplashViewModel(get()) }
+    factory { ForgotViewModel(get(), get(), get(), get()) }
+    factory { ResetViewModel(get()) }
+    factory { HealthViewModel(get()) }
+    factory { SubscribersListViewModel(get(), get()) }
+    factory { VisitViewModel(get()) }
+    factory { MyPostViewModel(get()) }
+    factory { PostViewModel(get()) }
+    factory { PostDetailViewModel(get()) }
+    factory { CommentViewModel(get(),get()) }
 
-    factory { CreatePostScreenModel(get(),get()) }
-    factory { PostLikesScreenModel(get(),get()) }
-    factory { EditPostScreenModel(get()) }
+    factory { CreatePostViewModel(get(),get()) }
+    factory { PostLikesViewModel(get(),get()) }
+    factory { EditPostViewModel(get()) }
 
     factory { (userId: Long) ->
-        ProfileScreenModel(
+        ProfileViewModel(
             userId = userId,
             repo = get(),
             toggleFollowUseCase = get(),
             toggleBlockUseCase = get()
         )
     }
-    factory { MyProfileScreenModel(get()) }
-    factory { MainScreenModel(get(),get()) }
-    factory { EditProfileScreenModel(get()) }
-    factory { SettingsScreenModel(get(), get(), get(), get()) }
-    factory { ActiveDevicesScreenModel(get()) }
-    factory { ChangePasswordScreenModel(get(), get()) }
-    factory { SearchScreenModel(get()) }
-    factory { NotificationScreenModel(get(), get(), get()) }
-    factory { BlockedScreenModel(get(), get()) }
-    factory { DeleteAccountScreenModel(get(), get()) }
+    factory { MyProfileViewModel(get()) }
+    factory { MainViewModel(get(),get()) }
+    factory { EditProfileViewModel(get()) }
+    factory { SettingsViewModel(get(), get(), get(), get()) }
+    factory { ActiveDevicesViewModel(get()) }
+    factory { ChangePasswordViewModel(get(), get()) }
+    factory { SearchViewModel(get()) }
+    factory { NotificationViewModel(get(), get(), get()) }
+    factory { BlockedViewModel(get(), get()) }
+    factory { DeleteAccountViewModel(get(), get()) }
 
     single<VerifyNavigator> { MobileVerifyNavigator() }
 }

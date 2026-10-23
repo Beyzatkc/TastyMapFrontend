@@ -27,10 +27,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import cafe.adriel.voyager.core.screen.Screen
-import cafe.adriel.voyager.koin.koinScreenModel
-import cafe.adriel.voyager.navigator.LocalNavigator
-import cafe.adriel.voyager.navigator.currentOrThrow
+import androidx.navigation.NavController
 import coil3.compose.AsyncImage
 import io.github.vinceglb.filekit.compose.rememberFilePickerLauncher
 import io.github.vinceglb.filekit.core.PickerType
@@ -42,8 +39,8 @@ import org.beem.tastymap.ui.components.TastyTextField
 import org.beem.tastymap.ui.components.responsiveContentWidth
 import org.beem.tastymap.ui.theme.LocalCustomColors
 import org.beem.tastymap.ui.theme.TastyTheme
-import org.jetbrains.compose.resources.getString
 import org.jetbrains.compose.resources.stringResource
+import org.koin.compose.viewmodel.koinViewModel
 import tastymap.composeapp.generated.resources.Res
 import tastymap.composeapp.generated.resources.edit_profile_back_cd
 import tastymap.composeapp.generated.resources.edit_profile_biography
@@ -57,48 +54,44 @@ import tastymap.composeapp.generated.resources.edit_profile_selected_photo_cd
 import tastymap.composeapp.generated.resources.edit_profile_surname
 import tastymap.composeapp.generated.resources.edit_profile_title
 import tastymap.composeapp.generated.resources.edit_profile_username
-class EditProfileScreen : Screen {
+@Composable
+fun EditProfileScreen(navController: NavController) {
+    val screenModel = koinViewModel<EditProfileViewModel>()
+    val uiState by screenModel.uiState.collectAsState()
 
-    @Composable
-    override fun Content() {
-        val screenModel = koinScreenModel<EditProfileScreenModel>()
-        val uiState by screenModel.uiState.collectAsState()
-        val navigator = LocalNavigator.currentOrThrow
-
-        LaunchedEffect(uiState.successMessageRes) {
-            uiState.successMessageRes?.let { res ->
-                ToastManager.show(getString(res))
-                screenModel.clearMessages()
-                navigator.pop()
-            }
+    LaunchedEffect(uiState.successMessageRes) {
+        uiState.successMessageRes?.let { res ->
+            ToastManager.show(res.toString())
+            screenModel.clearMessages()
+            navController.popBackStack()
         }
-
-        LaunchedEffect(uiState.errorMessage) {
-            uiState.errorMessage?.let { error ->
-                ToastManager.show(error)
-                screenModel.clearMessages()
-            }
-        }
-
-        EditProfileContent(
-            userProfile = uiState.profile,
-            isInitialLoading = uiState.isLoading,
-            isActionLoading = uiState.isActionLoading,
-            usernameError = uiState.usernameError?.let { stringResource(it) },
-            nameError = uiState.nameError?.let { stringResource(it) },
-            surnameError = uiState.surnameError?.let { stringResource(it) },
-            onBackClick = { navigator.pop() },
-            onSaveClick = { username, name, surname, biography, platformFile ->
-                screenModel.updateProfile(
-                    inputUsername = username,
-                    inputName = name,
-                    inputSurname = surname,
-                    inputBiography = biography,
-                    selectedFile = platformFile
-                )
-            }
-        )
     }
+
+    LaunchedEffect(uiState.errorMessage) {
+        uiState.errorMessage?.let { error ->
+            ToastManager.show(error)
+            screenModel.clearMessages()
+        }
+    }
+
+    EditProfileContent(
+        userProfile = uiState.profile,
+        isInitialLoading = uiState.isLoading,
+        isActionLoading = uiState.isActionLoading,
+        usernameError = uiState.usernameError?.let { stringResource(it) },
+        nameError = uiState.nameError?.let { stringResource(it) },
+        surnameError = uiState.surnameError?.let { stringResource(it) },
+        onBackClick = { navController.popBackStack() }, // YENİ: popBackStack()
+        onSaveClick = { username, name, surname, biography, platformFile ->
+            screenModel.updateProfile(
+                inputUsername = username,
+                inputName = name,
+                inputSurname = surname,
+                inputBiography = biography,
+                selectedFile = platformFile
+            )
+        }
+    )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -278,7 +271,6 @@ fun EditProfileContent(
                         }
                     }
 
-                    // 2. Kişisel Bilgiler Bölümü
                     item {
                         Column(
                             modifier = Modifier

@@ -7,6 +7,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.HelpOutline
 import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.Block
 import androidx.compose.material.icons.filled.ChevronRight
@@ -20,7 +21,6 @@ import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Place
 import androidx.compose.material.icons.filled.Policy
-import androidx.compose.material.icons.filled.Restaurant
 import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.*
@@ -30,612 +30,540 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import cafe.adriel.voyager.core.screen.Screen
-import cafe.adriel.voyager.koin.koinScreenModel
-import cafe.adriel.voyager.navigator.LocalNavigator
-import cafe.adriel.voyager.navigator.currentOrThrow
-import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.launch
-import org.beem.tastymap.core.auth.AuthEventBus
+import androidx.navigation.NavController
 import org.beem.tastymap.core.util.ToastManager
-import org.beem.tastymap.ui.auth.logReg.LogRegScreen
 import org.beem.tastymap.ui.components.responsiveContentWidth
-import org.beem.tastymap.ui.profile.myprofile.settings.activedevices.ActiveDevicesScreen
-import org.beem.tastymap.ui.profile.myprofile.settings.blockedusers.BlockedUsersScreen
+import org.beem.tastymap.ui.profile.ActiveDevicesRoute
+import org.beem.tastymap.ui.profile.BlockedUsersRoute
+import org.beem.tastymap.ui.profile.DeleteAccountRoute
+import org.beem.tastymap.ui.profile.EditHealthRoute
+import org.beem.tastymap.ui.profile.PrivacyPolicyRoute
+import org.beem.tastymap.ui.profile.VisitRoute
 import org.beem.tastymap.ui.profile.myprofile.settings.changepassword.ChangePasswordBottomSheet
-import org.beem.tastymap.ui.profile.myprofile.settings.changepassword.ChangePasswordScreenModel
-import org.beem.tastymap.ui.profile.myprofile.settings.deleteaccount.DeleteAccountScreen
-import org.beem.tastymap.ui.profile.myprofile.settings.edithealth.EditHealthScreen
-import org.beem.tastymap.ui.profile.myprofile.visit.VisitScreen
+import org.beem.tastymap.ui.profile.myprofile.settings.changepassword.ChangePasswordViewModel
+
 import org.beem.tastymap.ui.theme.LocalCustomColors
-import org.jetbrains.compose.resources.getString
 import org.jetbrains.compose.resources.stringResource
-import org.koin.compose.koinInject
+import org.koin.compose.viewmodel.koinViewModel
 import tastymap.composeapp.generated.resources.Res
-import tastymap.composeapp.generated.resources.settings_active_devices
-import tastymap.composeapp.generated.resources.settings_app_version
-import tastymap.composeapp.generated.resources.settings_back_cd
-import tastymap.composeapp.generated.resources.settings_blocked_users
-import tastymap.composeapp.generated.resources.settings_cancel
-import tastymap.composeapp.generated.resources.settings_change_password
-import tastymap.composeapp.generated.resources.settings_contact_us
-import tastymap.composeapp.generated.resources.settings_dark_mode
-import tastymap.composeapp.generated.resources.settings_delete_account
-import tastymap.composeapp.generated.resources.settings_language
-import tastymap.composeapp.generated.resources.settings_language_default
-import tastymap.composeapp.generated.resources.settings_logout
-import tastymap.composeapp.generated.resources.settings_logout_dialog_loading_text
-import tastymap.composeapp.generated.resources.settings_logout_dialog_loading_title
-import tastymap.composeapp.generated.resources.settings_logout_dialog_message
-import tastymap.composeapp.generated.resources.settings_logout_dialog_title
-import tastymap.composeapp.generated.resources.settings_notifications
-import tastymap.composeapp.generated.resources.settings_nutrition_preferences
-import tastymap.composeapp.generated.resources.settings_nutrition_preferences_sub
-import tastymap.composeapp.generated.resources.settings_privacy_policy
-import tastymap.composeapp.generated.resources.settings_private_account
-import tastymap.composeapp.generated.resources.settings_private_account_sub
-import tastymap.composeapp.generated.resources.settings_section_account_security
-import tastymap.composeapp.generated.resources.settings_section_activity
-import tastymap.composeapp.generated.resources.settings_section_app_preferences
-import tastymap.composeapp.generated.resources.settings_section_nutrition
-import tastymap.composeapp.generated.resources.settings_section_session_privacy
-import tastymap.composeapp.generated.resources.settings_section_support_about
-import tastymap.composeapp.generated.resources.settings_title
-import tastymap.composeapp.generated.resources.settings_visit_history_sub
-import tastymap.composeapp.generated.resources.visit_history_title
-import kotlin.time.Clock
+import tastymap.composeapp.generated.resources.*
 
-class SettingsScreen() : Screen {
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun SettingsScreen(navController: NavController) {
+    val changePasswordViewModel = koinViewModel<ChangePasswordViewModel>()
+    val changePasswordState by changePasswordViewModel.uiState.collectAsState()
 
-    @OptIn(ExperimentalMaterial3Api::class)
-    @Composable
-    override fun Content() {
-        val changePasswordScreenModel = koinScreenModel<ChangePasswordScreenModel>()
-        val changePasswordState by changePasswordScreenModel.uiState.collectAsState()
+    val settingsViewModel = koinViewModel<SettingsViewModel>()
+    val settingsState by settingsViewModel.uiState.collectAsState()
 
-        val settingsScreenModel = koinScreenModel<SettingsScreenModel>()
-        val settingsState by settingsScreenModel.uiState.collectAsState()
+    val isDarkModePref by settingsViewModel.isDarkMode.collectAsState()
+    val isDarkModeActive = isDarkModePref ?: isSystemInDarkTheme()
 
+    val currentLanguageCode by settingsViewModel.languageCode.collectAsState()
+    var showLanguageDialog by remember { mutableStateOf(false) }
 
-        val isDarkModePref by settingsScreenModel.isDarkMode.collectAsState()
-        val isDarkModeActive = isDarkModePref ?: isSystemInDarkTheme()
+    key(currentLanguageCode) {
+        val customColors = LocalCustomColors.current
 
-        val currentLanguageCode by settingsScreenModel.languageCode.collectAsState()
-        var showLanguageDialog by remember { mutableStateOf(false) }
+        var showChangePasswordSheet by remember { mutableStateOf(false) }
+        var showLogoutDialog by remember { mutableStateOf(false) }
+        var isNotificationsEnabled by remember { mutableStateOf(true) }
 
-
-        key(currentLanguageCode) {
-
-            val customColors = LocalCustomColors.current
-            val navigator = LocalNavigator.currentOrThrow
-
-            var showChangePasswordSheet by remember { mutableStateOf(false) }
-            var showLogoutDialog by remember { mutableStateOf(false) }
-            var isNotificationsEnabled by remember { mutableStateOf(true) }
-
-
-            LaunchedEffect(changePasswordState.successMessageRes) {
-                changePasswordState.successMessageRes?.let { res ->
-                    showChangePasswordSheet = false
-                    ToastManager.show(getString(res))
-                    changePasswordScreenModel.clearMessages()
-                }
+        LaunchedEffect(changePasswordState.successMessageRes) {
+            changePasswordState.successMessageRes?.let { res ->
+                showChangePasswordSheet = false
+                ToastManager.show(res.toString())
+                changePasswordViewModel.clearMessages()
             }
+        }
 
-            LaunchedEffect(settingsState.isLoggedOut) {
-                if (settingsState.isLoggedOut) {
-                    showLogoutDialog = false
-                }
+        LaunchedEffect(settingsState.isLoggedOut) {
+            if (settingsState.isLoggedOut) {
+                showLogoutDialog = false
             }
+        }
 
-            LaunchedEffect(settingsState.errorMessage) {
-                settingsState.errorMessage?.let { message ->
-                    ToastManager.show(message)
-                    settingsScreenModel.clearMessages()
-                }
+        LaunchedEffect(settingsState.errorMessage) {
+            settingsState.errorMessage?.let { message ->
+                ToastManager.show(message)
+                settingsViewModel.clearMessages()
             }
+        }
 
-            Scaffold(
-                containerColor = customColors.background,
-                topBar = {
-                    TopAppBar(
-                        title = {
-                            Text(
-                                text = stringResource(Res.string.settings_title),
-                                style = MaterialTheme.typography.titleLarge.copy(
-                                    color = customColors.textPrimary,
-                                    fontSize = 20.sp,
-                                    fontWeight = FontWeight.SemiBold
-                                )
+        Scaffold(
+            containerColor = customColors.background,
+            topBar = {
+                TopAppBar(
+                    title = {
+                        Text(
+                            text = stringResource(Res.string.settings_title),
+                            style = MaterialTheme.typography.titleLarge.copy(
+                                color = customColors.textPrimary,
+                                fontSize = 20.sp,
+                                fontWeight = FontWeight.SemiBold
                             )
-                        },
-                        navigationIcon = {
-                            IconButton(onClick = { navigator.pop() }) {
-                                Icon(
-                                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                    contentDescription = "Geri",
-                                    tint = customColors.textPrimary,
-                                )
-                            }
-                        },
-                        colors = TopAppBarDefaults.topAppBarColors(
-                            containerColor = customColors.background
                         )
+                    },
+                    navigationIcon = {
+                        IconButton(onClick = { navController.popBackStack() }) { // YENİ: popBackStack()
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = "Geri",
+                                tint = customColors.textPrimary,
+                            )
+                        }
+                    },
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = customColors.background
+                    )
+                )
+            }
+        ) { innerPadding ->
+            if (settingsState.isLoading) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(innerPadding),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator(
+                        color = customColors.gourmetOrange,
+                        strokeWidth = 3.dp
                     )
                 }
-            ) { innerPadding ->
-                if (settingsState.isLoading) {
-                    Box(
+            } else {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(innerPadding),
+                    contentAlignment = Alignment.TopCenter
+                ) {
+                    LazyColumn(
                         modifier = Modifier
-                            .fillMaxSize()
-                            .padding(innerPadding),
-                        contentAlignment = Alignment.Center
+                            .responsiveContentWidth()
+                            .fillMaxHeight()
+                            .padding(horizontal = 16.dp, vertical = 12.dp),
+                        verticalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
-                        CircularProgressIndicator(
-                            color = customColors.gourmetOrange,
-                            strokeWidth = 3.dp
-                        )
-                    }
-                } else {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(innerPadding),
-                        contentAlignment = Alignment.TopCenter
-                    ) {
-                        LazyColumn(
-                            modifier = Modifier
-                                .responsiveContentWidth()
-                                .fillMaxHeight()
-                                .padding(horizontal = 16.dp, vertical = 12.dp),
-                            verticalArrangement = Arrangement.spacedBy(16.dp)
-                        ) {
+                        item {
+                            SettingsSectionHeader(title = stringResource(Res.string.settings_section_account_security))
+                            Card(
+                                colors = CardDefaults.cardColors(containerColor = customColors.surface),
+                                shape = RoundedCornerShape(16.dp),
+                                elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+                            ) {
+                                Column {
+                                    SettingsOptionItem(
+                                        icon = Icons.Default.Lock,
+                                        title = stringResource(Res.string.settings_change_password),
+                                        onClick = {
+                                            changePasswordViewModel.clearMessages()
+                                            showChangePasswordSheet = true
+                                        }
+                                    )
+                                    SettingsDivider()
+                                    SettingsOptionItem(
+                                        icon = Icons.Default.Devices,
+                                        title = stringResource(Res.string.settings_active_devices),
+                                        onClick = {
+                                            navController.navigate(ActiveDevicesRoute)
+                                        }
+                                    )
+                                    SettingsDivider()
+                                    SettingsOptionItem(
+                                        icon = Icons.Default.Block,
+                                        title = stringResource(Res.string.settings_blocked_users),
+                                        onClick = {
+                                            navController.navigate(BlockedUsersRoute)
+                                        }
+                                    )
+                                    SettingsDivider()
 
-                            item {
-                                SettingsSectionHeader(title = stringResource(Res.string.settings_section_account_security))
-                                Card(
-                                    colors = CardDefaults.cardColors(containerColor = customColors.surface),
-                                    shape = RoundedCornerShape(16.dp),
-                                    elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
-                                ) {
-                                    Column {
-                                        SettingsOptionItem(
-                                            icon = Icons.Default.Lock,
-                                            title = stringResource(Res.string.settings_change_password),
-                                            onClick = {
-                                                changePasswordScreenModel.clearMessages()
-                                                showChangePasswordSheet = true
-                                            }
-                                        )
-                                        SettingsDivider()
-                                        SettingsOptionItem(
-                                            icon = Icons.Default.Devices,
-                                            title = stringResource(Res.string.settings_active_devices),
-                                            onClick = {
-                                                navigator.push(ActiveDevicesScreen())
-                                            }
-                                        )
-                                        SettingsDivider()
-                                        SettingsOptionItem(
-                                            icon = Icons.Default.Block,
-                                            title = stringResource(Res.string.settings_blocked_users),
-                                            onClick = {
-                                                navigator.push(BlockedUsersScreen())
-                                            }
-                                        )
-                                        SettingsDivider()
-
-                                        // GİZLİ HESAP (Tıklama mantığı sadece Switch'te)
-                                        SettingsOptionItem(
-                                            icon = Icons.Default.VisibilityOff,
-                                            title = stringResource(Res.string.settings_private_account),
-                                            subtitle = stringResource(Res.string.settings_private_account_sub),
-                                            trailingContent = {
-                                                Switch(
-                                                    checked = settingsState.isAccountPrivate,
-                                                    enabled = !settingsState.isPrivacyLoading,
-                                                    onCheckedChange = { isChecked ->
-                                                        if (!settingsState.isPrivacyLoading) {
-                                                            settingsScreenModel.updatePrivacyStatus(
-                                                                isChecked
-                                                            )
-                                                        }
-                                                    },
-                                                    colors = SwitchDefaults.colors(
-                                                        checkedThumbColor = customColors.surface,
-                                                        checkedTrackColor = customColors.navy,
-                                                        uncheckedThumbColor = customColors.surface,
-                                                        uncheckedTrackColor = customColors.borderStrong,
-                                                        uncheckedBorderColor = customColors.borderStrong
-                                                    )
+                                    SettingsOptionItem(
+                                        icon = Icons.Default.VisibilityOff,
+                                        title = stringResource(Res.string.settings_private_account),
+                                        subtitle = stringResource(Res.string.settings_private_account_sub),
+                                        trailingContent = {
+                                            Switch(
+                                                checked = settingsState.isAccountPrivate,
+                                                enabled = !settingsState.isPrivacyLoading,
+                                                onCheckedChange = { isChecked ->
+                                                    if (!settingsState.isPrivacyLoading) {
+                                                        settingsViewModel.updatePrivacyStatus(isChecked)
+                                                    }
+                                                },
+                                                colors = SwitchDefaults.colors(
+                                                    checkedThumbColor = customColors.surface,
+                                                    checkedTrackColor = customColors.navy,
+                                                    uncheckedThumbColor = customColors.surface,
+                                                    uncheckedTrackColor = customColors.borderStrong,
+                                                    uncheckedBorderColor = customColors.borderStrong
                                                 )
-                                            }
-                                        )
-                                    }
+                                            )
+                                        }
+                                    )
                                 }
                             }
-                            item {
-                                SettingsSectionHeader(title = stringResource(Res.string.settings_section_activity))
-                                Card(
-                                    colors = CardDefaults.cardColors(containerColor = customColors.surface),
-                                    shape = RoundedCornerShape(16.dp),
-                                    elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
-                                ) {
-                                    Column {
-                                        SettingsOptionItem(
-                                            icon = Icons.Default.Place,
-                                            title = stringResource(Res.string.visit_history_title),
-                                            subtitle = stringResource(Res.string.settings_visit_history_sub),
-                                            onClick = {
-                                                navigator.push(VisitScreen())
-                                            }
-                                        )
-                                    }
-                                }
-                            }
+                        }
 
-                            item {
-                                SettingsSectionHeader(title = stringResource(Res.string.settings_section_nutrition))
-                                Card(
-                                    colors = CardDefaults.cardColors(containerColor = customColors.surface),
-                                    shape = RoundedCornerShape(16.dp),
-                                    elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
-                                ) {
-                                    Column {
-                                        SettingsOptionItem(
-                                            icon = Icons.Default.Tune,
-                                            title = stringResource(Res.string.settings_nutrition_preferences),
-                                            subtitle = stringResource(Res.string.settings_nutrition_preferences_sub),
-                                            onClick = {
-                                                navigator.push(EditHealthScreen())
-                                            }
-                                        )
-                                    }
+                        item {
+                            SettingsSectionHeader(title = stringResource(Res.string.settings_section_activity))
+                            Card(
+                                colors = CardDefaults.cardColors(containerColor = customColors.surface),
+                                shape = RoundedCornerShape(16.dp),
+                                elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+                            ) {
+                                Column {
+                                    SettingsOptionItem(
+                                        icon = Icons.Default.Place,
+                                        title = stringResource(Res.string.visit_history_title),
+                                        subtitle = stringResource(Res.string.settings_visit_history_sub),
+                                        onClick = {
+                                            navController.navigate(VisitRoute)
+                                        }
+                                    )
                                 }
                             }
+                        }
 
-                            // 2. Uygulama Tercihleri
-                            item {
-                                SettingsSectionHeader(title = stringResource(Res.string.settings_section_app_preferences))
-                                Card(
-                                    colors = CardDefaults.cardColors(containerColor = customColors.surface),
-                                    shape = RoundedCornerShape(16.dp),
-                                    elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
-                                ) {
-                                    Column {
-                                        // BİLDİRİMLER (Tıklama mantığı sadece Switch'te)
-                                        SettingsOptionItem(
-                                            icon = Icons.Default.Notifications,
-                                            title = stringResource(Res.string.settings_notifications),
-                                            trailingContent = {
-                                                Switch(
-                                                    checked = isNotificationsEnabled,
-                                                    onCheckedChange = { isChecked ->
-                                                        isNotificationsEnabled = isChecked
-                                                    },
-                                                    colors = SwitchDefaults.colors(
-                                                        checkedThumbColor = customColors.surface,
-                                                        checkedTrackColor = customColors.navy,
-                                                        uncheckedThumbColor = customColors.surface,
-                                                        uncheckedTrackColor = customColors.borderStrong,
-                                                        uncheckedBorderColor = customColors.borderStrong
-                                                    )
+                        item {
+                            SettingsSectionHeader(title = stringResource(Res.string.settings_section_nutrition))
+                            Card(
+                                colors = CardDefaults.cardColors(containerColor = customColors.surface),
+                                shape = RoundedCornerShape(16.dp),
+                                elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+                            ) {
+                                Column {
+                                    SettingsOptionItem(
+                                        icon = Icons.Default.Tune,
+                                        title = stringResource(Res.string.settings_nutrition_preferences),
+                                        subtitle = stringResource(Res.string.settings_nutrition_preferences_sub),
+                                        onClick = {
+                                            navController.navigate(EditHealthRoute)
+                                        }
+                                    )
+                                }
+                            }
+                        }
+
+                        item {
+                            SettingsSectionHeader(title = stringResource(Res.string.settings_section_app_preferences))
+                            Card(
+                                colors = CardDefaults.cardColors(containerColor = customColors.surface),
+                                shape = RoundedCornerShape(16.dp),
+                                elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+                            ) {
+                                Column {
+                                    SettingsOptionItem(
+                                        icon = Icons.Default.Notifications,
+                                        title = stringResource(Res.string.settings_notifications),
+                                        trailingContent = {
+                                            Switch(
+                                                checked = isNotificationsEnabled,
+                                                onCheckedChange = { isNotificationsEnabled = it },
+                                                colors = SwitchDefaults.colors(
+                                                    checkedThumbColor = customColors.surface,
+                                                    checkedTrackColor = customColors.navy,
+                                                    uncheckedThumbColor = customColors.surface,
+                                                    uncheckedTrackColor = customColors.borderStrong,
+                                                    uncheckedBorderColor = customColors.borderStrong
                                                 )
-                                            }
-                                        )
-                                        SettingsDivider()
+                                            )
+                                        }
+                                    )
+                                    SettingsDivider()
 
-                                        SettingsOptionItem(
-                                            icon = Icons.Default.DarkMode,
-                                            title = stringResource(Res.string.settings_dark_mode),
-                                            trailingContent = {
-                                                Switch(
-                                                    checked = isDarkModeActive,
-                                                    onCheckedChange = { checked ->
-                                                        settingsScreenModel.toggleDarkMode(checked)
-                                                    },
-                                                    colors = SwitchDefaults.colors(
-                                                        checkedThumbColor = customColors.surface,
-                                                        checkedTrackColor = customColors.navy,
-                                                        uncheckedThumbColor = customColors.surface,
-                                                        uncheckedTrackColor = customColors.borderStrong,
-                                                        uncheckedBorderColor = customColors.borderStrong
-                                                    )
+                                    SettingsOptionItem(
+                                        icon = Icons.Default.DarkMode,
+                                        title = stringResource(Res.string.settings_dark_mode),
+                                        trailingContent = {
+                                            Switch(
+                                                checked = isDarkModeActive,
+                                                onCheckedChange = { checked ->
+                                                    settingsViewModel.toggleDarkMode(checked)
+                                                },
+                                                colors = SwitchDefaults.colors(
+                                                    checkedThumbColor = customColors.surface,
+                                                    checkedTrackColor = customColors.navy,
+                                                    uncheckedThumbColor = customColors.surface,
+                                                    uncheckedTrackColor = customColors.borderStrong,
+                                                    uncheckedBorderColor = customColors.borderStrong
                                                 )
-                                            }
-                                        )
-                                        SettingsDivider()
-                                        SettingsOptionItem(
-                                            icon = Icons.Default.Language,
-                                            title = stringResource(Res.string.settings_language),
-                                            badgeText = if (currentLanguageCode == "tr") "Türkçe" else "English",
-                                            onClick = {
-                                                showLanguageDialog = true
-                                            }
-                                        )
-                                    }
+                                            )
+                                        }
+                                    )
+                                    SettingsDivider()
+                                    SettingsOptionItem(
+                                        icon = Icons.Default.Language,
+                                        title = stringResource(Res.string.settings_language),
+                                        badgeText = if (currentLanguageCode == "tr") "Türkçe" else "English",
+                                        onClick = { showLanguageDialog = true }
+                                    )
                                 }
                             }
+                        }
 
-
-                            item {
-                                SettingsSectionHeader(title = stringResource(Res.string.settings_section_support_about))
-                                Card(
-                                    colors = CardDefaults.cardColors(containerColor = customColors.surface),
-                                    shape = RoundedCornerShape(16.dp),
-                                    elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
-                                ) {
-                                    Column {
-                                        SettingsOptionItem(
-                                            icon = Icons.Default.Policy,
-                                            title = stringResource(Res.string.settings_privacy_policy),
-                                            onClick = {
-                                                navigator.push(PrivacyPolicyScreen())
-                                            }
-                                        )
-                                        SettingsDivider()
-                                        SettingsOptionItem(
-                                            icon = Icons.Default.HelpOutline,
-                                            title = stringResource(Res.string.settings_contact_us),
-                                            onClick = { }
-                                        )
-                                        SettingsDivider()
-                                        SettingsOptionItem(
-                                            icon = Icons.Default.Info,
-                                            title = stringResource(Res.string.settings_app_version),
-                                            badgeText = "v1.0.0",
-                                            showChevron = false
-                                        )
-                                    }
+                        item {
+                            SettingsSectionHeader(title = stringResource(Res.string.settings_section_support_about))
+                            Card(
+                                colors = CardDefaults.cardColors(containerColor = customColors.surface),
+                                shape = RoundedCornerShape(16.dp),
+                                elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+                            ) {
+                                Column {
+                                    SettingsOptionItem(
+                                        icon = Icons.Default.Policy,
+                                        title = stringResource(Res.string.settings_privacy_policy),
+                                        onClick = {
+                                            navController.navigate(PrivacyPolicyRoute)
+                                        }
+                                    )
+                                    SettingsDivider()
+                                    SettingsOptionItem(
+                                        icon = Icons.Default.HelpOutline,
+                                        title = stringResource(Res.string.settings_contact_us),
+                                        onClick = { }
+                                    )
+                                    SettingsDivider()
+                                    SettingsOptionItem(
+                                        icon = Icons.Default.Info,
+                                        title = stringResource(Res.string.settings_app_version),
+                                        badgeText = "v1.0.0",
+                                        showChevron = false
+                                    )
                                 }
                             }
+                        }
 
-                            // 4. Oturum & Gizlilik
-                            item {
-                                SettingsSectionHeader(title = stringResource(Res.string.settings_section_session_privacy))
-                                Card(
-                                    colors = CardDefaults.cardColors(containerColor = customColors.surface),
-                                    shape = RoundedCornerShape(16.dp),
-                                    elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
-                                ) {
-                                    Column {
-                                        SettingsOptionItem(
-                                            icon = Icons.AutoMirrored.Filled.Logout,
-                                            title = stringResource(Res.string.settings_logout),
-                                            textColor = customColors.error,
-                                            iconColor = customColors.error,
-                                            showChevron = false,
-                                            onClick = {
-                                                showLogoutDialog = true
-                                            }
-                                        )
-                                        SettingsDivider()
-                                        SettingsOptionItem(
-                                            icon = Icons.Default.DeleteForever,
-                                            title = stringResource(Res.string.settings_delete_account),
-                                            textColor = customColors.error,
-                                            iconColor = customColors.error,
-                                            showChevron = false,
-                                            onClick = {
-                                                navigator.push(DeleteAccountScreen())
-                                            }
-                                        )
-                                    }
+                        item {
+                            SettingsSectionHeader(title = stringResource(Res.string.settings_section_session_privacy))
+                            Card(
+                                colors = CardDefaults.cardColors(containerColor = customColors.surface),
+                                shape = RoundedCornerShape(16.dp),
+                                elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+                            ) {
+                                Column {
+                                    SettingsOptionItem(
+                                        icon = Icons.AutoMirrored.Filled.Logout,
+                                        title = stringResource(Res.string.settings_logout),
+                                        textColor = customColors.error,
+                                        iconColor = customColors.error,
+                                        showChevron = false,
+                                        onClick = { showLogoutDialog = true }
+                                    )
+                                    SettingsDivider()
+                                    SettingsOptionItem(
+                                        icon = Icons.Default.DeleteForever,
+                                        title = stringResource(Res.string.settings_delete_account),
+                                        textColor = customColors.error,
+                                        iconColor = customColors.error,
+                                        showChevron = false,
+                                        onClick = {
+                                            navController.navigate(DeleteAccountRoute)
+                                        }
+                                    )
                                 }
                             }
+                        }
 
-                            item {
-                                Spacer(modifier = Modifier.height(16.dp))
-                            }
+                        item {
+                            Spacer(modifier = Modifier.height(16.dp))
                         }
                     }
                 }
+            }
 
-                if (showLanguageDialog) {
-                    AlertDialog(
-                        onDismissRequest = { showLanguageDialog = false },
-                        title = {
-                            Text(
-                                text = stringResource(Res.string.settings_language),
-                                style = MaterialTheme.typography.titleMedium.copy(
-                                    fontWeight = FontWeight.Bold,
+            if (showLanguageDialog) {
+                AlertDialog(
+                    onDismissRequest = { showLanguageDialog = false },
+                    title = {
+                        Text(
+                            text = stringResource(Res.string.settings_language),
+                            style = MaterialTheme.typography.titleMedium.copy(
+                                fontWeight = FontWeight.Bold,
+                                color = customColors.textPrimary
+                            )
+                        )
+                    },
+                    text = {
+                        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable {
+                                        settingsViewModel.setLanguage("tr")
+                                        showLanguageDialog = false
+                                    }
+                                    .padding(vertical = 12.dp, horizontal = 8.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                RadioButton(
+                                    selected = currentLanguageCode == "tr",
+                                    onClick = {
+                                        settingsViewModel.setLanguage("tr")
+                                        showLanguageDialog = false
+                                    }
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(
+                                    text = "Türkçe",
+                                    style = MaterialTheme.typography.bodyMedium,
                                     color = customColors.textPrimary
                                 )
-                            )
-                        },
-                        text = {
-                            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                                Row(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .clickable {
-                                            settingsScreenModel.setLanguage("tr")
-                                            showLanguageDialog = false
-                                        }
-                                        .padding(vertical = 12.dp, horizontal = 8.dp),
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    RadioButton(
-                                        selected = currentLanguageCode == "tr",
-                                        onClick = {
-                                            settingsScreenModel.setLanguage("tr")
-                                            showLanguageDialog = false
-                                        }
-                                    )
-                                    Spacer(modifier = Modifier.width(8.dp))
-                                    Text(
-                                        text = "Türkçe",
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        color = customColors.textPrimary
-                                    )
-                                }
-
-                                Row(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .clickable {
-                                            settingsScreenModel.setLanguage("en")
-                                            showLanguageDialog = false
-                                        }
-                                        .padding(vertical = 12.dp, horizontal = 8.dp),
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    RadioButton(
-                                        selected = currentLanguageCode == "en",
-                                        onClick = {
-                                            settingsScreenModel.setLanguage("en")
-                                            showLanguageDialog = false
-                                        }
-                                    )
-                                    Spacer(modifier = Modifier.width(8.dp))
-                                    Text(
-                                        text = "English",
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        color = customColors.textPrimary
-                                    )
-                                }
                             }
-                        },
-                        confirmButton = {
-                            TextButton(onClick = { showLanguageDialog = false }) {
+
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable {
+                                        settingsViewModel.setLanguage("en")
+                                        showLanguageDialog = false
+                                    }
+                                    .padding(vertical = 12.dp, horizontal = 8.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                RadioButton(
+                                    selected = currentLanguageCode == "en",
+                                    onClick = {
+                                        settingsViewModel.setLanguage("en")
+                                        showLanguageDialog = false
+                                    }
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(
+                                    text = "English",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = customColors.textPrimary
+                                )
+                            }
+                        }
+                    },
+                    confirmButton = {
+                        TextButton(onClick = { showLanguageDialog = false }) {
+                            Text(
+                                text = stringResource(Res.string.settings_cancel),
+                                color = customColors.textSecondary
+                            )
+                        }
+                    },
+                    containerColor = customColors.surface,
+                    shape = RoundedCornerShape(20.dp)
+                )
+            }
+
+            if (showLogoutDialog) {
+                AlertDialog(
+                    onDismissRequest = {
+                        if (!settingsState.isActionLoading) showLogoutDialog = false
+                    },
+                    icon = {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.Logout,
+                            contentDescription = null,
+                            tint = customColors.error,
+                            modifier = Modifier.size(28.dp)
+                        )
+                    },
+                    title = {
+                        Text(
+                            text = if (settingsState.isActionLoading) stringResource(Res.string.settings_logout_dialog_loading_title) else stringResource(
+                                Res.string.settings_logout_dialog_title
+                            ),
+                            style = MaterialTheme.typography.titleMedium.copy(
+                                fontWeight = FontWeight.Bold,
+                                color = customColors.textPrimary
+                            )
+                        )
+                    },
+                    text = {
+                        if (settingsState.isActionLoading) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                                modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp)
+                            ) {
+                                CircularProgressIndicator(
+                                    color = customColors.error,
+                                    strokeWidth = 2.5.dp
+                                )
+                                Text(
+                                    text = stringResource(Res.string.settings_logout_dialog_loading_text),
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = customColors.textPrimary
+                                )
+                            }
+                        } else {
+                            Text(
+                                text = stringResource(Res.string.settings_logout_dialog_message),
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = customColors.textSecondary
+                            )
+                        }
+                    },
+                    confirmButton = {
+                        if (!settingsState.isActionLoading) {
+                            Button(
+                                onClick = { settingsViewModel.logout() },
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = customColors.error
+                                ),
+                                shape = RoundedCornerShape(10.dp)
+                            ) {
+                                Text(
+                                    text = stringResource(Res.string.settings_logout),
+                                    style = MaterialTheme.typography.labelLarge.copy(
+                                        fontWeight = FontWeight.Bold,
+                                        color = customColors.surface
+                                    )
+                                )
+                            }
+                        }
+                    },
+                    dismissButton = {
+                        if (!settingsState.isActionLoading) {
+                            TextButton(onClick = { showLogoutDialog = false }) {
                                 Text(
                                     text = stringResource(Res.string.settings_cancel),
                                     color = customColors.textSecondary
                                 )
                             }
-                        },
-                        containerColor = customColors.surface,
-                        shape = RoundedCornerShape(20.dp)
-                    )
-                }
-
-                if (showLogoutDialog) {
-                    AlertDialog(
-                        onDismissRequest = {
-                            if (!settingsState.isActionLoading) showLogoutDialog = false
-                        },
-                        icon = {
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Filled.Logout,
-                                contentDescription = null,
-                                tint = customColors.error,
-                                modifier = Modifier.size(28.dp)
-                            )
-                        },
-                        title = {
-                            Text(
-                                text = if (settingsState.isActionLoading) stringResource(Res.string.settings_logout_dialog_loading_title) else stringResource(
-                                    Res.string.settings_logout_dialog_title
-                                ),
-                                style = MaterialTheme.typography.titleMedium.copy(
-                                    fontWeight = FontWeight.Bold,
-                                    color = customColors.textPrimary
-                                )
-                            )
-                        },
-                        text = {
-                            if (settingsState.isActionLoading) {
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(12.dp),
-                                    modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp)
-                                ) {
-                                    CircularProgressIndicator(
-                                        color = customColors.error,
-                                        strokeWidth = 2.5.dp
-                                    )
-                                    Text(
-                                        text = stringResource(Res.string.settings_logout_dialog_loading_text),
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        color = customColors.textPrimary
-                                    )
-                                }
-                            } else {
-                                Text(
-                                    text = stringResource(Res.string.settings_logout_dialog_message),
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = customColors.textSecondary
-                                )
-                            }
-                        },
-                        confirmButton = {
-                            if (!settingsState.isActionLoading) {
-                                Button(
-                                    onClick = {
-                                        settingsScreenModel.logout()
-                                    },
-                                    colors = ButtonDefaults.buttonColors(
-                                        containerColor = customColors.error
-                                    ),
-                                    shape = RoundedCornerShape(10.dp)
-                                ) {
-                                    Text(
-                                        text = stringResource(Res.string.settings_logout),
-                                        style = MaterialTheme.typography.labelLarge.copy(
-                                            fontWeight = FontWeight.Bold,
-                                            color = customColors.surface
-                                        )
-                                    )
-                                }
-                            }
-                        },
-                        dismissButton = {
-                            if (!settingsState.isActionLoading) {
-                                TextButton(onClick = { showLogoutDialog = false }) {
-                                    Text(
-                                        text = stringResource(Res.string.settings_cancel),
-                                        color = customColors.textSecondary
-                                    )
-                                }
-                            }
-                        },
-                        containerColor = customColors.surface,
-                        shape = RoundedCornerShape(20.dp)
-                    )
-                }
-
-                if (showChangePasswordSheet) {
-                    ChangePasswordBottomSheet(
-                        isActionLoading = changePasswordState.isLoading,
-                        errorMessage = changePasswordState.errorMessage,
-                        oldPasswordError = changePasswordState.oldPasswordError?.let {
-                            stringResource(
-                                it
-                            )
-                        },
-                        newPasswordError = changePasswordState.newPasswordError?.let {
-                            stringResource(
-                                it
-                            )
-                        },
-                        againNewPasswordError = changePasswordState.againNewPasswordError?.let {
-                            stringResource(
-                                it
-                            )
-                        },
-                        onDismissRequest = {
-                            showChangePasswordSheet = false
-                            changePasswordScreenModel.clearMessages()
-                        },
-                        onClearError = {
-                            changePasswordScreenModel.clearMessages()
-                        },
-                        onSubmitClick = { oldPassword, newPassword, againNew ->
-                            changePasswordScreenModel.changePassword(
-                                oldPassword = oldPassword,
-                                newPassword = newPassword,
-                                againNew = againNew
-                            )
                         }
-                    )
-                }
+                    },
+                    containerColor = customColors.surface,
+                    shape = RoundedCornerShape(20.dp)
+                )
+            }
+
+            if (showChangePasswordSheet) {
+                ChangePasswordBottomSheet(
+                    isActionLoading = changePasswordState.isLoading,
+                    errorMessage = changePasswordState.errorMessage,
+                    oldPasswordError = changePasswordState.oldPasswordError?.let { stringResource(it) },
+                    newPasswordError = changePasswordState.newPasswordError?.let { stringResource(it) },
+                    againNewPasswordError = changePasswordState.againNewPasswordError?.let { stringResource(it) },
+                    onDismissRequest = {
+                        showChangePasswordSheet = false
+                        changePasswordViewModel.clearMessages()
+                    },
+                    onClearError = {
+                        changePasswordViewModel.clearMessages()
+                    },
+                    onSubmitClick = { oldPassword, newPassword, againNew ->
+                        changePasswordViewModel.changePassword(
+                            oldPassword = oldPassword,
+                            newPassword = newPassword,
+                            againNew = againNew
+                        )
+                    }
+                )
             }
         }
     }
 }
+
 @Composable
 private fun SettingsSectionHeader(title: String) {
     val customColors = LocalCustomColors.current
@@ -668,7 +596,7 @@ private fun SettingsOptionItem(
     iconColor: Color? = null,
     showChevron: Boolean = true,
     trailingContent: (@Composable () -> Unit)? = null,
-    onClick: (() -> Unit)? = null // Opsiyonel duruma getirildi
+    onClick: (() -> Unit)? = null
 ) {
     val customColors = LocalCustomColors.current
     val effectiveIconColor = iconColor ?: customColors.textSecondary
@@ -746,4 +674,3 @@ private fun SettingsOptionItem(
         }
     }
 }
-

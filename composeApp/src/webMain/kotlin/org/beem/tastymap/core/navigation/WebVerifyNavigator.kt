@@ -1,24 +1,33 @@
 package org.beem.tastymap.core.navigation
 
-import cafe.adriel.voyager.navigator.Navigator
-import org.beem.tastymap.ui.auth.forgotPassword.ChangeSuccessScreen
-import org.beem.tastymap.ui.auth.logReg.LogRegScreen
-import org.beem.tastymap.ui.auth.verification.email.VerificationSuccessScreen
+import androidx.navigation.NavController
+import org.beem.tastymap.ui.auth.ChangeSuccessRoute
+import org.beem.tastymap.ui.auth.LogRegRoute
+import org.beem.tastymap.ui.auth.VerificationSuccessRoute
+
 
 class WebVerifyNavigator() : VerifyNavigator {
-    override suspend fun verifyEmailOnSuccess(navigator: Navigator) {
-        navigator.replaceAll(VerificationSuccessScreen())
+    override suspend fun verifyEmailOnSuccess(navController: NavController) {
+        navController.navigate(VerificationSuccessRoute) {
+            popUpTo(navController.graph.id) { inclusive = true }
+        }
     }
 
-    override suspend fun verifyEmailNavigationTwo(navigator: Navigator) {
-        navigator.replaceAll(LogRegScreen())
+    override suspend fun verifyEmailNavigationTwo(navController: NavController) {
+        navController.navigate(LogRegRoute) {
+            popUpTo(navController.graph.id) { inclusive = true }
+        }
     }
 
-    override suspend fun changePasswordOnSuccess(navigator: Navigator) {
-        navigator.replaceAll(LogRegScreen())
+    override suspend fun changePasswordOnSuccess(navController: NavController) {
+        navController.navigate(LogRegRoute) {
+            popUpTo(navController.graph.id) { inclusive = true }
+        }
     }
 
-    override suspend fun changePasswordOnSuccessTwo(navigator: Navigator) {
-        navigator.replaceAll(ChangeSuccessScreen())
+    override suspend fun changePasswordOnSuccessTwo(navController: NavController) {
+        navController.navigate(ChangeSuccessRoute) {
+            popUpTo(navController.graph.id) { inclusive = true }
+        }
     }
 }

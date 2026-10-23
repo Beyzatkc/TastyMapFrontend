@@ -1,10 +1,10 @@
 package org.beem.tastymap.core.navigation
-import cafe.adriel.voyager.navigator.Navigator
+import androidx.navigation.NavController
 
 interface VerifyNavigator {
-    suspend fun verifyEmailOnSuccess(navigator: Navigator)
-    suspend fun verifyEmailNavigationTwo(navigator: Navigator)
-    suspend fun changePasswordOnSuccess(navigator: Navigator)
+    suspend fun verifyEmailOnSuccess(navController: NavController)
+    suspend fun verifyEmailNavigationTwo(navController: NavController)
+    suspend fun changePasswordOnSuccess(navController: NavController)
 
-    suspend fun changePasswordOnSuccessTwo(navigator: Navigator)
+    suspend fun changePasswordOnSuccessTwo(navController: NavController)
 }

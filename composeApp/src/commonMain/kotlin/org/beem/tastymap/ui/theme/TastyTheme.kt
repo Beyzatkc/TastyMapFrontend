@@ -11,6 +11,7 @@ import androidx.compose.ui.unit.dp
 
 // 1. ÖZEL RENK PALETİ TANIMI (surface alanı eklendi)
 data class CustomColors(
+    val bottomBackground: Color,
     val navy: Color,
     val navyDark: Color,
     val navySoft: Color,
@@ -43,6 +44,7 @@ data class CustomColors(
 )
 
 val LightCustomColors = CustomColors(
+    bottomBackground = AppColors.placeHolderBack,
     navy = AppColors.NavyBlue,
     navyDark = AppColors.NavyDark,
     navySoft = AppColors.NavySoft,
@@ -75,9 +77,11 @@ val LightCustomColors = CustomColors(
 )
 
 val DarkCustomColors = CustomColors(
+    bottomBackground = Color(0xFF000F45),
     navy = Color(0xFF82A0FF),
     navyDark = Color(0xFF000F45),
     navySoft = Color(0xFF1E3A8A),
+
     backgroundBlue = Color(0xFF0F172A),
     background = Color(0xFF0F172A),
     surface = Color(0xFF1E293B),

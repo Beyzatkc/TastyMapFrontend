@@ -1,7 +1,7 @@
 package org.beem.tastymap.ui.profile.subscribers
 
-import cafe.adriel.voyager.core.model.ScreenModel
-import cafe.adriel.voyager.core.model.screenModelScope
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
@@ -11,10 +11,10 @@ import org.beem.tastymap.data.repository.SubscribersRepository
 import org.beem.tastymap.domain.model.RelationStatus
 import org.beem.tastymap.domain.usecase.ToggleFollowUseCase
 
-class SubscribersListScreenModel(
+class SubscribersListViewModel(
     private val subscribersRepository: SubscribersRepository,
     private val toggleFollowUseCase: ToggleFollowUseCase,
-) : ScreenModel {
+) : ViewModel() {
 
     private val _uiState = MutableStateFlow(SubscribersListUiState())
     val uiState = _uiState.asStateFlow()
@@ -55,7 +55,7 @@ class SubscribersListScreenModel(
     }
 
     private fun fetchPage(userId: Long,page: Int, isRefresh: Boolean) {
-        screenModelScope.launch {
+        viewModelScope.launch {
             val result = when (currentListType) {
                 SubscriberListType.SUBSCRIBERS -> {
                     subscribersRepository.getUserSubscribers(userId = userId, page = page, size = pageSize,forceFetch = isRefresh)
@@ -104,7 +104,7 @@ class SubscribersListScreenModel(
     }
 
     fun handleFollowAction(targetUserId: Long, currentStatus: RelationStatus) {
-        screenModelScope.launch {
+        viewModelScope.launch {
             val action = ToggleFollowUseCase.Action.ToggleFollow(currentStatus)
 
             when (val result = toggleFollowUseCase(targetUserId, action)) {

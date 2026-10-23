@@ -1,0 +1,290 @@
+package org.beem.tastymap.ui.auth.verification.loginPending
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancelAndJoin
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.receiveAsFlow
+import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
+import org.beem.tastymap.core.network.ResultWrapper
+import org.beem.tastymap.core.provider.DeviceInfoProvider
+import org.beem.tastymap.data.model.auth.ApprovedRefreshRequestDTO
+import org.beem.tastymap.data.model.auth.Status
+import org.beem.tastymap.data.model.domain.SecurityEventType
+import org.beem.tastymap.data.remote.AuthWebSocketClient
+import org.beem.tastymap.data.repository.AuthRepository
+import org.beem.tastymap.data.repository.UserSecurityRepository
+import org.beem.tastymap.ui.auth.common.AuthEffect
+import org.beem.tastymap.ui.auth.common.AuthLifecycleEvent
+import org.beem.tastymap.ui.auth.common.CountdownTimer
+import org.beem.tastymap.ui.auth.verification.RequestState
+import org.beem.tastymap.ui.profile.myprofile.settings.UiMessage
+import tastymap.composeapp.generated.resources.Res
+import tastymap.composeapp.generated.resources.pending_email_sent
+import tastymap.composeapp.generated.resources.pending_login_approved
+import tastymap.composeapp.generated.resources.pending_login_failed
+import tastymap.composeapp.generated.resources.pending_login_rejected
+import kotlin.Boolean
+import kotlin.concurrent.atomics.AtomicBoolean
+import kotlin.concurrent.atomics.ExperimentalAtomicApi
+
+class PendingViewModel(
+    private val authRepo: AuthRepository,
+    private val securityRepo: UserSecurityRepository,
+    private val authWebSocketClient: AuthWebSocketClient,
+    private val deviceInfoProvider: DeviceInfoProvider
+) : ViewModel() {
+
+    val timer = CountdownTimer(viewModelScope)
+
+    val timeLeft: StateFlow<Int> = timer.timeLeft
+
+    fun startTimer() {
+        timer.startTime()
+    }
+    companion object {
+        private const val RECONNECT_DELAY = 5000L
+    }
+
+    enum class ConnectionState {
+        DISCONNECTED,
+        CONNECTING,
+        STOPPED
+    }
+
+    @OptIn(ExperimentalAtomicApi::class)
+    private val isConnecting = AtomicBoolean(false)
+
+    private val _sendState = MutableStateFlow(RequestState())
+    val sendState = _sendState.asStateFlow()
+
+    private var wasBackgrounded = false
+
+
+
+    private var webSocketJob: Job? = null
+    private var connectionState = ConnectionState.DISCONNECTED
+
+    private val _pendingLogin = Channel<AuthEffect>()
+    val pendingLogin = _pendingLogin.receiveAsFlow()
+
+
+    private val _uiMessage = Channel<UiMessage>()
+    val uiMessage = _uiMessage.receiveAsFlow()
+
+
+
+    private suspend fun createRefreshRequest(
+        deviceId: String
+    ): ApprovedRefreshRequestDTO {
+
+        return ApprovedRefreshRequestDTO(
+            deviceId = deviceId,
+            userAgent = deviceInfoProvider.getUserAgent(),
+            fcmToken = deviceInfoProvider.getFcmToken()
+        )
+    }
+
+
+    private var lifecycleJob: Job? = null
+
+    fun onLifecycleEvent(
+        event: AuthLifecycleEvent,
+        deviceId: String
+    ) {
+        when (event) {
+            AuthLifecycleEvent.Resume -> {
+                connectionState = ConnectionState.CONNECTING
+                lifecycleJob?.cancel()
+                lifecycleJob = viewModelScope.launch {
+                    val dto = createRefreshRequest(deviceId)
+                    if (wasBackgrounded) {
+                        wasBackgrounded = false
+                        val handled = isUsedNotification(dto)
+
+                        if (!handled) {
+                            startWebSocket(dto)
+                        }
+                    } else {
+                        startWebSocket(dto)
+                    }
+                }
+            }
+            AuthLifecycleEvent.Stop -> {
+                wasBackgrounded = true
+                lifecycleJob?.cancel()
+                stopWebSocket()
+            }
+            AuthLifecycleEvent.Pause -> Unit
+        }
+    }
+
+    fun resendEmail(deviceId: String) {
+        if (_sendState.value.isLoading) return
+
+        viewModelScope.launch {
+            _sendState.update { it.copy(isLoading = true) }
+
+            when (val result = securityRepo.resendSecurityMail(deviceId)) {
+                is ResultWrapper.Success -> {
+                    val message = result.data
+                    if (message != null) {
+                        _uiMessage.send(UiMessage.Dynamic(message))
+                    } else {
+                        _uiMessage.send(UiMessage.Resource(Res.string.pending_email_sent))
+                    }
+                }
+                is ResultWrapper.Error -> {
+                    _uiMessage.send(UiMessage.Dynamic(result.message))
+                }
+            }
+            _sendState.update { it.copy(isLoading = false) }
+        }
+    }
+
+
+    private suspend fun isUsedNotification(
+        dto: ApprovedRefreshRequestDTO
+    ): Boolean {
+        return when (val result = securityRepo.isUsedNotification(dto.deviceId)) {
+            is ResultWrapper.Success -> {
+                println("succese1 girdi")
+                println("status=${result.data.status} used=${result.data.isUsed}")
+                if (result.data.status == Status.APPROVED && result.data.isUsed == true) {
+                    println("verifyLogin çağrılıyor")
+                    when (val verifyResult =authRepo.verifyLogin(dto)) {
+                        is ResultWrapper.Success -> {
+                            _uiMessage.send(UiMessage.Resource(Res.string.pending_login_approved))
+                            _pendingLogin.send(AuthEffect.NavigateToHome)
+                        }
+                        is ResultWrapper.Error -> {
+                            _uiMessage.send(UiMessage.Dynamic(verifyResult.message))
+                            _pendingLogin.send(AuthEffect.NavigateToLogin)
+                        }
+                    }
+                    stopWebSocket()
+                    true
+                }
+                else if (result.data.status == Status.REJECTED) {
+                    _uiMessage.send(UiMessage.Resource(Res.string.pending_login_rejected))
+                    _pendingLogin.send(AuthEffect.NavigateToLogin)
+                    stopWebSocket()
+                    true
+                }
+                else {
+                    false
+                }
+            }
+            is ResultWrapper.Error ->{
+                _uiMessage.send(UiMessage.Dynamic(result.message))
+                println("Bildirim durumu kontrol edilirken hata: ${result.message}")
+                false
+            }
+        }
+    }
+
+    @OptIn(ExperimentalAtomicApi::class)
+    private fun startWebSocket(dto: ApprovedRefreshRequestDTO) {
+
+        if (!isConnecting.compareAndSet(false, true))
+            return
+        webSocketJob?.cancel()
+        webSocketJob = viewModelScope.launch {
+
+            val eventJob = launch {
+
+                collectEvents(dto)
+            }
+            try{
+
+                while (isActive && connectionState != ConnectionState.STOPPED) {
+
+                    try {
+                        authWebSocketClient.connect(dto.deviceId)
+                    } catch (e: Exception) {
+                        println(e)
+                    }
+                    if (!isActive || connectionState == ConnectionState.STOPPED) break
+                    delay(RECONNECT_DELAY)
+                }
+            }finally{
+                eventJob.cancelAndJoin()
+                isConnecting.store(false)
+                if (connectionState != ConnectionState.STOPPED) {
+                    connectionState = ConnectionState.DISCONNECTED
+                }
+            }
+        }
+    }
+
+    private suspend fun collectEvents(
+        dto: ApprovedRefreshRequestDTO
+    ) {
+        authWebSocketClient.events.collect { event ->
+            when (event.type) {
+                SecurityEventType.LOGIN_APPROVED -> {
+                    handleApproved(dto)
+                }
+                SecurityEventType.LOGIN_REJECTED -> {
+                    handleRejected()
+                }
+
+                else -> Unit
+            }
+        }
+    }
+    private suspend fun handleApproved(
+        dto: ApprovedRefreshRequestDTO
+    ) {
+        when (val result = authRepo.verifyLogin(dto)) {
+            is ResultWrapper.Success -> {
+                _uiMessage.send(UiMessage.Resource(Res.string.pending_login_approved))
+                _pendingLogin.send(AuthEffect.NavigateToHome)
+                stopWebSocket()
+            }
+
+            is ResultWrapper.Error -> {
+                val error = result.message
+                if (error != null) {
+                    _uiMessage.send(UiMessage.Dynamic(error))
+                } else {
+                    _uiMessage.send(UiMessage.Resource(Res.string.pending_login_failed))
+                }
+                _pendingLogin.send(AuthEffect.NavigateToLogin)
+                stopWebSocket()
+            }
+
+        }
+    }
+
+    private suspend fun handleRejected() {
+        stopWebSocket()
+        _uiMessage.send(UiMessage.Resource(Res.string.pending_login_rejected))
+        _pendingLogin.send(AuthEffect.NavigateToLogin)
+
+    }
+
+    @OptIn(ExperimentalAtomicApi::class)
+    fun stopWebSocket() {
+        connectionState = ConnectionState.STOPPED
+        isConnecting.store(false)
+
+        webSocketJob?.cancel()
+
+        viewModelScope.launch {
+            try {
+                authWebSocketClient.disconnect()
+            } catch (e: Exception) {
+                println("Disconnect hatası: $e")
+            }
+        }
+    }
+
+}
+

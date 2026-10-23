@@ -3,6 +3,7 @@ package org.beem.tastymap.ui.theme
 import androidx.compose.ui.graphics.Color
 
 object AppColors {
+    val DarkBottomBackground = Color(0xFF14263D)
     // Lacivert Tonları
     val NavyBlue = Color(0xFF001970)
     val NavyDark = Color(0xFF000F45)

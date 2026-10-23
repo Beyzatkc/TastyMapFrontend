@@ -1,7 +1,7 @@
 package org.beem.tastymap.ui.profile.health
-
 import androidx.compose.animation.*
-import androidx.compose.animation.core.*
+import androidx.compose.animation.core.EaseOutCubic
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -9,7 +9,10 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.*
+import androidx.compose.material.icons.rounded.AutoAwesome
+import androidx.compose.material.icons.rounded.HealthAndSafety
+import androidx.compose.material.icons.rounded.Psychology
+import androidx.compose.material.icons.rounded.Restaurant
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -21,114 +24,101 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import cafe.adriel.voyager.core.screen.Screen
-import cafe.adriel.voyager.koin.koinScreenModel
-import cafe.adriel.voyager.navigator.LocalNavigator
-import cafe.adriel.voyager.navigator.Navigator
-import cafe.adriel.voyager.navigator.currentOrThrow
+import androidx.navigation.NavController
 import org.beem.tastymap.core.util.ToastManager
+import org.beem.tastymap.ui.bottomnav.ProfileTabRoute
 import org.beem.tastymap.ui.components.TastyButton
-import org.beem.tastymap.ui.profile.myprofile.MyProfileScreen
+import org.beem.tastymap.ui.profile.HealthWizardRoute
 import org.beem.tastymap.ui.theme.CustomColors
 import org.beem.tastymap.ui.theme.LocalCustomColors
 import org.jetbrains.compose.resources.stringResource
+import org.koin.compose.viewmodel.koinViewModel
 import tastymap.composeapp.generated.resources.Res
-import tastymap.composeapp.generated.resources.onboarding_feature_healthy_desc
-import tastymap.composeapp.generated.resources.onboarding_feature_healthy_title
-import tastymap.composeapp.generated.resources.onboarding_feature_original_desc
-import tastymap.composeapp.generated.resources.onboarding_feature_original_title
-import tastymap.composeapp.generated.resources.onboarding_feature_smart_desc
-import tastymap.composeapp.generated.resources.onboarding_feature_smart_title
-import tastymap.composeapp.generated.resources.onboarding_skip_btn
-import tastymap.composeapp.generated.resources.onboarding_start_btn
-import tastymap.composeapp.generated.resources.onboarding_subtitle
-import tastymap.composeapp.generated.resources.onboarding_tagline
-import tastymap.composeapp.generated.resources.onboarding_welcome
+import tastymap.composeapp.generated.resources.*
 
-class OnBoardingScreen : Screen {
+@Composable
+fun OnBoardingScreen(navController: NavController) {
+    var showContent by remember { mutableStateOf(false) }
+    val screenModel = koinViewModel<HealthViewModel>()
+    val state by screenModel.healthState.collectAsState()
 
-    @Composable
-    override fun Content() {
-        var showContent by remember { mutableStateOf(false) }
-        val screenModel = koinScreenModel<HealthScreenModel>()
-        val state by screenModel.healthState.collectAsState()
-        val navigator = LocalNavigator.currentOrThrow
+    LaunchedEffect(Unit) {
+        showContent = true
+    }
 
-        LaunchedEffect(Unit) {
-            showContent = true
-        }
-
-        LaunchedEffect(state.isSuccess) {
-            if (state.isSuccess) {
-                navigator.replace(MyProfileScreen())
-                screenModel.resetSuccessState()
+    LaunchedEffect(state.isSuccess) {
+        if (state.isSuccess) {
+            navController.navigate(ProfileTabRoute) {
+                popUpTo(0) { inclusive = true }
             }
+            screenModel.resetSuccessState()
         }
-        LaunchedEffect(screenModel.uiMessage) {
-            screenModel.uiMessage.collect { message ->
-                ToastManager.show(message)
-            }
+    }
+
+    LaunchedEffect(screenModel.uiMessage) {
+        screenModel.uiMessage.collect { message ->
+            ToastManager.show(message)
         }
+    }
 
-        val customColors = LocalCustomColors.current
-        val scrollState = rememberScrollState()
+    val customColors = LocalCustomColors.current
+    val scrollState = rememberScrollState()
 
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(customColors.background),
-            contentAlignment = Alignment.Center
-        ) {
-            AnimatedVisibility(
-                visible = showContent,
-                enter = fadeIn(animationSpec = tween(800)) +
-                        slideInVertically(
-                            initialOffsetY = { it / 10 },
-                            animationSpec = tween(800, easing = EaseOutCubic)
-                        )
-            ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .statusBarsPadding()
-                        .navigationBarsPadding()
-                        .padding(horizontal = 24.dp)
-                        .widthIn(max = 440.dp)
-                        .verticalScroll(scrollState),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center
-                ) {
-                    Spacer(modifier = Modifier.height(32.dp))
-
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        WelcomeLogo(customColors = customColors)
-
-                        Spacer(modifier = Modifier.height(16.dp))
-
-                        Text(
-                            text = stringResource(Res.string.onboarding_subtitle),
-                            fontSize = 15.sp,
-                            lineHeight = 22.sp,
-                            textAlign = TextAlign.Center,
-                            color = customColors.textSecondary,
-                            fontWeight = FontWeight.Medium
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.height(32.dp))
-
-                    WelcomeCardContent(
-                        customColors = customColors,
-                        navigator = navigator,
-                        screenModel = screenModel,
-                        isLoading = state.isActionLoading
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(customColors.background),
+        contentAlignment = Alignment.Center
+    ) {
+        AnimatedVisibility(
+            visible = showContent,
+            enter = fadeIn(animationSpec = tween(800)) +
+                    slideInVertically(
+                        initialOffsetY = { it / 10 },
+                        animationSpec = tween(800, easing = EaseOutCubic)
                     )
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .statusBarsPadding()
+                    .navigationBarsPadding()
+                    .padding(horizontal = 24.dp)
+                    .widthIn(max = 440.dp)
+                    .verticalScroll(scrollState),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) {
+                Spacer(modifier = Modifier.height(32.dp))
 
-                    Spacer(modifier = Modifier.height(32.dp))
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    WelcomeLogo(customColors = customColors)
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    Text(
+                        text = stringResource(Res.string.onboarding_subtitle),
+                        fontSize = 15.sp,
+                        lineHeight = 22.sp,
+                        textAlign = TextAlign.Center,
+                        color = customColors.textSecondary,
+                        fontWeight = FontWeight.Medium
+                    )
                 }
+
+                Spacer(modifier = Modifier.height(32.dp))
+
+                WelcomeCardContent(
+                    customColors = customColors,
+                    navController = navController, // YENİ: NavController aktarılıyor
+                    screenModel = screenModel,
+                    isLoading = state.isActionLoading
+                )
+
+                Spacer(modifier = Modifier.height(32.dp))
             }
         }
     }
@@ -216,8 +206,8 @@ fun WelcomeLogo(customColors: CustomColors) {
 @Composable
 fun WelcomeCardContent(
     customColors: CustomColors,
-    navigator: Navigator,
-    screenModel: HealthScreenModel,
+    navController: NavController,
+    screenModel: HealthViewModel,
     isLoading: Boolean
 ) {
     Card(
@@ -248,7 +238,7 @@ fun WelcomeCardContent(
                     customColors = customColors,
                     icon = Icons.Rounded.Psychology,
                     title = stringResource(Res.string.onboarding_feature_smart_title),
-                    description =stringResource(Res.string.onboarding_feature_smart_desc),
+                    description = stringResource(Res.string.onboarding_feature_smart_desc),
                     modifier = Modifier.weight(1f)
                 )
                 FeatureColumn(
@@ -271,7 +261,7 @@ fun WelcomeCardContent(
 
             TastyButton(
                 text = stringResource(Res.string.onboarding_start_btn),
-                onClick = { navigator.push(HealthWizardScreen()) },
+                onClick = { navController.navigate(HealthWizardRoute) },
                 modifier = Modifier.fillMaxWidth(),
                 isPrimary = true,
                 enabled = !isLoading,

@@ -1,4 +1,5 @@
-import org.gradle.declarative.dsl.schema.FqName.Empty.packageName
+
+import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import java.util.Properties
@@ -9,7 +10,7 @@ plugins {
     alias(libs.plugins.composeMultiplatform)
     alias(libs.plugins.composeCompiler)
     alias(libs.plugins.sqldelight)
-    kotlin("plugin.serialization") version "2.3.20"
+    alias(libs.plugins.kotlinSerialization)
     id("com.google.gms.google-services")
     id("com.codingfeline.buildkonfig") version "0.15.1"
 }
@@ -86,6 +87,9 @@ kotlin {
             implementation(libs.coil.compose)
             implementation(libs.coil.network.ktor3)
 
+            implementation(libs.jetbrains.navigation.compose)
+            implementation(libs.kotlinx.serialization.json)
+
             implementation(libs.koin.core)
             implementation(libs.koin.compose)
             implementation(libs.koin.compose.viewmodel)
@@ -97,11 +101,6 @@ kotlin {
             implementation(libs.ktor.client.logging)
             implementation(libs.ktor.client.auth)
 
-            implementation(libs.voyager.navigator)
-            implementation(libs.voyager.tab.navigator)
-            implementation(libs.voyager.screenmodel)
-            implementation(libs.voyager.koin)
-            implementation(libs.voyager.transitions)
 
             implementation(libs.androidx.paging.common)
             implementation(libs.androidx.paging.compose)

@@ -48,28 +48,24 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
-import cafe.adriel.voyager.core.screen.Screen
-import cafe.adriel.voyager.koin.koinScreenModel
-import cafe.adriel.voyager.navigator.LocalNavigator
-import cafe.adriel.voyager.navigator.Navigator
-import cafe.adriel.voyager.navigator.currentOrThrow
+import androidx.navigation.NavController
 import org.beem.tastymap.core.util.ToastManager
 import org.beem.tastymap.ui.animations.TastyAnimations
+import org.beem.tastymap.ui.auth.EmailRoute
+import org.beem.tastymap.ui.auth.ForgotRoute
+import org.beem.tastymap.ui.auth.LoginPendingRoute
 import org.beem.tastymap.ui.auth.common.AuthEffect
-import org.beem.tastymap.ui.auth.forgotPassword.ForgotScreen
-import org.beem.tastymap.ui.auth.verification.email.EmailVerificationScreen
-import org.beem.tastymap.ui.auth.verification.loginPending.PendingScreen
-import org.beem.tastymap.ui.bottomnav.MainScreen
+import org.beem.tastymap.ui.bottomnav.MainRoute
 import org.beem.tastymap.ui.components.AuthFooter
 import org.beem.tastymap.ui.components.PasswordStrengthIndicator
 import org.beem.tastymap.ui.components.TastyButton
 import org.beem.tastymap.ui.components.TastyTextField
-import org.beem.tastymap.ui.profile.health.OnBoardingScreen
-import org.beem.tastymap.ui.profile.myprofile.MyProfileScreen
+import org.beem.tastymap.ui.profile.OnBoardingRoute
 import org.beem.tastymap.ui.theme.CustomColors
 import org.beem.tastymap.ui.theme.LocalCustomColors
 import org.jetbrains.compose.resources.getString
 import org.jetbrains.compose.resources.stringResource
+import org.koin.compose.viewmodel.koinViewModel
 import tastymap.composeapp.generated.resources.Res
 import tastymap.composeapp.generated.resources.auth_app_subtitle
 import tastymap.composeapp.generated.resources.auth_resend_prompt
@@ -93,16 +89,14 @@ import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.sin
 
-class LogRegScreen : Screen {
-    @Composable
-    override fun Content() {
-        val navigator = LocalNavigator.currentOrThrow
-        val screenModel = koinScreenModel<LogRegScreenModel>()
-        val regState by screenModel.registerState.collectAsState()
-        val logState by screenModel.loginState.collectAsState()
-        val colors = LocalCustomColors.current
+@Composable
+fun LogRegScreen(navController: NavController)  {
+    val viewModel = koinViewModel<LogRegViewModel>()
+    val regState by viewModel.registerState.collectAsState()
+    val logState by viewModel.loginState.collectAsState()
+    val colors = LocalCustomColors.current
 
-        AuthEffectHandler(screenModel, navigator)
+    AuthEffectHandler(viewModel, navController)
 
         Box(
             modifier = Modifier
@@ -155,12 +149,12 @@ class LogRegScreen : Screen {
                         inactiveTextColor = colors.textSecondary,
                         onLoginClick = {
                             isLoginTab = true
-                            screenModel.clearRegisterForm()
-                            screenModel.previousRegisterStep()
+                            viewModel.clearRegisterForm()
+                            viewModel.previousRegisterStep()
                         },
                         onRegisterClick = {
                             isLoginTab = false
-                            screenModel.clearLoginForm()
+                            viewModel.clearLoginForm()
                         }
                     )
 
@@ -177,9 +171,9 @@ class LogRegScreen : Screen {
                     ) { targetIsLogin ->
                         key(targetIsLogin) {
                             if (targetIsLogin) {
-                                LoginForm(colors, screenModel, logState, navigator)
+                                LoginForm(colors, viewModel, logState, navController)
                             } else {
-                                RegisterForm(colors, screenModel, regState)
+                                RegisterForm(colors, viewModel, regState)
                             }
                         }
                     }
@@ -195,7 +189,6 @@ class LogRegScreen : Screen {
         }
         val currentLoading = if (isLoginTab) logState.isLoading else regState.isLoading
         FullScreenLoading(isLoading = currentLoading, scrimColor = colors.textPrimary.copy(alpha = 0.4f))
-    }
 }
 
 @Composable
@@ -256,8 +249,8 @@ fun HeaderTitles(textColor: Color) {
 
 @Composable
 fun AuthEffectHandler(
-    screenModel: LogRegScreenModel,
-    navigator: Navigator
+    screenModel: LogRegViewModel,
+    navController: NavController
 ) {
     LaunchedEffect(Unit) {
         screenModel.clearRegisterForm()
@@ -267,16 +260,26 @@ fun AuthEffectHandler(
         screenModel.effect.collect { effect ->
             when (effect) {
                 is AuthEffect.NavigateToPending -> {
-                    navigator.replaceAll(PendingScreen(effect.deviceId))
+                    navController.navigate(LoginPendingRoute(effect.deviceId)) {
+                        popUpTo(0) { inclusive = true }
+                    }
                 }
                 is AuthEffect.NavigateToValidate -> {
-                    navigator.push(EmailVerificationScreen(effect.email, effect.deviceId, effect.userId))
+                    navController.navigate(
+                        EmailRoute(effect.email, effect.deviceId, effect.userId)
+                    )
                 }
                 is AuthEffect.NavigateToWelcome -> {
-                    navigator.replaceAll(OnBoardingScreen())
+                    //OnBoardıngScreen
+                    navController.navigate(OnBoardingRoute) {
+                        popUpTo(0) { inclusive = true }
+                    }
                 }
                 is AuthEffect.NavigateToHome -> {
-                    navigator.replaceAll(MainScreen())
+                    //MainScreen
+                    navController.navigate(MainRoute) {
+                        popUpTo(0) { inclusive = true }
+                    }
                 }
                 else -> Unit
             }
@@ -286,8 +289,8 @@ fun AuthEffectHandler(
     LaunchedEffect(screenModel.uiMessage) {
         screenModel.uiMessage.collect { message ->
             val text = when (message) {
-                is LogRegScreenModel.UiMessage.Dynamic -> message.message
-                is LogRegScreenModel.UiMessage.Resource -> getString(message.res)
+                is LogRegViewModel.UiMessage.Dynamic -> message.message
+                is LogRegViewModel.UiMessage.Resource -> getString(message.res)
             }
             ToastManager.show(text)
         }
@@ -468,9 +471,9 @@ fun TabButton(
 @Composable
 fun LoginForm(
     colors: CustomColors,
-    vm: LogRegScreenModel,
+    vm: LogRegViewModel,
     state: LoginUiState,
-    navigator: Navigator
+    navController: NavController
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
         TastyTextField(
@@ -524,7 +527,7 @@ fun LoginForm(
 
         TastyButton(
             text = stringResource(Res.string.login_btn_forgot_password),
-            onClick = { navigator.push(ForgotScreen()) },
+            onClick = { navController.navigate(ForgotRoute) },
             modifier = Modifier.fillMaxWidth(),
             isPrimary = false,
             backcolor = Color.Transparent,
@@ -538,7 +541,7 @@ fun LoginForm(
 fun ResendSection(
     onResendClick: () -> Unit,
     colors: CustomColors,
-    screenModel: LogRegScreenModel,
+    screenModel: LogRegViewModel,
     state: LoginUiState
 ) {
     val timeLeft by screenModel.timeLeft.collectAsState()
@@ -586,7 +589,7 @@ fun ResendSection(
 }
 
 @Composable
-fun RegisterForm(color: CustomColors, vm: LogRegScreenModel, state: RegisterUiState) {
+fun RegisterForm(color: CustomColors, vm: LogRegViewModel, state: RegisterUiState) {
     AnimatedContent(
         targetState = state.step,
         transitionSpec = {

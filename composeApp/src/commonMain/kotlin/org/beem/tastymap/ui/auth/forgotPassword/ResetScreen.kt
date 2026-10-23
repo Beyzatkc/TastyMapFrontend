@@ -39,10 +39,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import cafe.adriel.voyager.core.screen.Screen
-import cafe.adriel.voyager.koin.koinScreenModel
-import cafe.adriel.voyager.navigator.LocalNavigator
-import cafe.adriel.voyager.navigator.currentOrThrow
+import androidx.navigation.NavController // YENİ
 import org.beem.tastymap.core.navigation.VerifyNavigator
 import org.beem.tastymap.core.util.ToastManager
 import org.beem.tastymap.ui.components.AuthFooter
@@ -54,190 +51,185 @@ import org.beem.tastymap.ui.theme.LocalCustomColors
 import org.jetbrains.compose.resources.getString
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.koinInject
+import org.koin.compose.viewmodel.koinViewModel // YENİ: KMP ViewModel
 import tastymap.composeapp.generated.resources.Res
-import tastymap.composeapp.generated.resources.reset_btn_back_to_login
-import tastymap.composeapp.generated.resources.reset_btn_submit
-import tastymap.composeapp.generated.resources.reset_field_confirm_password
-import tastymap.composeapp.generated.resources.reset_field_new_password
-import tastymap.composeapp.generated.resources.reset_header
-import tastymap.composeapp.generated.resources.reset_info_note
-import tastymap.composeapp.generated.resources.reset_title
+import tastymap.composeapp.generated.resources.*
 
-class ResetScreen(val token: String) : Screen {
-    @Composable
-    override fun Content() {
-        val navigator = LocalNavigator.currentOrThrow
-        val screenModel = koinScreenModel<ResetScreenModel>()
-        val state by screenModel.passwordState.collectAsState()
-        val colors = LocalCustomColors.current
-        val verifyNavigator = koinInject<VerifyNavigator>()
+@Composable
+fun ResetScreen(
+    token: String,
+    navController: NavController
+) {
+    val viewModel = koinViewModel<ResetViewModel>()
+    val state by viewModel.passwordState.collectAsState()
+    val colors = LocalCustomColors.current
+    val verifyNavigator = koinInject<VerifyNavigator>()
 
-        LaunchedEffect(state.isChanged) {
-            if (state.isChanged) {
-                verifyNavigator.changePasswordOnSuccessTwo(navigator)
-            }
+    LaunchedEffect(state.isChanged) {
+        if (state.isChanged) {
+            verifyNavigator.changePasswordOnSuccessTwo(navController)
         }
+    }
 
-        LaunchedEffect(screenModel.uiMessage) {
-            screenModel.uiMessage.collect { message ->
-                val text = when (message) {
-                    is ResetScreenModel.UiMessage.Dynamic -> message.message
-                    is ResetScreenModel.UiMessage.Resource -> getString(message.res)
-                }
-                ToastManager.show(text)
+    LaunchedEffect(viewModel.uiMessage) {
+        viewModel.uiMessage.collect { message ->
+            val text = when (message) {
+                is ResetViewModel.UiMessage.Dynamic -> message.message
+                is ResetViewModel.UiMessage.Resource -> getString(message.res)
             }
+            ToastManager.show(text)
         }
+    }
 
-        Surface(
-            modifier = Modifier.fillMaxSize(),
-            color = colors.background
+    Surface(
+        modifier = Modifier.fillMaxSize(),
+        color = colors.background
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .statusBarsPadding()
+                .navigationBarsPadding()
         ) {
-            Column(
+            BackPage(stringResource(Res.string.reset_header), {
+                viewModel.backClickReset()
+                navController.popBackStack()
+            })
+            Box(
                 modifier = Modifier
-                    .fillMaxSize()
-                    .statusBarsPadding()
-                    .navigationBarsPadding()
+                    .weight(1f)
+                    .fillMaxWidth(),
+                contentAlignment = Alignment.TopCenter
             ) {
-                BackPage(stringResource(Res.string.reset_header), {
-                    screenModel.backClickReset()
-                    navigator.pop()
-                })
-                Box(
+                Column(
                     modifier = Modifier
-                        .weight(1f)
-                        .fillMaxWidth(),
-                    contentAlignment = Alignment.TopCenter
+                        .widthIn(max = 480.dp)
+                        .fillMaxWidth()
+                        .verticalScroll(rememberScrollState())
+                        .padding(horizontal = 24.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Column(
+                    Spacer(modifier = Modifier.height(24.dp))
+
+                    Box(
                         modifier = Modifier
-                            .widthIn(max = 480.dp)
-                            .fillMaxWidth()
-                            .verticalScroll(rememberScrollState())
-                            .padding(horizontal = 24.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
+                            .size(96.dp)
+                            .background(
+                                color = colors.surfaceVariant,
+                                shape = RoundedCornerShape(28.dp)
+                            ),
+                        contentAlignment = Alignment.Center
                     ) {
-                        Spacer(modifier = Modifier.height(24.dp))
+                        Icon(
+                            imageVector = Icons.Default.LockReset,
+                            contentDescription = null,
+                            modifier = Modifier.size(40.dp),
+                            tint = colors.textPrimary
+                        )
+                    }
 
-                        Box(
-                            modifier = Modifier
-                                .size(96.dp)
-                                .background(
-                                    color = colors.surfaceVariant,
-                                    shape = RoundedCornerShape(28.dp)
-                                ),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.LockReset,
-                                contentDescription = null,
-                                modifier = Modifier.size(40.dp),
-                                tint = colors.textPrimary
-                            )
+                    Spacer(modifier = Modifier.height(24.dp))
+
+                    Text(
+                        text = stringResource(Res.string.reset_title),
+                        style = MaterialTheme.typography.headlineSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = colors.textPrimary,
+                        textAlign = TextAlign.Center
+                    )
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    TastyTextField(
+                        value = state.regPassword,
+                        isPassword = true,
+                        onValueChange = {
+                            viewModel.onPasswordEvent(PasswordEvent.PasswordChanged(it))
+                        },
+                        label = stringResource(Res.string.reset_field_new_password),
+                        leadingIcon = {
+                            Icon(Icons.Default.Lock, null)
+                        },
+
+                        error = state.regPasswordError?.let { stringResource(it) }
+                    )
+                    AnimatedVisibility(
+                        visible = state.regPassword.isNotEmpty(),
+                        enter = expandVertically(),
+                        exit = shrinkVertically()
+                    ) {
+                        Column {
+                            Spacer(modifier = Modifier.height(4.dp))
+                            PasswordStrengthIndicator(state.passwordStrength, colors)
                         }
+                    }
+                    Spacer(modifier = Modifier.height(5.dp))
+                    TastyTextField(
+                        value = state.confirmPassword,
+                        isPassword = true,
+                        onValueChange = {
+                            viewModel.onPasswordEvent(PasswordEvent.ConfirmPasswordChanged(it))
+                        },
+                        label = stringResource(Res.string.reset_field_confirm_password),
+                        leadingIcon = {
+                            Icon(Icons.Default.Lock, null)
+                        },
 
-                        Spacer(modifier = Modifier.height(24.dp))
+                        error = state.confirmPasswordError?.let { stringResource(it) }
+                    )
 
+                    Spacer(modifier = Modifier.height(24.dp))
+
+                    TastyButton(
+                        text = stringResource(Res.string.reset_btn_submit),
+                        onClick = { viewModel.resetPassword(token) },
+                        isLoading = state.isLoading,
+                        enabled = state.regPassword.isNotBlank() && state.confirmPassword.isNotBlank(),
+                        backcolor = colors.navy,
+                        textcolor = colors.surface,
+                        strokecolor = Color.Transparent
+                    )
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    TextButton(
+                        onClick = {
+                            viewModel.backClickReset()
+                            navController.popBackStack() // YENİ: navigator.pop() yerine
+                        }
+                    ) {
                         Text(
-                            text = stringResource(Res.string.reset_title),
-                            style = MaterialTheme.typography.headlineSmall,
-                            fontWeight = FontWeight.Bold,
-                            color = colors.textPrimary,
-                            textAlign = TextAlign.Center
+                            text = stringResource(Res.string.reset_btn_back_to_login),
+                            color = colors.navy,
+                            style = MaterialTheme.typography.labelLarge
                         )
+                    }
 
-                        Spacer(modifier = Modifier.height(12.dp))
+                    Spacer(modifier = Modifier.height(24.dp))
 
-                        TastyTextField(
-                            value = state.regPassword,
-                            isPassword = true,
-                            onValueChange = {
-                                screenModel.onPasswordEvent(PasswordEvent.PasswordChanged(it))
-                            },
-                            label = stringResource(Res.string.reset_field_new_password),
-                            leadingIcon = {
-                                Icon(Icons.Default.Lock, null)
-                            },
-
-                            error = state.regPasswordError?.let { stringResource(it) }
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(16.dp),
+                        colors = CardDefaults.cardColors(
+                            containerColor = colors.surfaceVariant
                         )
-                        AnimatedVisibility(
-                            visible = state.regPassword.isNotEmpty(),
-                            enter = expandVertically(),
-                            exit = shrinkVertically()
-                        ) {
-                            Column {
-                                Spacer(modifier = Modifier.height(4.dp))
-                                PasswordStrengthIndicator(state.passwordStrength, colors)
-                            }
-                        }
-                        Spacer(modifier = Modifier.height(5.dp))
-                        TastyTextField(
-                            value = state.confirmPassword,
-                            isPassword = true,
-                            onValueChange = {
-                                screenModel.onPasswordEvent(PasswordEvent.ConfirmPasswordChanged(it))
-                            },
-                            label = stringResource(Res.string.reset_field_confirm_password),
-                            leadingIcon = {
-                                Icon(Icons.Default.Lock, null)
-                            },
-
-                            error = state.confirmPasswordError?.let { stringResource(it) }
-                        )
-
-                        Spacer(modifier = Modifier.height(24.dp))
-
-                        TastyButton(
-                            text = stringResource(Res.string.reset_btn_submit),
-                            onClick = { screenModel.resetPassword(token) },
-                            isLoading = state.isLoading,
-                            enabled = state.regPassword.isNotBlank() && state.confirmPassword.isNotBlank(),
-                            backcolor = colors.navy,
-                            textcolor = colors.surface,
-                            strokecolor = Color.Transparent
-                        )
-
-                        Spacer(modifier = Modifier.height(16.dp))
-
-                        TextButton(
-                            onClick = {
-                                screenModel.backClickReset()
-                                navigator.pop()
-                            }
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(16.dp),
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
                             Text(
-                                text = stringResource(Res.string.reset_btn_back_to_login),
-                                color = colors.navy,
-                                style = MaterialTheme.typography.labelLarge
+                                text = stringResource(Res.string.reset_info_note),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = colors.textSecondary
                             )
-                        }
-
-                        Spacer(modifier = Modifier.height(24.dp))
-
-                        Card(
-                            modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(16.dp),
-                            colors = CardDefaults.cardColors(
-                                containerColor = colors.surfaceVariant
-                            )
-                        ) {
-                            Column(
-                                modifier = Modifier.padding(16.dp),
-                                verticalArrangement = Arrangement.spacedBy(8.dp)
-                            ) {
-                                Text(
-                                    text = stringResource(Res.string.reset_info_note),
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = colors.textSecondary
-                                )
-                            }
                         }
                     }
                 }
-                AuthFooter(
-                    modifier = Modifier.fillMaxWidth()
-                )
             }
+            AuthFooter(
+                modifier = Modifier.fillMaxWidth()
+            )
         }
     }
 }

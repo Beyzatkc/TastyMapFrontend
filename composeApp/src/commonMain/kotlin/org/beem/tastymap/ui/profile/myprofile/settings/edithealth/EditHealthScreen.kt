@@ -1,5 +1,6 @@
 package org.beem.tastymap.ui.profile.myprofile.settings.edithealth
 
+import androidx.compose.animation.*
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -24,73 +25,51 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import cafe.adriel.voyager.core.screen.Screen
-import cafe.adriel.voyager.koin.koinScreenModel
-import cafe.adriel.voyager.navigator.LocalNavigator
-import cafe.adriel.voyager.navigator.currentOrThrow
+import androidx.navigation.NavController
 import org.beem.tastymap.core.util.ToastManager
 import org.beem.tastymap.data.model.health.HealthEnum
 import org.beem.tastymap.ui.components.responsiveContentWidth
 import org.beem.tastymap.ui.profile.health.AllergyUiModel
-import org.beem.tastymap.ui.profile.health.HealthScreenModel
 import org.beem.tastymap.ui.profile.health.HealthUiState
+import org.beem.tastymap.ui.profile.health.HealthViewModel
 import org.beem.tastymap.ui.theme.LocalCustomColors
 import org.jetbrains.compose.resources.stringResource
+import org.koin.compose.viewmodel.koinViewModel
 import tastymap.composeapp.generated.resources.Res
-import tastymap.composeapp.generated.resources.edit_health_allergens_desc
-import tastymap.composeapp.generated.resources.edit_health_back_cd
-import tastymap.composeapp.generated.resources.edit_health_diabetes_desc
-import tastymap.composeapp.generated.resources.edit_health_diabetes_title
-import tastymap.composeapp.generated.resources.edit_health_diet_normal_desc
-import tastymap.composeapp.generated.resources.edit_health_diet_normal_title
-import tastymap.composeapp.generated.resources.edit_health_diet_vegan_desc
-import tastymap.composeapp.generated.resources.edit_health_diet_vegan_title
-import tastymap.composeapp.generated.resources.edit_health_diet_vegetarian_desc
-import tastymap.composeapp.generated.resources.edit_health_diet_vegetarian_title
-import tastymap.composeapp.generated.resources.edit_health_save
-import tastymap.composeapp.generated.resources.edit_health_section_allergens
-import tastymap.composeapp.generated.resources.edit_health_section_diet
-import tastymap.composeapp.generated.resources.edit_health_section_health_status
-import tastymap.composeapp.generated.resources.edit_health_success_toast
-import tastymap.composeapp.generated.resources.edit_health_title
+import tastymap.composeapp.generated.resources.*
 
-class EditHealthScreen : Screen {
+@Composable
+fun EditHealthScreen(navController: NavController) {
+    val screenModel = koinViewModel<HealthViewModel>()
+    val uiState by screenModel.healthState.collectAsState()
 
-    @OptIn(ExperimentalMaterial3Api::class)
-    @Composable
-    override fun Content() {
-        val screenModel = koinScreenModel<HealthScreenModel>()
-        val uiState by screenModel.healthState.collectAsState()
-        val navigator = LocalNavigator.currentOrThrow
-
-        LaunchedEffect(Unit) {
-            screenModel.loadUserHealthProfile()
-        }
-        val successMessage = stringResource(Res.string.edit_health_success_toast)
-
-        LaunchedEffect(uiState.isSuccess) {
-            if (uiState.isSuccess) {
-                ToastManager.show(successMessage)
-                screenModel.resetSuccessState()
-                navigator.pop()
-            }
-        }
-
-        LaunchedEffect(Unit) {
-            screenModel.uiMessage.collect { message ->
-                ToastManager.show(message)
-            }
-        }
-
-        EditHealthContent(
-            uiState = uiState,
-            onBackClick = { navigator.pop() },
-            onDiabetesToggle = { screenModel.toggleDiabetes(it) },
-            onEatTypeSelect = { screenModel.selectEatType(it) },
-            onAllergyToggle = { screenModel.toggleAllergy(it) },
-            onSaveClick = { screenModel.updateHealthProfile() }
-        )
+    LaunchedEffect(Unit) {
+        screenModel.loadUserHealthProfile()
     }
+    val successMessage = stringResource(Res.string.edit_health_success_toast)
+
+    LaunchedEffect(uiState.isSuccess) {
+        if (uiState.isSuccess) {
+            ToastManager.show(successMessage)
+            screenModel.resetSuccessState()
+            navController.popBackStack()
+        }
+    }
+
+    LaunchedEffect(Unit) {
+        screenModel.uiMessage.collect { message ->
+            ToastManager.show(message)
+        }
+    }
+
+    EditHealthContent(
+        uiState = uiState,
+        onBackClick = { navController.popBackStack() },
+        onDiabetesToggle = { screenModel.toggleDiabetes(it) },
+        onEatTypeSelect = { screenModel.selectEatType(it) },
+        onAllergyToggle = { screenModel.toggleAllergy(it) },
+        onSaveClick = { screenModel.updateHealthProfile() }
+    )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)

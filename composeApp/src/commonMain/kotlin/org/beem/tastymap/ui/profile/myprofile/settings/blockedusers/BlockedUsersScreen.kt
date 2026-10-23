@@ -1,9 +1,6 @@
 package org.beem.tastymap.ui.profile.myprofile.settings.blockedusers
 
-import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.togetherWith
+import androidx.compose.animation.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -19,11 +16,7 @@ import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
-import androidx.compose.material3.pulltorefresh.PullToRefreshBox
-import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults
-import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.*
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -33,10 +26,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import cafe.adriel.voyager.core.screen.Screen
-import cafe.adriel.voyager.koin.koinScreenModel
-import cafe.adriel.voyager.navigator.LocalNavigator
-import cafe.adriel.voyager.navigator.currentOrThrow
+import androidx.navigation.NavController
 import coil3.compose.AsyncImage
 import org.beem.tastymap.core.util.ToastManager
 import org.beem.tastymap.data.model.block.BlockResponse
@@ -45,277 +35,265 @@ import org.beem.tastymap.ui.components.TastyButton
 import org.beem.tastymap.ui.components.TastyConfirmDialog
 import org.beem.tastymap.ui.components.TastyPullToRefreshBox
 import org.beem.tastymap.ui.components.responsiveContentWidth
-import org.beem.tastymap.ui.profile.otherprofile.ProfileScreen
+import org.beem.tastymap.ui.profile.ProfileRoute
 import org.beem.tastymap.ui.theme.LocalCustomColors
 import org.jetbrains.compose.resources.stringResource
+import org.koin.compose.viewmodel.koinViewModel
 import tastymap.composeapp.generated.resources.Res
-import tastymap.composeapp.generated.resources.active_devices_retry
-import tastymap.composeapp.generated.resources.active_devices_retry_cd
-import tastymap.composeapp.generated.resources.common_search_placeholder
-import tastymap.composeapp.generated.resources.dialog_unblock_message
-import tastymap.composeapp.generated.resources.dialog_unblock_title
-import tastymap.composeapp.generated.resources.profile_action_unblock
-import tastymap.composeapp.generated.resources.profile_empty_list
-import tastymap.composeapp.generated.resources.profile_no_results
-import tastymap.composeapp.generated.resources.settings_back_cd
-import tastymap.composeapp.generated.resources.settings_blocked_users
+import tastymap.composeapp.generated.resources.*
 
-class BlockedUsersScreen() : Screen {
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun BlockedUsersScreen(navController: NavController) {
+    val screenModel = koinViewModel<BlockedViewModel>()
+    val uiState by screenModel.uiState.collectAsState()
+    val customColors = LocalCustomColors.current
 
-    @OptIn(ExperimentalMaterial3Api::class)
-    @Composable
-    override fun Content() {
-        val screenModel = koinScreenModel<BlockedScreenModel>()
-        val uiState by screenModel.uiState.collectAsState()
-        val navigator = LocalNavigator.currentOrThrow
-        val customColors = LocalCustomColors.current
+    var searchQuery by remember { mutableStateOf("") }
+    var activeDialog by remember { mutableStateOf<DialogConfig?>(null) }
+    val listState = rememberLazyListState()
 
-        var searchQuery by remember { mutableStateOf("") }
-        var activeDialog by remember { mutableStateOf<DialogConfig?>(null) }
-        val listState = rememberLazyListState()
+    LaunchedEffect(Unit) {
+        screenModel.loadInitialData()
+    }
 
-        LaunchedEffect(Unit) {
-            screenModel.loadInitialData()
+    LaunchedEffect(uiState.errorMessage) {
+        uiState.errorMessage?.let { message ->
+            ToastManager.show(message)
         }
+    }
 
-        LaunchedEffect(uiState.errorMessage) {
-            uiState.errorMessage?.let { message ->
-                ToastManager.show(message)
+    val shouldLoadMore = remember {
+        derivedStateOf {
+            val totalItems = listState.layoutInfo.totalItemsCount
+            val lastVisibleItem = listState.layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: 0
+            !uiState.isLoading && uiState.errorMessage == null && totalItems > 0 && lastVisibleItem >= totalItems - 2
+        }
+    }
+
+    LaunchedEffect(shouldLoadMore.value) {
+        if (shouldLoadMore.value) {
+            screenModel.loadNextPage()
+        }
+    }
+
+    val filteredList = remember(uiState.items, searchQuery) {
+        if (searchQuery.isBlank()) {
+            uiState.items
+        } else {
+            uiState.items.filter {
+                it.username?.contains(searchQuery, ignoreCase = true) ?: false
             }
         }
+    }
 
-        val shouldLoadMore = remember {
-            derivedStateOf {
-                val totalItems = listState.layoutInfo.totalItemsCount
-                val lastVisibleItem = listState.layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: 0
-                !uiState.isLoading && uiState.errorMessage == null && totalItems > 0 && lastVisibleItem >= totalItems - 2
-            }
-        }
-
-        LaunchedEffect(shouldLoadMore.value) {
-            if (shouldLoadMore.value) {
-                screenModel.loadNextPage()
-            }
-        }
-
-        val filteredList = remember(uiState.items, searchQuery) {
-            if (searchQuery.isBlank()) {
-                uiState.items
-            } else {
-                uiState.items.filter {
-                    it.username?.contains(searchQuery, ignoreCase = true) ?: false
-                }
-            }
-        }
-
-        Scaffold(
-            topBar = {
-                TopAppBar(
-                    navigationIcon = {
-                        IconButton(onClick = { navigator.pop() }) {
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                contentDescription = stringResource(Res.string.settings_back_cd),
-                                tint = customColors.textPrimary
-                            )
-                        }
-                    },
-                    title = {
-                        Text(
-                            text = stringResource(Res.string.settings_blocked_users),
-                            style = MaterialTheme.typography.titleLarge.copy(
-                                color = customColors.textPrimary,
-                                fontSize = 20.sp,
-                                fontWeight = FontWeight.SemiBold
-                            )
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                navigationIcon = {
+                    IconButton(onClick = { navController.popBackStack() }) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = stringResource(Res.string.settings_back_cd),
+                            tint = customColors.textPrimary
                         )
-                    },
-                    colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = customColors.background
+                    }
+                },
+                title = {
+                    Text(
+                        text = stringResource(Res.string.settings_blocked_users),
+                        style = MaterialTheme.typography.titleLarge.copy(
+                            color = customColors.textPrimary,
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.SemiBold
+                        )
                     )
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = customColors.background
+                )
+            )
+        }
+    ) { innerPadding ->
+        val boxShape = RoundedCornerShape(16.dp)
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+                .background(customColors.background),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                SearchBar(
+                    query = searchQuery,
+                    onQueryChange = { searchQuery = it },
+                    modifier = Modifier.responsiveContentWidth()
                 )
             }
-        ) { innerPadding ->
-            val boxShape = RoundedCornerShape(16.dp)
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(innerPadding)
-                    .background(customColors.background),
-                horizontalAlignment = Alignment.CenterHorizontally
+
+            TastyPullToRefreshBox(
+                isRefreshing = uiState.isRefreshing,
+                onRefresh = { screenModel.refresh() },
+                modifier = Modifier.fillMaxSize()
             ) {
                 Box(
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 8.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    SearchBar(
-                        query = searchQuery,
-                        onQueryChange = { searchQuery = it },
-                        modifier = Modifier.responsiveContentWidth()
-                    )
-                }
-
-                TastyPullToRefreshBox(
-                    isRefreshing = uiState.isRefreshing,
-                    onRefresh = { screenModel.refresh() },
-                    modifier = Modifier.fillMaxSize()
+                        .fillMaxSize()
+                        .padding(vertical = 4.dp),
+                    contentAlignment = Alignment.TopCenter
                 ) {
                     Box(
                         modifier = Modifier
-                            .fillMaxSize()
-                            .padding(vertical = 4.dp),
-                        contentAlignment = Alignment.TopCenter
+                            .responsiveContentWidth()
+                            .fillMaxHeight()
+                            .padding(horizontal = 16.dp, vertical = 8.dp)
+                            .shadow(
+                                elevation = 8.dp,
+                                shape = boxShape,
+                                spotColor = Color.Black.copy(alpha = 0.35f),
+                                ambientColor = Color.Black.copy(alpha = 0.20f)
+                            )
+                            .background(
+                                color = customColors.background,
+                                shape = boxShape
+                            )
+                            .clip(boxShape)
                     ) {
-                        Box(
-                            modifier = Modifier
-                                .responsiveContentWidth()
-                                .fillMaxHeight()
-                                .padding(horizontal = 16.dp, vertical = 8.dp)
-                                .shadow(
-                                    elevation = 8.dp,
-                                    shape = boxShape,
-                                    spotColor = Color.Black.copy(alpha = 0.35f),
-                                    ambientColor = Color.Black.copy(alpha = 0.20f)
-                                )
-                                .background(
-                                    color = customColors.background,
-                                    shape = boxShape
-                                )
-                                .clip(boxShape)
-                        ) {
-                            val isError = !uiState.errorMessage.isNullOrBlank()
-                            val isEmpty = uiState.items.isEmpty()
-                            when {
-                                uiState.isLoading && isEmpty && !isError -> {
-                                    Box(
-                                        modifier = Modifier.fillMaxSize(),
-                                        contentAlignment = Alignment.Center
-                                    ) {
-                                        CircularProgressIndicator(color = customColors.gourmetOrange)
-                                    }
+                        val isError = !uiState.errorMessage.isNullOrBlank()
+                        val isEmpty = uiState.items.isEmpty()
+                        when {
+                            uiState.isLoading && isEmpty && !isError -> {
+                                Box(
+                                    modifier = Modifier.fillMaxSize(),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    CircularProgressIndicator(color = customColors.gourmetOrange)
                                 }
+                            }
 
-                                isError && isEmpty -> {
-                                    Box(
-                                        modifier = Modifier.fillMaxSize(),
-                                        contentAlignment = Alignment.Center
+                            isError && isEmpty -> {
+                                Box(
+                                    modifier = Modifier.fillMaxSize(),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    FilledTonalButton(
+                                        onClick = { screenModel.loadInitialData() },
+                                        enabled = !uiState.isLoading,
+                                        modifier = Modifier.height(48.dp),
+                                        colors = ButtonDefaults.filledTonalButtonColors(
+                                            containerColor = customColors.surfaceVariant,
+                                            contentColor = customColors.textPrimary
+                                        )
                                     ) {
-                                        FilledTonalButton(
-                                            onClick = { screenModel.loadInitialData() },
-                                            enabled = !uiState.isLoading,
-                                            modifier = Modifier.height(48.dp),
-                                            colors = ButtonDefaults.filledTonalButtonColors(
-                                                containerColor = customColors.surfaceVariant,
-                                                contentColor = customColors.textPrimary
-                                            )
-                                        ) {
-                                            AnimatedContent(
-                                                targetState = uiState.isLoading,
-                                                transitionSpec = { fadeIn() togetherWith fadeOut() },
-                                                label = "ButtonLoadingTransition"
-                                            ) { loading ->
-                                                if (loading) {
-                                                    CircularProgressIndicator(
+                                        AnimatedContent(
+                                            targetState = uiState.isLoading,
+                                            transitionSpec = { fadeIn() togetherWith fadeOut() },
+                                            label = "ButtonLoadingTransition"
+                                        ) { loading ->
+                                            if (loading) {
+                                                CircularProgressIndicator(
+                                                    modifier = Modifier.size(24.dp),
+                                                    strokeWidth = 2.5.dp,
+                                                    color = customColors.textPrimary
+                                                )
+                                            } else {
+                                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                                    Icon(
+                                                        imageVector = Icons.Default.Refresh,
+                                                        contentDescription = stringResource(Res.string.active_devices_retry_cd),
                                                         modifier = Modifier.size(24.dp),
-                                                        strokeWidth = 2.5.dp,
-                                                        color = customColors.textPrimary
+                                                        tint = customColors.textSecondary
                                                     )
-                                                } else {
-                                                    Row(verticalAlignment = Alignment.CenterVertically) {
-                                                        Icon(
-                                                            imageVector = Icons.Default.Refresh,
-                                                            contentDescription = stringResource(Res.string.active_devices_retry_cd),
-                                                            modifier = Modifier.size(24.dp),
-                                                            tint = customColors.textSecondary
+                                                    Spacer(modifier = Modifier.width(8.dp))
+                                                    Text(
+                                                        text = stringResource(Res.string.active_devices_retry),
+                                                        style = MaterialTheme.typography.titleSmall.copy(
+                                                            fontWeight = FontWeight.Bold,
+                                                            color = customColors.textSecondary
                                                         )
-                                                        Spacer(modifier = Modifier.width(8.dp))
-                                                        Text(
-                                                            text = stringResource(Res.string.active_devices_retry),
-                                                            style = MaterialTheme.typography.titleSmall.copy(
-                                                                fontWeight = FontWeight.Bold,
-                                                                color = customColors.textSecondary
-                                                            )
-                                                        )
-                                                    }
+                                                    )
                                                 }
                                             }
                                         }
                                     }
                                 }
+                            }
 
-                                filteredList.isEmpty() -> {
-                                    Box(
-                                        modifier = Modifier.fillMaxSize(),
-                                        contentAlignment = Alignment.Center
-                                    ) {
-                                        Text(
-                                            text = if (searchQuery.isNotBlank()) {
-                                                stringResource(Res.string.profile_no_results)
-                                            } else {
-                                                stringResource(Res.string.profile_empty_list)
+                            filteredList.isEmpty() -> {
+                                Box(
+                                    modifier = Modifier.fillMaxSize(),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text(
+                                        text = if (searchQuery.isNotBlank()) {
+                                            stringResource(Res.string.profile_no_results)
+                                        } else {
+                                            stringResource(Res.string.profile_empty_list)
+                                        },
+                                        style = MaterialTheme.typography.bodyMedium.copy(color = customColors.textSecondary)
+                                    )
+                                }
+                            }
+
+                            else -> {
+                                LazyColumn(
+                                    state = listState,
+                                    modifier = Modifier
+                                        .responsiveContentWidth()
+                                        .fillMaxHeight(),
+                                    contentPadding = PaddingValues(bottom = 16.dp, top = 8.dp)
+                                ) {
+                                    items(
+                                        items = filteredList,
+                                        key = { it.userId }
+                                    ) { user ->
+
+                                        val unblockTitle =
+                                            stringResource(Res.string.dialog_unblock_title)
+                                        val unblockMessage = stringResource(
+                                            Res.string.dialog_unblock_message,
+                                            user.username ?: ""
+                                        )
+                                        val unblockConfirm =
+                                            stringResource(Res.string.profile_action_unblock)
+                                        BlockedUserItem(
+                                            user = user,
+                                            onUserClick = {
+                                                navController.navigate(ProfileRoute(userId = user.userId))
                                             },
-                                            style = MaterialTheme.typography.bodyMedium.copy(color = customColors.textSecondary)
+                                            onUnblockClick = {
+                                                activeDialog = DialogConfig(
+                                                    title = unblockTitle,
+                                                    message = unblockMessage,
+                                                    confirmText = unblockConfirm,
+                                                    isDestructive = false,
+                                                    onConfirm = {
+                                                        screenModel.unblockUser(
+                                                            targetUserId = user.userId
+                                                        )
+                                                    }
+                                                )
+                                            }
                                         )
                                     }
-                                }
 
-                                else -> {
-                                    LazyColumn(
-                                        state = listState,
-                                        modifier = Modifier
-                                            .responsiveContentWidth()
-                                            .fillMaxHeight(),
-                                        contentPadding = PaddingValues(bottom = 16.dp, top = 8.dp)
-                                    ) {
-                                        items(
-                                            items = filteredList,
-                                            key = { it.userId }
-                                        ) { user ->
-
-                                            val unblockTitle =
-                                                stringResource(Res.string.dialog_unblock_title)
-                                            val unblockMessage = stringResource(
-                                                Res.string.dialog_unblock_message,
-                                                user.username ?: ""
-                                            )
-                                            val unblockConfirm =
-                                                stringResource(Res.string.profile_action_unblock)
-                                            BlockedUserItem(
-                                                user = user,
-                                                onUserClick = {
-                                                    navigator.push(ProfileScreen(userId = user.userId))
-                                                },
-                                                onUnblockClick = {
-                                                    activeDialog = DialogConfig(
-                                                        title = unblockTitle,
-                                                        message = unblockMessage,
-                                                        confirmText = unblockConfirm,
-                                                        isDestructive = false,
-                                                        onConfirm = {
-                                                            screenModel.unblockUser(
-                                                                targetUserId = user.userId
-                                                            )
-                                                        }
-                                                    )
-                                                }
-                                            )
-                                        }
-
-                                        if (uiState.isLoadingMore) {
-                                            item {
-                                                Box(
-                                                    modifier = Modifier
-                                                        .fillMaxWidth()
-                                                        .padding(16.dp),
-                                                    contentAlignment = Alignment.Center
-                                                ) {
-                                                    CircularProgressIndicator(
-                                                        modifier = Modifier.size(24.dp),
-                                                        color = customColors.gourmetOrange
-                                                    )
-                                                }
+                                    if (uiState.isLoadingMore) {
+                                        item {
+                                            Box(
+                                                modifier = Modifier
+                                                    .fillMaxWidth()
+                                                    .padding(16.dp),
+                                                contentAlignment = Alignment.Center
+                                            ) {
+                                                CircularProgressIndicator(
+                                                    modifier = Modifier.size(24.dp),
+                                                    color = customColors.gourmetOrange
+                                                )
                                             }
                                         }
                                     }
@@ -325,12 +303,12 @@ class BlockedUsersScreen() : Screen {
                     }
                 }
             }
-            activeDialog?.let { config ->
-                TastyConfirmDialog(
-                    config = config,
-                    onDismiss = { activeDialog = null }
-                )
-            }
+        }
+        activeDialog?.let { config ->
+            TastyConfirmDialog(
+                config = config,
+                onDismiss = { activeDialog = null }
+            )
         }
     }
 }

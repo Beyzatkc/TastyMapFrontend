@@ -170,7 +170,6 @@ fun ChangePasswordBottomSheet(
                 }
             )
 
-            // GENEL API HATA MESAJI ALANI
             AnimatedVisibility(
                 visible = !errorMessage.isNullOrBlank(),
                 enter = expandVertically(),

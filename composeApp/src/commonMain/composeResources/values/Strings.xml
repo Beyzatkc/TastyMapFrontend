@@ -578,4 +578,26 @@
     <string name="view_replies">Yanıtları gör</string>
     <string name="view_more_replies">Daha fazla yanıt gör</string>
     <string name="view_replies_count">%1$d yanıtı gör</string>
+
+    <!-- Kısa Metin (Başlık / Etiket) -->
+    <string name="comments_disabled_label_tr">Yorumlar Kapalı</string>
+
+    <!-- Uzun Metin (Bilgilendirme Mesajı) -->
+    <string name="comments_disabled_msg_tr">Bu gönderi yorumlara kapatılmıştır.</string>
+
+    <string name="delete_comment_title">Yorumu Sil</string>
+    <string name="delete_comment_confirmation">Bu yorumu silmek istediğinize emin misiniz?</string>
+
+    <string name="update_comment_action_tr">Yorumu Güncelle</string>
+
+    <string name="loading_deleting_comment">Yorum siliniyor...</string>
+    <string name="loading_updating_comment">Yorum güncelleniyor...</string>
+    <string name="comment_edited">(Düzenlendi)</string>
+    <string name="content_desc_pinned">Sabitlendi</string>
+
+    <!-- Placeholder / İpucu Metinleri -->
+    <string name="add_reply_placeholder">Yanıt ekle...</string>
+    <string name="add_comment_placeholder">Yorum ekle...</string>
+    <string name="replying_to_label">Yanıtlanıyor: %1$s</string>
+    <string name="cancel_reply_content_desc">Yanıtlamayı İptal Et</string>
 </resources>

@@ -24,16 +24,15 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import cafe.adriel.voyager.core.screen.Screen
+import androidx.navigation.NavController
 import org.jetbrains.compose.resources.stringResource
 import tastymap.composeapp.generated.resources.Res
 import tastymap.composeapp.generated.resources.change_success_desc
 import tastymap.composeapp.generated.resources.change_success_icon_cd
 import tastymap.composeapp.generated.resources.change_success_title
 
-class ChangeSuccessScreen(): Screen {
-    @Composable
-    override fun Content() {
+@Composable
+fun ChangeSuccessScreen(navController: NavController){
         Column(
             modifier = Modifier.Companion
                 .fillMaxSize()
@@ -77,5 +76,4 @@ class ChangeSuccessScreen(): Screen {
             )
             Spacer(modifier = Modifier.Companion.height(40.dp))
         }
-    }
 }

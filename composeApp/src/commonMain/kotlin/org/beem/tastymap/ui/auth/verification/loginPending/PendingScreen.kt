@@ -23,22 +23,21 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
-import cafe.adriel.voyager.core.annotation.InternalVoyagerApi
-import cafe.adriel.voyager.core.screen.Screen
-import cafe.adriel.voyager.koin.koinScreenModel
-import cafe.adriel.voyager.navigator.LocalNavigator
-import cafe.adriel.voyager.navigator.currentOrThrow
-import cafe.adriel.voyager.navigator.internal.BackHandler
+import androidx.navigation.NavController
 import org.beem.tastymap.core.util.ToastManager
+import org.beem.tastymap.ui.auth.LogRegRoute
+import org.beem.tastymap.ui.auth.LoginPendingRoute
 import org.beem.tastymap.ui.auth.common.AuthEffect
 import org.beem.tastymap.ui.auth.common.AuthLifecycleEvent
 import org.beem.tastymap.ui.auth.logReg.LogRegScreen
 import org.beem.tastymap.ui.components.AuthFooter
 import org.beem.tastymap.ui.profile.myprofile.settings.UiMessage
+import org.beem.tastymap.ui.splash.SplashRoute
 import org.beem.tastymap.ui.splash.SplashScreen
 import org.beem.tastymap.ui.theme.LocalCustomColors
 import org.jetbrains.compose.resources.getString
 import org.jetbrains.compose.resources.stringResource
+import org.koin.compose.viewmodel.koinViewModel
 import tastymap.composeapp.generated.resources.Res
 import tastymap.composeapp.generated.resources.pending_email_sent_desc
 import tastymap.composeapp.generated.resources.pending_email_sent_title
@@ -49,69 +48,58 @@ import tastymap.composeapp.generated.resources.pending_security_title
 import tastymap.composeapp.generated.resources.pending_waiting
 import tastymap.composeapp.generated.resources.pending_warning_note
 
-class PendingScreen(val deviceId: String) : Screen {
-    @OptIn(InternalVoyagerApi::class)
-    @Preview
-    @Composable
-    override fun Content() {
-        val screenModel = koinScreenModel<PendingScreenModel>()
-        val lifecycleOwner = LocalLifecycleOwner.current
-        val navigator = LocalNavigator.currentOrThrow
-        val colors = LocalCustomColors.current
+@Composable
+fun PendingScreen(
+    deviceId: String,
+    navController: NavController
+) {
+    val viewModel = koinViewModel<PendingViewModel>()
+    val lifecycleOwner = LocalLifecycleOwner.current
+    val colors = LocalCustomColors.current
 
-        LaunchedEffect(Unit) {
-            screenModel.pendingLogin.collect { pendingLogin ->
-                when (pendingLogin) {
-                    is AuthEffect.NavigateToHome -> { navigator.replaceAll(SplashScreen()) }
-                    is AuthEffect.NavigateToLogin -> { navigator.replaceAll(LogRegScreen()) }
-                    is AuthEffect.NavigateToPending -> {
-                        navigator.replaceAll(PendingScreen(pendingLogin.deviceId))
-                    }
-                    else -> Unit
+    LaunchedEffect(Unit) {
+        viewModel.pendingLogin.collect { pendingLogin ->
+            when (pendingLogin) {
+                is AuthEffect.NavigateToHome -> {
+                    navController.navigate(SplashRoute) { popUpTo(0) { inclusive = true } }
                 }
-            }
-        }
-        LaunchedEffect(Unit) {
-            screenModel.uiMessage.collect { message ->
-                val text = when (message) {
-                    is UiMessage.Dynamic -> {
-                        message.message
-                    }
-                    is UiMessage.Resource -> {
-                        getString(message.res)
+                is AuthEffect.NavigateToLogin -> {
+                    navController.navigate(LogRegRoute) { popUpTo(0) { inclusive = true } }
+                }
+                is AuthEffect.NavigateToPending -> {
+                    navController.navigate(LoginPendingRoute(pendingLogin.deviceId)) {
+                        popUpTo(0) { inclusive = true }
                     }
                 }
-                ToastManager.show(text)
+                else -> Unit
             }
         }
+    }
+    LaunchedEffect(Unit) {
+        viewModel.uiMessage.collect { message ->
+            val text = when (message) {
+                is UiMessage.Dynamic -> message.message
+                is UiMessage.Resource -> getString(message.res)
+            }
+            ToastManager.show(text)
+        }
+    }
 
-        DisposableEffect(lifecycleOwner) {
-            val observer = LifecycleEventObserver { _, event ->
-                when (event) {
-                    Lifecycle.Event.ON_RESUME -> {
-                        screenModel.onLifecycleEvent(
-                            AuthLifecycleEvent.Resume,
-                            deviceId
-                        )
-                    }
-                    Lifecycle.Event.ON_STOP -> {
-                        screenModel.onLifecycleEvent(
-                            AuthLifecycleEvent.Stop,
-                            deviceId
-                        )
-                    }
-                    else -> Unit
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            when (event) {
+                Lifecycle.Event.ON_RESUME -> {
+                    viewModel.onLifecycleEvent(AuthLifecycleEvent.Resume, deviceId)
                 }
-            }
-
-            lifecycleOwner.lifecycle.addObserver(observer)
-
-            onDispose {
-                lifecycleOwner.lifecycle.removeObserver(observer)
+                Lifecycle.Event.ON_STOP -> {
+                    viewModel.onLifecycleEvent(AuthLifecycleEvent.Stop, deviceId)
+                }
+                else -> Unit
             }
         }
-
-        BackHandler(enabled = true) { }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    }
 
         Surface(
             modifier = Modifier.fillMaxSize(),
@@ -245,8 +233,8 @@ class PendingScreen(val deviceId: String) : Screen {
 
                         ResendSection(
                             navyIcons = colors.navy,
-                            screenModel = screenModel,
-                            onResendClick = { screenModel.resendEmail(deviceId) }
+                            viewModel = viewModel,
+                            onResendClick = { viewModel.resendEmail(deviceId) }
                         )
                     }
                 }
@@ -256,16 +244,16 @@ class PendingScreen(val deviceId: String) : Screen {
             }
         }
     }
-}
+
 
 @Composable
 fun ResendSection(
     onResendClick: () -> Unit,
     navyIcons: Color,
-    screenModel: PendingScreenModel
+    viewModel: PendingViewModel
 ) {
-    val timeLeft by screenModel.timeLeft.collectAsState()
-    val state by screenModel.sendState.collectAsState()
+    val timeLeft by viewModel.timeLeft.collectAsState()
+    val state by viewModel.sendState.collectAsState()
     val customColors = LocalCustomColors.current
 
     val isButtonEnabled = timeLeft == 0 && !state.isLoading
@@ -275,17 +263,13 @@ fun ResendSection(
             enabled = isButtonEnabled,
             onClick = {
                 if (isButtonEnabled) {
-                    screenModel.startTimer()
+                    viewModel.startTimer()
                     onResendClick()
                 }
             }
         ) {
             if (state.isLoading) {
-                CircularProgressIndicator(
-                    modifier = Modifier.size(16.dp),
-                    strokeWidth = 2.dp,
-                    color = navyIcons
-                )
+                CircularProgressIndicator(modifier = Modifier.size(16.dp), strokeWidth = 2.dp, color = navyIcons)
             } else {
                 Text(
                     text = if (timeLeft == 0) {

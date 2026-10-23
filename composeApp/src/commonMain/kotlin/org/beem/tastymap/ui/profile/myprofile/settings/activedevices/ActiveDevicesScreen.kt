@@ -1,9 +1,6 @@
 package org.beem.tastymap.ui.profile.myprofile.settings.activedevices
 
-import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.togetherWith
+import androidx.compose.animation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -16,229 +13,211 @@ import androidx.compose.material.icons.filled.PhoneAndroid
 import androidx.compose.material.icons.filled.PhoneIphone
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.*
-import androidx.compose.material3.pulltorefresh.PullToRefreshBox
-import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults
-import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import cafe.adriel.voyager.core.screen.Screen
-import cafe.adriel.voyager.koin.koinScreenModel
-import cafe.adriel.voyager.navigator.LocalNavigator
-import cafe.adriel.voyager.navigator.currentOrThrow
+import androidx.navigation.NavController
 import org.beem.tastymap.core.util.ToastManager
 import org.beem.tastymap.ui.components.TastyPullToRefreshBox
 import org.beem.tastymap.ui.components.responsiveContentWidth
 import org.beem.tastymap.ui.theme.LocalCustomColors
-import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
+import org.koin.compose.viewmodel.koinViewModel
 import tastymap.composeapp.generated.resources.Res
-import tastymap.composeapp.generated.resources.active_devices_back_cd
-import tastymap.composeapp.generated.resources.active_devices_last_seen
-import tastymap.composeapp.generated.resources.active_devices_retry
-import tastymap.composeapp.generated.resources.active_devices_retry_cd
-import tastymap.composeapp.generated.resources.active_devices_title
+import tastymap.composeapp.generated.resources.*
 
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun ActiveDevicesScreen(navController: NavController) {
+    val screenModel = koinViewModel<ActiveDevicesViewModel>()
+    val uiState by screenModel.uiState.collectAsState()
+    val customColors = LocalCustomColors.current
 
-class ActiveDevicesScreen : Screen {
+    LaunchedEffect(Unit) {
+        screenModel.getActiveDevices()
+    }
 
-    @OptIn(ExperimentalMaterial3Api::class)
-    @Composable
-    override fun Content() {
-        val screenModel = koinScreenModel<ActiveDevicesScreenModel>()
-        val uiState by screenModel.uiState.collectAsState()
-        val navigator = LocalNavigator.currentOrThrow
-        val customColors = LocalCustomColors.current
-
-        LaunchedEffect(Unit) {
-            screenModel.getActiveDevices()
+    LaunchedEffect(uiState.errorMessage) {
+        uiState.errorMessage?.let { message ->
+            ToastManager.show(message)
         }
+    }
 
-        LaunchedEffect(uiState.errorMessage) {
-            uiState.errorMessage?.let { message ->
-                ToastManager.show(message)
-            }
-        }
-
-        Scaffold(
-            containerColor = customColors.background,
-            topBar = {
-                TopAppBar(
-                    title = {
-                        Text(
-                            text = stringResource(Res.string.active_devices_title),
-                            style = MaterialTheme.typography.titleLarge.copy(
-                                color = customColors.textPrimary,
-                                fontSize = 20.sp,
-                                fontWeight = FontWeight.SemiBold
-                            )
+    Scaffold(
+        containerColor = customColors.background,
+        topBar = {
+            TopAppBar(
+                title = {
+                    Text(
+                        text = stringResource(Res.string.active_devices_title),
+                        style = MaterialTheme.typography.titleLarge.copy(
+                            color = customColors.textPrimary,
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.SemiBold
                         )
-                    },
-                    navigationIcon = {
-                        IconButton(onClick = { navigator.pop() }) {
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                contentDescription = stringResource(Res.string.active_devices_back_cd),
-                                tint = customColors.textPrimary
-                            )
-                        }
-                    },
-                    colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = customColors.background
                     )
+                },
+                navigationIcon = {
+                    IconButton(onClick = { navController.popBackStack() }) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = stringResource(Res.string.active_devices_back_cd),
+                            tint = customColors.textPrimary
+                        )
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = customColors.background
                 )
-            }
-        ) { innerPadding ->
-            TastyPullToRefreshBox(
-                isRefreshing = uiState.isLoading && uiState.devices.isNotEmpty(),
-                onRefresh = { screenModel.getActiveDevices() },
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(innerPadding)
+            )
+        }
+    ) { innerPadding ->
+        TastyPullToRefreshBox(
+            isRefreshing = uiState.isLoading && uiState.devices.isNotEmpty(),
+            onRefresh = { screenModel.getActiveDevices() },
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+        ) {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.TopCenter
             ) {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.TopCenter
-                ) {
-                    val isError = !uiState.errorMessage.isNullOrBlank()
-                    val isEmpty = uiState.devices.isEmpty()
+                val isError = !uiState.errorMessage.isNullOrBlank()
+                val isEmpty = uiState.devices.isEmpty()
 
-                    when {
-                        uiState.isLoading && isEmpty && !isError -> {
-                            Box(
-                                modifier = Modifier.fillMaxSize(),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                CircularProgressIndicator(color = customColors.gourmetOrange)
-                            }
+                when {
+                    uiState.isLoading && isEmpty && !isError -> {
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            CircularProgressIndicator(color = customColors.gourmetOrange)
                         }
+                    }
 
-                        isError && isEmpty -> {
-                            Box(
-                                modifier = Modifier.fillMaxSize(),
-                                contentAlignment = Alignment.Center
+                    isError && isEmpty -> {
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            FilledTonalButton(
+                                onClick = { screenModel.getActiveDevices() },
+                                enabled = !uiState.isLoading,
+                                modifier = Modifier.height(48.dp),
+                                colors = ButtonDefaults.filledTonalButtonColors(
+                                    containerColor = customColors.surfaceVariant,
+                                    contentColor = customColors.textPrimary
+                                )
                             ) {
-                                FilledTonalButton(
-                                    onClick = { screenModel.getActiveDevices() },
-                                    enabled = !uiState.isLoading,
-                                    modifier = Modifier.height(48.dp),
-                                    colors = ButtonDefaults.filledTonalButtonColors(
-                                        containerColor = customColors.surfaceVariant,
-                                        contentColor = customColors.textPrimary
-                                    )
-                                ) {
-                                    AnimatedContent(
-                                        targetState = uiState.isLoading,
-                                        transitionSpec = { fadeIn() togetherWith fadeOut() },
-                                        label = "ButtonLoadingTransition"
-                                    ) { loading ->
-                                        if (loading) {
-                                            CircularProgressIndicator(
+                                AnimatedContent(
+                                    targetState = uiState.isLoading,
+                                    transitionSpec = { fadeIn() togetherWith fadeOut() },
+                                    label = "ButtonLoadingTransition"
+                                ) { loading ->
+                                    if (loading) {
+                                        CircularProgressIndicator(
+                                            modifier = Modifier.size(24.dp),
+                                            strokeWidth = 2.5.dp,
+                                            color = customColors.textPrimary
+                                        )
+                                    } else {
+                                        Row(verticalAlignment = Alignment.CenterVertically) {
+                                            Icon(
+                                                imageVector = Icons.Default.Refresh,
+                                                contentDescription = stringResource(Res.string.active_devices_retry_cd),
                                                 modifier = Modifier.size(24.dp),
-                                                strokeWidth = 2.5.dp,
-                                                color = customColors.textPrimary
+                                                tint = customColors.textSecondary
                                             )
-                                        } else {
-                                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                                Icon(
-                                                    imageVector = Icons.Default.Refresh,
-                                                    contentDescription = stringResource(Res.string.active_devices_retry_cd),
-                                                    modifier = Modifier.size(24.dp),
-                                                    tint = customColors.textSecondary
+                                            Spacer(modifier = Modifier.width(8.dp))
+                                            Text(
+                                                text = stringResource(Res.string.active_devices_retry),
+                                                style = MaterialTheme.typography.titleSmall.copy(
+                                                    fontWeight = FontWeight.Bold,
+                                                    color = customColors.textSecondary
                                                 )
-                                                Spacer(modifier = Modifier.width(8.dp))
-                                                Text(
-                                                    text = stringResource(Res.string.active_devices_retry),
-                                                    style = MaterialTheme.typography.titleSmall.copy(
-                                                        fontWeight = FontWeight.Bold,
-                                                        color = customColors.textSecondary
-                                                    )
-                                                )
-                                            }
+                                            )
                                         }
                                     }
                                 }
                             }
                         }
+                    }
 
-                        else -> {
-                            LazyColumn(
-                                modifier = Modifier
-                                    .responsiveContentWidth()
-                                    .fillMaxHeight(),
-                                contentPadding = PaddingValues(16.dp),
-                                verticalArrangement = Arrangement.spacedBy(12.dp)
-                            ) {
-                                items(
-                                    items = uiState.devices,
-                                    key = { it.deviceId }
-                                ) { device ->
+                    else -> {
+                        LazyColumn(
+                            modifier = Modifier
+                                .responsiveContentWidth()
+                                .fillMaxHeight(),
+                            contentPadding = PaddingValues(16.dp),
+                            verticalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            items(
+                                items = uiState.devices,
+                                key = { it.deviceId }
+                            ) { device ->
 
-                                    val deviceIcon: ImageVector = when (device.deviceType) {
-                                        DeviceType.ANDROID -> Icons.Default.PhoneAndroid
-                                        DeviceType.IOS -> Icons.Default.PhoneIphone
-                                        DeviceType.WEB -> Icons.Default.Language
-                                        DeviceType.UNKNOWN -> Icons.Default.Android
-                                    }
+                                val deviceIcon: ImageVector = when (device.deviceType) {
+                                    DeviceType.ANDROID -> Icons.Default.PhoneAndroid
+                                    DeviceType.IOS -> Icons.Default.PhoneIphone
+                                    DeviceType.WEB -> Icons.Default.Language
+                                    DeviceType.UNKNOWN -> Icons.Default.Android
+                                }
 
-                                    Card(
-                                        colors = CardDefaults.cardColors(containerColor = customColors.surface),
-                                        shape = RoundedCornerShape(12.dp),
-                                        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+                                Card(
+                                    colors = CardDefaults.cardColors(containerColor = customColors.surface),
+                                    shape = RoundedCornerShape(12.dp),
+                                    elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+                                ) {
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(16.dp),
+                                        verticalAlignment = Alignment.CenterVertically
                                     ) {
-                                        Row(
-                                            modifier = Modifier
-                                                .fillMaxWidth()
-                                                .padding(16.dp),
-                                            verticalAlignment = Alignment.CenterVertically
+                                        Icon(
+                                            imageVector = deviceIcon,
+                                            contentDescription = null,
+                                            tint = customColors.navy,
+                                            modifier = Modifier.size(28.dp)
+                                        )
+                                        Spacer(modifier = Modifier.width(16.dp))
+                                        Column(
+                                            modifier = Modifier.weight(1f)
                                         ) {
-                                            Icon(
-                                                imageVector = deviceIcon,
-                                                contentDescription = null,
-                                                tint = customColors.navy,
-                                                modifier = Modifier.size(28.dp)
+                                            Text(
+                                                text = device.deviceName,
+                                                style = MaterialTheme.typography.bodyMedium.copy(
+                                                    fontWeight = FontWeight.Bold,
+                                                    color = customColors.textPrimary
+                                                )
                                             )
-                                            Spacer(modifier = Modifier.width(16.dp))
-                                            Column(
-                                                modifier = Modifier.weight(1f)
-                                            ) {
+
+                                            Spacer(modifier = Modifier.height(2.dp))
+
+                                            if (!device.location.isNullOrBlank()) {
                                                 Text(
-                                                    text = device.deviceName,
-                                                    style = MaterialTheme.typography.bodyMedium.copy(
-                                                        fontWeight = FontWeight.Bold,
-                                                        color = customColors.textPrimary
+                                                    text = device.location,
+                                                    style = MaterialTheme.typography.bodySmall.copy(
+                                                        fontWeight = FontWeight.Normal,
+                                                        color = customColors.textSecondary
                                                     )
                                                 )
-
                                                 Spacer(modifier = Modifier.height(2.dp))
-
-                                                if (!device.location.isNullOrBlank()) {
-                                                    Text(
-                                                        text = device.location,
-                                                        style = MaterialTheme.typography.bodySmall.copy(
-                                                            fontWeight = FontWeight.Normal,
-                                                            color = customColors.textSecondary
-                                                        )
-                                                    )
-                                                    Spacer(modifier = Modifier.height(2.dp))
-                                                }
-
-                                                Text(
-                                                    text = stringResource(
-                                                        Res.string.active_devices_last_seen,
-                                                        device.formattedLastSeen
-                                                    ),
-                                                    style = MaterialTheme.typography.labelSmall,
-                                                    color = customColors.textTertiary
-                                                )
                                             }
+
+                                            Text(
+                                                text = stringResource(
+                                                    Res.string.active_devices_last_seen,
+                                                    device.formattedLastSeen
+                                                ),
+                                                style = MaterialTheme.typography.labelSmall,
+                                                color = customColors.textTertiary
+                                            )
                                         }
                                     }
                                 }

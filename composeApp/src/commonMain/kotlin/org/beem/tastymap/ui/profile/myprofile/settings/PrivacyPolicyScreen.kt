@@ -1,28 +1,11 @@
 package org.beem.tastymap.ui.profile.myprofile.settings
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SegmentedButtonDefaults.Icon
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.runtime.Composable
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
@@ -30,123 +13,105 @@ import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.TextUnitType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import cafe.adriel.voyager.core.screen.Screen
-import cafe.adriel.voyager.navigator.LocalNavigator
-import cafe.adriel.voyager.navigator.currentOrThrow
+import androidx.navigation.NavController
 import org.beem.tastymap.ui.components.responsiveContentWidth
 import org.beem.tastymap.ui.theme.LocalCustomColors
 import org.jetbrains.compose.resources.stringResource
 import tastymap.composeapp.generated.resources.Res
-import tastymap.composeapp.generated.resources.privacy_policy_last_updated
-import tastymap.composeapp.generated.resources.privacy_policy_sec1_body
-import tastymap.composeapp.generated.resources.privacy_policy_sec1_title
-import tastymap.composeapp.generated.resources.privacy_policy_sec2_body
-import tastymap.composeapp.generated.resources.privacy_policy_sec2_title
-import tastymap.composeapp.generated.resources.privacy_policy_sec3_body
-import tastymap.composeapp.generated.resources.privacy_policy_sec3_title
-import tastymap.composeapp.generated.resources.privacy_policy_sec4_body
-import tastymap.composeapp.generated.resources.privacy_policy_sec4_title
-import tastymap.composeapp.generated.resources.privacy_policy_sec5_body
-import tastymap.composeapp.generated.resources.privacy_policy_sec5_title
-import tastymap.composeapp.generated.resources.privacy_policy_title
-import tastymap.composeapp.generated.resources.settings_back_cd
+import tastymap.composeapp.generated.resources.*
 
-class PrivacyPolicyScreen : Screen {
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun PrivacyPolicyScreen(navController: NavController) {
+    val customColors = LocalCustomColors.current
 
-    @OptIn(ExperimentalMaterial3Api::class)
-    @Composable
-    override fun Content() {
-        val customColors = LocalCustomColors.current
-        val navigator = LocalNavigator.currentOrThrow
-
-        Scaffold(
-            containerColor = customColors.background,
-            topBar = {
-                TopAppBar(
-                    title = {
-                        Text(
-                            text = stringResource(Res.string.privacy_policy_title),
-                            style = MaterialTheme.typography.titleLarge.copy(
-                                color = customColors.textPrimary,
-                                fontSize = 20.sp,
-                                fontWeight = FontWeight.SemiBold
-                            )
+    Scaffold(
+        containerColor = customColors.background,
+        topBar = {
+            TopAppBar(
+                title = {
+                    Text(
+                        text = stringResource(Res.string.privacy_policy_title),
+                        style = MaterialTheme.typography.titleLarge.copy(
+                            color = customColors.textPrimary,
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.SemiBold
                         )
-                    },
-                    navigationIcon = {
-                        IconButton(onClick = { navigator.pop() }) {
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                contentDescription = stringResource(Res.string.settings_back_cd),
-                                tint = customColors.textPrimary
-                            )
-                        }
-                    },
-                    colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = customColors.background
                     )
+                },
+                navigationIcon = {
+                    IconButton(onClick = { navController.popBackStack() }) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = stringResource(Res.string.settings_back_cd),
+                            tint = customColors.textPrimary
+                        )
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = customColors.background
                 )
-            }
-        ) { innerPadding ->
-            Box(
+            )
+        }
+    ) { innerPadding ->
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding),
+            contentAlignment = Alignment.TopCenter
+        ) {
+            LazyColumn(
                 modifier = Modifier
-                    .fillMaxSize()
-                    .padding(innerPadding),
-                contentAlignment = Alignment.TopCenter
+                    .responsiveContentWidth()
+                    .fillMaxHeight()
+                    .padding(horizontal = 20.dp, vertical = 12.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                LazyColumn(
-                    modifier = Modifier
-                        .responsiveContentWidth()
-                        .fillMaxHeight()
-                        .padding(horizontal = 20.dp, vertical = 12.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    item {
-                        Text(
-                            text = stringResource(Res.string.privacy_policy_last_updated),
-                            style = MaterialTheme.typography.labelMedium,
-                            color = customColors.textSecondary
-                        )
-                    }
+                item {
+                    Text(
+                        text = stringResource(Res.string.privacy_policy_last_updated),
+                        style = MaterialTheme.typography.labelMedium,
+                        color = customColors.textSecondary
+                    )
+                }
 
-                    item {
-                        PrivacyPolicySection(
-                            title = stringResource(Res.string.privacy_policy_sec1_title),
-                            body = stringResource(Res.string.privacy_policy_sec1_body)
-                        )
-                    }
+                item {
+                    PrivacyPolicySection(
+                        title = stringResource(Res.string.privacy_policy_sec1_title),
+                        body = stringResource(Res.string.privacy_policy_sec1_body)
+                    )
+                }
 
-                    item {
-                        PrivacyPolicySection(
-                            title = stringResource(Res.string.privacy_policy_sec2_title),
-                            body = stringResource(Res.string.privacy_policy_sec2_body)
-                        )
-                    }
+                item {
+                    PrivacyPolicySection(
+                        title = stringResource(Res.string.privacy_policy_sec2_title),
+                        body = stringResource(Res.string.privacy_policy_sec2_body)
+                    )
+                }
 
-                    item {
-                        PrivacyPolicySection(
-                            title = stringResource(Res.string.privacy_policy_sec3_title),
-                            body = stringResource(Res.string.privacy_policy_sec3_body)
-                        )
-                    }
+                item {
+                    PrivacyPolicySection(
+                        title = stringResource(Res.string.privacy_policy_sec3_title),
+                        body = stringResource(Res.string.privacy_policy_sec3_body)
+                    )
+                }
 
-                    item {
-                        PrivacyPolicySection(
-                            title = stringResource(Res.string.privacy_policy_sec4_title),
-                            body = stringResource(Res.string.privacy_policy_sec4_body)
-                        )
-                    }
+                item {
+                    PrivacyPolicySection(
+                        title = stringResource(Res.string.privacy_policy_sec4_title),
+                        body = stringResource(Res.string.privacy_policy_sec4_body)
+                    )
+                }
 
-                    item {
-                        PrivacyPolicySection(
-                            title = stringResource(Res.string.privacy_policy_sec5_title),
-                            body = stringResource(Res.string.privacy_policy_sec5_body)
-                        )
-                    }
+                item {
+                    PrivacyPolicySection(
+                        title = stringResource(Res.string.privacy_policy_sec5_title),
+                        body = stringResource(Res.string.privacy_policy_sec5_body)
+                    )
+                }
 
-                    item {
-                        Spacer(modifier = Modifier.height(24.dp))
-                    }
+                item {
+                    Spacer(modifier = Modifier.height(24.dp))
                 }
             }
         }

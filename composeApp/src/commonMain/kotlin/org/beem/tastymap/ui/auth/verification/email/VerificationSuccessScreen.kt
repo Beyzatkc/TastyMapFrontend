@@ -23,7 +23,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import cafe.adriel.voyager.core.screen.Screen
+import androidx.navigation.NavController // <-- YENİ EKLENDİ
+// import cafe.adriel.voyager.core.screen.Screen <-- SİLİNDİ
 import org.beem.tastymap.ui.components.AuthFooter
 import org.beem.tastymap.ui.theme.LocalCustomColors
 import org.jetbrains.compose.resources.stringResource
@@ -32,67 +33,65 @@ import tastymap.composeapp.generated.resources.verification_success_desc
 import tastymap.composeapp.generated.resources.verification_success_icon_cd
 import tastymap.composeapp.generated.resources.verification_success_title
 
-class VerificationSuccessScreen : Screen {
-    @Composable
-    override fun Content() {
-        val colors = LocalCustomColors.current
+@Composable
+fun VerificationSuccessScreen(navController: NavController) {
+    val colors = LocalCustomColors.current
 
-        Column(
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(colors.background)
+    ) {
+        Box(
             modifier = Modifier
-                .fillMaxSize()
-                .background(colors.background)
+                .weight(1f)
+                .fillMaxWidth(),
+            contentAlignment = Alignment.Center
         ) {
-            Box(
+            Column(
                 modifier = Modifier
-                    .weight(1f)
-                    .fillMaxWidth(),
-                contentAlignment = Alignment.Center
+                    .padding(24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Column(
+                Box(
                     modifier = Modifier
-                        .padding(24.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
+                        .size(120.dp)
+                        .background(colors.green.copy(alpha = 0.12f), CircleShape),
+                    contentAlignment = Alignment.Center
                 ) {
-                    Box(
-                        modifier = Modifier
-                            .size(120.dp)
-                            .background(colors.green.copy(alpha = 0.12f), CircleShape),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.CheckCircle,
-                            contentDescription = stringResource(Res.string.verification_success_icon_cd),
-                            modifier = Modifier.size(64.dp),
-                            tint = colors.green
-                        )
-                    }
-
-                    Spacer(Modifier.height(32.dp))
-
-                    Text(
-                        text = stringResource(Res.string.verification_success_title),
-                        style = MaterialTheme.typography.headlineMedium,
-                        fontWeight = FontWeight.ExtraBold,
-                        color = colors.textPrimary,
-                        textAlign = TextAlign.Center
-                    )
-
-                    Spacer(Modifier.height(16.dp))
-
-                    Text(
-                        text = stringResource(Res.string.verification_success_desc),
-                        textAlign = TextAlign.Center,
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = colors.textSecondary,
-                        lineHeight = 24.sp,
-                        modifier = Modifier.widthIn(max = 350.dp)
+                    Icon(
+                        imageVector = Icons.Default.CheckCircle,
+                        contentDescription = stringResource(Res.string.verification_success_icon_cd),
+                        modifier = Modifier.size(64.dp),
+                        tint = colors.green
                     )
                 }
-            }
 
-            AuthFooter(
-                modifier = Modifier.fillMaxWidth()
-            )
+                Spacer(Modifier.height(32.dp))
+
+                Text(
+                    text = stringResource(Res.string.verification_success_title),
+                    style = MaterialTheme.typography.headlineMedium,
+                    fontWeight = FontWeight.ExtraBold,
+                    color = colors.textPrimary,
+                    textAlign = TextAlign.Center
+                )
+
+                Spacer(Modifier.height(16.dp))
+
+                Text(
+                    text = stringResource(Res.string.verification_success_desc),
+                    textAlign = TextAlign.Center,
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = colors.textSecondary,
+                    lineHeight = 24.sp,
+                    modifier = Modifier.widthIn(max = 350.dp)
+                )
+            }
         }
+
+        AuthFooter(
+            modifier = Modifier.fillMaxWidth()
+        )
     }
 }
