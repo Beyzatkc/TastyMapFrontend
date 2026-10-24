@@ -272,7 +272,7 @@ fun SearchScreen(navController: NavController) {
                                             }
                                         } else {
                                             // YENİ: Başka bir kullanıcı ise navigator.push yerine navController.navigate kullanıyoruz
-                                            navController.navigate(ProfileRoute(userId = user.id))
+                                            navController.navigate(ProfileRoute(userId = user.id, username = user.username))
                                         }
                                     },
                                     onDeleteHistoryClick = {

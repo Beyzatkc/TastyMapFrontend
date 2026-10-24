@@ -320,7 +320,7 @@ fun PostDetailScreen(
                                                     restoreState = true
                                                 }
                                             } else {
-                                                navController.navigate(ProfileRoute(userId = post.userId))
+                                                navController.navigate(ProfileRoute(userId = post.userId,username = post.username.toString()))
                                             }
                                         }
                                     )
@@ -457,7 +457,7 @@ fun PostDetailScreen(
         PostLikesBottomSheet(
             onDismiss = { showPostLikeSheet = false },
             onClear = { likeScreenModel.clearError()},
-            onUserClick = { selectedUserId ->
+            onUserClick = { selectedUserId, username ->
                 showPostLikeSheet = false
                 if (likeScreenModel.isMe(selectedUserId)) {
                     navController.navigate(ProfileTabRoute) {
@@ -468,7 +468,7 @@ fun PostDetailScreen(
                         restoreState = true
                     }
                 } else {
-                    navController.navigate(ProfileRoute(userId = selectedUserId))
+                    navController.navigate(ProfileRoute(userId = selectedUserId, username = username))
                 }
             },
             uiState = likeUiState,
@@ -505,7 +505,7 @@ fun PostDetailScreen(
             isOwnPost = uiState.isOwnPost,
             isCommentEnabled = uiState.post?.isCommentEnabled?: false,
             onDismiss = { showCommentSheet = false },
-            onUserClick = { selectedUserId ->
+            onUserClick = { selectedUserId ,username->
                 showCommentSheet = false
                 if (screenModel.isMe(selectedUserId)) {
                     navController.navigate(ProfileTabRoute) {
@@ -516,7 +516,7 @@ fun PostDetailScreen(
                         restoreState = true
                     }
                 } else {
-                    navController.navigate(ProfileRoute(userId = selectedUserId))
+                    navController.navigate(ProfileRoute(userId = selectedUserId, username = username))
                 }
             }
         )

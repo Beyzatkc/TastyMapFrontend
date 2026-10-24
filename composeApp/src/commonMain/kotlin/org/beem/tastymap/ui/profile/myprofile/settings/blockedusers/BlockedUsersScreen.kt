@@ -264,7 +264,9 @@ fun BlockedUsersScreen(navController: NavController) {
                                         BlockedUserItem(
                                             user = user,
                                             onUserClick = {
-                                                navController.navigate(ProfileRoute(userId = user.userId))
+                                                navController.navigate(ProfileRoute(userId = user.userId,
+                                                    user.username.toString()
+                                                ))
                                             },
                                             onUnblockClick = {
                                                 activeDialog = DialogConfig(

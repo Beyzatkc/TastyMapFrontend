@@ -4,10 +4,12 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -27,7 +29,6 @@ import org.beem.tastymap.database.TastyDatabase
 import org.beem.tastymap.domain.auth.ClearSessionUseCase
 import org.beem.tastymap.ui.auth.LogRegRoute
 import org.beem.tastymap.ui.auth.authGraph
-import org.beem.tastymap.ui.auth.logReg.LogRegScreen
 import org.beem.tastymap.ui.bottomnav.mainGraph
 import org.beem.tastymap.ui.components.AppToast
 import org.beem.tastymap.ui.post.postGraph
@@ -48,9 +49,11 @@ import tastymap.composeapp.generated.resources.auth_password_changed
 import tastymap.composeapp.generated.resources.auth_session_expired
 import kotlin.reflect.typeOf
 
+// App.kt dosyasının importlarının hemen altına ekle:
+val LocalIsWideScreen = compositionLocalOf { false }
 @Composable
 @Preview
-fun App() {
+fun App(onNavHostReady: suspend (androidx.navigation.NavController) -> Unit = {}) {
     val settingsManager: SettingsManager = koinInject()
     val isDarkModePref by settingsManager.isDarkMode.collectAsState()
     val languageCode by settingsManager.languageCode.collectAsState()
@@ -111,25 +114,39 @@ fun App() {
                 }
             }
         }
-        NavHost(
-            navController = navController,
-            startDestination = SplashRoute,
-            modifier = Modifier.fillMaxSize(),
-            typeMap = mapOf(typeOf<SubscriberListType>() to SubscriberListNavType),
-            enterTransition = { fadeIn(animationSpec = tween(400)) },
-            exitTransition = { fadeOut(animationSpec = tween(400)) },
-            popEnterTransition = { fadeIn(animationSpec = tween(400)) },
-            popExitTransition = { fadeOut(animationSpec = tween(400)) }
-        ) {
-            authGraph(navController)
-            mainGraph(navController)
-            postGraph(navController)
-            profileGraph(navController)
-            searchGraph(navController)
-            splashGraph(navController)
+        BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
+            val isWideScreen = maxWidth >= 600.dp // Geniş ekran kontrolü
 
+            // Tüm uygulamaya isWideScreen bilgisini en tepeden veriyoruz!
+            CompositionLocalProvider(
+                LocalIsWideScreen provides isWideScreen
+            ) {
+                NavHost(
+                    navController = navController,
+                    startDestination = SplashRoute,
+                    modifier = Modifier.fillMaxSize(),
+                    enterTransition = { fadeIn(animationSpec = tween(400)) },
+                    exitTransition = { fadeOut(animationSpec = tween(400)) },
+                    popEnterTransition = { fadeIn(animationSpec = tween(400)) },
+                    popExitTransition = { fadeOut(animationSpec = tween(400)) }
+                ) {
+                    authGraph(navController)
+                    mainGraph(navController)
+                    postGraph(navController)
+                    profileGraph(navController)
+                    searchGraph(navController)
+                    splashGraph(navController)
+
+                }
+                LaunchedEffect(navController) {
+                    onNavHostReady(navController)
+                }
+
+                AppToast()
+            }
         }
     }
+}
 
 
 /*
@@ -172,4 +189,3 @@ fun App() {
     }
 
  */
-}

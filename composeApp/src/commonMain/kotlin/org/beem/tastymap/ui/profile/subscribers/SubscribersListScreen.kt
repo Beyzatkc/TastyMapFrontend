@@ -38,6 +38,7 @@ import org.beem.tastymap.ui.components.TastyButton
 import org.beem.tastymap.ui.components.TastyConfirmDialog
 import org.beem.tastymap.ui.components.TastyPullToRefreshBox
 import org.beem.tastymap.ui.components.responsiveContentWidth
+import org.beem.tastymap.ui.profile.MyProfileFullScreenRoute
 import org.beem.tastymap.ui.profile.ProfileRoute
 import org.beem.tastymap.ui.theme.LocalCustomColors
 import org.jetbrains.compose.resources.stringResource
@@ -307,15 +308,9 @@ fun SubscribersListScreen(
                                             user = user,
                                             onUserClick = {
                                                 if (screenModel.isMe(user.id)) {
-                                                    navController.navigate(ProfileTabRoute) {
-                                                        popUpTo(navController.graph.findStartDestination().route!!) {
-                                                            saveState = true
-                                                        }
-                                                        launchSingleTop = true
-                                                        restoreState = true
-                                                    }
+                                                    navController.navigate(MyProfileFullScreenRoute)
                                                 } else {
-                                                    navController.navigate(ProfileRoute(userId = user.id))
+                                                    navController.navigate(ProfileRoute(userId = user.id, username = user.username))
                                                 }
                                             },
                                             onActionClick = {

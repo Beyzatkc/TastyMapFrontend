@@ -27,7 +27,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import coil3.compose.AsyncImage
 import org.beem.tastymap.data.model.post.PostGridResponse
-import org.beem.tastymap.ui.bottomnav.LocalIsWideScreen
 import org.beem.tastymap.ui.components.TastyButton
 import org.beem.tastymap.ui.components.TastyPullToRefreshBox
 import org.beem.tastymap.ui.components.responsiveContentWidth
@@ -62,6 +61,7 @@ import androidx.compose.foundation.*
 import androidx.compose.foundation.lazy.grid.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -76,6 +76,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import androidx.navigation.NavController // YENİ: NavController
+import org.beem.tastymap.LocalIsWideScreen
+import org.beem.tastymap.core.navigation.closePostUrl
+import org.beem.tastymap.core.navigation.openPostUrl
 import org.beem.tastymap.core.util.ToastManager
 import org.beem.tastymap.ui.common.NotificationBadgeManager
 import org.beem.tastymap.ui.post.PostDetailRoute
@@ -88,7 +91,7 @@ import tastymap.composeapp.generated.resources.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MyProfileScreen(navController: NavController) {
+fun MyProfileScreen(navController: NavController,showBackButton: Boolean = false) {
     val profileScreenModel = koinViewModel<MyProfileViewModel>()
     val postScreenModel = koinViewModel<MyPostViewModel>()
     val postDetailViewModel = koinViewModel<PostDetailViewModel>()
@@ -107,6 +110,14 @@ fun MyProfileScreen(navController: NavController) {
     val isWideScreen = LocalIsWideScreen.current
 
     val gridState = rememberLazyGridState()
+
+    LaunchedEffect(selectedWebPostId, isWideScreen) {
+        if (isWideScreen && selectedWebPostId != null) {
+            openPostUrl()
+        } else {
+            closePostUrl()
+        }
+    }
 
     LaunchedEffect(Unit) {
         profileScreenModel.getMyProfile()
@@ -163,6 +174,17 @@ fun MyProfileScreen(navController: NavController) {
                                 text = "@" + (profileState.profile?.username ?: ""),
                                 style = MaterialTheme.typography.titleMedium.copy(color = Color.White)
                             )
+                        },
+                        navigationIcon = {
+                            if (showBackButton) {
+                                IconButton(onClick = { navController.popBackStack() }) {
+                                    Icon(
+                                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                        contentDescription = "Geri",
+                                        tint = Color.White
+                                    )
+                                }
+                            }
                         },
                         actions = {
                             if (!isWideScreen) {

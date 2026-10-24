@@ -4,7 +4,6 @@ import androidx.navigation.NavType
 import androidx.savedstate.SavedState
 import androidx.savedstate.read
 import androidx.savedstate.write
-import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
 val SubscriberListNavType = object : NavType<SubscriberListType>(isNullableAllowed = false) {

@@ -42,7 +42,7 @@ import tastymap.composeapp.generated.resources.*
 @Composable
 fun PostLikesBottomSheet(
     onDismiss: () -> Unit,
-    onUserClick: (Long) -> Unit,
+    onUserClick: (Long,String) -> Unit,
     uiState: PostLikesUiState,
     onActionClick: (Long, RelationStatus) -> Unit,
     onClear: ()-> Unit,
@@ -183,7 +183,7 @@ fun PostLikesBottomSheet(
                                         user = user,
                                         onUserClick = {
                                             onDismiss()
-                                            onUserClick(user.userId)
+                                            onUserClick(user.userId,user.username)
                                         },
                                         onActionClick = {
                                             onActionClick(

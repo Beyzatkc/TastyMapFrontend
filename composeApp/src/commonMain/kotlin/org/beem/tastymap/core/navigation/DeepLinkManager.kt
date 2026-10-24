@@ -106,13 +106,14 @@ object DeepLinkManager {
                     _navigationEvents.trySend(route)
                 }
             }
+
             url.contains("/profile/") -> {
                 println("DEEPLINK_MGR: Profil yönlendirmesi yakalandı")
                 val userIdStr = extractPathParameter(url, "/profile/")
                 val userId = userIdStr?.toLongOrNull()
 
                 if (userId != null) {
-                    val route = ProfileRoute(userId = userId)
+                    val route = ProfileRoute(userId = userId,"")
                     pendingInitialRoute = route
                     _navigationEvents.trySend(route)
                 }

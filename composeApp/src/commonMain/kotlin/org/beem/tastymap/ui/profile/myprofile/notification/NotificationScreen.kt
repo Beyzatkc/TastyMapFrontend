@@ -203,7 +203,7 @@ fun NotificationScreen(navController: NavController) {
                                     NotificationItem(
                                         notification = notification,
                                         onItemClick = {
-                                            navController.navigate(ProfileRoute(userId = notification.actor.id))
+                                            navController.navigate(ProfileRoute(userId = notification.actor.id, username = notification.actor.username))
                                         },
                                         onAccept = {
                                             screenModel.acceptRequest(

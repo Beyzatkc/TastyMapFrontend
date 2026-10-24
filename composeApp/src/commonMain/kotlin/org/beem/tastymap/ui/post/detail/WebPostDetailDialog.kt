@@ -114,7 +114,7 @@ fun WebPostDetailDialog(
                 restoreState = true
             }
         } else {
-            navController.navigate(ProfileRoute(userId = targetUserId))
+            navController.navigate(ProfileRoute(userId = targetUserId, username = uiState.post?.username?:"Kullanıcı"))
         }
     }
 

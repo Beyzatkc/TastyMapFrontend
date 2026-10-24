@@ -42,10 +42,12 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import androidx.navigation.NavController
 import coil3.compose.AsyncImage
+import org.beem.tastymap.LocalIsWideScreen
+import org.beem.tastymap.core.navigation.closePostUrl
+import org.beem.tastymap.core.navigation.openPostUrl
 import org.beem.tastymap.core.util.ToastManager
 import org.beem.tastymap.data.model.post.PostGridResponse
 import org.beem.tastymap.domain.model.RelationStatus
-import org.beem.tastymap.ui.bottomnav.LocalIsWideScreen
 import org.beem.tastymap.ui.components.DialogConfig
 import org.beem.tastymap.ui.components.TastyButton
 import org.beem.tastymap.ui.components.TastyConfirmDialog
@@ -106,6 +108,7 @@ import tastymap.composeapp.generated.resources.profile_user_unavailable
 @Composable
 fun ProfileScreen(
     userId: Long,
+    username : String,
     navController: NavController
 ) {
     val screenModel = koinViewModel<ProfileViewModel> { parametersOf(userId) }
@@ -143,6 +146,13 @@ fun ProfileScreen(
     val removeFollowerMessage = stringResource(Res.string.dialog_remove_follower_message, state.profile?.username ?: "")
     val removeFollowerConfirm = stringResource(Res.string.profile_action_remove_follower)
 
+    LaunchedEffect(selectedWebPostId, isWideScreen) {
+        if (isWideScreen && selectedWebPostId != null) {
+            openPostUrl()
+        } else {
+            closePostUrl()
+        }
+    }
     LaunchedEffect(state.errorMessage) {
         state.errorMessage?.let { message ->
             ToastManager.show(message)

@@ -58,7 +58,7 @@ import tastymap.composeapp.generated.resources.update_comment_action_en
             onClear = {
                 screenModel.clearError()
             },
-            onUserClick = { selectedUserId ->
+            onUserClick = { selectedUserId ,username->
                 onDismissLikeSheet()
                 onNavigateToUser(selectedUserId)
             },

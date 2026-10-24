@@ -90,7 +90,7 @@ fun CommentBottomSheet(
     isCommentEnabled: Boolean,
     screenModel: CommentViewModel,
     onDismiss: () -> Unit,
-    onUserClick: (Long) -> Unit
+    onUserClick: (Long,String) -> Unit
 ) {
     val uiState by screenModel.uiState.collectAsState()
     val customColors = LocalCustomColors.current
@@ -288,7 +288,7 @@ fun CommentBottomSheet(
                                     CommentItem(
                                         comment = comment,
                                         uiState = uiState,
-                                        onUserClick = { onUserClick(comment.userId) },
+                                        onUserClick = { onUserClick(comment.userId,comment.username) },
                                         isWeb = false,
                                         isOwnPost = isOwnPost,
                                         checkIsOwnComment = { userId -> screenModel.isMe(userId) },

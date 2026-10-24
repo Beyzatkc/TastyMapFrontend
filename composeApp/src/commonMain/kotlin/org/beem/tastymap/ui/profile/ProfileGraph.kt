@@ -6,6 +6,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.toRoute
 import org.beem.tastymap.ui.profile.health.HealthWizardScreen
 import org.beem.tastymap.ui.profile.health.OnBoardingScreen
+import org.beem.tastymap.ui.profile.myprofile.MyProfileScreen
 import org.beem.tastymap.ui.profile.myprofile.editprofile.EditProfileScreen
 import org.beem.tastymap.ui.profile.myprofile.notification.NotificationScreen
 import org.beem.tastymap.ui.profile.myprofile.settings.PrivacyPolicyScreen
@@ -63,8 +64,12 @@ fun NavGraphBuilder.profileGraph(navController: NavController) {
         val route = backStackEntry.toRoute<ProfileRoute>()
         ProfileScreen(
             userId = route.userId,
+            username = route.username,
             navController = navController
         )
+    }
+    composable<MyProfileFullScreenRoute> {
+        MyProfileScreen(navController = navController, showBackButton = true)
     }
     composable<SubscribersListRoute>(
         typeMap = mapOf(typeOf<SubscriberListType>() to SubscriberListNavType)
