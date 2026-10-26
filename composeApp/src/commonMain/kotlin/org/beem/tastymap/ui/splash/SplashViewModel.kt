@@ -35,7 +35,13 @@ class SplashViewModel(
 
             when (authRepository.getAuthStatus()) {
                 AuthStatus.AUTHENTICATED -> {
-                    _effect.value = SplashEffect.NavigateToHome
+                    val refreshRoute = DeepLinkManager.pendingRefreshRoute
+                    if (refreshRoute != null) {
+                        DeepLinkManager.pendingRefreshRoute = null
+                        _effect.value = SplashEffect.NavigateToDeepLink(refreshRoute)
+                    } else {
+                        _effect.value = SplashEffect.NavigateToHome
+                    }
                 }
                 AuthStatus.NEEDS_ONBOARDING -> {
                     _effect.value = SplashEffect.NavigateToOnBoard

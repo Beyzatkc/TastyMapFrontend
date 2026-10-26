@@ -50,6 +50,7 @@ class ProfileLocalDataSource(
             .flowOn(dispatchers.io)
     }
 
+
     fun getPrivacyStatusFlow(userId: Long): Flow<Boolean?> {
         return queries.getPrivacyStatus(userId)
             .asFlow()

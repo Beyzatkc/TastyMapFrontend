@@ -22,6 +22,9 @@ CREATE TABLE ProfileEntity (
 getProfileById:
 SELECT * FROM ProfileEntity WHERE userId = ?;
 
+getProfileByUsername:
+SELECT * FROM ProfileEntity WHERE username = ?;
+
 getPrivacyStatus:
 SELECT privateProfile FROM ProfileEntity WHERE userId = ?;
 

@@ -6,6 +6,7 @@ import org.beem.tastymap.domain.model.RelationStatus
 
 @Serializable
 data class ProfileResponse(
+    val userId: Long,
     @SerialName("username")
     val username: String,
 

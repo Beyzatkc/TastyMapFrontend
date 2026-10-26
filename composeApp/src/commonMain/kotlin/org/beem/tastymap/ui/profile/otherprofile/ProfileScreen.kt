@@ -108,10 +108,15 @@ import tastymap.composeapp.generated.resources.profile_user_unavailable
 @Composable
 fun ProfileScreen(
     userId: Long,
-    username : String,
+    username: String?,
     navController: NavController
 ) {
-    val screenModel = koinViewModel<ProfileViewModel> { parametersOf(userId) }
+    val screenModel = koinViewModel<ProfileViewModel> {
+        parametersOf(
+            if (userId < 0) null else userId,
+            if (username.isNullOrBlank() || username == "null") null else username
+        )
+    }
     val postViewModel = koinViewModel<PostViewModel>()
     val state by screenModel.profileState.collectAsState()
     var isPhotoZoomed by remember { mutableStateOf(false) }
@@ -147,10 +152,12 @@ fun ProfileScreen(
     val removeFollowerConfirm = stringResource(Res.string.profile_action_remove_follower)
 
     LaunchedEffect(selectedWebPostId, isWideScreen) {
-        if (isWideScreen && selectedWebPostId != null) {
-            openPostUrl()
-        } else {
-            closePostUrl()
+        if (isWideScreen) {
+            if (selectedWebPostId != null) {
+                openPostUrl()
+            } else {
+                closePostUrl()
+            }
         }
     }
     LaunchedEffect(state.errorMessage) {
@@ -159,23 +166,36 @@ fun ProfileScreen(
             screenModel.clearError()
         }
     }
-    LaunchedEffect(Unit){
-        postViewModel.loadInitialData(userId)
+    // 1. Görme yetkisini yukarıda tek bir değişkene alıyoruz (Her yerde bunu kullanacağız)
+    val profile = state.profile
+    val canSeePosts = profile != null &&
+            !profile.blockedByMe &&
+            !profile.blockedMe &&
+            (!profile.privateProfile || profile.relationStatus == RelationStatus.FOLLOWING)
+
+    LaunchedEffect(profile?.userId, canSeePosts) {
+        if (canSeePosts) {
+            postViewModel.loadInitialData(profile.userId)
+        }
     }
 
-        val shouldLoadMore = remember {
-            derivedStateOf {
-                val totalItemsCount = gridState.layoutInfo.totalItemsCount
-                val lastVisibleItemIndex = gridState.layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: 0
-                lastVisibleItemIndex >= totalItemsCount - 3
-            }
-        }
+    val shouldLoadMore = remember {
+        derivedStateOf {
+            val totalItemsCount = gridState.layoutInfo.totalItemsCount
+            if (totalItemsCount == 0) return@derivedStateOf false
 
-        LaunchedEffect(shouldLoadMore.value) {
-            if (shouldLoadMore.value && selectedTab == 0) {
-                postViewModel.loadNextPage(userId)
+            val lastVisibleItemIndex = gridState.layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: 0
+            lastVisibleItemIndex >= totalItemsCount - 3
+        }
+    }
+
+    LaunchedEffect(shouldLoadMore.value, canSeePosts, selectedTab) {
+        if (shouldLoadMore.value && selectedTab == 0 && canSeePosts && postState.items.isNotEmpty()) {
+            profile.userId.let { validUserId ->
+                postViewModel.loadNextPage(validUserId)
             }
         }
+    }
 
         val isInitialLoading = state.isLoading && state.profile == null
 
@@ -416,10 +436,10 @@ fun ProfileScreen(
                                                             username = profile.username,
                                                             isLoading = state.isActionLoading,
                                                             onAcceptClick = {
-                                                                screenModel.acceptRequest(userId)
+                                                                screenModel.acceptRequest(profile.userId)
                                                             },
                                                             onRejectClick = {
-                                                                screenModel.rejectRequest(userId)
+                                                                screenModel.rejectRequest(profile.userId)
                                                             }
                                                         )
                                                         Spacer(modifier = Modifier.height(12.dp))
@@ -444,17 +464,19 @@ fun ProfileScreen(
                                                                                 confirmText = unfollowConfirm,
                                                                                 isDestructive = false,
                                                                                 onConfirm = {
-                                                                                    screenModel.handleFollowAction(
-                                                                                        userId,
-                                                                                        status
-                                                                                    )
+                                                                                    profile?.userId?.let { targetId ->
+                                                                                        screenModel.handleFollowAction(targetId, status)
+                                                                                    }
                                                                                 }
                                                                             )
                                                                         } else {
-                                                                            screenModel.handleFollowAction(
-                                                                                userId,
-                                                                                status
-                                                                            )
+                                                                            println("PROFILIDSI "+profile?.userId)
+                                                                            profile?.let {
+                                                                                screenModel.handleFollowAction(
+                                                                                    it.userId,
+                                                                                    status
+                                                                                )
+                                                                            }
                                                                         }
                                                                     }
                                                                 )

@@ -112,10 +112,12 @@ fun MyProfileScreen(navController: NavController,showBackButton: Boolean = false
     val gridState = rememberLazyGridState()
 
     LaunchedEffect(selectedWebPostId, isWideScreen) {
-        if (isWideScreen && selectedWebPostId != null) {
-            openPostUrl()
-        } else {
-            closePostUrl()
+        if (isWideScreen) {
+            if (selectedWebPostId != null) {
+                openPostUrl()
+            } else {
+                closePostUrl()
+            }
         }
     }
 

@@ -5,7 +5,9 @@ import kotlinx.browser.window
 private var previousHash: String = ""
 
 actual fun openPostUrl() {
-    previousHash = window.location.hash
+    if (window.location.hash != "#post") {
+        previousHash = window.location.hash
+    }
     window.history.replaceState(
         window.history.state,
         "",
@@ -14,10 +16,12 @@ actual fun openPostUrl() {
 }
 
 actual fun closePostUrl() {
-    window.history.replaceState(
-        window.history.state,
-        "",
-        previousHash.ifBlank { "#profile" }
-    )
-    previousHash = ""
+    if (previousHash.isNotBlank()) {
+        window.history.replaceState(
+            window.history.state,
+            "",
+            previousHash
+        )
+        previousHash = ""
+    }
 }

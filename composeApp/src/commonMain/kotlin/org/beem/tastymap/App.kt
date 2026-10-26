@@ -29,21 +29,22 @@ import org.beem.tastymap.database.TastyDatabase
 import org.beem.tastymap.domain.auth.ClearSessionUseCase
 import org.beem.tastymap.ui.auth.LogRegRoute
 import org.beem.tastymap.ui.auth.authGraph
+import org.beem.tastymap.ui.bottomnav.MainAppShell
+import org.beem.tastymap.ui.bottomnav.MainRoute
 import org.beem.tastymap.ui.bottomnav.mainGraph
 import org.beem.tastymap.ui.components.AppToast
 import org.beem.tastymap.ui.post.postGraph
+import org.beem.tastymap.ui.profile.OnBoardingRoute
 import org.beem.tastymap.ui.profile.profileGraph
-import org.beem.tastymap.ui.profile.subscribers.SubscriberListNavType
-import org.beem.tastymap.ui.profile.subscribers.SubscriberListType
-import org.beem.tastymap.ui.search.searchGraph
-import org.beem.tastymap.ui.splash.SplashRoute
-import org.beem.tastymap.ui.splash.SplashScreen
+import org.beem.tastymap.ui.splash.SplashEffect
+import org.beem.tastymap.ui.splash.SplashLogoView
+import org.beem.tastymap.ui.splash.SplashViewModel
 import org.beem.tastymap.ui.splash.splashGraph
 import org.beem.tastymap.ui.theme.TastyTheme
 import org.jetbrains.compose.resources.getString
 import org.koin.compose.koinInject
+import org.koin.compose.viewmodel.koinViewModel
 import tastymap.composeapp.generated.resources.Res
-import tastymap.composeapp.generated.resources.account_deactivated_subtitle
 import tastymap.composeapp.generated.resources.auth_logged_out
 import tastymap.composeapp.generated.resources.auth_password_changed
 import tastymap.composeapp.generated.resources.auth_session_expired
@@ -53,7 +54,13 @@ import kotlin.reflect.typeOf
 val LocalIsWideScreen = compositionLocalOf { false }
 @Composable
 @Preview
-fun App(onNavHostReady: suspend (androidx.navigation.NavController) -> Unit = {}) {
+fun App(
+    initialRoute: Any? = null,
+    onNavHostReady: suspend (androidx.navigation.NavController) -> Unit = {}
+) {
+    val splashViewModel = koinViewModel<SplashViewModel>()
+    val splashEffect by splashViewModel.effect.collectAsState()
+
     val settingsManager: SettingsManager = koinInject()
     val isDarkModePref by settingsManager.isDarkMode.collectAsState()
     val languageCode by settingsManager.languageCode.collectAsState()
@@ -65,7 +72,6 @@ fun App(onNavHostReady: suspend (androidx.navigation.NavController) -> Unit = {}
 
     ChangeAppLanguage(languageCode)
 
-    val navController = rememberNavController()
     TastyTheme(useDarkTheme = useDarkTheme) {
 
         setSingletonImageLoaderFactory { context ->
@@ -83,71 +89,92 @@ fun App(onNavHostReady: suspend (androidx.navigation.NavController) -> Unit = {}
                 }
                 .build()
         }
-        LaunchedEffect(navController) {
-            DeepLinkManager.navigationEvents.collect { route ->
-                navController.currentBackStackEntry?.destination?.route?.let { currentRoute ->
-                    if (!currentRoute.contains("Splash")) {
-                        navController.navigate(route) {
-                            popUpTo(0) { inclusive = true }
+        if (splashEffect == null) {
+            // NAVHOST HENÜZ OLUŞTURULMADI. URL TİTREMEZ!
+            SplashLogoView() // Ekranda sadece logo göster
+        }
+        else {
+            // 1. NAVCONTROLLER BURAYA TAŞINDI!
+            // Artık NavHost'un çizileceğinden eminiz, NavController'ı güvenle yaratabiliriz.
+            val navController = rememberNavController()
+
+            // 2. DİNLEYİCİLER BURAYA TAŞINDI!
+            LaunchedEffect(navController) {
+                DeepLinkManager.navigationEvents.collect { route ->
+                    navController.currentBackStackEntry?.destination?.route?.let { currentRoute ->
+                        if (!currentRoute.contains("Splash")) {
+                            navController.navigate(route) {
+                                popUpTo(0) { inclusive = true }
+                            }
                         }
                     }
                 }
             }
-        }
-        LaunchedEffect(navController) {
-            authEventBus.events.collect { event ->
-                clearSessionUseCase()
 
-                val message = when (event) {
-                    is AuthEventBus.AuthEvent.OnSessionExpired -> getString(Res.string.auth_session_expired)
-                    is AuthEventBus.AuthEvent.OnPasswordChanged -> getString(Res.string.auth_password_changed)
-                    is AuthEventBus.AuthEvent.OnLoggedOut -> getString(Res.string.auth_logged_out)
-                    is AuthEventBus.AuthEvent.DeleteAccount -> null
-                }
+            LaunchedEffect(navController) {
+                authEventBus.events.collect { event ->
+                    clearSessionUseCase()
 
-                message?.let {
-                    ToastManager.show(it)
-                }
+                    val message = when (event) {
+                        is AuthEventBus.AuthEvent.OnSessionExpired -> getString(Res.string.auth_session_expired)
+                        is AuthEventBus.AuthEvent.OnPasswordChanged -> getString(Res.string.auth_password_changed)
+                        is AuthEventBus.AuthEvent.OnLoggedOut -> getString(Res.string.auth_logged_out)
+                        is AuthEventBus.AuthEvent.DeleteAccount -> null
+                    }
 
-                navController.navigate(LogRegRoute) {
-                    popUpTo(0) { inclusive = true }
+                    message?.let {
+                        ToastManager.show(it)
+                    }
+
+                    navController.navigate(LogRegRoute) {
+                        popUpTo(0) { inclusive = true }
+                    }
                 }
             }
-        }
-        BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
-            val isWideScreen = maxWidth >= 600.dp // Geniş ekran kontrolü
 
-            // Tüm uygulamaya isWideScreen bilgisini en tepeden veriyoruz!
-            CompositionLocalProvider(
-                LocalIsWideScreen provides isWideScreen
-            ) {
-                NavHost(
-                    navController = navController,
-                    startDestination = SplashRoute,
-                    modifier = Modifier.fillMaxSize(),
-                    enterTransition = { fadeIn(animationSpec = tween(400)) },
-                    exitTransition = { fadeOut(animationSpec = tween(400)) },
-                    popEnterTransition = { fadeIn(animationSpec = tween(400)) },
-                    popExitTransition = { fadeOut(animationSpec = tween(400)) }
-                ) {
-                    authGraph(navController)
-                    mainGraph(navController)
-                    postGraph(navController)
-                    profileGraph(navController)
-                    searchGraph(navController)
-                    splashGraph(navController)
+            // 3. StartDestination'ı SplashEffect'e göre belirliyoruz
+            val startDest = when (val effect = splashEffect) {
+                is SplashEffect.NavigateToDeepLink -> effect.route
+                is SplashEffect.NavigateToHome -> MainRoute
+                is SplashEffect.NavigateToLogin -> LogRegRoute
+                is SplashEffect.NavigateToOnBoard -> OnBoardingRoute
+                else -> LogRegRoute
+            }
 
+            BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
+                val isWideScreen = maxWidth >= 600.dp
+                CompositionLocalProvider(LocalIsWideScreen provides isWideScreen) {
+
+                    MainAppShell(navController = navController) {
+                        NavHost(
+                            navController = navController,
+                            startDestination = startDest, // DOĞRUDAN HEDEF! (Örn: #ahmet)
+                            modifier = Modifier.fillMaxSize(),
+                            enterTransition = { fadeIn(animationSpec = tween(400)) },
+                            exitTransition = { fadeOut(animationSpec = tween(400)) },
+                            popEnterTransition = { fadeIn(animationSpec = tween(400)) },
+                            popExitTransition = { fadeOut(animationSpec = tween(400)) }
+                        ) {
+                            // 4. SPLASH GRAPH BURADA KALDI!
+                            // İstediğin gibi navController.navigate(SplashRoute) yapabilirsin.
+                            splashGraph(navController)
+                            authGraph(navController)
+                            mainGraph(navController)
+                            postGraph(navController)
+                            profileGraph(navController)
+                        }
+                    }
+
+                    // Bu kısım sayfa yenilemesinde URL'i Browser'a bağlayacak ve artık titremeyecek.
+                    LaunchedEffect(navController) {
+                        onNavHostReady(navController)
+                    }
+                    AppToast()
                 }
-                LaunchedEffect(navController) {
-                    onNavHostReady(navController)
-                }
-
-                AppToast()
             }
         }
     }
 }
-
 
 /*
         Navigator(SplashScreen()) { navigator ->

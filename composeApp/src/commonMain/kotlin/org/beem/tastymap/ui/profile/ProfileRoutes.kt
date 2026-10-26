@@ -54,10 +54,10 @@ data object VisitRoute
 
 @Serializable
 @SerialName("profile")
-data class ProfileRoute(val userId: Long, val username: String)
+data class ProfileRoute(val userId: Long, val username: String?)
 
 @Serializable
-@SerialName("myprofile")
+@SerialName("myprofilee")
 data object MyProfileFullScreenRoute
 
 @Serializable

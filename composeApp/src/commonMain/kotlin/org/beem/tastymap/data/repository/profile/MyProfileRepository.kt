@@ -93,7 +93,7 @@ class MyProfileRepository(
                 val userId = userManager.userSession.value?.userId
 
                 val remoteDto = dataSource.getUserProfile()
-                val freshProfile = remoteDto.toDomain(userId)
+                val freshProfile = remoteDto.toDomain()
 
                 memoryCache.put(userId, freshProfile)
                 localDataSource.saveProfile(freshProfile)

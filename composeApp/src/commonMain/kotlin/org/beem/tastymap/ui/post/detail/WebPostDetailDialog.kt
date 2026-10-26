@@ -54,13 +54,9 @@ import org.jetbrains.compose.resources.stringResource
 import tastymap.composeapp.generated.resources.Res
 import tastymap.composeapp.generated.resources.active_devices_retry
 import tastymap.composeapp.generated.resources.active_devices_retry_cd
-import androidx.compose.animation.*
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
@@ -72,7 +68,6 @@ import androidx.navigation.NavGraph.Companion.findStartDestination
 import org.beem.tastymap.ui.bottomnav.ProfileTabRoute
 import org.beem.tastymap.ui.post.EditPostRoute
 import org.beem.tastymap.ui.profile.ProfileRoute
-import tastymap.composeapp.generated.resources.*
 
 @Composable
 fun WebPostDetailDialog(
@@ -97,6 +92,7 @@ fun WebPostDetailDialog(
     var isSendingComment by remember { mutableStateOf(false) }
     var replyingToCommentId by remember { mutableStateOf<Long?>(null) }
     var replyingToUsername by remember { mutableStateOf<String?>(null) }
+    var toastMessage by remember { mutableStateOf<String?>(null) }
 
     val customColors = LocalCustomColors.current
     val coroutineScope = rememberCoroutineScope()
@@ -152,23 +148,16 @@ fun WebPostDetailDialog(
         }
     }
 
-    LaunchedEffect(commentUiState.errorMessage) {
-        if (!commentUiState.errorMessage.isNullOrBlank()) {
-            delay(2000L)
-            commentViewModel.clearError()
-        }
-    }
-    LaunchedEffect(likeUiState.errorMessage) {
-        if (!likeUiState.errorMessage.isNullOrBlank()) {
-            delay(2000L)
-            likesScreenModel.clearError()
-        }
-    }
+    val activeErrorMessage = commentUiState.errorMessage ?: likeUiState.errorMessage ?: uiState.errorMessage
 
-    LaunchedEffect(uiState.errorMessage) {
-        if (!uiState.errorMessage.isNullOrBlank()) {
+    LaunchedEffect(activeErrorMessage) {
+        if (!activeErrorMessage.isNullOrBlank()) {
+            toastMessage = activeErrorMessage
             delay(2000L)
-            screenModel.clearError()
+            toastMessage = null
+
+            commentViewModel.clearError()
+            likesScreenModel.clearError()
         }
     }
 
@@ -379,12 +368,9 @@ fun WebPostDetailDialog(
                     }
                 }
 
-                val activeErrorMessage = commentUiState.errorMessage
-                    ?: likeUiState.errorMessage
-                    ?: uiState.errorMessage
 
                 AnimatedVisibility(
-                    visible = !activeErrorMessage.isNullOrBlank(),
+                    visible = !toastMessage.isNullOrBlank(),
                     enter = fadeIn() + slideInVertically(initialOffsetY = { it / 2 }),
                     exit = fadeOut() + slideOutVertically(targetOffsetY = { it / 2 }),
                     modifier = Modifier

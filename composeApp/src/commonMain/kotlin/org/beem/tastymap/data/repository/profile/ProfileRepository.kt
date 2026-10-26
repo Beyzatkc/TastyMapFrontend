@@ -48,8 +48,8 @@ class ProfileRepository(
         return try {
             withContext(dispatchers.io) {
 
-                val remoteDto = dataSource.getUserProfile(userId)
-                val freshProfile = remoteDto.toDomain(userId)
+                val remoteDto = dataSource.getUserProfileId(userId)
+                val freshProfile = remoteDto.toDomain()
 
                 memoryCache.put(userId, freshProfile)
                 localDataSource.saveProfile(freshProfile)
@@ -60,6 +60,24 @@ class ProfileRepository(
             ResultWrapper.Error(
                 e.message.toString(), ErrorType.UNKNOWN_ERROR
             )
+        }
+    }
+
+    suspend fun fetchProfileByUsername(username: String): ResultWrapper<UserProfile> {
+        return try {
+            withContext(dispatchers.io) {
+                val remoteDto = dataSource.getUserProfileUsername(username)
+                val freshProfile = remoteDto.toDomain()
+
+                val userId = freshProfile.userId
+
+                memoryCache.put(userId, freshProfile)
+                localDataSource.saveProfile(freshProfile)
+
+                ResultWrapper.Success(freshProfile)
+            }
+        } catch (e: Exception) {
+            ResultWrapper.Error(e.message.toString(), ErrorType.UNKNOWN_ERROR)
         }
     }
 }

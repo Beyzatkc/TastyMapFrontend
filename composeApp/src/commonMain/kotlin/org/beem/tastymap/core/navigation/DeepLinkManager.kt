@@ -3,16 +3,27 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.receiveAsFlow
 import org.beem.tastymap.ui.auth.ResetRoute
 import org.beem.tastymap.ui.auth.VerifyRoute
-import org.beem.tastymap.ui.auth.forgotPassword.ResetScreen
-import org.beem.tastymap.ui.auth.verification.email.VerifyScreen
+import org.beem.tastymap.ui.bottomnav.AITabRoute
+import org.beem.tastymap.ui.bottomnav.MapTabRoute
+import org.beem.tastymap.ui.bottomnav.ProfileTabRoute
+import org.beem.tastymap.ui.bottomnav.SearchTabRoute
+import org.beem.tastymap.ui.bottomnav.UploadTabRoute
+import org.beem.tastymap.ui.profile.ActiveDevicesRoute
+import org.beem.tastymap.ui.profile.BlockedUsersRoute
+import org.beem.tastymap.ui.profile.EditProfileRoute
+import org.beem.tastymap.ui.profile.NotificationRoute
+import org.beem.tastymap.ui.profile.PrivacyPolicyRoute
 import org.beem.tastymap.ui.profile.ProfileRoute
-import org.beem.tastymap.ui.profile.otherprofile.ProfileScreen
+import org.beem.tastymap.ui.profile.SettingsRoute
+import org.beem.tastymap.ui.profile.VisitRoute
 
 object DeepLinkManager {
     private val _navigationEvents = Channel<Any>(Channel.BUFFERED)
     val navigationEvents = _navigationEvents.receiveAsFlow()
 
     var pendingInitialRoute: Any? = null
+    var pendingRefreshRoute: Any? = null
+
 
 
 /*
@@ -121,6 +132,65 @@ object DeepLinkManager {
         }
     }
 
+
+    // myUsername parametresini de alalım ki F5'te kendi profilimiz mi başkasınınki mi anlayalım
+    fun handleWebRefresh(url: String, myUsername: String? = null) {
+        val rawHash = url.substringAfter("#", "").substringBefore("?")
+        if (rawHash.isEmpty()) return
+
+        val hashLower = rawHash.lowercase()
+
+        // Verify veya Reset ise burası karışmasın (handleLink hallediyor)
+        if (hashLower.startsWith("verify") || hashLower.startsWith("reset") || hashLower.contains("splash") || hashLower.contains("logreg")) {
+            return
+        }
+
+        val refreshRoute: Any? = when {
+            // 1. Ana Sekmeler ve Bilinen Ekranlar (Hem kısa adını hem de main.kt'nin ürettiği Route sınıf adlarını yakalar)
+            hashLower == "map" || hashLower == "maptabroute" || hashLower == "mainroute" -> MapTabRoute
+            hashLower == "search" || hashLower == "searchtabroute" -> SearchTabRoute
+            hashLower == "ai" || hashLower == "aitabroute" -> AITabRoute
+            hashLower == "upload" || hashLower == "uploadtabroute" -> UploadTabRoute
+            hashLower == "myprofile" || hashLower == "profiletabroute" || hashLower == "myprofilefullscreenroute" -> ProfileTabRoute
+            hashLower == "notifications" || hashLower == "notificationroute" -> NotificationRoute
+            hashLower == "settings" || hashLower == "settingsroute" -> SettingsRoute
+            hashLower == "editprofile" || hashLower == "editprofileroute" -> EditProfileRoute
+            hashLower == "visits" || hashLower == "visitroute" -> VisitRoute
+            hashLower == "privacypolicy" || hashLower == "privacypolicyroute" -> PrivacyPolicyRoute
+            hashLower == "blockedusers" || hashLower == "blockedusersroute" -> BlockedUsersRoute
+            hashLower == "activedevices" || hashLower == "activedevicesroute" -> ActiveDevicesRoute
+
+            // 2. Eğer #profile/123 veya #profile/ahmet formatındaysa:
+            hashLower.startsWith("profile/") -> {
+                val parts = rawHash.substringAfter("/").split("/").filter { it.isNotEmpty() }
+                val firstPart = parts.getOrNull(0)
+                val parsedId = firstPart?.toLongOrNull()
+
+                if (parsedId != null) {
+                    val uName = parts.getOrNull(1) ?: ""
+                    // Username varsa F5'te username üzerinden çekmesi için userId = -1L veriyoruz
+                    if (uName.isNotBlank()) ProfileRoute(userId = -1L, username = uName)
+                    else ProfileRoute(userId = parsedId, username = "")
+                } else if (!firstPart.isNullOrBlank()) {
+                    ProfileRoute(userId = -1L, username = firstPart)
+                } else null
+            }
+            !rawHash.contains("/") -> {
+                val cleanUsername = rawHash.removePrefix("@")
+                if (myUsername != null && cleanUsername.equals(myUsername, ignoreCase = true)) {
+                    ProfileTabRoute // Kendi kullanıcı adıysa kendi profil sekmesine git
+                } else {
+                    ProfileRoute(userId = -1L, username = cleanUsername)
+                }
+            }
+
+            else -> null
+        }
+
+        if (refreshRoute != null) {
+            pendingRefreshRoute = refreshRoute
+        }
+    }
     private fun extractPathParameter(url: String, pathPrefix: String): String? {
 
         return url.substringAfter(pathPrefix, "")
@@ -140,6 +210,7 @@ object DeepLinkManager {
 
     fun clear() {
         pendingInitialRoute = null
+        pendingRefreshRoute = null
     }
 
 }

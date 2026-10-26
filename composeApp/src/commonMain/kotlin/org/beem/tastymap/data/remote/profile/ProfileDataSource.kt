@@ -9,7 +9,10 @@ import org.beem.tastymap.data.model.profile.ProfileResponse
 class ProfileDataSource(private val authHttpClientManager: AuthHttpClientManager) {
     private val client: HttpClient
         get() = authHttpClientManager.getClient()
-     suspend fun getUserProfile(userId: Long): ProfileResponse {
-        return client.get("api/userProfile/profile/$userId").body()
+     suspend fun getUserProfileId(userId: Long): ProfileResponse {
+        return client.get("api/user-profile/id/$userId").body()
+    }
+    suspend fun getUserProfileUsername(username: String): ProfileResponse {
+        return client.get("api/user-profile/username/$username").body()
     }
 }

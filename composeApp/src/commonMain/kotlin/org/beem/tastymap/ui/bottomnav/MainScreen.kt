@@ -53,30 +53,30 @@ import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel // YENİ: KMP ViewModel
 import tastymap.composeapp.generated.resources.Res
 import tastymap.composeapp.generated.resources.*
-
-val LocalNavigationBarVisibility = compositionLocalOf<MutableState<Boolean>> { error("NavigationBarVisibility not provided") }
-
+val LocalNavigationBarVisibility = compositionLocalOf<MutableState<Boolean>> {
+    error("NavigationBarVisibility not provided")
+}
 
 @Composable
-fun MainScreen(rootNavController: NavController) {
-    val isNavVisible = remember { mutableStateOf(true) }
+fun MainAppShell(
+    navController: NavHostController,
+    content: @Composable () -> Unit
+) {
+    val isNavVisible = remember { mutableStateOf(false) }
     val badgeManager = koinInject<NotificationBadgeManager>()
     val viewModel = koinViewModel<MainViewModel>()
     val hasUnread by badgeManager.hasUnreadBadge.collectAsState()
-
-    val bottomNavController = rememberNavController()
 
     LaunchedEffect(Unit) {
         viewModel.checkUnreadNotifications()
     }
 
-    // YENİ: BoxWithConstraints silindi! Genişlik bilgisini artık direkt App.kt'den (tepeden) çekiyoruz.
     val isWideScreen = LocalIsWideScreen.current
-
-    val navBackStackEntry by bottomNavController.currentBackStackEntryAsState()
+    val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = navBackStackEntry?.destination
 
-    val isMainScreen = currentDestination?.hierarchy?.any {
+    // Hangi ekranlarda Alt Bar veya Yan Bar görünecek?
+    val isTopLevelDestination = currentDestination?.hierarchy?.any {
         it.hasRoute(MapTabRoute::class) ||
                 it.hasRoute(SearchTabRoute::class) ||
                 it.hasRoute(AITabRoute::class) ||
@@ -84,13 +84,22 @@ fun MainScreen(rootNavController: NavController) {
                 it.hasRoute(ProfileTabRoute::class)
     } == true
 
-    LaunchedEffect(currentDestination, isWideScreen) {
-        if (isWideScreen) {
-            isNavVisible.value = true
-        } else {
-            isNavVisible.value = isMainScreen
-        }
+    // Splash veya Login gibi ekranlarda yan barın da çıkmaması için kontrol:
+    val isAuthOrSplash = currentDestination == null || currentDestination.hierarchy.any {
+        it.hasRoute(org.beem.tastymap.ui.splash.SplashRoute::class) ||
+                it.route?.contains("Splash", ignoreCase = true) == true ||
+                it.route?.contains("LogReg", ignoreCase = true) == true ||
+                it.route?.contains("Verify", ignoreCase = true) == true ||
+                it.route?.contains("Reset", ignoreCase = true) == true ||
+                it.route?.contains("OnBoarding", ignoreCase = true) == true
     }
+
+    val shouldShowNav = when {
+        isAuthOrSplash -> false
+        isWideScreen -> true
+        else -> isTopLevelDestination
+    }
+    isNavVisible.value = shouldShowNav
 
     CompositionLocalProvider(
         LocalNavigationBarVisibility provides isNavVisible
@@ -99,19 +108,21 @@ fun MainScreen(rootNavController: NavController) {
             Row(modifier = Modifier.fillMaxSize()) {
                 if (isNavVisible.value) {
                     AppNavigationRail(
-                        rootNavController = rootNavController,
-                        bottomNavController = bottomNavController,
+                        rootNavController = navController,
+                        bottomNavController = navController, // Artık ikisi de aynı tek controller!
                         hasUnreadBadge = hasUnread
                     )
                 }
-                ScaffoldContent(
-                    rootNavController = rootNavController,
-                    bottomNavController = bottomNavController,
-                    modifier = Modifier.weight(1f),
-                    contentWindowInsets = WindowInsets.safeDrawing.only(
-                        WindowInsetsSides.Horizontal + WindowInsetsSides.Top
-                    )
-                )
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxSize()
+                        .windowInsetsPadding(
+                            WindowInsets.safeDrawing.only(WindowInsetsSides.Horizontal + WindowInsetsSides.Top)
+                        )
+                ) {
+                    content()
+                }
             }
         } else {
             Scaffold(
@@ -120,47 +131,13 @@ fun MainScreen(rootNavController: NavController) {
                 ),
                 bottomBar = {
                     if (isNavVisible.value) {
-                        AppBottomBar(bottomNavController = bottomNavController)
+                        AppBottomBar(bottomNavController = navController)
                     }
                 }
             ) { innerPadding ->
-                ScaffoldContent(
-                    rootNavController = rootNavController,
-                    bottomNavController = bottomNavController,
-                    modifier = Modifier.padding(innerPadding)
-                )
-            }
-        }
-    }
-}
-// 1. ScaffoldContent'e rootNavController parametresini ekliyoruz
-@Composable
-private fun ScaffoldContent(
-    rootNavController: NavController, // YENİ EKLENDİ
-    bottomNavController: NavHostController,
-    modifier: Modifier = Modifier,
-    contentWindowInsets: WindowInsets = WindowInsets(0.dp)
-) {
-
-    Box(modifier = modifier.fillMaxSize().windowInsetsPadding(contentWindowInsets)) {
-        NavHost(
-            navController = bottomNavController,
-            startDestination = MapTabRoute
-        ) {
-            composable<MapTabRoute> {
-                // MapScreen(bottomNavController)
-            }
-            composable<SearchTabRoute> {
-                SearchScreen(rootNavController)
-            }
-            composable<AITabRoute> {
-                //AIScreen(bottomNavController)
-            }
-            composable<UploadTabRoute> {
-                CreatePostScreen(rootNavController)
-            }
-            composable<ProfileTabRoute> {
-                MyProfileScreen(navController = rootNavController, showBackButton = false)
+                Box(modifier = Modifier.padding(innerPadding).fillMaxSize()) {
+                    content()
+                }
             }
         }
     }
@@ -263,7 +240,7 @@ private fun NavTabItem(
             indication = null
         ) {
             navController.navigate(route) {
-                popUpTo(navController.graph.findStartDestination().route!!) {
+                popUpTo(MapTabRoute) {
                     saveState = true
                 }
                 launchSingleTop = true
@@ -308,7 +285,7 @@ private fun AITabItem(
             indication = null
         ) {
             navController.navigate(route) {
-                popUpTo(navController.graph.findStartDestination().route!!) {
+                popUpTo(MapTabRoute) {
                     saveState = true
                 }
                 launchSingleTop = true
@@ -446,7 +423,15 @@ private fun AppNavigationRail(
                     icon =  Icons.Outlined.Notifications,
                     isExpanded = isHovered,
                     hasBadge = hasUnreadBadge,
-                    onClick = { rootNavController.navigate(NotificationRoute) }
+                    onClick = {
+                        rootNavController.navigate(NotificationRoute) {
+                            popUpTo(MapTabRoute) {
+                                saveState = true
+                            }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                    }
                 )
 
                 RailActionItem(
@@ -454,7 +439,15 @@ private fun AppNavigationRail(
                     icon = Icons.Default.Menu,
                     isExpanded = isHovered,
                     hasBadge = false,
-                    onClick = { rootNavController.navigate(SettingsRoute) }
+                    onClick = {
+                        rootNavController.navigate(SettingsRoute) {
+                            popUpTo(MapTabRoute) {
+                                saveState = true
+                            }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                    }
                 )
             }
         }
@@ -556,7 +549,7 @@ private fun RailTabItem(
                 indication = null
             ) {
                 navController.navigate(route) {
-                    popUpTo(navController.graph.findStartDestination().route!!) {
+                    popUpTo(MapTabRoute) {
                         saveState = true
                     }
                     launchSingleTop = true
@@ -623,7 +616,7 @@ private fun RailAITabItem(
             indication = null
         ) {
             navController.navigate(route) {
-                popUpTo(navController.graph.findStartDestination().route!!) {
+                popUpTo(MapTabRoute) {
                     saveState = true
                 }
                 launchSingleTop = true

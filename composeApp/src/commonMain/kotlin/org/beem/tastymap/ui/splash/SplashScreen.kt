@@ -21,38 +21,7 @@ import tastymap.composeapp.generated.resources.Res
 import tastymap.composeapp.generated.resources.*
 
 @Composable
-fun SplashScreen(navController: NavController) {
-    val screenModel = koinViewModel<SplashViewModel>()
-    val effect by screenModel.effect.collectAsState()
-
-    LaunchedEffect(effect) {
-        effect?.let {
-            delay(2000)
-            when (it) {
-                is SplashEffect.NavigateToDeepLink -> {
-                    navController.navigate(it.route) {
-                        popUpTo(0) { inclusive = true }
-                    }
-                }
-                is SplashEffect.NavigateToLogin -> {
-                    navController.navigate(LogRegRoute) {
-                        popUpTo(0) { inclusive = true }
-                    }
-                }
-                is SplashEffect.NavigateToHome -> {
-                    navController.navigate(MainRoute) {
-                        popUpTo(0) { inclusive = true }
-                    }
-                }
-                is SplashEffect.NavigateToOnBoard -> {
-                    navController.navigate(OnBoardingRoute) {
-                        popUpTo(0) { inclusive = true }
-                    }
-                }
-            }
-        }
-    }
-
+fun SplashLogoView() {
     Surface(
         modifier = Modifier.fillMaxSize(),
         color = MaterialTheme.colorScheme.background
@@ -68,4 +37,25 @@ fun SplashScreen(navController: NavController) {
             )
         }
     }
+}
+
+// 2. SENİN MEVCUT EKRANIN (Yönlendirmeleri dinleyen kısım)
+@Composable
+fun SplashScreen(navController: NavController) {
+    val screenModel = koinViewModel<SplashViewModel>()
+    val effect by screenModel.effect.collectAsState()
+
+    LaunchedEffect(effect) {
+        effect?.let {
+            when (it) {
+                is SplashEffect.NavigateToDeepLink -> navController.navigate(it.route) { popUpTo(0) }
+                is SplashEffect.NavigateToLogin -> navController.navigate(LogRegRoute) { popUpTo(0) }
+                is SplashEffect.NavigateToHome -> navController.navigate(MainRoute) { popUpTo(0) }
+                is SplashEffect.NavigateToOnBoard -> navController.navigate(OnBoardingRoute) { popUpTo(0) }
+            }
+        }
+    }
+
+    // Arayüz olarak yukarıdaki saf logoyu çağırıyoruz
+    SplashLogoView()
 }

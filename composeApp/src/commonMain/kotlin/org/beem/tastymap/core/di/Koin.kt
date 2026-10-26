@@ -163,9 +163,10 @@ val appModule = module {
     factory { PostLikesViewModel(get(),get()) }
     factory { EditPostViewModel(get()) }
 
-    factory { (userId: Long) ->
+    factory { (userId: Long?, username: String?) ->
         ProfileViewModel(
-            userId = userId,
+            initialUserId = userId,
+            initialUsername = username,
             repo = get(),
             toggleFollowUseCase = get(),
             toggleBlockUseCase = get()

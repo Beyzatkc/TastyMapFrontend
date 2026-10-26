@@ -101,7 +101,6 @@ import org.beem.tastymap.ui.post.postcomment.CommentViewModel
 import org.beem.tastymap.ui.post.postlike.PostLikesBottomSheet
 import org.beem.tastymap.ui.post.postlike.PostLikesViewModel
 import org.beem.tastymap.ui.profile.ProfileRoute
-import org.beem.tastymap.ui.profile.otherprofile.ProfileScreen
 import org.beem.tastymap.ui.theme.LocalCustomColors
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
@@ -320,7 +319,9 @@ fun PostDetailScreen(
                                                     restoreState = true
                                                 }
                                             } else {
-                                                navController.navigate(ProfileRoute(userId = post.userId,username = post.username.toString()))
+                                                navController.navigate(ProfileRoute(
+                                                    userId = post.userId,
+                                                    username = post.username.toString()))
                                             }
                                         }
                                     )

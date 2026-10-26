@@ -1,4 +1,5 @@
 package org.beem.tastymap.ui.profile.otherprofile
+
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Job
@@ -12,12 +13,13 @@ import org.beem.tastymap.data.repository.profile.ProfileRepository
 import org.beem.tastymap.domain.model.RelationStatus
 import org.beem.tastymap.domain.usecase.ToggleBlockUseCase
 import org.beem.tastymap.domain.usecase.ToggleFollowUseCase
+
 class ProfileViewModel(
-    private val userId: Long,
+    private val initialUserId: Long?,
+    private val initialUsername: String?,
     private val repo: ProfileRepository,
     private val toggleFollowUseCase: ToggleFollowUseCase,
     private val toggleBlockUseCase: ToggleBlockUseCase,
-
 ): ViewModel() {
 
     private val _profileState = MutableStateFlow(ProfileUiState())
@@ -25,16 +27,45 @@ class ProfileViewModel(
 
     private var observeJob: Job? = null
 
+
+    var activeUserId: Long? = initialUserId
+        private set
+
     init {
-        observeProfile(userId)
-        fetchRemoteProfile()
+        if (initialUserId != null) {
+            observeProfile(initialUserId)
+            refreshProfile(initialUserId)
+        } else if (!initialUsername.isNullOrBlank()) {
+            resolveUserAndObserve(initialUsername)
+        }
     }
-    private fun observeProfile(userId:Long) {
+
+    private fun resolveUserAndObserve(username: String) {
+        viewModelScope.launch {
+            _profileState.update { it.copy(isLoading = true) }
+
+            when (val result = repo.fetchProfileByUsername(username)) {
+                is ResultWrapper.Success -> {
+                    val resolvedUserId = result.data.userId
+                    activeUserId = resolvedUserId // ID'yi yakaladık!
+
+                    observeProfile(resolvedUserId)
+
+                    _profileState.update { it.copy(isLoading = false, errorMessage = null) }
+                }
+                is ResultWrapper.Error -> {
+                    _profileState.update { it.copy(isLoading = false, errorMessage = result.message) }
+                }
+            }
+        }
+    }
+
+    private fun observeProfile(userId: Long) {
+        observeJob?.cancel()
         observeJob = viewModelScope.launch {
             repo.getProfile(userId)
                 .distinctUntilChanged()
                 .collect { profile ->
-
                     _profileState.update {
                         it.copy(
                             profile = profile,
@@ -46,45 +77,28 @@ class ProfileViewModel(
         }
     }
 
-    fun fetchRemoteProfile() {
+    // Overload (Yardımcı private metod): Direkt ID alıp refresh atar
+    private fun refreshProfile(userId: Long) {
         viewModelScope.launch {
-            when (val result = repo.refreshProfile(userId)) {
-
-                is ResultWrapper.Success -> {
-                    _profileState.update {
-                        it.copy(
-                            isLoading = false,
-                            errorMessage = null
-                        )
-                    }
-                }
-
-                is ResultWrapper.Error -> {
-                    _profileState.update {
-                        it.copy(
-                            isLoading = false,
-                            errorMessage = result.message
-                        )
-                    }
-                }
-            }
+            repo.refreshProfile(userId)
         }
     }
 
+
+    // Swipe to Refresh (Kullanıcı ekrandan aşağı çekince çalışır)
     fun refreshProfile() {
+        val currentId = activeUserId ?: return
 
         if (_profileState.value.isRefreshing) {
             return
         }
 
         viewModelScope.launch {
-
             _profileState.update {
                 it.copy(isRefreshing = true)
             }
 
-            when (val result = repo.refreshProfile(userId)) {
-
+            when (val result = repo.refreshProfile(currentId)) {
                 is ResultWrapper.Success -> {
                     _profileState.update {
                         it.copy(
@@ -95,7 +109,6 @@ class ProfileViewModel(
                         )
                     }
                 }
-
                 is ResultWrapper.Error -> {
                     _profileState.update {
                         it.copy(
@@ -113,6 +126,7 @@ class ProfileViewModel(
             it.copy(errorMessage = null)
         }
     }
+
     fun toggleBlockStatus(targetUserId: Long) {
         val currentProfile = _profileState.value.profile ?: return
 
@@ -141,7 +155,6 @@ class ProfileViewModel(
             }
         }
     }
-
 
     fun handleFollowAction(targetUserId: Long, currentStatus: RelationStatus) {
         executeAction(
