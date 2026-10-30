@@ -33,7 +33,6 @@ import org.beem.tastymap.ui.auth.logReg.LogRegScreen
 import org.beem.tastymap.ui.components.AuthFooter
 import org.beem.tastymap.ui.profile.myprofile.settings.UiMessage
 import org.beem.tastymap.ui.splash.SplashRoute
-import org.beem.tastymap.ui.splash.SplashScreen
 import org.beem.tastymap.ui.theme.LocalCustomColors
 import org.jetbrains.compose.resources.getString
 import org.jetbrains.compose.resources.stringResource

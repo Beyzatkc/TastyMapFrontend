@@ -1,5 +1,6 @@
 package org.beem.tastymap.ui.auth.logReg
 
+import MainRoute
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.SizeTransform
@@ -55,7 +56,6 @@ import org.beem.tastymap.ui.auth.EmailRoute
 import org.beem.tastymap.ui.auth.ForgotRoute
 import org.beem.tastymap.ui.auth.LoginPendingRoute
 import org.beem.tastymap.ui.auth.common.AuthEffect
-import org.beem.tastymap.ui.bottomnav.MainRoute
 import org.beem.tastymap.ui.components.AuthFooter
 import org.beem.tastymap.ui.components.PasswordStrengthIndicator
 import org.beem.tastymap.ui.components.TastyButton

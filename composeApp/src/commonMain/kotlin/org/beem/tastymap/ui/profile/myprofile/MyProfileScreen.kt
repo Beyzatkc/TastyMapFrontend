@@ -74,6 +74,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import androidx.compose.ui.zIndex
 import androidx.navigation.NavController // YENİ: NavController
 import org.beem.tastymap.LocalIsWideScreen
@@ -86,8 +88,9 @@ import org.beem.tastymap.ui.profile.EditProfileRoute
 import org.beem.tastymap.ui.profile.NotificationRoute
 import org.beem.tastymap.ui.profile.SettingsRoute
 import org.beem.tastymap.ui.profile.SubscribersListRoute
+import org.beem.tastymap.ui.profile.common.ConnectionsDialogState
+import org.beem.tastymap.ui.profile.subscribers.SubscribersListScreen
 import org.koin.compose.viewmodel.koinViewModel
-import tastymap.composeapp.generated.resources.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -97,7 +100,7 @@ fun MyProfileScreen(navController: NavController,showBackButton: Boolean = false
     val postDetailViewModel = koinViewModel<PostDetailViewModel>()
     val commentViewModel = koinViewModel<CommentViewModel>()
     val postLikesViewModel = koinViewModel<PostLikesViewModel>()
-
+    var connectionsDialog by remember { mutableStateOf<ConnectionsDialogState?>(null)}
     var selectedWebPostId by remember { mutableStateOf<Long?>(null) }
     val profileState by profileScreenModel.myProfileState.collectAsState()
     val postState by postScreenModel.uiState.collectAsState()
@@ -154,6 +157,24 @@ fun MyProfileScreen(navController: NavController,showBackButton: Boolean = false
 
     val isInitialLoading = profileState.isLoading && profileState.profile == null
 
+    fun openConnections(tab: SubscriberListType) {
+        profileState.profile?.userId?.let { userId ->
+            if (isWideScreen) {
+                connectionsDialog = ConnectionsDialogState(
+                    userId = userId,
+                    initialTab = tab
+                )
+            } else {
+                navController.navigate(
+                    SubscribersListRoute(
+                        userId = userId,
+                        initialTab = tab
+                    )
+                )
+            }
+        }
+    }
+
     Crossfade(
         targetState = isInitialLoading,
         label = "ProfileFullScreenLoading"
@@ -168,6 +189,7 @@ fun MyProfileScreen(navController: NavController,showBackButton: Boolean = false
                 CircularProgressIndicator(color = customColors.gourmetOrange)
             }
         } else {
+
             Scaffold(
                 topBar = {
                     TopAppBar(
@@ -438,14 +460,7 @@ fun MyProfileScreen(navController: NavController,showBackButton: Boolean = false
                                                 title = stringResource(Res.string.my_profile_metric_subscribers),
                                                 value = (profile?.subscriberCount ?: 0).toString(),
                                                 onClick = {
-                                                    profile?.userId?.let { userId ->
-                                                        navController.navigate(
-                                                            SubscribersListRoute(
-                                                                userId = userId,
-                                                                initialTab = SubscriberListType.SUBSCRIBERS
-                                                            )
-                                                        )
-                                                    }
+                                                    openConnections(SubscriberListType.SUBSCRIBERS)
                                                 },
                                                 modifier = Modifier.weight(1f),
                                                 cardColor = customColors.surfaceVariant
@@ -454,12 +469,7 @@ fun MyProfileScreen(navController: NavController,showBackButton: Boolean = false
                                                 title = stringResource(Res.string.my_profile_metric_following),
                                                 value = (profile?.subscribedCount ?: 0).toString(),
                                                 onClick = {
-                                                    profile?.userId?.let { userId ->
-                                                        // YENİ: navigator.push yerine navigate
-                                                        navController.navigate(
-                                                            SubscribersListRoute(userId = userId, initialTab = SubscriberListType.SUBSCRIBES)
-                                                        )
-                                                    }
+                                                    openConnections(SubscriberListType.SUBSCRIBES)
                                                 },
                                                 modifier = Modifier.weight(1f),
                                                 cardColor = customColors.surfaceVariant
@@ -703,6 +713,39 @@ fun MyProfileScreen(navController: NavController,showBackButton: Boolean = false
                             }
                         }
                     }
+                }
+            }
+        }
+    }
+    connectionsDialog?.let { dialog ->
+        Dialog(
+            onDismissRequest = {
+                connectionsDialog = null
+            },
+            properties = DialogProperties(
+                usePlatformDefaultWidth = false
+            )
+        ) {
+            Surface(
+                modifier = Modifier
+                    .fillMaxWidth(0.5f)
+                    .widthIn(max = 460.dp)
+                    .fillMaxHeight(0.85f)
+                    .heightIn(max = 720.dp),
+                shape = RoundedCornerShape(20.dp),
+                color = customColors.background,
+                shadowElevation = 24.dp
+            ) {
+                key(dialog.userId, dialog.initialTab) {
+                    SubscribersListScreen(
+                        userId = dialog.userId,
+                        initialTab = dialog.initialTab,
+                        navController = navController,
+                        onClose = {
+                            connectionsDialog = null
+                        },
+                        modifier = Modifier.fillMaxSize()
+                    )
                 }
             }
         }

@@ -1,5 +1,6 @@
 package org.beem.tastymap.ui.post.detail
 
+import ProfileGraphRoute
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
@@ -89,7 +90,6 @@ import org.beem.tastymap.core.util.ToastManager
 import org.beem.tastymap.core.util.formatLikeCount
 import org.beem.tastymap.core.util.formatToRelativeDateTime
 import org.beem.tastymap.data.model.post.PostResponse
-import org.beem.tastymap.ui.bottomnav.ProfileTabRoute
 import org.beem.tastymap.ui.components.DialogConfig
 import org.beem.tastymap.ui.components.LoadingOverlay
 import org.beem.tastymap.ui.components.TastyConfirmDialog
@@ -311,7 +311,7 @@ fun PostDetailScreen(
                                         post = post,
                                         onUserClick = {
                                             if (screenModel.isMe(post.userId)) {
-                                                navController.navigate(ProfileTabRoute) {
+                                                navController.navigate(ProfileGraphRoute) {
                                                     popUpTo(navController.graph.findStartDestination().route!!) {
                                                         saveState = true
                                                     }
@@ -461,7 +461,7 @@ fun PostDetailScreen(
             onUserClick = { selectedUserId, username ->
                 showPostLikeSheet = false
                 if (likeScreenModel.isMe(selectedUserId)) {
-                    navController.navigate(ProfileTabRoute) {
+                    navController.navigate(ProfileGraphRoute) {
                         popUpTo(navController.graph.findStartDestination().route!!) {
                             saveState = true
                         }
@@ -509,7 +509,7 @@ fun PostDetailScreen(
             onUserClick = { selectedUserId ,username->
                 showCommentSheet = false
                 if (screenModel.isMe(selectedUserId)) {
-                    navController.navigate(ProfileTabRoute) {
+                    navController.navigate(ProfileGraphRoute) {
                         popUpTo(navController.graph.findStartDestination().route!!) {
                             saveState = true
                         }

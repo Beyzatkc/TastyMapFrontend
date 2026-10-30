@@ -49,15 +49,17 @@ import tastymap.composeapp.generated.resources.*
 fun SubscribersListScreen(
     userId: Long,
     initialTab: SubscriberListType = SubscriberListType.SUBSCRIBERS,
-    navController: NavController
-) {
+    navController: NavController,
+    onClose: (() -> Unit)? = null,
+    modifier: Modifier = Modifier
+){
     val screenModel = koinViewModel<SubscribersListViewModel>()
     val uiState by screenModel.uiState.collectAsState()
     val customColors = LocalCustomColors.current
 
     var activeDialog by remember { mutableStateOf<DialogConfig?>(null) }
 
-    var selectedTab by remember { mutableStateOf(initialTab) }
+    var selectedTab by remember(initialTab) { mutableStateOf(initialTab) }
     var searchQuery by remember { mutableStateOf("") }
     val listState = rememberLazyListState()
 
@@ -96,11 +98,20 @@ fun SubscribersListScreen(
     }
 
     Scaffold(
+        modifier = modifier,
         topBar = {
             Column {
                 TopAppBar(
                     navigationIcon = {
-                        IconButton(onClick = { navController.popBackStack() }) { // YENİ: navigator.pop yerine popBackStack()
+                        IconButton(
+                            onClick = {
+                                if (onClose != null) {
+                                    onClose()
+                                } else {
+                                    navController.popBackStack()
+                                }
+                            }
+                        ) {
                             Icon(
                                 imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                                 contentDescription = stringResource(Res.string.settings_back_cd),

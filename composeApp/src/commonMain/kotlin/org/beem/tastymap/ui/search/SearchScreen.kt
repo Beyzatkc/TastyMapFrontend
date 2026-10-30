@@ -1,5 +1,6 @@
 package org.beem.tastymap.ui.search
 
+import ProfileGraphRoute
 import androidx.compose.animation.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -34,7 +35,6 @@ import androidx.navigation.NavGraph.Companion.findStartDestination // YENİ: Tab
 import coil3.compose.AsyncImage
 import org.beem.tastymap.core.util.ToastManager
 import org.beem.tastymap.data.model.search.UserSearchResponse
-import org.beem.tastymap.ui.bottomnav.ProfileTabRoute // YENİ: Profil sekmesi rotası
 import org.beem.tastymap.ui.components.responsiveContentWidth
 import org.beem.tastymap.ui.profile.ProfileRoute
 // import org.beem.tastymap.ui.profile.ProfileRoute // Kendi profil rota importun
@@ -263,7 +263,7 @@ fun SearchScreen(navController: NavController) {
                                     onUserClick = {
                                         screenModel.onUserClicked(user)
                                         if (screenModel.isMe(user.id)) {
-                                            navController.navigate(ProfileTabRoute) {
+                                            navController.navigate(ProfileGraphRoute) {
                                                 popUpTo(navController.graph.findStartDestination().route!!) {
                                                     saveState = true
                                                 }

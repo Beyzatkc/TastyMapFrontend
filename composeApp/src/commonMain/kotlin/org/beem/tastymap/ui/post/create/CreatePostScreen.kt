@@ -1,4 +1,6 @@
 package org.beem.tastymap.ui.post.create
+import ProfileGraphRoute
+import ProfileTabRoute
 import androidx.compose.animation.*
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
@@ -40,7 +42,6 @@ import org.beem.tastymap.core.camera.rememberCameraLauncher
 import org.beem.tastymap.core.util.ToastManager
 import org.beem.tastymap.data.model.post.PostAndVisitRequest
 import org.beem.tastymap.data.model.visit.VisitResponse
-import org.beem.tastymap.ui.bottomnav.ProfileTabRoute
 import org.beem.tastymap.ui.components.TastyButton
 import org.beem.tastymap.ui.components.TastyTextField
 import org.beem.tastymap.ui.components.responsiveContentWidth
@@ -113,8 +114,9 @@ fun CreatePostScreen(navController: NavController) {
             viewModel.resetSuccess()
 
             // YENİ: Voyager tabNavigator.current = ProfileTab YERİNE standart alt sekme geçişi
-            navController.navigate(ProfileTabRoute) {
-                popUpTo(navController.graph.findStartDestination().route!!) {
+            navController.navigate(ProfileGraphRoute) {
+                // route!! yerine .id kullanıyoruz (Type-Safe Navigation standartı)
+                popUpTo(navController.graph.findStartDestination().id) {
                     saveState = true
                 }
                 launchSingleTop = true

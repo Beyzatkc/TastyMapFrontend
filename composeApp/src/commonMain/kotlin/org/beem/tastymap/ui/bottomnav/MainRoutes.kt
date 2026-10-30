@@ -1,28 +1,24 @@
-package org.beem.tastymap.ui.bottomnav
-
-import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
-@Serializable
-@SerialName("main")
-data object MainRoute
+// Ana uygulama kabuğu (Tüm alt sekmeleri kapsar)
+@Serializable data object MainRoute
 
-@Serializable
-@SerialName("map")
-data object MapTabRoute
+// --- MAP SEKMESİ ---
+@Serializable data object MapGraphRoute
+@Serializable data object MapTabRoute // Harita ana ekranı
 
-@Serializable
-@SerialName("search")
-data object SearchTabRoute
+// --- ARAMA SEKMESİ ---
+@Serializable data object SearchGraphRoute
+@Serializable data object SearchTabRoute // Arama ana ekranı
 
-@Serializable
-@SerialName("ai")
-data object AITabRoute
+// --- AI SEKMESİ ---
+@Serializable data object AIGraphRoute
+@Serializable data object AITabRoute // AI ana ekranı
 
-@Serializable
-@SerialName("upload")
-data object UploadTabRoute
+// --- YÜKLEME SEKMESİ ---
+@Serializable data object UploadGraphRoute
+@Serializable data object UploadTabRoute // Yükleme ana ekranı
 
-@Serializable
-@SerialName("myprofile")
-data object ProfileTabRoute
+// --- PROFİL SEKMESİ ---
+@Serializable data object ProfileGraphRoute
+@Serializable data object ProfileTabRoute // Kendi profilimizin ana ekranı

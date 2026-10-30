@@ -1,5 +1,6 @@
 package org.beem.tastymap
 
+import ProfileGraphRoute
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.window.ComposeViewport
 import androidx.navigation.ExperimentalBrowserHistoryApi
@@ -16,7 +17,6 @@ import org.beem.tastymap.core.navigation.DeepLinkManager
 import org.beem.tastymap.core.notification.setupWebNotificationBridge
 import org.beem.tastymap.database.TastyDatabase
 import org.beem.tastymap.di.webModule
-import org.beem.tastymap.ui.bottomnav.ProfileTabRoute
 import org.beem.tastymap.ui.common.NotificationBadgeManager
 import org.beem.tastymap.ui.profile.MyProfileFullScreenRoute
 import org.beem.tastymap.ui.profile.ProfileRoute
@@ -65,7 +65,7 @@ fun main() {
                             }
 
                             // 2. KENDİ PROFİLİM (Alt Bar veya Tam Ekran): Kendi kullanıcı adını göster!
-                            destination.hasRoute<ProfileTabRoute>() ||
+                            destination.hasRoute<ProfileGraphRoute>() ||
                                     destination.hasRoute<MyProfileFullScreenRoute>() -> {
                                 "#${userManager.userSession.value?.username ?: "Kullanıcı"}"
                             }

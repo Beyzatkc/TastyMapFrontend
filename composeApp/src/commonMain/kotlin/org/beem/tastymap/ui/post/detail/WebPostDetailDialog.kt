@@ -1,5 +1,6 @@
 package org.beem.tastymap.ui.post.detail
 
+import ProfileGraphRoute
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
@@ -65,7 +66,6 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.navigation.NavController
 import androidx.navigation.NavGraph.Companion.findStartDestination
-import org.beem.tastymap.ui.bottomnav.ProfileTabRoute
 import org.beem.tastymap.ui.post.EditPostRoute
 import org.beem.tastymap.ui.profile.ProfileRoute
 
@@ -102,7 +102,7 @@ fun WebPostDetailDialog(
     val navigateToProfile: (Long) -> Unit = { targetUserId ->
         onDismiss()
         if (screenModel.isMe(targetUserId)) {
-            navController.navigate(ProfileTabRoute) {
+            navController.navigate(ProfileGraphRoute) {
                 popUpTo(navController.graph.findStartDestination().route!!) {
                     saveState = true
                 }

@@ -10,9 +10,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import kotlinx.coroutines.delay
-import org.beem.tastymap.ui.auth.LogRegRoute
-import org.beem.tastymap.ui.bottomnav.MainRoute
 import org.beem.tastymap.ui.profile.OnBoardingRoute
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
@@ -38,8 +35,13 @@ fun SplashLogoView() {
         }
     }
 }
+@Composable
+fun SplashScreen(navController: NavController) {
+    SplashLogoView()
+}
 
 // 2. SENİN MEVCUT EKRANIN (Yönlendirmeleri dinleyen kısım)
+/*
 @Composable
 fun SplashScreen(navController: NavController) {
     val screenModel = koinViewModel<SplashViewModel>()
@@ -59,3 +61,5 @@ fun SplashScreen(navController: NavController) {
     // Arayüz olarak yukarıdaki saf logoyu çağırıyoruz
     SplashLogoView()
 }
+
+ */

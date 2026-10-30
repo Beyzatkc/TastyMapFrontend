@@ -1,13 +1,13 @@
 package org.beem.tastymap.core.navigation
+import AIGraphRoute
+import MapGraphRoute
+import ProfileGraphRoute
+import SearchGraphRoute
+import UploadGraphRoute
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.receiveAsFlow
 import org.beem.tastymap.ui.auth.ResetRoute
 import org.beem.tastymap.ui.auth.VerifyRoute
-import org.beem.tastymap.ui.bottomnav.AITabRoute
-import org.beem.tastymap.ui.bottomnav.MapTabRoute
-import org.beem.tastymap.ui.bottomnav.ProfileTabRoute
-import org.beem.tastymap.ui.bottomnav.SearchTabRoute
-import org.beem.tastymap.ui.bottomnav.UploadTabRoute
 import org.beem.tastymap.ui.profile.ActiveDevicesRoute
 import org.beem.tastymap.ui.profile.BlockedUsersRoute
 import org.beem.tastymap.ui.profile.EditProfileRoute
@@ -146,12 +146,14 @@ object DeepLinkManager {
         }
 
         val refreshRoute: Any? = when {
-            // 1. Ana Sekmeler ve Bilinen Ekranlar (Hem kısa adını hem de main.kt'nin ürettiği Route sınıf adlarını yakalar)
-            hashLower == "map" || hashLower == "maptabroute" || hashLower == "mainroute" -> MapTabRoute
-            hashLower == "search" || hashLower == "searchtabroute" -> SearchTabRoute
-            hashLower == "ai" || hashLower == "aitabroute" -> AITabRoute
-            hashLower == "upload" || hashLower == "uploadtabroute" -> UploadTabRoute
-            hashLower == "myprofile" || hashLower == "profiletabroute" || hashLower == "myprofilefullscreenroute" -> ProfileTabRoute
+            // 1. Ana Sekmeler ve Bilinen Ekranlar (Artık Graph rotalarına yönlendiriyoruz)
+            hashLower == "map" || hashLower == "maptabroute" || hashLower == "mapgraphroute" || hashLower == "mainroute" -> MapGraphRoute
+            hashLower == "search" || hashLower == "searchtabroute" || hashLower == "searchgraphroute" -> SearchGraphRoute
+            hashLower == "ai" || hashLower == "aitabroute" || hashLower == "aigraphroute" -> AIGraphRoute
+            hashLower == "upload" || hashLower == "uploadtabroute" || hashLower == "uploadgraphroute" -> UploadGraphRoute
+            hashLower == "myprofile" || hashLower == "profiletabroute" || hashLower == "profilegraphroute" || hashLower == "myprofilefullscreenroute" -> ProfileGraphRoute
+
+            // Diğer alt ekranlar aynı kalıyor
             hashLower == "notifications" || hashLower == "notificationroute" -> NotificationRoute
             hashLower == "settings" || hashLower == "settingsroute" -> SettingsRoute
             hashLower == "editprofile" || hashLower == "editprofileroute" -> EditProfileRoute
@@ -178,7 +180,7 @@ object DeepLinkManager {
             !rawHash.contains("/") -> {
                 val cleanUsername = rawHash.removePrefix("@")
                 if (myUsername != null && cleanUsername.equals(myUsername, ignoreCase = true)) {
-                    ProfileTabRoute // Kendi kullanıcı adıysa kendi profil sekmesine git
+                    ProfileGraphRoute // Kendi kullanıcı adıysa kendi profil grafiğine git
                 } else {
                     ProfileRoute(userId = -1L, username = cleanUsername)
                 }

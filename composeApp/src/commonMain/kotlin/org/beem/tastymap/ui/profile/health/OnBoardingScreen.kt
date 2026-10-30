@@ -1,4 +1,5 @@
 package org.beem.tastymap.ui.profile.health
+import ProfileGraphRoute
 import androidx.compose.animation.*
 import androidx.compose.animation.core.EaseOutCubic
 import androidx.compose.animation.core.tween
@@ -26,7 +27,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import org.beem.tastymap.core.util.ToastManager
-import org.beem.tastymap.ui.bottomnav.ProfileTabRoute
 import org.beem.tastymap.ui.components.TastyButton
 import org.beem.tastymap.ui.profile.HealthWizardRoute
 import org.beem.tastymap.ui.theme.CustomColors
@@ -48,7 +48,7 @@ fun OnBoardingScreen(navController: NavController) {
 
     LaunchedEffect(state.isSuccess) {
         if (state.isSuccess) {
-            navController.navigate(ProfileTabRoute) {
+            navController.navigate(ProfileGraphRoute) {
                 popUpTo(0) { inclusive = true }
             }
             screenModel.resetSuccessState()

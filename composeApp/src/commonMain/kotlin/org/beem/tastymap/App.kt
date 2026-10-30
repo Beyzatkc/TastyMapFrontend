@@ -1,5 +1,8 @@
 package org.beem.tastymap
 
+import MainRoute
+import MapGraphRoute
+import MapTabRoute
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -28,9 +31,10 @@ import org.beem.tastymap.core.util.ToastManager
 import org.beem.tastymap.database.TastyDatabase
 import org.beem.tastymap.domain.auth.ClearSessionUseCase
 import org.beem.tastymap.ui.auth.LogRegRoute
+import org.beem.tastymap.ui.auth.ResetRoute
+import org.beem.tastymap.ui.auth.VerifyRoute
 import org.beem.tastymap.ui.auth.authGraph
 import org.beem.tastymap.ui.bottomnav.MainAppShell
-import org.beem.tastymap.ui.bottomnav.MainRoute
 import org.beem.tastymap.ui.bottomnav.mainGraph
 import org.beem.tastymap.ui.components.AppToast
 import org.beem.tastymap.ui.post.postGraph
@@ -92,8 +96,7 @@ fun App(
         if (splashEffect == null) {
             // NAVHOST HENÜZ OLUŞTURULMADI. URL TİTREMEZ!
             SplashLogoView() // Ekranda sadece logo göster
-        }
-        else {
+        } else {
             // 1. NAVCONTROLLER BURAYA TAŞINDI!
             // Artık NavHost'un çizileceğinden eminiz, NavController'ı güvenle yaratabiliriz.
             val navController = rememberNavController()
@@ -104,7 +107,9 @@ fun App(
                     navController.currentBackStackEntry?.destination?.route?.let { currentRoute ->
                         if (!currentRoute.contains("Splash")) {
                             navController.navigate(route) {
-                                popUpTo(0) { inclusive = true }
+                                val popTarget: Any = if (route is VerifyRoute || route is ResetRoute) LogRegRoute else MainRoute
+                                popUpTo(popTarget) { inclusive = false }
+                                launchSingleTop = true
                             }
                         }
                     }
@@ -132,13 +137,25 @@ fun App(
                 }
             }
 
-            // 3. StartDestination'ı SplashEffect'e göre belirliyoruz
-            val startDest = when (val effect = splashEffect) {
-                is SplashEffect.NavigateToDeepLink -> effect.route
-                is SplashEffect.NavigateToHome -> MainRoute
-                is SplashEffect.NavigateToLogin -> LogRegRoute
-                is SplashEffect.NavigateToOnBoard -> OnBoardingRoute
-                else -> LogRegRoute
+            val safeStartDest = remember(splashEffect) {
+                when (val effect = splashEffect) {
+                    is SplashEffect.NavigateToDeepLink -> {
+                        when (effect.route) {
+                            is VerifyRoute, is ResetRoute -> LogRegRoute
+                            else -> MainRoute
+                        }
+                    }
+                    is SplashEffect.NavigateToHome -> MainRoute
+                    is SplashEffect.NavigateToLogin -> LogRegRoute
+                    is SplashEffect.NavigateToOnBoard -> OnBoardingRoute
+                    else -> LogRegRoute
+                }
+            }
+
+
+            val jumpRoute = remember(splashEffect) {
+                val route = (splashEffect as? SplashEffect.NavigateToDeepLink)?.route
+                if (route == MainRoute || route == MapGraphRoute) null else route
             }
 
             BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
@@ -148,15 +165,13 @@ fun App(
                     MainAppShell(navController = navController) {
                         NavHost(
                             navController = navController,
-                            startDestination = startDest, // DOĞRUDAN HEDEF! (Örn: #ahmet)
+                            startDestination = safeStartDest, // SADECE ROOT ROTA (MainRoute) VEREBİLİRİZ!
                             modifier = Modifier.fillMaxSize(),
                             enterTransition = { fadeIn(animationSpec = tween(400)) },
                             exitTransition = { fadeOut(animationSpec = tween(400)) },
                             popEnterTransition = { fadeIn(animationSpec = tween(400)) },
                             popExitTransition = { fadeOut(animationSpec = tween(400)) }
                         ) {
-                            // 4. SPLASH GRAPH BURADA KALDI!
-                            // İstediğin gibi navController.navigate(SplashRoute) yapabilirsin.
                             splashGraph(navController)
                             authGraph(navController)
                             mainGraph(navController)
@@ -165,8 +180,13 @@ fun App(
                         }
                     }
 
-                    // Bu kısım sayfa yenilemesinde URL'i Browser'a bağlayacak ve artık titremeyecek.
-                    LaunchedEffect(navController) {
+                    LaunchedEffect(navController, jumpRoute) {
+                        if (jumpRoute != null) {
+                            navController.navigate(jumpRoute) {
+                                popUpTo(safeStartDest) { inclusive = false }
+                                launchSingleTop = true
+                            }
+                        }
                         onNavHostReady(navController)
                     }
                     AppToast()

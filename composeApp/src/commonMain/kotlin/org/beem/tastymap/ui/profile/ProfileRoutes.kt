@@ -60,6 +60,7 @@ data class ProfileRoute(val userId: Long, val username: String?)
 @SerialName("myprofilee")
 data object MyProfileFullScreenRoute
 
+
 @Serializable
 @SerialName("subscribers")
 data class SubscribersListRoute(val userId: Long, val initialTab: SubscriberListType)

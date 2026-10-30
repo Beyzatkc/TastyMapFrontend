@@ -1,5 +1,6 @@
 package org.beem.tastymap.ui.profile.health
 
+import ProfileGraphRoute
 import androidx.compose.animation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -15,7 +16,6 @@ import androidx.navigation.NavController
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import org.beem.tastymap.core.util.ToastManager
 import org.beem.tastymap.ui.animations.TastyAnimations
-import org.beem.tastymap.ui.bottomnav.ProfileTabRoute
 import org.beem.tastymap.ui.profile.health.stepScreens.AllergiesStep
 import org.beem.tastymap.ui.profile.health.stepScreens.DiabetesStep
 import org.beem.tastymap.ui.profile.health.stepScreens.EatTypeStep
@@ -42,11 +42,12 @@ fun HealthWizardScreen(navController: NavController) {
 
     LaunchedEffect(state.isSuccess) {
         if (state.isSuccess) {
-            navController.navigate(ProfileTabRoute) {
-                popUpTo(navController.graph.findStartDestination().route!!) {
-                    inclusive = true
+            navController.navigate(ProfileGraphRoute) {
+                popUpTo(navController.graph.findStartDestination().id) {
+                    saveState = true
                 }
                 launchSingleTop = true
+                restoreState = true
             }
         }
     }

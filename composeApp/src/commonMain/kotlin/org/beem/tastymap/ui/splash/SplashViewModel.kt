@@ -9,6 +9,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import org.beem.tastymap.core.navigation.DeepLinkManager
 import org.beem.tastymap.data.model.auth.AuthStatus
+import org.beem.tastymap.ui.auth.ResetRoute
+import org.beem.tastymap.ui.auth.VerifyRoute
 
 class SplashViewModel(
     private val authRepository: AuthRepository,
@@ -25,7 +27,7 @@ class SplashViewModel(
         viewModelScope.launch {
             // Eğer DeepLinkManager bekleyen bir rota tutuyorsa onu yakalıyoruz
             val deepLinkRoute = DeepLinkManager.pendingInitialRoute
-            if (deepLinkRoute != null) {
+            if (deepLinkRoute is VerifyRoute || deepLinkRoute is ResetRoute) {
                 DeepLinkManager.pendingInitialRoute = null
                 _effect.value = SplashEffect.NavigateToDeepLink(deepLinkRoute)
                 return@launch
