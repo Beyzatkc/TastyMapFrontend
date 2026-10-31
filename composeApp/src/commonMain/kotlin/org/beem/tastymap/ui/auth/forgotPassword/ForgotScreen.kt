@@ -59,6 +59,7 @@ fun ForgotScreen(
             ForgotViewModel.PasswordNavEffect.OnSuccess -> {
                 verifyNavigator.changePasswordOnSuccess(navController)
             }
+
             null -> Unit
         }
     }
@@ -81,28 +82,34 @@ fun ForgotScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .statusBarsPadding()
-                .verticalScroll(rememberScrollState())
                 .navigationBarsPadding()
+            // DİKKAT: verticalScroll buradan kaldırıldı.
         ) {
+            // 1. Üst Bar - Sabit
             BackPage(stringResource(Res.string.forgot_header), {
                 viewModel.onBackClickForgot()
                 navController.popBackStack()
             })
 
+            // 2. Orta İçerik - Kaydırılabilir
             Box(
                 modifier = Modifier
-                    .weight(1f)
-                    .fillMaxWidth(),
+                    .weight(1f) // Dış Column sabit boyutlu olduğu için artık weight doğru çalışır
+                    .fillMaxWidth()
+                    .verticalScroll(rememberScrollState()), // verticalScroll buraya eklendi
                 contentAlignment = Alignment.TopCenter
             ) {
                 Column(
                     modifier = Modifier
                         .widthIn(max = 480.dp)
                         .fillMaxWidth()
-                        .padding(horizontal = 24.dp),
+                        .padding(
+                            horizontal = 24.dp,
+                            vertical = 16.dp
+                        ), // Alt/üst boşluk için vertical padding eklendi
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Spacer(modifier = Modifier.height(24.dp))
+                    Spacer(modifier = Modifier.height(8.dp))
 
                     Box(
                         modifier = Modifier
@@ -171,7 +178,7 @@ fun ForgotScreen(
                     TextButton(
                         onClick = {
                             viewModel.onBackClickForgot()
-                            navController.popBackStack() // YENİ: navigator.pop() yerine resmi popBackStack()
+                            navController.popBackStack()
                         }
                     ) {
                         Text(
@@ -215,6 +222,8 @@ fun ForgotScreen(
                     }
                 }
             }
+
+            // 3. Alt Bilgi (Footer) - Altta Sabit
             AuthFooter(
                 modifier = Modifier.fillMaxWidth()
             )

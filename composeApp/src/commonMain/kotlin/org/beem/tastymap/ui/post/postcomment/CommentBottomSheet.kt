@@ -178,7 +178,7 @@ fun CommentBottomSheet(
                         .fillMaxWidth()
                         .weight(1f)
                 ) {
-                    val isError = !uiState.errorMessage.isNullOrBlank()
+                    val isInitialError = uiState.isInitialError
                     val isEmpty = uiState.items.isEmpty()
 
                     when {
@@ -214,7 +214,7 @@ fun CommentBottomSheet(
                             }
                         }
 
-                        isError && isEmpty -> {
+                        isInitialError && isEmpty -> {
                             Box(
                                 modifier = Modifier.fillMaxSize(),
                                 contentAlignment = Alignment.Center
@@ -380,22 +380,28 @@ fun CommentBottomSheet(
                                     postId = postId,
                                     parentCommentId = replyingToCommentId!!,
                                     contents = finalReplyText,
-                                    onSuccess = {
-                                        commentText = ""
-                                        replyingToCommentId = null
-                                        replyingToUsername = null
+                                    onResult = { isSuccess ->
                                         isSendingComment = false
+
+                                        if (isSuccess) {
+                                            commentText = ""
+                                            replyingToCommentId = null
+                                            replyingToUsername = null
+                                        }
                                     }
                                 )
                             } else {
                                 screenModel.addComment(
                                     postId = postId,
                                     contents = commentText,
-                                    onSuccess = {
-                                        commentText = ""
+                                    onResult = { isSuccess ->
                                         isSendingComment = false
-                                        coroutineScope.launch {
-                                            listState.animateScrollToItem(0)
+
+                                        if (isSuccess) {
+                                            commentText = ""
+                                            coroutineScope.launch {
+                                                listState.animateScrollToItem(0)
+                                            }
                                         }
                                     }
                                 )

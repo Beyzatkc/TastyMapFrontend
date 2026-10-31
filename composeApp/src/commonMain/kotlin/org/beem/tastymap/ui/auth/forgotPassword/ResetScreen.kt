@@ -195,7 +195,7 @@ fun ResetScreen(
                     TextButton(
                         onClick = {
                             viewModel.backClickReset()
-                            navController.popBackStack() // YENİ: navigator.pop() yerine
+                            navController.popBackStack()
                         }
                     ) {
                         Text(

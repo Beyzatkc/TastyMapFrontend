@@ -24,6 +24,7 @@ class SplashViewModel(
     }
 
     private fun checkAuthentication() {
+        println("SPLASH_VIEW_MODEL: checkAuthentication ÇAĞRILDI!")
         viewModelScope.launch {
             // Eğer DeepLinkManager bekleyen bir rota tutuyorsa onu yakalıyoruz
             val deepLinkRoute = DeepLinkManager.pendingInitialRoute

@@ -291,22 +291,27 @@ fun WebPostDetailDialog(
                                                 postId = postId,
                                                 parentCommentId = replyingToCommentId!!,
                                                 contents = finalReplyText,
-                                                onSuccess = {
-                                                    commentText = ""
-                                                    replyingToCommentId = null
-                                                    replyingToUsername = null
+                                                onResult = { isSuccess ->
                                                     isSendingComment = false
+                                                    if (isSuccess) {
+                                                        commentText = ""
+                                                        replyingToCommentId = null
+                                                        replyingToUsername = null
+                                                    }
                                                 }
                                             )
                                         } else {
                                             commentViewModel.addComment(
                                                 postId = postId,
                                                 contents = commentText,
-                                                onSuccess = {
-                                                    commentText = ""
+                                                onResult = { isSuccess ->
                                                     isSendingComment = false
-                                                    coroutineScope.launch {
-                                                        listState.animateScrollToItem(0)
+
+                                                    if (isSuccess) {
+                                                        commentText = ""
+                                                        coroutineScope.launch {
+                                                            listState.animateScrollToItem(0)
+                                                        }
                                                     }
                                                 }
                                             )

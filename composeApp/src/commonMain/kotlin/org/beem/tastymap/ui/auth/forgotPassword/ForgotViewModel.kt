@@ -183,11 +183,11 @@ class ForgotViewModel(
     fun forgotPassword(identifier: String) {
         if (_sendState.value.isLoading) return
         viewModelScope.launch {
-            if (validateEmail()) {
+            if (validateIdentifier()) {
                 _sendState.update { it.copy(isLoading = true) }
                 val dto = PasswordRequest(
                     deviceId = deviceInfoProvider.getDeviceId(),
-                    identifier = identifier
+                    identifier = identifier.trim()
                 )
                 when (val result = repoSecurity.forgotPassword(dto)) {
                     is ResultWrapper.Success -> {
@@ -223,18 +223,20 @@ class ForgotViewModel(
         }
     }
 
-    fun validateEmail(): Boolean {
+    fun validateIdentifier(): Boolean {
         val state = _sendState.value
-        val eResult = CheckValidator.validateEmail(
-            email = state.pasEmail
+
+        val validationResult = CheckValidator.validateIdentifier(
+            identifier = state.pasEmail
         )
-        val eError = (eResult as? ValidationResult.Invalid)?.messageRes
+
+        val errorMessage = (validationResult as? ValidationResult.Invalid)?.messageRes
         _sendState.update {
             it.copy(
-                pasEmailError = eError
+                pasEmailError = errorMessage
             )
         }
-        return eResult is ValidationResult.Valid
+        return validationResult is ValidationResult.Valid
     }
 
     fun onEmailEvent(event: EmailEvent) {

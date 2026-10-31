@@ -107,8 +107,11 @@ fun App(
                     navController.currentBackStackEntry?.destination?.route?.let { currentRoute ->
                         if (!currentRoute.contains("Splash")) {
                             navController.navigate(route) {
+                                /*
                                 val popTarget: Any = if (route is VerifyRoute || route is ResetRoute) LogRegRoute else MainRoute
                                 popUpTo(popTarget) { inclusive = false }
+
+                                 */
                                 launchSingleTop = true
                             }
                         }
@@ -118,6 +121,7 @@ fun App(
 
             LaunchedEffect(navController) {
                 authEventBus.events.collect { event ->
+                    println("AUTH_EVENT_BUS TETİKLENDİ: $event")
                     clearSessionUseCase()
 
                     val message = when (event) {

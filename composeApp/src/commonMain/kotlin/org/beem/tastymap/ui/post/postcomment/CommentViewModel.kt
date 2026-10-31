@@ -43,8 +43,11 @@ class CommentViewModel(
         loadInitialData(postId)
     }
 
-    fun addComment(postId: Long, contents: String, onSuccess: () -> Unit) {
-        if (contents.isBlank()) return
+    fun addComment(postId: Long, contents: String, onResult: (Boolean) -> Unit) {
+        if (contents.isBlank()) {
+            onResult(false)
+            return
+        }
 
         viewModelScope.launch {
             val request = CommentRequest(contents = contents.trim())
@@ -55,24 +58,25 @@ class CommentViewModel(
                     val newComment = result.data
                     _uiState.update { currentState ->
                         val (pinnedComments, unpinnedComments) = currentState.items.partition { it.isPinned }
-
                         val updatedList = pinnedComments + listOf(newComment) + unpinnedComments
 
-                        currentState.copy(
-                            items = updatedList
-                        )
+                        currentState.copy(items = updatedList)
                     }
-                    onSuccess()
+                    onResult(true)
                 }
                 is ResultWrapper.Error -> {
                     _uiState.update { it.copy(errorMessage = result.message) }
+                    onResult(false)
                 }
             }
         }
     }
 
-    fun addReply(postId: Long, parentCommentId: Long, contents: String, onSuccess: () -> Unit) {
-        if (contents.isBlank()) return
+    fun addReply(postId: Long, parentCommentId: Long, contents: String, onResult: (Boolean) -> Unit) {
+        if (contents.isBlank()) {
+            onResult(false)
+            return
+        }
 
         viewModelScope.launch {
             val request = CommentRequest(contents = contents.trim())
@@ -103,10 +107,11 @@ class CommentViewModel(
                             expandedComments = currentState.expandedComments + parentCommentId
                         )
                     }
-                    onSuccess()
+                    onResult(true)
                 }
                 is ResultWrapper.Error -> {
                     _uiState.update { it.copy(errorMessage = result.message) }
+                    onResult(false)
                 }
             }
         }
@@ -124,7 +129,8 @@ class CommentViewModel(
         _uiState.update { currentState ->
             currentState.copy(
                 isLoading = true,
-                errorMessage = null
+                errorMessage = null,
+                isInitialError = false
             )
         }
         fetchPage(postId, page = 0, isRefresh = false)
@@ -173,7 +179,7 @@ class CommentViewModel(
                 is ResultWrapper.Error -> {
                     _uiState.update {
                         if (page == 0) {
-                            it.copy(isLoading = false, isLoadingMore = false, errorMessage = result.message)
+                            it.copy(isLoading = false, isLoadingMore = false, isInitialError = true,errorMessage = result.message)
                         } else {
                             it.copy(isLoadingMore = false, loadingMoreError = true)
                         }

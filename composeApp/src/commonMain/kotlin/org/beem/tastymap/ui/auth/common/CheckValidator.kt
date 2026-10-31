@@ -78,6 +78,15 @@ object CheckValidator {
         }
     }
 
+    fun validateIdentifier(identifier: String): ValidationResult {
+        val trimmed = identifier.trim()
+
+        return if (trimmed.contains("@")) {
+            validateEmail(trimmed)
+        } else {
+            validateUsername(trimmed)
+        }
+    }
     fun validateRequiredField(value: String, errorRes: StringResource): ValidationResult {
         return if (value.isBlank()) {
             ValidationResult.Invalid(errorRes)

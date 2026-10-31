@@ -13,6 +13,7 @@ data class ReplyState(
 )
 
 data class CommentListUiState(
+    val isInitialError: Boolean = false,
     val items: List<CommentsResponse> = emptyList(),
     val repliesState: Map<Long, ReplyState> = emptyMap(),
     val expandedComments: Set<Long> = emptySet(),

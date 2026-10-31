@@ -79,9 +79,6 @@ fun MainAppShell(
     val viewModel = koinViewModel<MainViewModel>()
     val hasUnread by badgeManager.hasUnreadBadge.collectAsState()
 
-    LaunchedEffect(Unit) {
-        viewModel.checkUnreadNotifications()
-    }
 
     val isWideScreen = LocalIsWideScreen.current
     val navBackStackEntry by navController.currentBackStackEntryAsState()
@@ -106,6 +103,12 @@ fun MainAppShell(
                 destination.hasRoute(VerifyRoute::class) ||
                 destination.hasRoute(VerificationSuccessRoute::class) ||
                 destination.hasRoute(LoginPendingRoute::class)
+    }
+
+    LaunchedEffect(isAuthOrSplash) {
+        if (!isAuthOrSplash) {
+            viewModel.checkUnreadNotifications()
+        }
     }
 
     val shouldShowNav = when {
