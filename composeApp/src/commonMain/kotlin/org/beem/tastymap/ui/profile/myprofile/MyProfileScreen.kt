@@ -95,6 +95,7 @@ import org.koin.compose.viewmodel.koinViewModel
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MyProfileScreen(navController: NavController,showBackButton: Boolean = false) {
+
     val profileScreenModel = koinViewModel<MyProfileViewModel>()
     val postScreenModel = koinViewModel<MyPostViewModel>()
     val postDetailViewModel = koinViewModel<PostDetailViewModel>()
@@ -114,6 +115,7 @@ fun MyProfileScreen(navController: NavController,showBackButton: Boolean = false
 
     val gridState = rememberLazyGridState()
 
+    /*
     LaunchedEffect(selectedWebPostId, isWideScreen) {
         if (isWideScreen) {
             if (selectedWebPostId != null) {
@@ -124,17 +126,30 @@ fun MyProfileScreen(navController: NavController,showBackButton: Boolean = false
         }
     }
 
+     */
+
     LaunchedEffect(Unit) {
         profileScreenModel.getMyProfile()
         profileScreenModel.fetchRemoteProfile()
-        postScreenModel.loadInitialData()
+    }
+
+    LaunchedEffect(profileState.profile?.userId) {
+        val userId = profileState.profile?.userId
+        if (userId != null && userId > 0L) {
+            postScreenModel.loadInitialData(userId = userId)
+        }
     }
 
     val shouldLoadMore = remember {
         derivedStateOf {
             val totalItemsCount = gridState.layoutInfo.totalItemsCount
             val lastVisibleItemIndex = gridState.layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: 0
-            lastVisibleItemIndex >= totalItemsCount - 3
+
+            if (totalItemsCount == 0 || postState.isLoading) {
+                false
+            } else {
+                lastVisibleItemIndex >= totalItemsCount - 3
+            }
         }
     }
 
@@ -552,7 +567,7 @@ fun MyProfileScreen(navController: NavController,showBackButton: Boolean = false
                                         ) {
                                             IconButton(
                                                 onClick = {
-                                                    postScreenModel.loadInitialData()
+                                                    profile?.let { postScreenModel.loadInitialData(it.userId) }
                                                 }
                                             ) {
                                                 Icon(

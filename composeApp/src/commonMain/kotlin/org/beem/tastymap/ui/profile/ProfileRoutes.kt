@@ -21,36 +21,37 @@ data object EditProfileRoute
 data object NotificationRoute
 
 @Serializable
-@SerialName("activedevices")
+@SerialName("settings/activedevices")
 data object ActiveDevicesRoute
 
 @Serializable
-@SerialName("blockedusers")
+@SerialName("settings/blockedusers")
 data object BlockedUsersRoute
 
 @Serializable
-@SerialName("accountdeactivated")
+@SerialName("settings/accountdeactivated")
 data object AccountDeactivatedRoute
 
 @Serializable
-@SerialName("deleteaccount")
+@SerialName("settings/deleteaccount")
 data object DeleteAccountRoute
 
 @Serializable
-@SerialName("edithealth")
+@SerialName("settings/edithealth")
 data object EditHealthRoute
 
 @Serializable
-@SerialName("privacypolicy")
+@SerialName("settings/privacypolicy")
 data object PrivacyPolicyRoute
+
+@Serializable
+@SerialName("settings/visits")
+data object VisitRoute
 
 @Serializable
 @SerialName("settings")
 data object SettingsRoute
 
-@Serializable
-@SerialName("visits")
-data object VisitRoute
 
 @Serializable
 @SerialName("profile")

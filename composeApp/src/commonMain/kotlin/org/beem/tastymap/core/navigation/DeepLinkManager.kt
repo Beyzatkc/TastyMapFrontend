@@ -8,8 +8,11 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.receiveAsFlow
 import org.beem.tastymap.ui.auth.ResetRoute
 import org.beem.tastymap.ui.auth.VerifyRoute
+import org.beem.tastymap.ui.profile.AccountDeactivatedRoute
 import org.beem.tastymap.ui.profile.ActiveDevicesRoute
 import org.beem.tastymap.ui.profile.BlockedUsersRoute
+import org.beem.tastymap.ui.profile.DeleteAccountRoute
+import org.beem.tastymap.ui.profile.EditHealthRoute
 import org.beem.tastymap.ui.profile.EditProfileRoute
 import org.beem.tastymap.ui.profile.NotificationRoute
 import org.beem.tastymap.ui.profile.PrivacyPolicyRoute
@@ -18,6 +21,7 @@ import org.beem.tastymap.ui.profile.SettingsRoute
 import org.beem.tastymap.ui.profile.VisitRoute
 
 object DeepLinkManager {
+    var initialBrowserUrl: String? = null
     private val _navigationEvents = Channel<Any>(Channel.BUFFERED)
     val navigationEvents = _navigationEvents.receiveAsFlow()
 
@@ -133,14 +137,13 @@ object DeepLinkManager {
     }
 
 
-    // myUsername parametresini de alalım ki F5'te kendi profilimiz mi başkasınınki mi anlayalım
+
     fun handleWebRefresh(url: String, myUsername: String? = null) {
         val rawHash = url.substringAfter("#", "").substringBefore("?")
         if (rawHash.isEmpty()) return
 
         val hashLower = rawHash.lowercase()
 
-        // Verify veya Reset ise burası karışmasın (handleLink hallediyor)
         if (hashLower.startsWith("verify") || hashLower.startsWith("reset") || hashLower.contains("splash") || hashLower.contains("logreg")) {
             return
         }
@@ -151,16 +154,20 @@ object DeepLinkManager {
             hashLower == "search" || hashLower == "searchtabroute" || hashLower == "searchgraphroute" -> SearchGraphRoute
             hashLower == "ai" || hashLower == "aitabroute" || hashLower == "aigraphroute" -> AIGraphRoute
             hashLower == "upload" || hashLower == "uploadtabroute" || hashLower == "uploadgraphroute" -> UploadGraphRoute
-            hashLower == "myprofile" || hashLower == "profiletabroute" || hashLower == "profilegraphroute" || hashLower == "myprofilefullscreenroute" -> ProfileGraphRoute
+            hashLower == "my" || hashLower == "profiletabroute" || hashLower == "profilegraphroute" || hashLower == "myprofilefullscreenroute" -> ProfileGraphRoute
 
             // Diğer alt ekranlar aynı kalıyor
             hashLower == "notifications" || hashLower == "notificationroute" -> NotificationRoute
             hashLower == "settings" || hashLower == "settingsroute" -> SettingsRoute
             hashLower == "editprofile" || hashLower == "editprofileroute" -> EditProfileRoute
-            hashLower == "visits" || hashLower == "visitroute" -> VisitRoute
-            hashLower == "privacypolicy" || hashLower == "privacypolicyroute" -> PrivacyPolicyRoute
-            hashLower == "blockedusers" || hashLower == "blockedusersroute" -> BlockedUsersRoute
-            hashLower == "activedevices" || hashLower == "activedevicesroute" -> ActiveDevicesRoute
+
+            hashLower == "settings/edithealth" -> EditHealthRoute
+            hashLower == "settings/visits" -> VisitRoute
+            hashLower == "settings/activedevices" -> ActiveDevicesRoute
+            hashLower == "settings/blockedusers" -> BlockedUsersRoute
+            hashLower == "settings/deleteaccount" -> DeleteAccountRoute
+            hashLower == "settings/accountdeactivated" -> AccountDeactivatedRoute
+            hashLower == "settings/privacypolicy" -> PrivacyPolicyRoute
 
             // 2. Eğer #profile/123 veya #profile/ahmet formatındaysa:
             hashLower.startsWith("profile/") -> {
@@ -177,10 +184,21 @@ object DeepLinkManager {
                     ProfileRoute(userId = -1L, username = firstPart)
                 } else null
             }
+            /*
             !rawHash.contains("/") -> {
                 val cleanUsername = rawHash.removePrefix("@")
                 if (myUsername != null && cleanUsername.equals(myUsername, ignoreCase = true)) {
-                    ProfileGraphRoute // Kendi kullanıcı adıysa kendi profil grafiğine git
+                    ProfileGraphRoute
+                } else {
+                    ProfileRoute(userId = -1L, username = cleanUsername)
+                }
+            }
+
+             */
+            !rawHash.contains("/") -> {
+                val cleanUsername = rawHash.removePrefix("@")
+                if (myUsername != null && cleanUsername.equals(myUsername, ignoreCase = true)) {
+                    ProfileGraphRoute
                 } else {
                     ProfileRoute(userId = -1L, username = cleanUsername)
                 }

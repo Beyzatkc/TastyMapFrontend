@@ -3,7 +3,6 @@ package org.beem.tastymap.data.repository
 
 import org.beem.tastymap.core.network.ResultWrapper
 import org.beem.tastymap.core.network.safeApiCall
-import org.beem.tastymap.core.provider.AuthValidator
 import org.beem.tastymap.data.model.auth.CommonRequest
 import org.beem.tastymap.data.model.auth.NotificationResponse
 import org.beem.tastymap.data.model.auth.PasswordRequest

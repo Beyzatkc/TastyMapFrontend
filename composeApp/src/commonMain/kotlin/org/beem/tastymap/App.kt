@@ -2,7 +2,6 @@ package org.beem.tastymap
 
 import MainRoute
 import MapGraphRoute
-import MapTabRoute
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -14,7 +13,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import coil3.ImageLoader
 import coil3.compose.setSingletonImageLoaderFactory
@@ -26,9 +24,9 @@ import io.ktor.client.request.header
 import org.beem.tastymap.core.auth.AuthEventBus
 import org.beem.tastymap.core.local.ChangeAppLanguage
 import org.beem.tastymap.core.local.SettingsManager
+import org.beem.tastymap.core.local.UserManager
 import org.beem.tastymap.core.navigation.DeepLinkManager
 import org.beem.tastymap.core.util.ToastManager
-import org.beem.tastymap.database.TastyDatabase
 import org.beem.tastymap.domain.auth.ClearSessionUseCase
 import org.beem.tastymap.ui.auth.LogRegRoute
 import org.beem.tastymap.ui.auth.ResetRoute
@@ -52,7 +50,6 @@ import tastymap.composeapp.generated.resources.Res
 import tastymap.composeapp.generated.resources.auth_logged_out
 import tastymap.composeapp.generated.resources.auth_password_changed
 import tastymap.composeapp.generated.resources.auth_session_expired
-import kotlin.reflect.typeOf
 
 // App.kt dosyasının importlarının hemen altına ekle:
 val LocalIsWideScreen = compositionLocalOf { false }
@@ -62,6 +59,7 @@ fun App(
     initialRoute: Any? = null,
     onNavHostReady: suspend (androidx.navigation.NavController) -> Unit = {}
 ) {
+    val userManager: UserManager = koinInject()
     val splashViewModel = koinViewModel<SplashViewModel>()
     val splashEffect by splashViewModel.effect.collectAsState()
 
@@ -143,20 +141,21 @@ fun App(
 
             val safeStartDest = remember(splashEffect) {
                 when (val effect = splashEffect) {
+
                     is SplashEffect.NavigateToDeepLink -> {
                         when (effect.route) {
                             is VerifyRoute, is ResetRoute -> LogRegRoute
                             else -> MainRoute
                         }
                     }
+
+
                     is SplashEffect.NavigateToHome -> MainRoute
                     is SplashEffect.NavigateToLogin -> LogRegRoute
                     is SplashEffect.NavigateToOnBoard -> OnBoardingRoute
                     else -> LogRegRoute
                 }
             }
-
-
             val jumpRoute = remember(splashEffect) {
                 val route = (splashEffect as? SplashEffect.NavigateToDeepLink)?.route
                 if (route == MainRoute || route == MapGraphRoute) null else route
@@ -183,6 +182,27 @@ fun App(
                             profileGraph(navController)
                         }
                     }
+                    LaunchedEffect(navController) {
+                        // 1. Önce jumpRoute varsa doğrudan hedefe git
+                        if (jumpRoute != null) {
+                            navController.navigate(jumpRoute) {
+                                // Eğer bir ana sekmeye (Profile, Search, AI, Upload) F5 ile gelindiyse,
+                                // arkada fazladan "map" kalıp geçmişi şişirmemesi için MainRoute'a kadar temizle:
+                                popUpTo(safeStartDest) {
+                                    inclusive = false
+                                    saveState = true
+                                }
+                                launchSingleTop = true
+                                restoreState = true
+                            }
+                        }
+
+                        // 2. Navigasyon yerleştikten SONRA tarayıcı geçmişini bağla
+                        onNavHostReady(navController)
+                    }
+
+
+                    /*
 
                     LaunchedEffect(navController, jumpRoute) {
                         if (jumpRoute != null) {
@@ -193,6 +213,9 @@ fun App(
                         }
                         onNavHostReady(navController)
                     }
+
+                     */
+
                     AppToast()
                 }
             }

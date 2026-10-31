@@ -148,7 +148,7 @@ val appModule = module {
     factory { LogRegViewModel(get(), get(), get(), get()) }
     factory { PendingViewModel(get(), get(), get(), get()) }
     factory { EmailViewModel(get(), get()) }
-    factory { SplashViewModel(get()) }
+    factory { SplashViewModel(get(),get()) }
     factory { ForgotViewModel(get(), get(), get(), get()) }
     factory { ResetViewModel(get()) }
     factory { HealthViewModel(get()) }

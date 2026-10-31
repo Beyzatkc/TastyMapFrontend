@@ -1,15 +1,15 @@
 package org.beem.tastymap.ui.bottomnav
 
 import AIGraphRoute
-import AITabRoute
+import AI
 import MapGraphRoute
-import MapTabRoute
+import map
 import ProfileGraphRoute
-import ProfileTabRoute
+import my
 import SearchGraphRoute
-import SearchTabRoute
+import search
 import UploadGraphRoute
-import UploadTabRoute
+import upload
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.Image
@@ -193,7 +193,7 @@ private fun AppBottomBar(bottomNavController: NavController) {
                     iconFilled = Icons.Default.LocationOn,
                     iconOutlined = Icons.Outlined.LocationOn,
                     graphRoute = MapGraphRoute,
-                    startRoute = MapTabRoute,
+                    startRoute = map,
                     isSelected = isMapSelected,
                     navController = bottomNavController,
                     modifier = Modifier.weight(1f)
@@ -203,14 +203,14 @@ private fun AppBottomBar(bottomNavController: NavController) {
                     iconFilled = Icons.Default.Search,
                     iconOutlined = Icons.Outlined.Search,
                     graphRoute = SearchGraphRoute,
-                    startRoute = SearchTabRoute,
+                    startRoute = search,
                     isSelected = isSearchSelected,
                     navController = bottomNavController,
                     modifier = Modifier.weight(1f)
                 )
                 AITabItem(
                     graphRoute = AIGraphRoute,
-                    startRoute = AITabRoute,
+                    startRoute = AI,
                     isSelected = isAISelected,
                     navController = bottomNavController,
                     modifier = Modifier.weight(1f)
@@ -220,7 +220,7 @@ private fun AppBottomBar(bottomNavController: NavController) {
                     iconFilled = Icons.Default.Add,
                     iconOutlined = Icons.Outlined.Add,
                     graphRoute = UploadGraphRoute,
-                    startRoute = UploadTabRoute,
+                    startRoute = upload,
                     isSelected = isUploadSelected,
                     navController = bottomNavController,
                     modifier = Modifier.weight(1f)
@@ -230,7 +230,7 @@ private fun AppBottomBar(bottomNavController: NavController) {
                     iconFilled = Icons.Default.Person,
                     iconOutlined = Icons.Outlined.Person,
                     graphRoute = ProfileGraphRoute,
-                    startRoute = ProfileTabRoute,
+                    startRoute = my,
                     isSelected = isProfileSelected,
                     navController = bottomNavController,
                     modifier = Modifier.weight(1f)
@@ -319,7 +319,7 @@ private fun AppNavigationRail(
                     iconFilled = Icons.Default.LocationOn,
                     iconOutlined = Icons.Outlined.LocationOn,
                     graphRoute = MapGraphRoute,
-                    startRoute = MapTabRoute,
+                    startRoute = map,
                     isSelected = isMapSelected,
                     navController = bottomNavController,
                     isExpanded = isHovered
@@ -329,14 +329,14 @@ private fun AppNavigationRail(
                     iconFilled = Icons.Default.Search,
                     iconOutlined = Icons.Outlined.Search,
                     graphRoute = SearchGraphRoute,
-                    startRoute = SearchTabRoute,
+                    startRoute = search,
                     isSelected = isSearchSelected,
                     navController = bottomNavController,
                     isExpanded = isHovered
                 )
                 RailAITabItem(
                     graphRoute = AIGraphRoute,
-                    startRoute = AITabRoute,
+                    startRoute = AI,
                     isSelected = isAISelected,
                     navController = bottomNavController,
                     isExpanded = isHovered
@@ -346,7 +346,7 @@ private fun AppNavigationRail(
                     iconFilled = Icons.Default.Add,
                     iconOutlined = Icons.Outlined.Add,
                     graphRoute = UploadGraphRoute,
-                    startRoute = UploadTabRoute,
+                    startRoute = upload,
                     isSelected = isUploadSelected,
                     navController = bottomNavController,
                     isExpanded = isHovered
@@ -356,7 +356,7 @@ private fun AppNavigationRail(
                     iconFilled = Icons.Default.Person,
                     iconOutlined = Icons.Outlined.Person,
                     graphRoute = ProfileGraphRoute,
-                    startRoute = ProfileTabRoute,
+                    startRoute = my,
                     isSelected = isProfileSelected,
                     navController = bottomNavController,
                     isExpanded = isHovered
@@ -401,23 +401,23 @@ private fun AppNavigationRail(
 fun navigateToBottomTab(
     navController: NavController,
     graphRoute: Any,
-    startRoute: Any
+    startRoute: Any // Parametreyi silmiyoruz, diğer yerlerde hata vermesin
 ) {
-    // 1. Eğer hedef sekmenin ana ekranı (örn: SearchTabRoute) zaten geçmişte (backstack'te) varsa,
-    // üstüne açılmış olan Profil, Gönderi vb. tüm sayfaları anında sil ve o ana ekrana dön!
-    val popped = navController.popBackStack(route = startRoute, inclusive = false)
-
-    // 2. Eğer geçmişte yoksa (başka bir sekmedeysek), MapGraphRoute'a kadar olan diğer sekmeleri
-    // geçmişten temizle (saveState/restoreState KULLANMADAN, böylece eski baktığın profil asla geri gelmez!)
-    if (!popped) {
-        navController.navigate(graphRoute) {
-            popUpTo(MapGraphRoute) {
-                inclusive = false
-            }
-            launchSingleTop = true
+    navController.navigate(graphRoute) {
+        // Alt barda sekme değiştirirken geçmişi şişirmemek için ana sekmeye (MapGraphRoute) kadar pop yapıyoruz.
+        // Bu sayede araya sıkışmış Profil, Gönderi vb. sayfalar temizlenir.
+        popUpTo(MapGraphRoute) {
+            saveState = true // Ayrıldığımız sekmenin (Örn: Arama) durumunu kaydet
         }
+
+        // Kullanıcı aynı sekmeye defalarca basarsa üst üste açılmasını engeller
+        launchSingleTop = true
+
+        // Daha önce bu sekmeye girilmişse (Örn: Arama sekmesinde bir şeyler yazılmışsa) durumu geri yükle
+        restoreState = true
     }
 }
+
 
 // -------------------------------------------------------------
 // UI BİLEŞENLERİ (TASARIMLARI BİREBİR KORUNMUŞTUR)
