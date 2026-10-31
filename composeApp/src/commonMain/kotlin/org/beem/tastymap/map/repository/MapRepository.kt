@@ -1,5 +1,7 @@
 package org.beem.tastymap.map.repository
 
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import org.beem.tastymap.core.network.ResultWrapper
 import org.beem.tastymap.core.network.safeApiCall
 import org.beem.tastymap.core.util.GridUtils
@@ -14,15 +16,17 @@ class MapRepository(
     private val dataSource: MapDataSource
 ) {
 
-    // $O(1)$ Grid Havuzu (Key: "lat:lng", Value: O griddeki mekan ID listesi)
+    private val mutex = Mutex()
+
+    // Grid Key -> O bölgede bulunan Place ID'leri
     private val gridPlaceIds = mutableMapOf<String, MutableSet<String>>()
 
-    // Tüm mekanların tekil nesne havuzu (Key: place_id)
+    // place_id bazlı mekan ve feature havuzu
     private val allPlacesMap = mutableMapOf<String, PlaceResult>()
     private val allFeaturesMap = mutableMapOf<String, Feature>()
 
-    // Taranan gridleri takip eden Set
-    private val scannedGridKeys = mutableSetOf<String>()
+
+    private val scannedGridCacheKeys = mutableSetOf<String>()
 
     private val MAX_VISIBLE_PINS = 50
 
@@ -30,82 +34,101 @@ class MapRepository(
         val centerGridKey = GridUtils.getGridKey(request.lat, request.lng)
         val surroundingKeys = GridUtils.getSurroundingGridKeys(request.lat, request.lng, request.radius)
 
-        // 1. RAM KONTROLÜ: Merkez grid daha önce taranmış mı?
-        if (!forceRefresh && scannedGridKeys.contains(centerGridKey)) {
+        println("TastyMap Repo -> [İSTEK] Hedef Lat: ${request.lat}, Lng: ${request.lng}")
+        println("TastyMap Repo -> Merkez Grid: $centerGridKey | Komşu Grid Sayısı: ${surroundingKeys.size}")
+
+        val currentScanCacheKey = GridUtils.buildGridCacheKey(centerGridKey, request.keywords)
+
+        val isCached = isCached(currentScanCacheKey, forceRefresh)
+
+        if (isCached) {
             val cachedResponse = buildResponseFromGridKeys(surroundingKeys)
-            if (cachedResponse.results.isNotEmpty()) {
-                return ResultWrapper.Success(cachedResponse)
-            }
+            println("TastyMap Repo -> Grid RAM cache'ten okundu. Dönen Mekan: ${cachedResponse.results.size}")
+            return ResultWrapper.Success(cachedResponse)
         }
 
-        // 2. NETWORK ÇAĞRISI: Grid bellekte yoksa backend'e sor
+        // 2. NETWORK ÇAĞRISI
         return safeApiCall {
             val response = dataSource.searchMap(request)
+            println("TastyMap Repo -> [BACKEND CEVAP] Gelen Mekan Sayısı: ${response.results.size}, Feature Sayısı: ${response.geoJson.features.size}")
 
-            response.results.forEach { place ->
-                allPlacesMap[place.place_id] = place
+            mutex.withLock {
 
-                // Mekanın ait olduğu grid anahtarını bulup grid setine ekle
-                val placeLat = place.geometry?.location?.lat ?: request.lat
-                val placeLng = place.geometry?.location?.lng ?: request.lng
-                val placeGridKey = GridUtils.getGridKey(placeLat, placeLng)
+                // 1. Adım: Feature'ları properties.id üzerinden güvenle kaydet
+                response.geoJson.features.forEach { feature ->
+                    val pId = feature.properties.id
+                    if (pId.isNotBlank()) {
+                        allFeaturesMap[pId] = feature
+                    }
+                }
 
-                gridPlaceIds.getOrPut(placeGridKey) { mutableSetOf() }.add(place.place_id)
+                // 2. Adım: Mekanları kaydet ve grid'e bağla
+                response.results.forEach { place ->
+                    val placeId = place.place_id
+                    allPlacesMap[placeId] = place
+
+                    val placeLat = place.geometry?.location?.lat ?: request.lat
+                    val placeLng = place.geometry?.location?.lng ?: request.lng
+                    val placeGridKey = GridUtils.getGridKey(placeLat, placeLng)
+
+                    // Mekanın kendi koordinat gridine ekle
+                    gridPlaceIds.getOrPut(placeGridKey) { mutableSetOf() }.add(placeId)
+                }
+
+                scannedGridCacheKeys.add(currentScanCacheKey)
             }
 
-            response.geoJson.features.forEach { feature ->
-                allFeaturesMap[feature.properties.id] = feature
-            }
-
-            scannedGridKeys.add(centerGridKey)
-
-            // 3x3 komşu gridlerin tamamından ekrana verilecek filtrelenmiş paketi hazırla
-            buildResponseFromGridKeys(surroundingKeys, response.geoJson)
+            buildResponseFromGridKeys(surroundingKeys)
         }
     }
 
-    /**
-     * Verilen Grid anahtarlarındaki mekanları birleştirip UI formatına getirir.
-     */
-    private fun buildResponseFromGridKeys(
-        gridKeys: List<String>,
-        baseGeoJson: GeoJson? = null
-    ): MapResponse {
-        // İlgili gridlerdeki tüm tekil place_id'leri topla
-        val targetPlaceIds = mutableSetOf<String>()
-        gridKeys.forEach { key ->
-            gridPlaceIds[key]?.let { targetPlaceIds.addAll(it) }
+    private suspend fun buildResponseFromGridKeys(gridKeys: List<String>): MapResponse {
+        return mutex.withLock {
+            val targetPlaceIds = mutableSetOf<String>()
+            gridKeys.forEach { key ->
+                gridPlaceIds[key]?.let { targetPlaceIds.addAll(it) }
+            }
+
+            // Toplanan mekanları puana göre sıralayıp en iyi 50 tanesini al
+            val targetPlaces = targetPlaceIds
+                .mapNotNull { allPlacesMap[it] }
+                .sortedWith(
+                    compareByDescending<PlaceResult> { it.rating ?: 0.0 }
+                        .thenByDescending { it.user_ratings_total ?: 0 }
+                )
+                .take(MAX_VISIBLE_PINS)
+
+            // Sıralanan 50 mekanın Feature'larını topla
+            val targetFeatures = targetPlaces.mapNotNull { place ->
+                allFeaturesMap[place.place_id]
+            }
+
+            MapResponse(
+                results = targetPlaces,
+                geoJson = GeoJson(type = "FeatureCollection", features = targetFeatures),
+                status = "Ok"
+            )
         }
-
-        // Eğer grid eşleşmesinden az mekan çıkarsa hafızadaki tüm mekanlardan tamamla
-        val targetFeatures = if (targetPlaceIds.isNotEmpty()) {
-            targetPlaceIds.mapNotNull { allFeaturesMap[it] }
-        } else {
-            allFeaturesMap.values.toList()
-        }.take(MAX_VISIBLE_PINS)
-
-        val targetPlaces = targetFeatures.mapNotNull { allPlacesMap[it.properties.id] }
-
-        val geoJsonResult = GeoJson(
-            type = baseGeoJson?.type ?: "FeatureCollection",
-            features = targetFeatures
-        )
-
-        return MapResponse(
-            results = targetPlaces,
-            geoJson = geoJsonResult,
-            status = "Ok"
-        )
     }
 
-    fun getPlaceById(placeId: String): PlaceResult? {
-        return allPlacesMap[placeId]
+    private suspend fun isCached(scanCacheKey: String, forceRefresh: Boolean = false): Boolean {
+        return mutex.withLock {
+            !forceRefresh && scannedGridCacheKeys.contains(scanCacheKey)
+        }
     }
 
-    fun clearCache() {
-        gridPlaceIds.clear()
-        allPlacesMap.clear()
-        allFeaturesMap.clear()
-        scannedGridKeys.clear()
+    suspend fun getPlaceById(placeId: String): PlaceResult? {
+        return mutex.withLock {
+            allPlacesMap[placeId]
+        }
+    }
+
+    suspend fun clearCache() {
+        mutex.withLock {
+            gridPlaceIds.clear()
+            allPlacesMap.clear()
+            allFeaturesMap.clear()
+            scannedGridCacheKeys.clear()
+        }
     }
 }

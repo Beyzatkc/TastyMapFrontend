@@ -25,6 +25,7 @@ import org.beem.tastymap.search.model.toRestaurant
 import org.beem.tastymap.ui.detailsheet.TastyDetailSheet
 import org.beem.tastymap.ui.map.components.ActiveRouteBottomCard
 import org.beem.tastymap.ui.map.components.SearchThisAreaChip
+import org.beem.tastymap.ui.map.states.SearchChipState
 import org.beem.tastymap.ui.search.TastySearchOverlay
 
 
@@ -53,6 +54,8 @@ class TastyMapScreen : Screen {
         var collapseSheetTrigger by remember { mutableStateOf(0) }
 
         val isSearchingActive = searchUiState.query.isNotEmpty() || searchUiState.isDropdownVisible
+
+        val searchChipState by mapScreenModel.searchChipState.collectAsState()
 
         val localFocusManager = LocalFocusManager.current
 
@@ -142,6 +145,10 @@ class TastyMapScreen : Screen {
                     is MapEvent.ClearSelectedPin -> {
                         mapState.clearSelectedPin()
                     }
+
+                    is MapEvent.JumpTo -> {
+                        mapState.jumpTo(event.lat, event.lng, event.zoom)
+                    }
                 }
             }
             mapScreenModel.startObservingLocation()
@@ -170,11 +177,6 @@ class TastyMapScreen : Screen {
                     userLocation = userLocation,
                     onFabClicked = {
                         mapScreenModel.onCenterMapClicked()
-
-                        mapScreenModel.fetchNearbyRestaurants(
-                            userLocation.latitude,
-                            userLocation.longitude
-                        )
                     }
                 )
                 TastySearchOverlay(
@@ -187,8 +189,7 @@ class TastyMapScreen : Screen {
                 )
 
                 SearchThisAreaChip(
-                    visible = showSearchThisArea && !isSearchingActive,
-                    isLoading = false,
+                    state = if (isSearchingActive) SearchChipState.HIDDEN else searchChipState,
                     onClick = mapScreenModel::onSearchThisAreaClicked,
                     modifier = Modifier
                         .align(Alignment.TopCenter)

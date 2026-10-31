@@ -3,6 +3,13 @@ package org.beem.tastymap.map
 import org.beem.tastymap.data.model.Restaurant
 
 sealed class MapEvent{
+
+    data class JumpTo(
+        val lat: Double,
+        val lng: Double,
+        val zoom: Float
+    ) : MapEvent()
+
     data class CenterOn(
         val lat: Double,
         val lng: Double,

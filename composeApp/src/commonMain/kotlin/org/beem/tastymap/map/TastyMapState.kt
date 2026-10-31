@@ -10,6 +10,9 @@ import org.beem.tastymap.data.model.Restaurant
 class TastyMapState {
     private val _controller = mutableStateOf<MapController?>(null)
 
+    private var pendingJump: Triple<Double, Double, Float>? = null
+
+
     var controller: MapController?
         get() = _controller.value
         set(value) {
@@ -18,6 +21,7 @@ class TastyMapState {
             setupCameraIdleListener()
             setupZoomListener()
             setupMapClickListener()
+            startPendingJump()
         }
 
     var onCameraIdleCallback: ((lat: Double, lng: Double, zoom: Double) -> Unit)? = null
@@ -95,6 +99,22 @@ class TastyMapState {
     fun setupMapClickListener() {
         controller?.setOnMapClickListener {
             onMapClickCallback?.invoke()
+        }
+    }
+
+    fun jumpTo(lat: Double, lng: Double, zoom: Float) {
+        val currentController = controller
+        if (currentController != null) {
+            currentController.jumpTo(lat, lng, zoom)
+        } else {
+            pendingJump = Triple(lat, lng, zoom)
+        }
+    }
+
+    private fun startPendingJump() {
+        pendingJump?.let { (lat, lng, zoom) ->
+            jumpTo(lat, lng, zoom)
+            pendingJump = null
         }
     }
 }

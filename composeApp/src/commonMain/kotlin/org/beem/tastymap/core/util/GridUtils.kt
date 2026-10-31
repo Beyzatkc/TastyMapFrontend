@@ -1,17 +1,10 @@
 package org.beem.tastymap.core.util
 
 import kotlin.math.floor
+import kotlin.math.round
 
 object GridUtils {
     const val GRID_SIZE_DEG = 0.0045 // ~500 metre
-
-    /**
-     * Koordinatı grid hücresinin başlangıç tabanına yuvarlar (Floor).
-     */
-    fun roundToGrid(coordinate: Double): Double {
-        val grid = floor(coordinate / GRID_SIZE_DEG) * GRID_SIZE_DEG
-        return normalize(grid)
-    }
 
     /**
      * Koordinatı ait olduğu gridin merkez noktasına odaklar.
@@ -22,39 +15,55 @@ object GridUtils {
         return normalize(center)
     }
 
-    /**
-     * 4 ondalık basamağa normalize eder.
-     */
-    fun normalize(value: Double): Double {
-        return (floor(value * 10000.0)) / 10000.0
+    fun buildGridCacheKey(gridKey: String, keywords: List<String>): String {
+        val sortedTypes = keywords.sorted().joinToString("_")
+        return if (sortedTypes.isNotBlank()) "$gridKey:t:$sortedTypes" else gridKey
     }
 
     /**
-     * Grid için benzersiz String anahtar üretir: "37.9507:32.5057"
+     * 4 ondalık basamağa güvenli şekilde yuvarlar (Floating-point precision fix).
+     */
+    fun normalize(value: Double): Double {
+        return round(value * 10000.0) / 10000.0
+    }
+
+    /**
+     * Saf Kotlin ile her platformda (Android, iOS, Desktop) tam 4 basamaklı nokta formatı üretir.
+     * Örn: 37.95 -> "37.9500", 37.8697 -> "37.8697"
+     */
+    fun formatCoordinate(value: Double): String {
+        val normalized = normalize(value)
+        val str = normalized.toString().replace(',', '.')
+        val parts = str.split('.')
+        val integerPart = parts[0]
+        val decimalPart = if (parts.size > 1) parts[1] else ""
+        val paddedDecimal = decimalPart.padEnd(4, '0').take(4)
+        return "$integerPart.$paddedDecimal"
+    }
+
+    /**
+     * Grid için standart String anahtar üretir: "37.9507:32.5057"
      */
     fun getGridKey(lat: Double, lng: Double): String {
         val centerLat = roundToGridCenter(lat)
         val centerLng = roundToGridCenter(lng)
-        return "$centerLat:$centerLng"
+        return "${formatCoordinate(centerLat)}:${formatCoordinate(centerLng)}"
     }
 
     /**
-     * Merkez koordinatın etrafındaki 3x3 (veya verilen menzile göre) komşu grid anahtarlarını döner.
+     * Merkez koordinatın etrafındaki 3x3 komşu grid anahtarlarını döner.
      */
     fun getSurroundingGridKeys(lat: Double, lng: Double, radiusMeters: Int = 500): List<String> {
-        val gridRange = 1 // 500m için 3x3 matris (1 komşuluk)
-        val baseCenterLat = roundToGridCenter(lat)
-        val baseCenterLng = roundToGridCenter(lng)
-
+        val gridRange = 1 // 3x3 matris
         val gridKeys = mutableListOf<String>()
 
         for (i in -gridRange..gridRange) {
             for (j in -gridRange..gridRange) {
-                val cellLat = normalize(baseCenterLat + (i * GRID_SIZE_DEG))
-                val cellLng = normalize(baseCenterLng + (j * GRID_SIZE_DEG))
-                gridKeys.add("$cellLat:$cellLng")
+                val offsetLat = lat + (i * GRID_SIZE_DEG)
+                val offsetLng = lng + (j * GRID_SIZE_DEG)
+                gridKeys.add(getGridKey(offsetLat, offsetLng))
             }
         }
-        return gridKeys
+        return gridKeys.distinct()
     }
 }

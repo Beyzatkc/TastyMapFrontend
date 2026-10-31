@@ -3,6 +3,7 @@ package org.beem.tastymap.map.mapstylelayers
 import android.content.Context
 import androidx.compose.ui.graphics.toColorLong
 import org.beem.tastymap.R
+import org.beem.tastymap.map.MapLayerConstants
 import org.beem.tastymap.map.createMarkerBitmap
 import org.beem.tastymap.ui.theme.AppColors
 import org.beem.tastymap.ui.utils.toAndroidColor
@@ -13,46 +14,74 @@ import org.maplibre.android.style.layers.PropertyFactory
 import org.maplibre.android.style.layers.SymbolLayer
 import org.maplibre.android.style.sources.GeoJsonSource
 
-fun Style.setupUserLocationLayer(context: Context, iconId: String, iconRes: Int) {
-    createMarkerBitmap(context, iconRes, 30)?.let { addImage(iconId, it) }
 
-    val source = GeoJsonSource("user-location-source")
+fun Style.setupUserLocationLayer(context: Context) {
+    val userNavIconId = MapLayerConstants.USER_NAVIGATION_ICON_ID
+    // 64dp olarak bitmap oluşturup stilde tanımlıyoruz
+    createMarkerBitmap(context, R.drawable.ic_user_location_marker, 64)?.let {
+        addImage(userNavIconId, it)
+    }
+
+    val userSourceId = MapLayerConstants.USER_LOCATION_SOURCE_ID
+    val userLayerId = MapLayerConstants.USER_LOCATION_LAYER_ID
+
+    val source = GeoJsonSource(userSourceId)
     addSource(source)
 
-    val layer = SymbolLayer("user-location-layer", "user-location-source").withProperties(
-        PropertyFactory.iconImage(iconId),
+    val layer = SymbolLayer(userLayerId, userSourceId).withProperties(
+        PropertyFactory.iconImage(userNavIconId),
+
+        // Bearing verisiyle harita yönüne göre fırıldak gibi dönmesini sağlar:
         PropertyFactory.iconRotate(Expression.get("bearing")),
         PropertyFactory.iconRotationAlignment(Property.ICON_ROTATION_ALIGNMENT_MAP),
+
+        // Daire tam (128, 128) merkezinde olduğu için tam orta noktadan dönecek:
+        PropertyFactory.iconAnchor(Property.ICON_ANCHOR_CENTER),
+
         PropertyFactory.iconAllowOverlap(true),
         PropertyFactory.iconIgnorePlacement(true)
     )
-    addLayer(layer)
+    if (getLayer(MapLayerConstants.RESTAURANT_LAYER_ID) != null) {
+        addLayerAbove(layer, MapLayerConstants.RESTAURANT_LAYER_ID)
+    } else {
+        addLayer(layer)
+    }
 }
+
 
 fun Style.setupRestaurantLayer(context: Context) {
     val iconSizeDp = 42
     val selectedPinSizeDp = 54
 
-    createMarkerBitmap(context, R.drawable.ic_restaurant_v2, iconSizeDp)?.let { addImage("tm_restaurant", it) }
-    createMarkerBitmap(context, R.drawable.ic_marker_bakery, iconSizeDp)?.let { addImage("tm_bakery", it) }
-    createMarkerBitmap(context, R.drawable.ic_marker_cafe, iconSizeDp)?.let { addImage("tm_cafe", it) }
-    createMarkerBitmap(context, R.drawable.ic_marker_default_v2, iconSizeDp)?.let { addImage("tm_default", it) }
+    val icRestaurant = MapLayerConstants.RESTAURANT_ICON_ID
+    val icBakery = MapLayerConstants.BAKERY_ICON_ID
+    val icCafe = MapLayerConstants.CAFE_ICON_ID
+    val icDefault = MapLayerConstants.DEFAULT_ICON_ID
+    val icSelected = MapLayerConstants.SELECTED_PIN_ICON_ID
+
+    createMarkerBitmap(context, R.drawable.ic_restaurant_v2, iconSizeDp)?.let { addImage(icRestaurant, it) }
+    createMarkerBitmap(context, R.drawable.ic_marker_bakery, iconSizeDp)?.let { addImage(icBakery, it) }
+    createMarkerBitmap(context, R.drawable.ic_marker_cafe, iconSizeDp)?.let { addImage(icCafe, it) }
+    createMarkerBitmap(context, R.drawable.ic_marker_default_v2, iconSizeDp)?.let { addImage(icDefault, it) }
 
     createMarkerBitmap(context, R.drawable.ic_selected_search_pin, selectedPinSizeDp)?.let {
-        addImage("tm_selected_search_pin", it)
+        addImage(icSelected, it)
     }
 
-    val source = GeoJsonSource("restaurant-source")
+    val restaurantSourceId = MapLayerConstants.RESTAURANT_SOURCE_ID
+    val restaurantLayerId = MapLayerConstants.RESTAURANT_LAYER_ID
+
+    val source = GeoJsonSource(restaurantSourceId)
     addSource(source)
 
-    val layer = SymbolLayer("restaurant-layer", "restaurant-source").withProperties(
+    val layer = SymbolLayer(restaurantLayerId, restaurantSourceId).withProperties(
         PropertyFactory.iconImage(
             Expression.match(
                 Expression.get("category"),
-                Expression.literal("bakery"), Expression.literal("tm_bakery"),
-                Expression.literal("cafe"), Expression.literal("tm_cafe"),
-                Expression.literal("restaurant"), Expression.literal("tm_restaurant"),
-                Expression.literal("tm_default")
+                Expression.literal("bakery"), Expression.literal(MapLayerConstants.BAKERY_ICON_ID),
+                Expression.literal("cafe"), Expression.literal(MapLayerConstants.CAFE_ICON_ID),
+                Expression.literal("restaurant"), Expression.literal(MapLayerConstants.RESTAURANT_ICON_ID),
+                Expression.literal(MapLayerConstants.DEFAULT_ICON_ID)
             )
         ),
 

@@ -5,5 +5,5 @@ import org.beem.tastymap.data.model.BaseResponse
 import org.beem.tastymap.route.model.RouteDirectionDto
 
 interface RouteRepository {
-    suspend fun fetchRoute(placeId: String, userLat: Double, userLng: Double): ResultWrapper<BaseResponse<RouteDirectionDto>>
+    suspend fun fetchRoute(placeId: String, userLat: Double, userLng: Double, forceRefresh: Boolean = false): ResultWrapper<BaseResponse<RouteDirectionDto>>
 }

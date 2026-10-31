@@ -13,10 +13,11 @@ class RouteRepositoryImpl(
     override suspend fun fetchRoute(
         placeId: String,
         userLat: Double,
-        userLng: Double
+        userLng: Double,
+        forceRefresh: Boolean
     ): ResultWrapper<BaseResponse<RouteDirectionDto>> {
         val result = safeApiCall {
-            source.getDirections(placeId, userLat, userLng)
+            source.getDirections(placeId, userLat, userLng, forceRefresh)
         }
         return result
     }

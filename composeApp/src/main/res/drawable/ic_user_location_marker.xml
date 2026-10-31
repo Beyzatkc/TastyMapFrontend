@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="64dp"
+    android:height="64dp"
+    android:viewportWidth="256"
+    android:viewportHeight="256">
+
+    <!-- 1. IŞIK HUZMESİ / RADAR KONİSİ (İleriye doğru yayılan yarı saydam açı) -->
+    <!-- Merkez: (128, 128) | Yukarıya doğru 60 derecelik fener açısı -->
+    <path
+        android:pathData="M128,128 L84,32 C112,18 144,18 172,32 Z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:startX="128"
+                android:startY="128"
+                android:endX="128"
+                android:endY="24"
+                android:type="linear">
+                <!-- Merkezden uzağa doğru sönen gradyan -->
+                <item android:offset="0.0" android:color="#66001970" />
+                <item android:offset="0.5" android:color="#33001970" />
+                <item android:offset="1.0" android:color="#00001970" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- 2. Işık Huzmesinin İnce Kılavuz Kanatları (Çizdiğin turuncu kılavuz çizgiler) -->
+    <path
+        android:strokeWidth="2.5"
+        android:strokeColor="#40001970"
+        android:strokeLineCap="round"
+        android:pathData="M128,128 L84,32 M128,128 L172,32" />
+
+    <!-- 3. ZEMİN YUMUŞAK GÖLGESİ (Dairenin yere bastığını hissettirir) -->
+    <path
+        android:fillColor="#33000000"
+        android:pathData="M128,128m-42,0a42,42 0,1,1 84,0a42,42 0,1,1 -84,0" />
+
+    <!-- 4. DIŞ BEYAZ KORUMA HALKASI (Harita zemininden ayrıştırır) -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M128,128m-36,0a36,36 0,1,1 72,0a36,36 0,1,1 -72,0" />
+
+    <!-- 5. ANA GÖVDE DAİRESİ (Tasty Laciverti) -->
+    <path
+        android:fillColor="#001970"
+        android:pathData="M128,128m-30,0a30,30 0,1,1 60,0a30,30 0,1,1 -60,0" />
+
+    <!-- 6. İÇ HALKA (Açık Kontrast Çerçeve) -->
+    <path
+        android:fillColor="#E8EEF9"
+        android:pathData="M128,128m-20,0a20,20 0,1,1 40,0a20,20 0,1,1 -40,0" />
+
+    <!-- 7. MERKEZ ÇEKİRDEK (Canlı Gurme Turuncusu) -->
+    <path
+        android:fillColor="#F5A623"
+        android:pathData="M128,128m-14,0a14,14 0,1,1 28,0a14,14 0,1,1 -28,0" />
+
+</vector>

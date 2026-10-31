@@ -28,20 +28,21 @@ class MapControllerImp(
     private val style: Style
 ) : MapController {
 
-    private val ROUTE_SOURCE_ID = "tastymap-route-source"
-    private val ROUTE_CASING_LAYER_ID = "tastymap-route-casing-layer"
-    private val ROUTE_MAIN_LAYER_ID = "tastymap-route-main-layer"
+    private val ROUTE_SOURCE_ID = MapLayerConstants.ROUTE_SOURCE_ID
+    private val ROUTE_CASING_LAYER_ID = MapLayerConstants.ROUTE_CASING_LAYER_ID
+    private val ROUTE_MAIN_LAYER_ID = MapLayerConstants.ROUTE_MAIN_LAYER_ID
 
-    private val CONNECTOR_SOURCE_ID = "tastymap-connector-source"
-    private val CONNECTOR_LAYER_ID = "tastymap-connector-layer"
+    private val CONNECTOR_SOURCE_ID = MapLayerConstants.CONNECTOR_SOURCE_ID
+    private val CONNECTOR_LAYER_ID = MapLayerConstants.CONNECTOR_LAYER_ID
 
-    private val RESTAURANT_LAYER_ID = "restaurant-layer"
+    private val RESTAURANT_SOURCE_ID = MapLayerConstants.RESTAURANT_SOURCE_ID
+    private val RESTAURANT_LAYER_ID = MapLayerConstants.RESTAURANT_LAYER_ID
 
-    val SOURCE_ID = "user-location-source"
-    val LAYER_ID = "user-location-layer"
+    val SOURCE_ID = MapLayerConstants.USER_LOCATION_SOURCE_ID
+    val LAYER_ID = MapLayerConstants.USER_LOCATION_LAYER_ID
 
-    private val SELECTED_PIN_SOURCE_ID = "tastymap-selected-pin-source"
-    private val SELECTED_PIN_LAYER_ID = "tastymap-selected-pin-layer"
+    private val SELECTED_PIN_SOURCE_ID = MapLayerConstants.SELECTED_PIN_SOURCE_ID
+    private val SELECTED_PIN_LAYER_ID = MapLayerConstants.SELECTED_PIN_LAYER_ID
 
     private var animator: ValueAnimator? = null
     private var lastLat = 0.0
@@ -56,7 +57,7 @@ class MapControllerImp(
 
         map.post {
             try {
-                val source = style.getSourceAs<GeoJsonSource>("restaurant-source")
+                val source = style.getSourceAs<GeoJsonSource>(RESTAURANT_SOURCE_ID)
                 if (source != null) {
                     val featureCollection = FeatureCollection.fromJson(geoJson)
                     println("TastyMap -> Parse edilen Feature sayısı: ${featureCollection.features()?.size ?: 0}")
@@ -101,6 +102,17 @@ class MapControllerImp(
                     false
                 }
             }
+        }
+    }
+
+    override fun jumpTo(lat: Double, lng: Double, zoom: Float) {
+        map.getMapAsync { mapLibreMap ->
+            val pos = CameraPosition.Builder()
+                .target(LatLng(lat, lng))
+                .zoom(zoom.toDouble())
+                .build()
+
+            mapLibreMap.moveCamera(CameraUpdateFactory.newCameraPosition(pos))
         }
     }
 

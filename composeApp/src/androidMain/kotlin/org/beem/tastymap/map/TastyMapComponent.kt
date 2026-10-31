@@ -1,11 +1,16 @@
 package org.beem.tastymap.map
 
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.MyLocation
+import androidx.compose.material.icons.rounded.NearMe
 import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -22,6 +27,7 @@ import org.beem.tastymap.R
 import org.beem.tastymap.data.model.LocationData
 import org.beem.tastymap.map.mapstylelayers.setupRestaurantLayer
 import org.beem.tastymap.map.mapstylelayers.setupUserLocationLayer
+import org.beem.tastymap.ui.theme.AppColors
 import org.maplibre.android.maps.MapView
 import org.maplibre.android.maps.Style
 
@@ -64,13 +70,8 @@ actual fun TastyMapComponent(
                 mapView.apply {
                     getMapAsync { mapLibreMap ->
                         mapLibreMap.setStyle(Style.Builder().fromUri(mapUrl)) { style ->
-                            style.setupUserLocationLayer(
-                                context = context,
-                                iconId = "user-navigation-icon",
-                                iconRes = android.R.drawable.ic_menu_mylocation
-                            )
-
                             style.setupRestaurantLayer(context)
+                            style.setupUserLocationLayer(context = context)
 
                             val controller = MapControllerImp(mapView, style)
                             state.controller = controller
@@ -80,15 +81,26 @@ actual fun TastyMapComponent(
             },
             modifier = Modifier.fillMaxSize()
         )
+
         FloatingActionButton(
             onClick = onFabClicked,
             modifier = Modifier
                 .align(Alignment.BottomEnd)
-                .padding(16.dp)
+                .padding(bottom = 24.dp, end = 16.dp)
+                .size(48.dp)
+                .border(1.dp, AppColors.BorderLight, RoundedCornerShape(16.dp)),
+            shape = RoundedCornerShape(16.dp),
+            containerColor = AppColors.Surface,
+            contentColor = AppColors.GourmetOrange,
+            elevation = FloatingActionButtonDefaults.elevation(
+                defaultElevation = 6.dp,
+                pressedElevation = 2.dp
+            )
         ) {
             Icon(
-                imageVector = Icons.Default.MyLocation,
-                contentDescription = "Merkeze Odaklan"
+                imageVector = Icons.Rounded.NearMe,
+                contentDescription = "Merkeze Odaklan",
+                modifier = Modifier.size(22.dp)
             )
         }
     }

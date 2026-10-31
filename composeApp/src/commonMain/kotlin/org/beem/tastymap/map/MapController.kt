@@ -3,6 +3,7 @@ package org.beem.tastymap.map
 import org.beem.tastymap.data.model.Restaurant
 
 interface MapController {
+    fun jumpTo(lat: Double, lng: Double, zoom: Float)
     fun animateTo(lat: Double, lng: Double, zoom: Float?)
     fun addMarker(lat: Double, lng: Double, title: String)
     fun userMarker(lat: Double, lng: Double, title: String, bearing: Float)

@@ -16,11 +16,13 @@ class RouteDataSource(
     suspend fun getDirections(
         placeId: String,
         userLat: Double,
-        userLng: Double
+        userLng: Double,
+        forceRefresh: Boolean = false
     ): BaseResponse<RouteDirectionDto> {
         return client.get("route/$placeId/directions"){
             parameter("userLat", userLat)
             parameter("userLng", userLng)
+            parameter("forceRefresh", forceRefresh)
             DevTokenProvider.authHeader?.let { header(HttpHeaders.Authorization, it) }
         }.body()
     }

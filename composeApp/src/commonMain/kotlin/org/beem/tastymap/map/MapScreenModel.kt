@@ -2,6 +2,8 @@ package org.beem.tastymap.map
 
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -19,6 +21,7 @@ import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import org.beem.tastymap.core.network.ResultWrapper
 import org.beem.tastymap.core.network.safeApiCall
+import org.beem.tastymap.core.util.GeoUtils
 import org.beem.tastymap.data.model.LocationData
 import org.beem.tastymap.data.model.Restaurant
 import org.beem.tastymap.map.model.ActiveRouteState
@@ -28,12 +31,14 @@ import org.beem.tastymap.map.repository.MapRepository
 import org.beem.tastymap.route.repository.RouteRepository
 import org.beem.tastymap.route.repository.RouteRepositoryImpl
 import org.beem.tastymap.ui.components.TastyMapIcon
+import org.beem.tastymap.ui.map.states.SearchChipState
 import kotlin.math.PI
 import kotlin.math.abs
 import kotlin.math.atan2
 import kotlin.math.cos
 import kotlin.math.sin
 import kotlin.math.sqrt
+import kotlin.time.Duration.Companion.milliseconds
 
 class MapScreenModel(
     private val locationTracker: LocationTracker,
@@ -50,6 +55,8 @@ class MapScreenModel(
         prettyPrint = false
     }
 
+    private var searchJob: Job? = null
+
     private val ALPHA = 0.2f
     private var lastSmoothedLocation: LocationData? = null
     private var lastEmittedLocation: LocationData? = null
@@ -61,11 +68,21 @@ class MapScreenModel(
     private var currentCameraLat: Double = 0.0
     private var currentCameraLng: Double = 0.0
     private var currentCameraZoom: Double = 0.0
-    private var isSearching = false
+
+    private var activeRouteCoordinates: List<List<Double>> = emptyList()
+    private var offRouteCount = 0
+    private var isRerouting = false
+    private val OFF_ROUTE_THRESHOLD_METERS = 35.0
+    private val OFF_ROUTE_TRIGGER_COUNT = 2
+
 
     private val _activeRoute = MutableStateFlow<ActiveRouteState>(ActiveRouteState.Idle)
     val activeRoute = _activeRoute.asStateFlow()
 
+    private val _searchChipState = MutableStateFlow(SearchChipState.HIDDEN)
+    val searchChipState = _searchChipState.asStateFlow()
+
+    private var isFirstLocationFixed = false
 
     val event = _event.asSharedFlow()
 
@@ -88,10 +105,27 @@ class MapScreenModel(
 
                 val filteredLocation = applyLowPassFilter(location)
 
+                if (!isFirstLocationFixed) {
+                    isFirstLocationFixed = true
+
+                    _event.emit(
+                        MapEvent.JumpTo(
+                            lat = filteredLocation.latitude,
+                            lng = filteredLocation.longitude,
+                            zoom = 15.5f
+                        )
+                    )
+
+                    fetchNearbyRestaurants(
+                        lat = filteredLocation.latitude,
+                        lng = filteredLocation.longitude
+                    )
+                }
+
                 val distance = if (lastEmittedLocation == null) {
                     Double.MAX_VALUE
                 } else {
-                    calculateDistance(
+                    GeoUtils.distanceInMeters(
                         filteredLocation.latitude, filteredLocation.longitude,
                         lastEmittedLocation!!.latitude, lastEmittedLocation!!.longitude
                     )
@@ -108,6 +142,34 @@ class MapScreenModel(
                         title = "Buradasınız",
                         bearing = currentBearing
                     ))
+
+
+                    val currentRoute = _activeRoute.value
+                    if (currentRoute is ActiveRouteState.Active && activeRouteCoordinates.isNotEmpty() && !isRerouting) {
+                        val distanceToRoute = GeoUtils.minDistanceToRoute(
+                            userLat = filteredLocation.latitude,
+                            userLng = filteredLocation.longitude,
+                            routeCoordinates = activeRouteCoordinates
+                        )
+
+                        if (distanceToRoute > OFF_ROUTE_THRESHOLD_METERS) {
+                            offRouteCount++
+                            println("TastyMap Navigation -> Rotadan Sapıldı: $distanceToRoute m (Sayaç: $offRouteCount)")
+
+                            if (offRouteCount >= OFF_ROUTE_TRIGGER_COUNT) {
+                                isRerouting = true
+                                println("TastyMap Navigation -> Yeni rota isteniyor...")
+                                fetchDirections(
+                                    placeId = currentRoute.placeId,
+                                    targetLat = currentRoute.targetLat,
+                                    targetLng = currentRoute.targetLng,
+                                    forceRefresh = true
+                                )
+                            }
+                        } else {
+                            offRouteCount = 0
+                        }
+                    }
                 }
             }
         }
@@ -115,23 +177,22 @@ class MapScreenModel(
 
     fun onCenterMapClicked(){
         screenModelScope.launch {
-            screenModelScope.launch {
-                val targetLoc = lastEmittedLocation ?: userLocation.value
-                val targetZoom = if (currentCameraZoom >= 14.0) null else 15f
+            val targetLoc = lastEmittedLocation ?: userLocation.value
+            val targetZoom = if (currentCameraZoom >= 14.0) null else 15f
 
-                _event.emit(MapEvent.CenterOn(
-                    lat = targetLoc.latitude,
-                    lng = targetLoc.longitude,
-                    zoom = targetZoom
-                ))
-            }
+            _event.emit(MapEvent.CenterOn(
+                lat = targetLoc.latitude,
+                lng = targetLoc.longitude,
+                zoom = targetZoom
+            ))
         }
     }
 
     fun fetchNearbyRestaurants(lat: Double, lng: Double) {
-        screenModelScope.launch {
-            isSearching = true
-            _event.emit(MapEvent.ToggleSearchThisAreaButton(visible = false))
+        searchJob?.cancel()
+        searchJob = screenModelScope.launch {
+
+            _searchChipState.value = SearchChipState.LOADING
 
             lastSearchedLat = lat
             lastSearchedLng = lng
@@ -148,12 +209,20 @@ class MapScreenModel(
                     _event.emit(MapEvent.UpdateMapGeoSource(
                         source = rebuildGeoJson(response.data.geoJson)
                     ))
+
+                    _searchChipState.value = SearchChipState.SUCCESS
+
+                    delay(1000.milliseconds)
+                    _searchChipState.value = SearchChipState.HIDDEN
                 }
                 is ResultWrapper.Error -> {
                     println("Hata Oluştu: ${response.message}")
+
+                    _searchChipState.value = SearchChipState.ERROR
+                    delay(1500.milliseconds)
+                    _searchChipState.value = SearchChipState.HIDDEN
                 }
             }
-            isSearching = false
         }
     }
 
@@ -163,13 +232,13 @@ class MapScreenModel(
         currentCameraLng = lng
         currentCameraZoom = zoom
 
-        if (_activeRoute.value is ActiveRouteState.Active || isSearching) return
+        if (_activeRoute.value is ActiveRouteState.Active || searchJob?.isActive == true) return
 
         if (lastSearchedLat != 0.0 && lastSearchedLng != 0.0) {
-            val distance = calculateDistance(lastSearchedLat, lastSearchedLng, lat, lng)
+            val distance = GeoUtils.distanceInMeters(lastSearchedLat, lastSearchedLng, lat, lng)
             if (distance > 400.0) {
                 screenModelScope.launch {
-                    _event.emit(MapEvent.ToggleSearchThisAreaButton(visible = true))
+                    _searchChipState.value = SearchChipState.ACTIONABLE
                 }
             }
         }
@@ -181,18 +250,19 @@ class MapScreenModel(
     }
 
     fun onMarkerClicked(restaurant: Restaurant) {
-        val updatedRestaurant = repository.getPlaceById(restaurant.id)?.let { place ->
-            restaurant.copy(
-                rating = place.rating,
-                address = place.vicinity ?: "",
-                types = place.types,
-                status = place.business_status ?: "",
-                latitude = place.geometry?.location?.lat ?: 0.0,
-                longitude = place.geometry?.location?.lng ?: 0.0,
-                totalRatings = place.user_ratings_total
-            )
-        } ?: restaurant
         screenModelScope.launch{
+            val updatedRestaurant = repository.getPlaceById(restaurant.id)?.let { place ->
+                restaurant.copy(
+                    rating = place.rating,
+                    address = place.vicinity ?: "",
+                    types = place.types,
+                    status = place.business_status ?: "",
+                    latitude = place.geometry?.location?.lat ?: 0.0,
+                    longitude = place.geometry?.location?.lng ?: 0.0,
+                    totalRatings = place.user_ratings_total
+                )
+            } ?: restaurant
+
             _event.emit(MapEvent.CenterOn(
                 lat = updatedRestaurant.latitude,
                 lng = updatedRestaurant.longitude
@@ -245,22 +315,12 @@ class MapScreenModel(
         return smoothedLocation
     }
 
-    private fun calculateDistance(lat1: Double, lon1: Double, lat2: Double, lon2: Double): Double {
-        val r = 6371000.0
-
-        val dLat = (lat2 - lat1) * (PI / 180.0)
-        val dLon = (lon2 - lon1) * (PI / 180.0)
-
-        val a = sin(dLat / 2) * sin(dLat / 2) +
-                cos(lat1 * (PI / 180.0)) * cos(lat2 * (PI / 180.0)) *
-                sin(dLon / 2) * sin(dLon / 2)
-
-        val c = 2 * atan2(sqrt(a), sqrt(1 - a))
-
-        return r * c
-    }
-
-    fun fetchDirections(placeId: String, targetLat: Double, targetLng: Double) {
+    fun fetchDirections(
+        placeId: String,
+        targetLat: Double,
+        targetLng: Double,
+        forceRefresh: Boolean = false
+    ) {
         screenModelScope.launch {
             val currentUserLoc = lastEmittedLocation ?: userLocation.value
             if (currentUserLoc.latitude == 0.0 && currentUserLoc.longitude == 0.0) {
@@ -268,13 +328,20 @@ class MapScreenModel(
                 return@launch
             }
 
-            _activeRoute.value = ActiveRouteState.Loading
+            // Yeniden hesaplanırken kullanıcı kartı yok olmasın
+            if (_activeRoute.value !is ActiveRouteState.Active) {
+                _activeRoute.value = ActiveRouteState.Loading
+            }
 
-            when (val result = routeRepository.fetchRoute(placeId, currentUserLoc.latitude, currentUserLoc.longitude)) {
+            when (val result = routeRepository.fetchRoute(placeId, currentUserLoc.latitude, currentUserLoc.longitude, forceRefresh)) {
                 is ResultWrapper.Success -> {
                     val routeData = result.data.data
                     if (routeData != null && routeData.coordinates.isNotEmpty()) {
                         val mainCoordinates = routeData.coordinates
+
+                        activeRouteCoordinates = mainCoordinates
+                        offRouteCount = 0
+                        isRerouting = false
 
                         val firstPoint = mainCoordinates.first()
                         val userPoint = listOf(currentUserLoc.longitude, currentUserLoc.latitude)
@@ -305,19 +372,23 @@ class MapScreenModel(
                             )
                         )
                     } else {
+                        isRerouting = false
                         _activeRoute.value = ActiveRouteState.Error("Uygun bir rota bulunamadı.")
                     }
                 }
                 is ResultWrapper.Error -> {
+                    isRerouting = false
                     _activeRoute.value = ActiveRouteState.Error(result.message ?: "Rota hesaplanamadı.")
                 }
             }
         }
     }
 
-    // YENİ: Rotayı Temizleme Fonksiyonu
     fun clearRoute() {
         screenModelScope.launch {
+            activeRouteCoordinates = emptyList()
+            offRouteCount = 0
+            isRerouting = false
             _activeRoute.value = ActiveRouteState.Idle
             _event.emit(MapEvent.ClearRoute)
         }
