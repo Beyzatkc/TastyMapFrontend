@@ -5,6 +5,7 @@ import MapGraphRoute
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.fillMaxSize
@@ -42,6 +43,7 @@ import org.beem.tastymap.ui.splash.SplashEffect
 import org.beem.tastymap.ui.splash.SplashLogoView
 import org.beem.tastymap.ui.splash.SplashViewModel
 import org.beem.tastymap.ui.splash.splashGraph
+import org.beem.tastymap.ui.theme.LocalCustomColors
 import org.beem.tastymap.ui.theme.TastyTheme
 import org.jetbrains.compose.resources.getString
 import org.koin.compose.koinInject
@@ -51,7 +53,6 @@ import tastymap.composeapp.generated.resources.auth_logged_out
 import tastymap.composeapp.generated.resources.auth_password_changed
 import tastymap.composeapp.generated.resources.auth_session_expired
 
-// App.kt dosyasının importlarının hemen altına ekle:
 val LocalIsWideScreen = compositionLocalOf { false }
 @Composable
 @Preview
@@ -59,7 +60,6 @@ fun App(
     initialRoute: Any? = null,
     onNavHostReady: suspend (androidx.navigation.NavController) -> Unit = {}
 ) {
-    val userManager: UserManager = koinInject()
     val splashViewModel = koinViewModel<SplashViewModel>()
     val splashEffect by splashViewModel.effect.collectAsState()
 
@@ -168,8 +168,9 @@ fun App(
                     MainAppShell(navController = navController) {
                         NavHost(
                             navController = navController,
-                            startDestination = safeStartDest, // SADECE ROOT ROTA (MainRoute) VEREBİLİRİZ!
-                            modifier = Modifier.fillMaxSize(),
+                            startDestination = safeStartDest,
+                            modifier = Modifier.fillMaxSize().background(LocalCustomColors.current.surface),
+                            //modifier = Modifier.fillMaxSize(),
                             enterTransition = { fadeIn(animationSpec = tween(400)) },
                             exitTransition = { fadeOut(animationSpec = tween(400)) },
                             popEnterTransition = { fadeIn(animationSpec = tween(400)) },

@@ -8,6 +8,7 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.receiveAsFlow
 import org.beem.tastymap.ui.auth.ResetRoute
 import org.beem.tastymap.ui.auth.VerifyRoute
+import org.beem.tastymap.ui.post.EditPostRoute
 import org.beem.tastymap.ui.profile.AccountDeactivatedRoute
 import org.beem.tastymap.ui.profile.ActiveDevicesRoute
 import org.beem.tastymap.ui.profile.BlockedUsersRoute
@@ -149,7 +150,15 @@ object DeepLinkManager {
         }
 
         val refreshRoute: Any? = when {
-            // 1. Ana Sekmeler ve Bilinen Ekranlar (Artık Graph rotalarına yönlendiriyoruz)
+            hashLower.startsWith("editpost/") -> {
+                val idString = rawHash.substringAfter("editpost/")
+                val parsedId = idString.toLongOrNull()
+
+                if (parsedId != null) {
+                    EditPostRoute(postId = parsedId)
+                } else null
+            }
+
             hashLower == "map" || hashLower == "maptabroute" || hashLower == "mapgraphroute" || hashLower == "mainroute" -> MapGraphRoute
             hashLower == "search" || hashLower == "searchtabroute" || hashLower == "searchgraphroute" -> SearchGraphRoute
             hashLower == "ai" || hashLower == "aitabroute" || hashLower == "aigraphroute" -> AIGraphRoute

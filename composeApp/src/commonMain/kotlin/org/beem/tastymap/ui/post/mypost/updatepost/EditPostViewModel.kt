@@ -29,13 +29,31 @@ class EditPostViewModel(
     fun loadPostDetail(postId: Long) {
         observeJob?.cancel()
 
+        // 1. Veritabanını (Flow) dinlemeye başla
         observeJob = viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true) }
+
             postRepository.getPostDetailStream(postId = postId).collect { post ->
-                initialPost = post
+                if (post != null) {
+                    initialPost = post
+                    _uiState.update {
+                        it.copy(
+                            isLoading = false,
+                            post = post,
+                        )
+                    }
+                }
+            }
+        }
+
+        viewModelScope.launch {
+            val result = postRepository.refreshPostDetail(postId)
+
+            if (result is ResultWrapper.Error && initialPost == null) {
                 _uiState.update {
                     it.copy(
                         isLoading = false,
-                        post = post,
+                        errorMessage = result.message ?: "Gönderi yüklenirken bir hata oluştu"
                     )
                 }
             }

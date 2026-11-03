@@ -21,10 +21,6 @@ import androidx.compose.foundation.interaction.collectIsHoveredAsState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
-import androidx.compose.material.icons.outlined.*
-import androidx.compose.material.icons.rounded.AutoAwesome
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -32,7 +28,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -40,6 +36,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.NavDestination.Companion.hierarchy
+import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import org.beem.tastymap.LocalIsWideScreen
@@ -190,20 +187,18 @@ private fun AppBottomBar(bottomNavController: NavController) {
             ) {
                 NavTabItem(
                     title = stringResource(Res.string.nav_map),
-                    iconFilled = Icons.Default.LocationOn,
-                    iconOutlined = Icons.Outlined.LocationOn,
+                    iconFilled = painterResource(Res.drawable.ic_map_fill),
+                    iconOutlined = painterResource(Res.drawable.ic_map_outline),
                     graphRoute = MapGraphRoute,
-                    startRoute = map,
                     isSelected = isMapSelected,
                     navController = bottomNavController,
                     modifier = Modifier.weight(1f)
                 )
                 NavTabItem(
                     title = stringResource(Res.string.nav_search),
-                    iconFilled = Icons.Default.Search,
-                    iconOutlined = Icons.Outlined.Search,
+                    iconFilled = painterResource(Res.drawable.ic_search_fill),
+                    iconOutlined = painterResource(Res.drawable.ic_search),
                     graphRoute = SearchGraphRoute,
-                    startRoute = search,
                     isSelected = isSearchSelected,
                     navController = bottomNavController,
                     modifier = Modifier.weight(1f)
@@ -217,20 +212,18 @@ private fun AppBottomBar(bottomNavController: NavController) {
                 )
                 NavTabItem(
                     title = stringResource(Res.string.nav_upload),
-                    iconFilled = Icons.Default.Add,
-                    iconOutlined = Icons.Outlined.Add,
+                    iconFilled = painterResource(Res.drawable.ic_plus_fill),
+                    iconOutlined = painterResource(Res.drawable.ic_plus),
                     graphRoute = UploadGraphRoute,
-                    startRoute = upload,
                     isSelected = isUploadSelected,
                     navController = bottomNavController,
                     modifier = Modifier.weight(1f)
                 )
                 NavTabItem(
                     title = stringResource(Res.string.nav_profile),
-                    iconFilled = Icons.Default.Person,
-                    iconOutlined = Icons.Outlined.Person,
+                    iconFilled = painterResource(Res.drawable.ic_user_fill),
+                    iconOutlined = painterResource(Res.drawable.ic_user_outline),
                     graphRoute = ProfileGraphRoute,
-                    startRoute = my,
                     isSelected = isProfileSelected,
                     navController = bottomNavController,
                     modifier = Modifier.weight(1f)
@@ -287,10 +280,11 @@ private fun AppNavigationRail(
                         horizontalArrangement = Arrangement.Start,
                         modifier = Modifier.padding(vertical = 4.dp, horizontal = if (isHovered) 0.dp else 12.dp)
                     ) {
-                        Image(
-                            painter = painterResource(Res.drawable.app_logo),
+                        Icon(
+                            painter = painterResource(Res.drawable.firsticon),
                             contentDescription = "App Logo",
-                            modifier = Modifier.size(if (isHovered) 42.dp else 52.dp)
+                            tint = customColors.blackWhite, // <-- Temaya göre siyah/beyaz olur
+                            modifier = Modifier.size(if (isHovered) 45.dp else 42.dp)
                         )
                         AnimatedVisibility(
                             visible = isHovered,
@@ -311,13 +305,12 @@ private fun AppNavigationRail(
                     }
                 }
 
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(35.dp))
 
-                // DÜZELTİLDİ: route yerine graphRoute ve startRoute eklendi!
                 RailTabItem(
                     title = stringResource(Res.string.nav_map),
-                    iconFilled = Icons.Default.LocationOn,
-                    iconOutlined = Icons.Outlined.LocationOn,
+                    iconFilled = painterResource(Res.drawable.ic_map_fill),
+                    iconOutlined = painterResource(Res.drawable.ic_map_outline),
                     graphRoute = MapGraphRoute,
                     startRoute = map,
                     isSelected = isMapSelected,
@@ -326,8 +319,8 @@ private fun AppNavigationRail(
                 )
                 RailTabItem(
                     title = stringResource(Res.string.nav_search),
-                    iconFilled = Icons.Default.Search,
-                    iconOutlined = Icons.Outlined.Search,
+                    iconFilled = painterResource(Res.drawable.ic_search_fill),
+                    iconOutlined = painterResource(Res.drawable.ic_search),
                     graphRoute = SearchGraphRoute,
                     startRoute = search,
                     isSelected = isSearchSelected,
@@ -343,8 +336,8 @@ private fun AppNavigationRail(
                 )
                 RailTabItem(
                     title = stringResource(Res.string.nav_upload),
-                    iconFilled = Icons.Default.Add,
-                    iconOutlined = Icons.Outlined.Add,
+                    iconFilled = painterResource(Res.drawable.ic_plus_fill),
+                    iconOutlined = painterResource(Res.drawable.ic_plus),
                     graphRoute = UploadGraphRoute,
                     startRoute = upload,
                     isSelected = isUploadSelected,
@@ -353,8 +346,8 @@ private fun AppNavigationRail(
                 )
                 RailTabItem(
                     title = stringResource(Res.string.nav_profile),
-                    iconFilled = Icons.Default.Person,
-                    iconOutlined = Icons.Outlined.Person,
+                    iconFilled = painterResource(Res.drawable.ic_user_fill),
+                    iconOutlined = painterResource(Res.drawable.ic_user_outline),
                     graphRoute = ProfileGraphRoute,
                     startRoute = my,
                     isSelected = isProfileSelected,
@@ -366,7 +359,8 @@ private fun AppNavigationRail(
 
                 RailActionItem(
                     title = stringResource(Res.string.my_profile_notification_cd),
-                    icon = Icons.Outlined.Notifications,
+                    iconFilled = painterResource(Res.drawable.ic_bell_outline), // Varsa fill, yoksa outline kullan
+                    iconOutlined = painterResource(Res.drawable.ic_bell_outline),
                     isExpanded = isHovered,
                     hasBadge = hasUnreadBadge,
                     onClick = {
@@ -379,7 +373,8 @@ private fun AppNavigationRail(
 
                 RailActionItem(
                     title = stringResource(Res.string.my_profile_settings_cd),
-                    icon = Icons.Default.Menu,
+                    iconFilled = painterResource(Res.drawable.ic_menu),
+                    iconOutlined = painterResource(Res.drawable.ic_menu),
                     isExpanded = isHovered,
                     hasBadge = false,
                     onClick = {
@@ -395,44 +390,36 @@ private fun AppNavigationRail(
     }
 }
 
-// -------------------------------------------------------------
-// SENIOR SEVİYE KESİN SIFIRLAMA VE GEÇİŞ MANTIĞI
-// -------------------------------------------------------------
 fun navigateToBottomTab(
     navController: NavController,
     graphRoute: Any,
-    startRoute: Any // Parametreyi silmiyoruz, diğer yerlerde hata vermesin
+    isWideScreen: Boolean
 ) {
     navController.navigate(graphRoute) {
-        // Alt barda sekme değiştirirken geçmişi şişirmemek için ana sekmeye (MapGraphRoute) kadar pop yapıyoruz.
-        // Bu sayede araya sıkışmış Profil, Gönderi vb. sayfalar temizlenir.
-        popUpTo(MapGraphRoute) {
-            saveState = true // Ayrıldığımız sekmenin (Örn: Arama) durumunu kaydet
+        if (isWideScreen) {
+            launchSingleTop = true
+            restoreState = true
+        } else {
+            popUpTo(navController.graph.findStartDestination().id) {
+                saveState = true
+            }
+            launchSingleTop = true
+            restoreState = true
         }
-
-        // Kullanıcı aynı sekmeye defalarca basarsa üst üste açılmasını engeller
-        launchSingleTop = true
-
-        // Daha önce bu sekmeye girilmişse (Örn: Arama sekmesinde bir şeyler yazılmışsa) durumu geri yükle
-        restoreState = true
     }
 }
 
-
-// -------------------------------------------------------------
-// UI BİLEŞENLERİ (TASARIMLARI BİREBİR KORUNMUŞTUR)
-// -------------------------------------------------------------
 @Composable
 private fun NavTabItem(
     title: String,
-    iconFilled: ImageVector,
-    iconOutlined: ImageVector,
+    iconFilled: Painter,
+    iconOutlined: Painter,
     graphRoute: Any,
-    startRoute: Any,
     isSelected: Boolean,
     navController: NavController,
     modifier: Modifier = Modifier
 ) {
+    val iconPainter = if (isSelected) iconFilled else iconOutlined
     val customColors = LocalCustomColors.current
     val fontFamily = getAppFontFamily()
 
@@ -440,14 +427,15 @@ private fun NavTabItem(
     val backgroundColor by animateColorAsState(targetValue = if (isSelected) customColors.blackWhite.copy(alpha = 0.12f) else Color.Transparent, animationSpec = tween(300))
     val iconSize by animateDpAsState(targetValue = 22.dp, animationSpec = tween(300))
     val textFont = if (isSelected) FontWeight.Bold else FontWeight.Medium
-    val iconVector = if (isSelected) iconFilled else iconOutlined
 
     Column(
         modifier = modifier.fillMaxHeight().clickable(
             interactionSource = remember { MutableInteractionSource() },
             indication = null
         ) {
-            navigateToBottomTab(navController, graphRoute, startRoute)
+            if (!isSelected) {
+                navigateToBottomTab(navController, graphRoute, isWideScreen = false)
+            }
         },
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
@@ -457,14 +445,17 @@ private fun NavTabItem(
             contentAlignment = Alignment.Center
         ) {
             Icon(
-                imageVector = iconVector,
+                painter = iconPainter,
                 contentDescription = title,
                 tint = iconColor,
                 modifier = Modifier.size(iconSize)
             )
         }
+        /*
         Spacer(modifier = Modifier.height(4.dp))
         Text(text = title, color = iconColor, fontSize = 10.sp, fontFamily = fontFamily, fontWeight = textFont)
+
+         */
     }
 }
 
@@ -486,7 +477,9 @@ private fun AITabItem(
             interactionSource = remember { MutableInteractionSource() },
             indication = null
         ) {
-            navigateToBottomTab(navController, graphRoute, startRoute)
+            if (!isSelected) {
+                navigateToBottomTab(navController, graphRoute, isWideScreen = false)
+            }
         },
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
@@ -495,7 +488,12 @@ private fun AITabItem(
             verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.Center,
             modifier = Modifier.scale(scale).clip(CircleShape).background(bgColor).padding(horizontal = 14.dp, vertical = 8.dp)
         ) {
-            Icon(imageVector = Icons.Rounded.AutoAwesome, contentDescription = null, tint = Color.White, modifier = Modifier.size(18.dp))
+            Icon(
+                painter = painterResource(Res.drawable.ic_sparkles), // Güncellendi
+                contentDescription = null,
+                tint = Color.White,
+                modifier = Modifier.size(18.dp)
+            )
             Spacer(modifier = Modifier.width(6.dp))
             Text(text = "AI", color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.Bold)
         }
@@ -505,7 +503,8 @@ private fun AITabItem(
 @Composable
 private fun RailActionItem(
     title: String,
-    icon: ImageVector,
+    iconFilled: Painter,
+    iconOutlined: Painter,
     isExpanded: Boolean,
     hasBadge: Boolean = false,
     onClick: () -> Unit
@@ -513,6 +512,8 @@ private fun RailActionItem(
     val customColors = LocalCustomColors.current
     val fontFamily = getAppFontFamily()
     val iconColor = customColors.blackWhite
+    // Ayarlar vs. tıklandığında değişmesini istersen state bağlayabilirsin, şu anlık outline kullanıyoruz
+    val iconPainter = iconOutlined
 
     Row(
         modifier = Modifier
@@ -535,7 +536,7 @@ private fun RailActionItem(
                 }
             ) {
                 Icon(
-                    imageVector = icon,
+                    painter = iconPainter,
                     contentDescription = title,
                     tint = iconColor,
                     modifier = Modifier.size(26.dp)
@@ -565,8 +566,8 @@ private fun RailActionItem(
 @Composable
 private fun RailTabItem(
     title: String,
-    iconFilled: ImageVector,
-    iconOutlined: ImageVector,
+    iconFilled: Painter,
+    iconOutlined: Painter,
     graphRoute: Any,
     startRoute: Any,
     isSelected: Boolean,
@@ -577,11 +578,12 @@ private fun RailTabItem(
     val customColors = LocalCustomColors.current
     val fontFamily = getAppFontFamily()
 
+    val iconPainter = if (isSelected) iconFilled else iconOutlined
+
     val iconColor by animateColorAsState(targetValue = customColors.blackWhite, animationSpec = tween(300))
     val backgroundColor by animateColorAsState(targetValue = if (isSelected) customColors.blackWhite.copy(alpha = 0.12f) else Color.Transparent, animationSpec = tween(300))
     val iconSize by animateDpAsState(targetValue = 26.dp, animationSpec = tween(300))
     val textFont = if (isSelected) FontWeight.Bold else FontWeight.Medium
-    val iconVector = if (isSelected) iconFilled else iconOutlined
 
     Row(
         modifier = modifier
@@ -593,7 +595,7 @@ private fun RailTabItem(
                 interactionSource = remember { MutableInteractionSource() },
                 indication = null
             ) {
-                navigateToBottomTab(navController, graphRoute, startRoute)
+                navigateToBottomTab(navController, graphRoute,true)
             }
             .then(if (isExpanded) Modifier.padding(horizontal = 12.dp) else Modifier),
         verticalAlignment = Alignment.CenterVertically,
@@ -601,7 +603,7 @@ private fun RailTabItem(
     ) {
         if (isExpanded) {
             Icon(
-                imageVector = iconVector,
+                painter = iconPainter,
                 contentDescription = title,
                 tint = iconColor,
                 modifier = Modifier.size(iconSize)
@@ -625,7 +627,7 @@ private fun RailTabItem(
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
-                    imageVector = iconVector,
+                    painter = iconPainter,
                     contentDescription = title,
                     tint = iconColor,
                     modifier = Modifier.size(iconSize)
@@ -654,7 +656,7 @@ private fun RailAITabItem(
             interactionSource = remember { MutableInteractionSource() },
             indication = null
         ) {
-            navigateToBottomTab(navController, graphRoute, startRoute)
+            navigateToBottomTab(navController, graphRoute,true)
         }.padding(horizontal = if (isExpanded) 20.dp else 0.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = if (isExpanded) Arrangement.Start else Arrangement.Center
@@ -663,7 +665,12 @@ private fun RailAITabItem(
             verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.Center,
             modifier = Modifier.scale(scale).clip(if (isExpanded) RoundedCornerShape(12.dp) else CircleShape).background(bgColor).padding(horizontal = if (isExpanded) 16.dp else 12.dp, vertical = 12.dp)
         ) {
-            Icon(imageVector = Icons.Rounded.AutoAwesome, contentDescription = null, tint = Color.White, modifier = Modifier.size(20.dp))
+            Icon(
+                painter = painterResource(Res.drawable.ic_sparkles), // Güncellendi
+                contentDescription = null,
+                tint = Color.White,
+                modifier = Modifier.size(20.dp)
+            )
             AnimatedVisibility(visible = isExpanded, enter = fadeIn() + expandHorizontally(), exit = fadeOut() + shrinkHorizontally()) {
                 Text(text = "AI", color = Color.White, fontSize = 15.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(start = 8.dp))
             }

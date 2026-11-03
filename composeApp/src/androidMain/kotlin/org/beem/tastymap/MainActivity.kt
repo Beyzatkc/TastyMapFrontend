@@ -17,7 +17,6 @@ class MainActivity : ComponentActivity() {
         PermissionsController(applicationContext)
     }
 
-
     override fun onCreate(savedInstanceState: Bundle?) {
         installSplashScreen()
         super.onCreate(savedInstanceState)
@@ -29,7 +28,6 @@ class MainActivity : ComponentActivity() {
         getKoin().declare(permissionsController)
         FirebaseApp.initializeApp(this)
 
-        // 1. Uygulama Kapalıyken Gelen Linki İşle
         processDeepLink(intent)
 
         setContent {
@@ -41,12 +39,10 @@ class MainActivity : ComponentActivity() {
         super.onNewIntent(intent)
         setIntent(intent)
 
-        // 2. Uygulama Açık/Arkaplandayken Gelen Linki İşle
         processDeepLink(intent)
     }
 
     private fun processDeepLink(intent: Intent?) {
-        // 1. Önce normal web linki (URI) ile mi gelindi ona bakalım
         val dataUri = intent?.data
         if (dataUri != null) {
             Log.d("DEEPLINK_DEBUG", "Gelen Raw Intent Data: $dataUri")
@@ -54,11 +50,10 @@ class MainActivity : ComponentActivity() {
             return // İşlem bitti, çık
         }
 
-        // 2. FCM Bildirimine tıklanarak mı gelindi? (Extras kontrolü)
         val extras = intent?.extras
         if (extras != null) {
             val type = extras.getString("type")
-            val userId = extras.getString("userId") // Takip bildirimi için backend'den yolladığımız id
+            val userId = extras.getString("userId")
 
             Log.d("FCM_DEBUG", "Bildirime Tıklandı - Type: $type, UserId: $userId")
 

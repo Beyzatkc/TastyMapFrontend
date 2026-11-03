@@ -32,6 +32,7 @@ import coil3.compose.AsyncImage
 import io.github.vinceglb.filekit.compose.rememberFilePickerLauncher
 import io.github.vinceglb.filekit.core.PickerType
 import io.github.vinceglb.filekit.core.PlatformFile
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.beem.tastymap.core.util.ToastManager
 import org.beem.tastymap.domain.model.UserProfile
@@ -59,9 +60,14 @@ fun EditProfileScreen(navController: NavController) {
     val screenModel = koinViewModel<EditProfileViewModel>()
     val uiState by screenModel.uiState.collectAsState()
 
-    LaunchedEffect(uiState.successMessageRes) {
-        uiState.successMessageRes?.let { res ->
-            ToastManager.show(res.toString())
+    val successMessage = uiState.successMessageRes?.let {
+        stringResource(it)
+    }
+
+    LaunchedEffect(successMessage) {
+        successMessage?.let { message ->
+            ToastManager.show(message)
+            delay(1000)
             screenModel.clearMessages()
             navController.popBackStack()
         }
@@ -122,10 +128,10 @@ fun EditProfileContent(
         }
     }
 
-    var username by rememberSaveable(userProfile?.username) { mutableStateOf(userProfile?.username.orEmpty()) }
-    var name by rememberSaveable(userProfile?.name) { mutableStateOf(userProfile?.name.orEmpty()) }
-    var surname by rememberSaveable(userProfile?.surname) { mutableStateOf(userProfile?.surname.orEmpty()) }
-    var biography by rememberSaveable(userProfile?.biography) { mutableStateOf(userProfile?.biography.orEmpty()) }
+    var username by remember(userProfile) { mutableStateOf(userProfile?.username.orEmpty()) }
+    var name by remember(userProfile) { mutableStateOf(userProfile?.name.orEmpty()) }
+    var surname by remember(userProfile) { mutableStateOf(userProfile?.surname.orEmpty()) }
+    var biography by remember(userProfile) { mutableStateOf(userProfile?.biography.orEmpty()) }
 
     Scaffold(
         containerColor = customColors.background,

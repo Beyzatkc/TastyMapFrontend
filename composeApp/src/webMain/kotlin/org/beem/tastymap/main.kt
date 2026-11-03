@@ -23,6 +23,7 @@ import org.beem.tastymap.ui.profile.ProfileRoute
 import org.beem.tastymap.ui.splash.SplashRoute
 import org.koin.core.context.startKoin
 import my
+import org.beem.tastymap.ui.post.EditPostRoute
 
 @OptIn(
     ExperimentalComposeUiApi::class,
@@ -60,6 +61,11 @@ fun main() {
 
                         when {
                             destination.hasRoute<SplashRoute>() -> startupHash
+
+                            destination.hasRoute<EditPostRoute>() -> {
+                                val editRoute = entry.toRoute<EditPostRoute>()
+                                "#editpost/${editRoute.postId}"
+                            }
 
                             destination.hasRoute<ProfileRoute>() -> {
                                 val profile = entry.toRoute<ProfileRoute>()

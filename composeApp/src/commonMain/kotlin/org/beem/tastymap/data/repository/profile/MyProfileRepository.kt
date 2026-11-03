@@ -86,7 +86,6 @@ class MyProfileRepository(
     }
 
     suspend fun refreshMyProfile(): ResultWrapper<UserProfile> = withContext(dispatchers.io) {
-        // userSession.value?.userId KONTROLÜNÜ KALDIRDIK! (Çünkü F5 anında null olabiliyor)
         val result = safeApiCall { dataSource.getUserProfile() }
 
         if (result is ResultWrapper.Success) {
