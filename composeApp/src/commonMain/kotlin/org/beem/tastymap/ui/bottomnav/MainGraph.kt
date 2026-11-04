@@ -15,6 +15,7 @@ import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
 import androidx.navigation.navigation
+import org.beem.tastymap.ui.ai.AiChatScreen
 import org.beem.tastymap.ui.post.create.CreatePostScreen
 import org.beem.tastymap.ui.profile.myprofile.MyProfileScreen
 import org.beem.tastymap.ui.search.SearchScreen
@@ -45,7 +46,7 @@ fun NavGraphBuilder.mainGraph(navController: NavController) {
         // 3. AI SEKMESİ GRAFİĞİ
         navigation<AIGraphRoute>(startDestination = AITabRoute) {
             composable<AITabRoute> {
-                // AIScreen(navController)
+                AiChatScreen(navController, false)
             }
         }
 

@@ -30,6 +30,7 @@ import org.beem.tastymap.database.TastyDatabase
 import org.beem.tastymap.domain.auth.ClearSessionUseCase
 import org.beem.tastymap.domain.usecase.ToggleBlockUseCase
 import org.beem.tastymap.domain.usecase.ToggleFollowUseCase
+import org.beem.tastymap.ui.ai.AiViewModel
 import org.beem.tastymap.ui.auth.forgotPassword.ForgotViewModel
 import org.beem.tastymap.ui.auth.forgotPassword.PasswordResetSessionManager
 import org.beem.tastymap.ui.auth.forgotPassword.ResetViewModel
@@ -127,6 +128,7 @@ val appModule = module {
     single { AuthWebSocketClient(get()) }
     single { VisitDataSource(get()) }
     single { PostDataSource(get()) }
+    single { AiChatDataSource(get()) }
 
     single { NotificationBadgeManager() }
 
@@ -143,6 +145,7 @@ val appModule = module {
     single { DeleteAccountRepository(get(), get(), get()) }
     single { VisitRepository(get(), get(), get()) }
     single { PostRepository(get(), get(), get(),get(),get(),get()) }
+    single { AiChatRepository(get(), get()) }
     factory { PostCommentRepository(get(),get(),get(),get()) }
 
     factory { LogRegViewModel(get(), get(), get(), get()) }
@@ -158,6 +161,7 @@ val appModule = module {
     factory { PostViewModel(get()) }
     factory { PostDetailViewModel(get()) }
     factory { CommentViewModel(get(),get()) }
+    factory { AiViewModel(get()) }
 
     factory { CreatePostViewModel(get(),get()) }
     factory { PostLikesViewModel(get(),get()) }
