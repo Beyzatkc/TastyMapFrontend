@@ -40,7 +40,6 @@ fun ForgotScreen(
     val viewModel = koinViewModel<ForgotViewModel>()
     val state by viewModel.sendState.collectAsState()
     val colors = LocalCustomColors.current
-    val navigationEffect by viewModel.navigationState.collectAsState(initial = null)
     val verifyNavigator = koinInject<VerifyNavigator>()
 
     UnifiedLifecycleObserver(
@@ -54,15 +53,16 @@ fun ForgotScreen(
         }
     )
 
-    LaunchedEffect(navigationEffect) {
-        when (navigationEffect) {
-            ForgotViewModel.PasswordNavEffect.OnSuccess -> {
-                verifyNavigator.changePasswordOnSuccess(navController)
+    LaunchedEffect(Unit) {
+        viewModel.navigationState.collect { effect ->
+            when (effect) {
+                ForgotViewModel.PasswordNavEffect.OnSuccess -> {
+                    verifyNavigator.changePasswordOnSuccess(navController)
+                }
             }
-
-            null -> Unit
         }
     }
+
 
     LaunchedEffect(Unit) {
         viewModel.uiMessage.collect { message ->

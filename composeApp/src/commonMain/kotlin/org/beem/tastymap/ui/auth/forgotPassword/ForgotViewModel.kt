@@ -36,7 +36,7 @@ class ForgotViewModel(
     private val resetSession: PasswordResetSessionManager
 ) : ViewModel() {
 
-    private val _navigationState = Channel<PasswordNavEffect>()
+    private val _navigationState = Channel<PasswordNavEffect>(Channel.BUFFERED)
     val navigationState = _navigationState.receiveAsFlow()
 
     private val _uiMessage = Channel<UiMessage>()
@@ -158,13 +158,16 @@ class ForgotViewModel(
             when (it.type) {
                 SecurityEventType.PASSWORD_CHANGE -> {
                     clearResetContext()
-                    stopWebSocket()
+
                     _navigationState.send(PasswordNavEffect.OnSuccess)
+
+                    stopWebSocket()
                 }
                 else -> Unit
             }
         }
     }
+
 
     fun stopWebSocket() {
         isConnecting.store(false)

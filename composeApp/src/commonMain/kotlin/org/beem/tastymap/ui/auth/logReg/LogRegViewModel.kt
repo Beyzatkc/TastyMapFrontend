@@ -90,10 +90,10 @@ class LogRegViewModel(
                 val state = _registerState.value
                 val deviceId = deviceInfoProvider.getDeviceId()
                 val request = RegisterRequest(
-                    username = state.regUsername,
-                    name = state.regName,
-                    surname = state.regSurname,
-                    email = state.regEmail,
+                    username = state.regUsername.trim(),
+                    name = state.regName.trim(),
+                    surname = state.regSurname.trim(),
+                    email = state.regEmail.trim(),
                     password = state.regPassword,
                     null, null, "USER", true, deviceId
                 )

@@ -87,7 +87,7 @@ fun EditProfileScreen(navController: NavController) {
         usernameError = uiState.usernameError?.let { stringResource(it) },
         nameError = uiState.nameError?.let { stringResource(it) },
         surnameError = uiState.surnameError?.let { stringResource(it) },
-        onBackClick = { navController.popBackStack() }, // YENİ: popBackStack()
+        onBackClick = { navController.popBackStack() },
         onSaveClick = { username, name, surname, biography, platformFile ->
             screenModel.updateProfile(
                 inputUsername = username,

@@ -53,15 +53,16 @@ fun EmailVerificationScreen(
 ) {
     val colors = LocalCustomColors.current
     val viewModel = koinViewModel<EmailViewModel>()
-    val navigationEffect by viewModel.navigationState.collectAsState(initial = null)
     val verifyNavigator = koinInject<VerifyNavigator>()
 
-    LaunchedEffect(navigationEffect) {
-        when (navigationEffect) {
-            EmailViewModel.EmailNavEffect.OnSuccess -> {
-                verifyNavigator.verifyEmailNavigationTwo(navController)
+    LaunchedEffect(Unit) {
+        viewModel.navigationState.collect { effect ->
+            when (effect) {
+                EmailViewModel.EmailNavEffect.OnSuccess -> {
+                    println("UI_LOG: Navigasyon tetiklendi, yönlendiriliyor!")
+                    verifyNavigator.verifyEmailNavigationTwo(navController)
+                }
             }
-            null -> Unit
         }
     }
 
@@ -82,6 +83,9 @@ fun EmailVerificationScreen(
     UnifiedLifecycleObserver(
         onActive = {
             println("LIFECYCLE: Ekran aktif (Resume/Focus/Visible). Model tetikleniyor.")
+            // 1. Önce context'i set et!
+            viewModel.setVerificationContext(userId, deviceId)
+            // 2. Sonra lifecycle eventini tetikle!
             viewModel.handleLifecycleEvent(AuthLifecycleEvent.Resume)
         },
         onInactive = {

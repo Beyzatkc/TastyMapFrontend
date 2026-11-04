@@ -30,7 +30,6 @@ object DeepLinkManager {
     var pendingRefreshRoute: Any? = null
 
 
-
 /*
     fun handleLink(url: String) {
         try {
@@ -81,7 +80,7 @@ object DeepLinkManager {
 
                     if (userId != null) {
                         // YENİ: Screen yerine ProfileRoute nesnesi oluşturuluyor
-                        val route = ProfileRoute(userId = userId)
+                        val route = ProfileRoute(userId = userId,"")
                         pendingInitialRoute = route
                         val result = _navigationEvents.trySend(route)
                         println("DEEPLINK_MGR: ProfileRoute Event Gönderildi mi? -> ${result.isSuccess}")
@@ -100,6 +99,8 @@ object DeepLinkManager {
     }
 
  */
+
+
 
 
     fun handleLink(url: String) {
@@ -136,6 +137,7 @@ object DeepLinkManager {
             }
         }
     }
+
 
 
 
