@@ -1,0 +1,23 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+
+    <!-- 3 Dişli Net Çatal -->
+    <path
+        android:strokeColor="#1A237E"
+        android:strokeWidth="1.5"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:pathData="M6,3v6c0,1.66 1.34,3 3,3h0c1.66,0 3,-1.34 3,-3V3 M9,12v9 M6,3v4 M9,3v4 M12,3v4" />
+
+    <!-- Şık Bıçak -->
+    <path
+        android:strokeColor="#1A237E"
+        android:strokeWidth="1.5"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:pathData="M18,3v8c0,1.1 -0.9,2 -2,2h-1V3 C15,3 18,3 18,3z M15,13v8" />
+
+</vector>

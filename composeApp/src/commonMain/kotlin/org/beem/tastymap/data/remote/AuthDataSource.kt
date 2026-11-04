@@ -2,19 +2,19 @@ package org.beem.tastymap.data.remote
 
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
-import io.ktor.client.plugins.auth.Auth
+import io.ktor.client.request.get
 import io.ktor.client.request.header
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
-import org.beem.tastymap.data.model.LoginRequest
-import org.beem.tastymap.data.model.LoginResponse
-import org.beem.tastymap.data.model.RegisterRequest
-import org.beem.tastymap.data.model.RegisterResponse
+import org.beem.tastymap.data.model.auth.ApprovedRefreshRequestDTO
+import org.beem.tastymap.data.model.auth.LoginRequest
+import org.beem.tastymap.data.model.auth.LoginResponse
+import org.beem.tastymap.data.model.auth.RegisterRequest
+import org.beem.tastymap.data.model.auth.UserResponse
 
 
 class AuthDataSource(private val client: HttpClient) {
-
-    suspend fun register(request: RegisterRequest): RegisterResponse{
+    suspend fun register(request: RegisterRequest): UserResponse {
         return client.post("api/users/register"){
             setBody(request)
         }.body()
@@ -24,5 +24,28 @@ class AuthDataSource(private val client: HttpClient) {
             setBody(request)
             header("User-Agent", userAgent)
         }.body()
+
     }
+    suspend fun verifyLogin(
+        request: ApprovedRefreshRequestDTO
+    ): LoginResponse {
+        return client.post("api/users/refresh/approved") {
+            setBody(request)
+        }.body()
+    }
+
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+

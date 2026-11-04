@@ -1,46 +1,61 @@
 package org.beem.tastymap.core.network
 
-import io.ktor.client.statement.bodyAsText
-import kotlinx.coroutines.Dispatchers
+import io.ktor.client.call.body
+import io.ktor.client.plugins.ResponseException
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.withContext
 import kotlinx.io.IOException
+import kotlinx.serialization.SerializationException
+import org.beem.tastymap.core.provider.AppDispatchers
+import org.beem.tastymap.data.model.auth.ErrorResponse
 
 suspend fun <T> safeApiCall(
+    dispatcher: CoroutineDispatcher = AppDispatchers.io,
     call: suspend () -> T
-): ResultWrapper<T> {
-    return withContext(Dispatchers.Default) {
-        try {
-            ResultWrapper.Success(call())
-        } catch (e: Exception) {
-            println("TastyMap Network [EXCEPTION] -> Sınıf: ${e::class.simpleName} | Mesaj: ${e.message}")
-            when (e) {
-                is io.ktor.client.network.sockets.ConnectTimeoutException,
-                is io.ktor.utils.io.errors.IOException -> {
-                    println("TastyMap Network [TIMEOUT/IO] -> Bağlantı zaman aşımına uğradı veya koptu.")
-                    ResultWrapper.Error("Bağlantı hatası", ErrorType.NETWORK_ERROR)
-                }
-                is io.ktor.client.plugins.ResponseException -> {
-                    val errorBody = e.response.bodyAsText()
+): ResultWrapper<T> = withContext(dispatcher) {
+    try {
+        ResultWrapper.Success(call())
+    } catch (e: Exception) {
+        e.printStackTrace()
+        when (e) {
+            is IOException, is io.ktor.client.network.sockets.ConnectTimeoutException -> {
+                val message = e.message ?: "Bilinmeyen ağ hatası"
 
-                    val cleanMessage = if (errorBody.contains("\"message\"")) {
-                        errorBody.substringAfter("\"message\":\"").substringBefore("\"")
-                    } else {
-                        "Sunucu hatası: ${e.response.status.value}"
-                    }
+                ResultWrapper.Error(
+                    "İnternet bağlantınızı kontrol edin. ($message)",
+                    ErrorType.NETWORK_ERROR
+                )
+            }
 
-                    println("TastyMap Network [HTTP ${e.response.status}] -> Dönen Hata Gövdesi: $errorBody")
+            is ResponseException -> {
+                val errorResponse = try {
+                    e.response.body<ErrorResponse>()
+                } catch (_: Exception) {
+                    null
+                }
 
-                    ResultWrapper.Error(cleanMessage, ErrorType.SERVER_ERROR)
+                val errorMessage = errorResponse?.message
+                    ?: errorResponse?.error
+                    ?: "Sunucu hatası: ${e.response.status.value}"
+
+                if (errorResponse?.error == "EMAIL_NOT_VERIFIED") {
+                    ResultWrapper.Error(
+                        message = errorMessage,
+                        type = ErrorType.EMAIL_NOT_VERIFIED,
+                        email = errorResponse.email
+                    )
+                } else {
+                    ResultWrapper.Error(errorMessage, ErrorType.SERVER_ERROR)
                 }
-                is kotlinx.serialization.SerializationException -> {
-                    println("TastyMap Network [SERIALIZATION ERROR] -> Model eşleşmedi! JSON Parse Detayı: ${e.message}")
-                    ResultWrapper.Error("Veri işleme hatası oluştu.", ErrorType.SERVER_ERROR)
-                }
-                else -> {
-                    println("TastyMap Network [UNKNOWN ERROR] -> Beklenmeyen hata: ${e.message}")
-                    println("Gizli Hata Detayı: ${e.message}")
-                    ResultWrapper.Error("Bir hata oluştu.", ErrorType.SERVER_ERROR)
-                }
+            }
+
+            is SerializationException -> {
+                ResultWrapper.Error("Veri formatı hatası.", ErrorType.SERVER_ERROR)
+            }
+
+            else -> {
+                println("Beklenmeyen hata detayı: ${ e.message}")
+                ResultWrapper.Error("Beklenmeyen bir hata oluştu.", ErrorType.UNKNOWN_ERROR)
             }
         }
     }

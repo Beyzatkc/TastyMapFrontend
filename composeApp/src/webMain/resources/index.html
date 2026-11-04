@@ -4,20 +4,22 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TastyMap</title>
-
     <link type="text/css" rel="stylesheet" href="styles.css">
-    <script src="tasty-bridge.js"></script>
 </head>
-<body style="margin: 0; padding: 0; background-color: transparent;">
-
-<div id="compose-root" style="position: absolute; width: 1px; height: 1px; z-index: 1; opacity: 0;">
-    <script type="application/javascript" src="composeApp.js"></script>
-</div>
-
-<!-- Firebase Script'in aynı kalsın (Değişmedi) -->
+<body style="text-align: center; align-content: center">
+<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 50 50" role="presentation">
+    <circle cx="25" cy="25" r="20" stroke="#ccc" stroke-width="4" fill="none"/>
+    <circle cx="25" cy="25" r="20" stroke="#333" stroke-width="4" fill="none" stroke-linecap="round"
+            stroke-dasharray="90 125">
+        <animateTransform attributeName="transform" type="rotate" from="0 25 25" to="360 25 25" dur="1s"
+                          repeatCount="indefinite"/>
+    </circle>
+</svg>
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getMessaging, getToken } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-messaging.js";
+    // 1. DÜZELTME: onMessage buraya eklenmeli
+    import { getMessaging, getToken, onMessage } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-messaging.js";
+
     const firebaseConfig = {
         apiKey: "AIzaSyBM8iUX0bRKR7cWTrPr79-hiB3wn8qLIGI",
         authDomain: "tastymap-12dfb.firebaseapp.com",
@@ -27,22 +29,72 @@
         appId: "1:733188538534:web:7d9004b772de2b0b697467",
         measurementId: "G-J13MMYEGZF"
     };
+
     const app = initializeApp(firebaseConfig);
     const messaging = getMessaging(app);
+
+    // Servis Worker Kaydı
+   if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('/firebase-messaging-sw.js')
+        .then(async (reg) => {
+            console.log('SW Kayıtlı:', reg.scope);
+            await reg.update();
+            await reg.active?.postMessage?.({ type: "INIT" });
+        })
+        .catch(console.error);
+
+        // 🔥 KRİTİK: Arka plandaki Service Worker'dan gelen mesajı yakala ve Kotlin tarafına ilet
+       navigator.serviceWorker.addEventListener('message', (event) => {
+    console.log("WEB_DEBUG: Service Worker'dan mesaj yakalandı: ", event.data);
+    if (event.data && event.data.type === 'NOTIFICATION_RECEIVED') {
+        console.log("WEB_DEBUG: Kotlin için window.dispatchEvent tetikleniyor (Arka plan)!");
+        window.dispatchEvent(new Event("onNotificationReceived"));
+    }
+});
+    }
+
+    // Ön plan mesaj dinleyicisi
+   // Ön plan mesaj dinleyicisi
+   onMessage(messaging, (payload) => {
+    console.log("WEB_DEBUG: Mesaj geldi (Ön planda): ", payload);
+
+    const data = payload.data || {};
+    const title = data.title || "TastyMap";
+    const body = data.body || "Yeni bildirim var";
+
+    if (Notification.permission === "granted") {
+        new Notification(title, {
+            body: body,
+            icon: "/favicon.ico",
+            data: data
+        });
+    }
+
+    console.log("WEB_DEBUG: Kotlin için window.dispatchEvent tetikleniyor (Ön plan)!");
+    window.dispatchEvent(new Event("onNotificationReceived"));
+});
+
     window.getFcmTokenJs = async function(vapidKey) {
         try {
             const permission = await Notification.requestPermission();
             if (permission === 'granted') {
-                return await getToken(messaging, { vapidKey: vapidKey });
+                const registration = await navigator.serviceWorker.ready;
+
+const token = await getToken(messaging, {
+    vapidKey: vapidKey,
+    serviceWorkerRegistration: registration
+});
+                return token;
             } else {
+                console.log("Bildirim izni reddedildi.");
                 return "";
             }
         } catch (error) {
+            console.error("FCM Token alınırken hata oluştu:", error);
             return "";
         }
     };
 </script>
-
-
+<script type="application/javascript" src="composeApp.js"></script>
 </body>
 </html>

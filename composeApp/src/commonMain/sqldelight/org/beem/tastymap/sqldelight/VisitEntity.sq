@@ -1,0 +1,36 @@
+CREATE TABLE VisitEntity (
+    visitId INTEGER PRIMARY KEY AUTOINCREMENT,
+    placeId TEXT NOT NULL,
+    placeName TEXT NOT NULL,
+    city TEXT,
+    district TEXT,
+    categories TEXT,
+    neighbourhood TEXT,
+    latitude REAL NOT NULL,
+    longitude REAL NOT NULL,
+    averagePoint REAL NOT NULL,
+    createdAt TEXT NOT NULL,
+    isDelete INTEGER NOT NULL DEFAULT 0
+);
+
+getVisits:
+SELECT * FROM VisitEntity
+WHERE isDelete = 0
+ORDER BY createdAt DESC;
+
+softDeleteVisit:
+UPDATE VisitEntity
+SET isDelete = 1
+WHERE visitId = ?;
+
+insertVisit:
+INSERT OR REPLACE INTO VisitEntity(visitId, placeId, placeName, city, district, categories, neighbourhood,latitude, longitude,averagePoint, createdAt, isDelete)
+VALUES (?, ?, ?, ?,?, ?, ?, ?, ?, ?, ?, ?);
+
+trimOldVisits:
+DELETE FROM VisitEntity
+WHERE visitId NOT IN (
+    SELECT visitId FROM VisitEntity
+    ORDER BY createdAt DESC
+    LIMIT 100
+);

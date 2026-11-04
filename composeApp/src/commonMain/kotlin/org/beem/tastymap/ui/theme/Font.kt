@@ -6,12 +6,13 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
-import org.beem.tastymap.composeapp.generated.resources.Res
-import org.beem.tastymap.composeapp.generated.resources.plusjakartasans_bold
-import org.beem.tastymap.composeapp.generated.resources.plusjakartasans_medium
-import org.beem.tastymap.composeapp.generated.resources.plusjakartasans_regular
-import org.beem.tastymap.composeapp.generated.resources.plusjakartasans_semibold
 import org.jetbrains.compose.resources.Font
+import tastymap.composeapp.generated.resources.Res
+import tastymap.composeapp.generated.resources.plusjakartasans_bold
+import tastymap.composeapp.generated.resources.plusjakartasans_medium
+import tastymap.composeapp.generated.resources.plusjakartasans_regular
+import tastymap.composeapp.generated.resources.plusjakartasans_semibold
+
 
 @Composable
 fun getAppFontFamily() = FontFamily(

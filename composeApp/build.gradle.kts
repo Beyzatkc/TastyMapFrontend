@@ -1,10 +1,8 @@
 
-import org.gradle.declarative.dsl.schema.FqName.Empty.packageName
+import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import java.util.Properties
-
-
 
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
@@ -12,10 +10,11 @@ plugins {
     alias(libs.plugins.composeMultiplatform)
     alias(libs.plugins.composeCompiler)
     alias(libs.plugins.sqldelight)
-    kotlin("plugin.serialization") version "2.0.21"
+    alias(libs.plugins.kotlinSerialization)
     id("com.google.gms.google-services")
     id("com.codingfeline.buildkonfig") version "0.15.1"
 }
+
 buildkonfig {
     packageName = "org.beem.tastymap.core.util"
 
@@ -26,19 +25,25 @@ buildkonfig {
     }
 
     defaultConfigs {
-        buildConfigField(com.codingfeline.buildkonfig.compiler.FieldSpec.Type.STRING, "VAPID_KEY", props.getProperty("VAPID_KEY") ?: "")
+        buildConfigField(com.codingfeline.buildkonfig.compiler.FieldSpec.Type.STRING, "VAPID_KEY", props.getProperty("web.vapid.key") ?: "")
+        buildConfigField(com.codingfeline.buildkonfig.compiler.FieldSpec.Type.STRING, "API_HOST", props.getProperty("API_URL") ?: "10.0.2.2:8080")
+        buildConfigField(com.codingfeline.buildkonfig.compiler.FieldSpec.Type.STRING, "WS_PROTOCOL", "wss")
+    }
+    defaultConfigs("release") {
+        buildConfigField(com.codingfeline.buildkonfig.compiler.FieldSpec.Type.STRING, "API_HOST", props.getProperty("API_URL") ?: "10.0.2.2:8080")
+        buildConfigField(com.codingfeline.buildkonfig.compiler.FieldSpec.Type.STRING, "WS_PROTOCOL", "wss")
+        buildConfigField(com.codingfeline.buildkonfig.compiler.FieldSpec.Type.STRING, "VAPID_KEY", props.getProperty("web.vapid.key") ?: "")
     }
 }
-
 
 sqldelight {
     databases {
         create("TastyDatabase") {
             packageName.set("org.beem.tastymap.database")
+            generateAsync.set(true)
         }
     }
 }
-
 
 kotlin {
     androidTarget {
@@ -46,7 +51,7 @@ kotlin {
             jvmTarget.set(JvmTarget.JVM_11)
         }
     }
-    
+
     listOf(
         iosArm64(),
         iosSimulatorArm64()
@@ -56,78 +61,19 @@ kotlin {
             isStatic = true
         }
     }
-    
+
     js {
         browser()
         binaries.executable()
     }
-    
+
     @OptIn(ExperimentalWasmDsl::class)
     wasmJs {
         browser()
         binaries.executable()
     }
-/*
-    cocoapods {
-        summary = "TastyMap Shared Library"
-        homepage = "https://github.com/beyza/tastymap"
-        ios.deploymentTarget = "15.0"
-        framework {
-            baseName = "ComposeApp"
-            isStatic = true
-        }
 
-        // --- Firebase Pod'larını Buraya Yazıyoruz ---
-        pod("FirebaseCore")
-        pod("FirebaseAuth")     // Kullanıcı girişi yapacaksan
-        pod("FirebaseMessaging") // Bildirimler için
-        // Mackbookum olmadııg iicn hata verıyoooor
-    }
-
- */
-    
     sourceSets {
-
-
-        webMain.dependencies {
-            implementation("org.jetbrains.kotlinx:kotlinx-browser:0.5.0")
-            implementation(libs.ktor.client.js)
-        }
-
-        jsMain.dependencies {
-        }
-
-        wasmJsMain.dependencies {
-            implementation(libs.sqldelight.web)
-        }
-
-
-        androidMain.dependencies {
-            implementation(libs.compose.uiToolingPreview)
-            implementation(libs.androidx.activity.compose)
-            implementation(libs.koin.android)
-            implementation(libs.ktor.client.okhttp)
-            implementation(libs.sqldelight.android)
-            implementation(libs.firebase.gitlive.messaging)
-            implementation(project.dependencies.platform(libs.firebase.bom))
-            implementation(libs.firebase.messaging.android)
-
-            implementation(libs.maplibre.android)
-            implementation(libs.google.gson)
-
-            implementation("com.google.android.gms:play-services-location:21.3.0")
-            implementation("com.google.accompanist:accompanist-permissions:0.34.0")
-
-            implementation("io.insert-koin:koin-android:3.5.0")
-            implementation("io.insert-koin:koin-androidx-compose:3.5.0")
-
-        }
-        iosMain.dependencies {
-            implementation(libs.ktor.client.darwin)
-            implementation(libs.sqldelight.native)
-            implementation(libs.firebase.gitlive.messaging)
-        }
-
         commonMain.dependencies {
             implementation(libs.compose.runtime)
             implementation(libs.compose.foundation)
@@ -137,6 +83,12 @@ kotlin {
             implementation(libs.compose.uiToolingPreview)
             implementation(libs.androidx.lifecycle.viewmodelCompose)
             implementation(libs.androidx.lifecycle.runtimeCompose)
+
+            implementation(libs.coil.compose)
+            implementation(libs.coil.network.ktor3)
+
+            implementation(libs.jetbrains.navigation.compose)
+            implementation(libs.kotlinx.serialization.json)
 
             implementation(libs.koin.core)
             implementation(libs.koin.compose)
@@ -149,11 +101,6 @@ kotlin {
             implementation(libs.ktor.client.logging)
             implementation(libs.ktor.client.auth)
 
-            implementation(libs.voyager.navigator)
-            implementation(libs.voyager.screenmodel)
-            implementation(libs.voyager.koin)
-            implementation(libs.voyager.transitions)
-
 
             implementation(libs.androidx.paging.common)
             implementation(libs.androidx.paging.compose)
@@ -163,22 +110,81 @@ kotlin {
             implementation(compose.materialIconsExtended)
 
             implementation(libs.kotlinx.coroutines.core)
+            implementation(libs.ktor.client.websockets)
 
-            implementation("io.coil-kt.coil3:coil-compose:3.0.4")
-            implementation("io.coil-kt.coil3:coil-network-ktor3:3.0.4")
+            implementation(libs.compottie)
+            implementation(libs.compottie.resources)
+            implementation(libs.kotlinx.datetime)
 
-            implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.6.0")
+            implementation(libs.filekit.core)
+            implementation(libs.filekit.compose)
+
 
         }
+
+        androidMain.dependencies {
+            implementation(libs.compose.uiToolingPreview)
+            implementation(libs.androidx.activity.compose)
+            implementation(libs.koin.android)
+            implementation(libs.ktor.client.okhttp)
+            implementation(libs.sqldelight.android)
+            implementation(libs.firebase.gitlive.messaging)
+            implementation(project.dependencies.platform(libs.firebase.bom))
+            implementation(libs.firebase.messaging.android)
+            implementation(libs.androidx.security.crypto)
+            implementation(libs.moko.permissions)
+            implementation("androidx.core:core-splashscreen:1.0.1")
+
+            implementation(libs.maplibre.android)
+            implementation(libs.google.gson)
+            implementation("com.google.android.gms:play-services-location:21.3.0")
+            implementation("com.google.accompanist:accompanist-permissions:0.34.0")
+        }
+
+        iosMain.dependencies {
+            implementation(libs.ktor.client.darwin)
+            implementation(libs.sqldelight.native)
+            implementation(libs.moko.permissions)
+            implementation(libs.firebase.gitlive.messaging)
+        }
+
+        // JS ve Wasm ortak kaynak kümesi
+        val webMain by creating {
+            dependsOn(commonMain.get())
+            dependencies {
+                implementation(libs.kotlinx.browser)
+                implementation("io.ktor:ktor-client-core:3.0.0")
+                implementation("io.ktor:ktor-client-js:3.0.0")
+            }
+        }
+
+        wasmJsMain.get().apply {
+            dependsOn(webMain)
+
+            dependencies {
+                implementation(libs.ktor.client.js)
+                implementation(libs.sqldelight.web)
+
+                implementation(
+                    npm(
+                        "@cashapp/sqldelight-sqljs-worker",
+                        "2.3.2"
+                    )
+                )
+
+                implementation(
+                    npm(
+                        "sql.js",
+                        "1.8.0"
+                    )
+                )
+            }
+        }
+
         commonTest.dependencies {
             implementation(libs.kotlin.test)
         }
     }
-}
-
-compose.resources{
-    publicResClass = true
-    packageOfResClass = "org.beem.tastymap.composeapp.generated.resources"
 }
 
 android {
@@ -209,8 +215,6 @@ android {
     }
 }
 
-
 dependencies {
     debugImplementation(libs.compose.uiTooling)
 }
-

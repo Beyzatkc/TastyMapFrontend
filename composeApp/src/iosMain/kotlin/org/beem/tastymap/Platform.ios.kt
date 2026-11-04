@@ -4,6 +4,12 @@ import platform.UIKit.UIDevice
 
 class IOSPlatform: Platform {
     override val name: String = UIDevice.currentDevice.systemName() + " " + UIDevice.currentDevice.systemVersion
+    override val isWeb: Boolean = false
 }
 
 actual fun getPlatform(): Platform = IOSPlatform()
+actual fun HttpClientConfig<*>.platformConfig() {
+        install(DefaultRequest) {
+            header("X-Client-Type", "MOBILE")
+        }
+}

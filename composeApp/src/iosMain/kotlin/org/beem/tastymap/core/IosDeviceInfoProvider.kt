@@ -6,8 +6,6 @@ import platform.UIKit.UIDevice
 import dev.gitlive.firebase.Firebase
 import dev.gitlive.firebase.messaging.messaging
 
-
-
 class IosDeviceInfoProvider: DeviceInfoProvider {
     override fun getDeviceId(): String {
         return UIDevice.currentDevice.identifierForVendor?.UUIDString ?: "unknown_ios_id"
@@ -27,6 +25,9 @@ class IosDeviceInfoProvider: DeviceInfoProvider {
 
     override suspend fun getFcmToken(): String {
         return Firebase.messaging.getToken() ?: ""
+    }
+    override suspend fun getFingerprint(): String? {
+        return null
     }
 
 }

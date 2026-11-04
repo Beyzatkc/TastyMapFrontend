@@ -1,0 +1,230 @@
+package org.beem.tastymap.data.local
+
+import app.cash.sqldelight.async.coroutines.awaitAsOne
+import app.cash.sqldelight.coroutines.asFlow
+import app.cash.sqldelight.coroutines.mapToList
+import app.cash.sqldelight.coroutines.mapToOneOrNull
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.withContext
+import org.beem.tastymap.core.provider.DispatcherProvider
+import org.beem.tastymap.data.model.post.PostGridResponse
+import org.beem.tastymap.data.model.post.PostResponse
+import org.beem.tastymap.sqldelight.PostEntityQueries
+import kotlin.time.Clock
+class PostLocalDataSource(
+    private val queries: PostEntityQueries,
+    private val dispatchers: DispatcherProvider
+) {
+
+    private fun String?.toUrlList(): List<String> {
+        return if (this.isNullOrBlank()) emptyList() else this.split(",")
+    }
+
+    private fun List<String>?.toDbString(): String {
+        return this?.joinToString(",") ?: ""
+    }
+
+    suspend fun incrementCommentCount(postId: Long) = withContext(dispatchers.io) {
+        queries.incrementCommentCount(
+            updatedAt = Clock.System.now().toEpochMilliseconds(),
+            postId = postId
+        )
+    }
+
+    suspend fun decrementCommentCount(postId: Long) = withContext(dispatchers.io) {
+        queries.decrementCommentCount(
+            updatedAt = Clock.System.now().toEpochMilliseconds(),
+            postId = postId
+        )
+    }
+
+    fun getUserGridPostsFlow(userId: Long): Flow<List<PostGridResponse>> {
+        return queries.getUserGridPosts(userId)
+            .asFlow()
+            .mapToList(dispatchers.io)
+            .map { list ->
+                list.map { entity ->
+                    PostGridResponse(
+                        postId = entity.postId,
+                        photoUrl = entity.photoUrls.toUrlList().firstOrNull().orEmpty(),
+                        createdAt = entity.createdAt,
+                        isPinned = entity.isPinned == 1L
+                    )
+                }
+            }
+            .distinctUntilChanged()
+            .flowOn(dispatchers.io)
+    }
+
+    fun getPostDetailFlow(postId: Long): Flow<PostResponse?> {
+        return queries.getPostDetailById(postId)
+            .asFlow()
+            .mapToOneOrNull(dispatchers.io)
+            .map { entity ->
+                entity?.let {
+                    PostResponse(
+                        postId = it.postId,
+                        userId = it.userId,
+                        photoUrls = it.photoUrls.toUrlList(),
+                        explanation = it.explanation,
+                        likeCount = it.numberOfLikes.toInt(),
+                        commentCount = it.commentCount.toInt(),
+                        isLiked = it.isLiked == 1L,
+                        isPinned = it.isPinned == 1L,
+                        isCommentEnabled = it.commentEnabled == 1L,
+                        createdAt = it.createdAt.toString(),
+                        username = it.username.orEmpty(),
+                        profilePhotoUrl = it.profilePhotoUrl,
+                        placeId = it.placeId,
+                        placeName = it.placeName,
+                        categories = it.categories,
+                        city = it.city,
+                        district = it.district,
+                        neighbourhood = it.neighbourhood,
+                        latitude = it.latitude ?: 0.0,
+                        longitude = it.longitude ?: 0.0,
+                        averagePoint = it.averagePoint ?: 0.0
+                    )
+                }
+            }
+            .distinctUntilChanged()
+            .flowOn(dispatchers.io)
+    }
+
+    suspend fun saveGridPosts(
+        userId: Long,
+        posts: List<PostGridResponse>,
+        page: Int
+    ) = withContext(dispatchers.io) {
+        val now = Clock.System.now().toEpochMilliseconds()
+
+        queries.transaction {
+            posts.forEach { post ->
+                val exists = queries.checkPostExists(post.postId).awaitAsOne() > 0
+
+                if (exists) {
+                    queries.updateGridPost(
+                        postId = post.postId,
+                        userId = userId,
+                        photoUrls = post.photoUrl,
+                        isPinned = if (post.isPinned) 1L else 0L,
+                        page = page.toLong(),
+                        updatedAt = now
+                    )
+                } else {
+                    queries.insertGridPost(
+                        postId = post.postId,
+                        userId = userId,
+                        photoUrls = post.photoUrl,
+                        isPinned = if (post.isPinned) 1L else 0L,
+                        creaetedAt = post.createdAt,
+                        page = page.toLong(),
+                        updatedAt = now
+                    )
+                }
+            }
+        }
+    }
+
+    suspend fun updatePostLocally(
+        postId: Long,
+        newExplanation: String?,
+        isCommentEnabled: Boolean
+    ) = withContext(dispatchers.io) {
+        val now = Clock.System.now().toEpochMilliseconds()
+
+        queries.updatePostExplanationAndComment(
+            explanation = newExplanation,
+            commentEnabled = if (isCommentEnabled) 1L else 0L,
+            updateDate = now,
+            updatedAt = now,
+            postId = postId
+        )
+    }
+
+    suspend fun savePostDetail(post: PostResponse) = withContext(dispatchers.io) {
+        val now = Clock.System.now().toEpochMilliseconds()
+
+        queries.transaction {
+            val exists = queries.checkPostExists(post.postId).awaitAsOne() > 0
+
+            if (exists) {
+                queries.updatePostDetail(
+                    postId = post.postId,
+                    photoUrls = post.photoUrls.toDbString(),
+                    explanation = post.explanation,
+                    numberOfLikes = post.likeCount.toLong(),
+                    commentCount = post.commentCount.toLong(),
+                    isLiked = if (post.isLiked) 1L else 0L,
+                    commentEnabled = if (post.isCommentEnabled) 1L else 0L,
+                    updateDate = post.updateDate?.toLongOrNull(),
+                    username = post.username,
+                    profilePhotoUrl = post.profilePhotoUrl,
+                    placeId = post.placeId,
+                    placeName = post.placeName,
+                    categories = post.categories,
+                    city = post.city,
+                    district = post.district,
+                    neighbourhood = post.neighbourhood,
+                    latitude = post.latitude,
+                    longitude = post.longitude,
+                    averagePoint = post.averagePoint,
+                    updatedAt = now
+                )
+            } else {
+                queries.insertPostDetail(
+                    postId = post.postId,
+                    userId = post.userId,
+                    photoUrls = post.photoUrls.toDbString(),
+                    isPinned = if (post.isPinned) 1L else 0L,
+                    explanation = post.explanation,
+                    numberOfLikes = post.likeCount.toLong(),
+                    commentCount = post.commentCount.toLong(),
+                    isLiked = if (post.isLiked) 1L else 0L,
+                    commentEnabled = if (post.isCommentEnabled) 1L else 0L,
+                    createdAt = post.createdAt,
+                    updateDate = post.updateDate?.toLongOrNull(),
+                    username = post.username,
+                    profilePhotoUrl = post.profilePhotoUrl,
+                    placeId = post.placeId,
+                    placeName = post.placeName,
+                    categories = post.categories,
+                    city = post.city,
+                    district = post.district,
+                    neighbourhood = post.neighbourhood,
+                    latitude = post.latitude,
+                    longitude = post.longitude,
+                    averagePoint = post.averagePoint,
+                    page = 0L,
+                    updatedAt = now
+                )
+            }
+            queries.trimOldPosts()
+        }
+    }
+
+    suspend fun toggleLikeLocal(postId: Long) = withContext(dispatchers.io) {
+        queries.toggleLikeLocal(
+            updatedAt = Clock.System.now().toEpochMilliseconds(),
+            postId = postId
+        )
+    }
+
+    suspend fun togglePinLocal(postId: Long) = withContext(dispatchers.io) {
+        queries.togglePinLocal(
+            updatedAt = Clock.System.now().toEpochMilliseconds(),
+            postId = postId
+        )
+    }
+
+    suspend fun deletePostLocal(postId: Long) = withContext(dispatchers.io) {
+        queries.deletePostById(postId)
+    }
+
+    suspend fun clearAll() = withContext(dispatchers.io) {
+        queries.clearAllPosts()
+    }
+}

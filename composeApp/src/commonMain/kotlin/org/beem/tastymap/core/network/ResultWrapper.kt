@@ -7,16 +7,20 @@ sealed class ResultWrapper<out T> {
 
     data class Error(
         val message: String,
-        val type: ErrorType
+        val type: ErrorType,
+        val email: String? = null
     ) : ResultWrapper<Nothing>()
 }
 
 enum class ErrorType {
     EMAIL_NOT_VERIFIED,
     WRONG_REGISTER,
+    UNKNOWN_ERROR,
+
     SERVER_ERROR,
     NETWORK_ERROR,
-    EMPTY_RESPONSE
+    EMPTY_RESPONSE,
+    UNAUTHORIZED,
 }
 
 

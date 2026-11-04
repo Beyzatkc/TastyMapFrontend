@@ -2,6 +2,7 @@ package org.beem.tastymap.core.local
 import com.russhwolf.settings.Settings
 import com.russhwolf.settings.set
 import com.russhwolf.settings.get
+import org.beem.tastymap.getPlatform
 
 interface TokenManager {
     fun saveTokens(accessToken: String?, refreshToken: String?);
@@ -14,13 +15,15 @@ interface TokenManager {
 
 
 class TokenManagerImpl(private val settings: Settings) : TokenManager {
+    private val platform = getPlatform()
     companion object {
         private const val KEY_ACCESS_TOKEN = "access_token"
         private const val KEY_REFRESH_TOKEN = "refresh_token"
-        private const val KEY_DEVICE_ID = "device_id"
+        private const val KEY_DEVICE_ID = "browser_device_id"
     }
 
     override fun saveTokens(accessToken: String?, refreshToken: String?) {
+        if (platform.isWeb) return
         settings[KEY_ACCESS_TOKEN] = accessToken
         settings[KEY_REFRESH_TOKEN] = refreshToken
     }
@@ -34,8 +37,7 @@ class TokenManagerImpl(private val settings: Settings) : TokenManager {
 
 
     override fun clear() {
-        settings.remove(KEY_ACCESS_TOKEN)
-        settings.remove(KEY_REFRESH_TOKEN)
+        settings.clear()
     }
 
 }

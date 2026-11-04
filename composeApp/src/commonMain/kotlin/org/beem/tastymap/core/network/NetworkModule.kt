@@ -2,26 +2,34 @@ package org.beem.tastymap.core.network
 
 import io.ktor.client.HttpClient
 import io.ktor.client.HttpClientConfig
-import io.ktor.client.call.body
 import io.ktor.client.plugins.DefaultRequest
 import io.ktor.client.plugins.HttpTimeout
-import io.ktor.client.plugins.auth.Auth
-import io.ktor.client.plugins.auth.providers.BearerTokens
-import io.ktor.client.plugins.auth.providers.bearer
+import io.ktor.client.plugins.HttpSend
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.logging.*
+import io.ktor.client.plugins.plugin
+import io.ktor.client.plugins.websocket.WebSockets
+import io.ktor.client.plugins.websocket.pingInterval
 import io.ktor.client.request.header
-import io.ktor.client.request.post
-import io.ktor.client.request.setBody
-import io.ktor.http.HttpStatusCode
 import io.ktor.serialization.kotlinx.json.json
+import io.ktor.util.AttributeKey
 import kotlinx.serialization.json.Json
-import org.beem.tastymap.core.local.TokenManager
+import org.beem.tastymap.core.local.SettingsManager
 import org.beem.tastymap.core.util.AppConfig
-import org.beem.tastymap.data.model.RefreshTokenResponseDTO
+import org.beem.tastymap.platformConfig
+import kotlin.time.Duration.Companion.seconds
+import io.ktor.client.request.HttpSendPipeline
+import org.beem.tastymap.core.network.plugins.LanguageHeaderPlugin
 
-fun HttpClientConfig<*>.commonConfig() {
+val JsFetchCredentials = AttributeKey<String>("js.fetch.credentials")
+fun HttpClientConfig<*>.commonConfig(settingsManager: SettingsManager) {
+    platformConfig()
     expectSuccess = true
+
+    install(WebSockets) {
+        pingInterval = 30.seconds
+    }
+
     install(HttpTimeout) {
         requestTimeoutMillis = 10000
         connectTimeoutMillis = 10000
@@ -42,42 +50,15 @@ fun HttpClientConfig<*>.commonConfig() {
         url(AppConfig.BASE_URL)
         header("ngrok-skip-browser-warning", "true")
         header("Content-Type", "application/json")
+        header("Accept-Language", settingsManager.languageCode.value.ifEmpty { "tr" })
+
     }
-}
-fun createNoAuthClient() = HttpClient {
-    commonConfig()
-}
-fun createAuthClient(tokenManager: TokenManager, noAuthClient: HttpClient) = HttpClient {
-    commonConfig()
-
-    install(Auth) {
-        bearer {
-            loadTokens {
-                val access = tokenManager.getAccessToken()
-                val refresh = tokenManager.getRefreshToken()
-                if (access != null && refresh != null) BearerTokens(access, refresh) else null
-            }
-
-            refreshTokens {
-                val deviceId = tokenManager.getDeviceId() ?: "unknown_device"
-                val refreshToken = tokenManager.getRefreshToken()
-
-                val response = noAuthClient.post("api/users/refresh") {
-                    setBody(mapOf(
-                        "refreshToken" to refreshToken,
-                        "deviceId" to deviceId
-                    ))
-                }
-
-                if (response.status == HttpStatusCode.OK) {
-                    val newTokens = response.body<RefreshTokenResponseDTO>()
-                    tokenManager.saveTokens(newTokens.accessToken, newTokens.refreshToken)
-                    BearerTokens(newTokens.accessToken, newTokens.refreshToken)
-                } else {
-                    tokenManager.clear()
-                    null
-                }
-            }
-        }
+    install(LanguageHeaderPlugin) {
+        this.settingsManager = settingsManager
     }
+
+}
+
+fun createNoAuthClient(settingsManager: SettingsManager) = HttpClient {
+    commonConfig(settingsManager)
 }

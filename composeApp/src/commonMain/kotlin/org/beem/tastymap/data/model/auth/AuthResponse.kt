@@ -1,0 +1,58 @@
+package org.beem.tastymap.data.model.auth
+
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
+@Serializable
+data class RefreshTokenResponseDTO(
+    val accessToken: String,
+    val refreshtoken: String,
+    val message: String,
+)
+@Serializable
+data class ApprovedRefreshRequestDTO(
+    val deviceId: String,
+    val userAgent: String,
+    val fcmToken: String
+)
+@Serializable
+enum class Status {
+    PENDING,
+    APPROVED,
+    REJECTED,
+    EXPIRED
+}
+
+@Serializable
+data class NotificationResponse(
+    val status: Status? = null,
+    @SerialName("used")
+    val isUsed: Boolean? = false
+)
+
+@Serializable
+data class CommonRequest(
+    val deviceId: String,
+    val email: String
+)
+@Serializable
+data class PasswordRequest(
+    val deviceId: String,
+    val identifier: String
+)
+@Serializable
+data class ResetPassword(
+    val token: String,
+    val newPassword: String
+)
+@Serializable
+data class ResetPasswordResponse(
+    val userId: Long,
+    val deviceId: String,
+    val message: String
+)
+enum class AuthStatus {
+    AUTHENTICATED,
+    NEEDS_ONBOARDING,
+    UNAUTHENTICATED
+}
+
