@@ -218,7 +218,7 @@ val appModule = module {
     factory { EditProfileViewModel(get()) }
     factory { SettingsViewModel(get(), get(), get(), get()) }
     factory { ActiveDevicesViewModel(get()) }
-    factory { ChangePasswordViewModel(get(), get()) }
+    factory { ChangePasswordViewModel(get(), get(),get()) }
     factory { SearchViewModel(get()) }
     factory { NotificationViewModel(get(), get(), get()) }
     factory { BlockedViewModel(get(), get()) }

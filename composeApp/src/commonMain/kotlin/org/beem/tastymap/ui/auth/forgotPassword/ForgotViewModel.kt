@@ -179,7 +179,7 @@ class ForgotViewModel(
         }
     }
 
-    private fun clearResetContext() {
+    private suspend fun clearResetContext() {
         resetSession.clear()
     }
 

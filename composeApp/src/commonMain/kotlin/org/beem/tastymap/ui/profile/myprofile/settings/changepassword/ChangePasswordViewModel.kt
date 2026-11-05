@@ -12,6 +12,7 @@ import org.beem.tastymap.data.model.profile.ChangePassword
 import org.beem.tastymap.data.repository.profile.MyProfileRepository
 import org.beem.tastymap.ui.auth.common.CheckValidator
 import org.beem.tastymap.ui.auth.common.ValidationResult
+import org.beem.tastymap.ui.auth.forgotPassword.PasswordResetSessionManager
 import tastymap.composeapp.generated.resources.Res
 import tastymap.composeapp.generated.resources.change_password_error_again_empty
 import tastymap.composeapp.generated.resources.change_password_error_mismatch
@@ -20,7 +21,8 @@ import tastymap.composeapp.generated.resources.change_password_success
 
 class ChangePasswordViewModel(
     private val repo: MyProfileRepository,
-    private val deviceInfoProvider: DeviceInfoProvider
+    private val deviceInfoProvider: DeviceInfoProvider,
+    private val resetSession: PasswordResetSessionManager
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ChangePasswordUiState())
@@ -75,6 +77,7 @@ class ChangePasswordViewModel(
 
             when (val result = repo.changePassword(request)) {
                 is ResultWrapper.Success -> {
+                    resetSession.clear()
                     _uiState.update {
                         it.copy(
                             isLoading = false,
