@@ -8,6 +8,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import org.beem.tastymap.core.local.UserManager
 import org.beem.tastymap.core.network.ResultWrapper
 import org.beem.tastymap.core.paging.TastyPagingController
 import org.beem.tastymap.core.paging.TastyPagingState
@@ -18,7 +19,8 @@ import org.beem.tastymap.place.state.RestaurantDetailIntent
 import org.beem.tastymap.place.util.RatingCalculator
 
 class RestaurantDetailScreenModel(
-    private val repository: PlaceRepository
+    private val repository: PlaceRepository,
+    private val userManager: UserManager
 ) : ViewModel() {
 
     private val _reviewsPagingState = MutableStateFlow(TastyPagingState<ReviewItem>())
@@ -30,6 +32,19 @@ class RestaurantDetailScreenModel(
     private var currentPlaceId: String? = null
     private var pagingController: TastyPagingController<ReviewItem, Long>? = null
     private var collectJob: Job? = null
+
+    init {
+        viewModelScope.launch {
+            val sessionValue = userManager.userSession.value
+            val fullName = "${sessionValue?.name} ${sessionValue?.surname}".trim()
+
+            _detailsUiState.update { state ->
+                state.copy(
+                    nameAndSurname = if (!fullName.isEmpty()) fullName else "Kullanıcı"
+                )
+            }
+        }
+    }
 
     fun handleIntent(intent: RestaurantDetailIntent) {
         when (intent) {

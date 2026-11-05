@@ -1,6 +1,5 @@
 package org.beem.tastymap.core
 
-import commonConfig
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.plugins.HttpSend
@@ -13,6 +12,7 @@ import io.ktor.http.contentType
 import io.ktor.http.encodedPath
 import org.beem.tastymap.core.auth.AuthEventBus
 import org.beem.tastymap.core.local.SettingsManager
+import org.beem.tastymap.core.network.commonConfig
 import org.beem.tastymap.core.provider.DeviceInfoProvider
 import org.beem.tastymap.core.provider.HttpClientFactory
 import org.beem.tastymap.data.model.auth.ErrorResponse

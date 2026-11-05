@@ -30,7 +30,6 @@ class PlaceDataSource(private val authHttpClientManager: AuthHttpClientManager) 
     suspend fun getPlaceDetails(placeId: String): PlaceDetailsResponse {
         return client.get("places/nearby-details") {
             parameter("place_id", placeId)
-            DevTokenProvider.authHeader?.let { header(HttpHeaders.Authorization, it) }
         }.body<PlaceDetailsResponse>()
     }
 
@@ -51,7 +50,6 @@ class PlaceDataSource(private val authHttpClientManager: AuthHttpClientManager) 
     ): BaseResponse<ReviewItem> {
         return client.post("place-review/send-review") {
             contentType(ContentType.Application.Json)
-            DevTokenProvider.authHeader?.let { header(HttpHeaders.Authorization, it) }
             setBody(request)
         }.body<BaseResponse<ReviewItem>>()
     }
@@ -61,7 +59,6 @@ class PlaceDataSource(private val authHttpClientManager: AuthHttpClientManager) 
     ): BaseResponse<ReviewItem> {
         return client.patch("place-review/update-review") {
             contentType(ContentType.Application.Json)
-            DevTokenProvider.authHeader?.let { header(HttpHeaders.Authorization, it) }
             setBody(request)
         }.body<BaseResponse<ReviewItem>>()
     }
@@ -70,7 +67,6 @@ class PlaceDataSource(private val authHttpClientManager: AuthHttpClientManager) 
         reviewId: Long
     ): BaseResponse<Boolean> {
         return client.delete("place-review/delete-review/$reviewId") {
-            DevTokenProvider.authHeader?.let { header(HttpHeaders.Authorization, it) }
         }.body<BaseResponse<Boolean>>()
     }
 

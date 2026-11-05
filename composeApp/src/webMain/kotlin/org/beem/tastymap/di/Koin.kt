@@ -4,7 +4,6 @@ import app.cash.sqldelight.db.SqlDriver
 import app.cash.sqldelight.driver.worker.WebWorkerDriver
 import com.russhwolf.settings.Settings
 import com.russhwolf.settings.StorageSettings
-import createNoAuthClient
 import io.ktor.client.HttpClient
 import org.beem.tastymap.core.WebDeviceInfoProvider
 import org.beem.tastymap.core.WebHttpClientFactory
@@ -13,6 +12,7 @@ import org.beem.tastymap.core.local.UserManager
 import org.beem.tastymap.core.local.WebUserManager
 import org.beem.tastymap.core.navigation.VerifyNavigator
 import org.beem.tastymap.core.navigation.WebVerifyNavigator
+import org.beem.tastymap.core.network.createNoAuthClient
 import org.beem.tastymap.core.permission.PermissionManager
 import org.beem.tastymap.core.permission.WebPermissionManager
 import org.beem.tastymap.core.provider.AuthValidator

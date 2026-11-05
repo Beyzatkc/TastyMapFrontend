@@ -3,11 +3,8 @@ package org.beem.tastymap.search.network
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.get
-import io.ktor.client.request.header
 import io.ktor.client.request.parameter
-import io.ktor.http.HttpHeaders
 import org.beem.tastymap.core.network.AuthHttpClientManager
-import org.beem.tastymap.core.network.DevTokenProvider
 import org.beem.tastymap.search.model.SearchResponse
 
 class SearchDataSource(
@@ -24,7 +21,6 @@ class SearchDataSource(
             parameter("searchText", searchText)
             parameter("page", page)
             parameter("size", size)
-            DevTokenProvider.authHeader?.let { header(HttpHeaders.Authorization, it) }
         }.body()
     }
 }
