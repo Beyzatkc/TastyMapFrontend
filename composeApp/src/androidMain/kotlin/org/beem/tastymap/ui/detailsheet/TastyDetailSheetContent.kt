@@ -99,6 +99,9 @@ fun TastyDetailSheetContent(
             }
         }
     }
+    val nameAndSurname = "Emrullah Uygun"
+
+
 
     val isPeekMode = offsetY.value >= (peekOffset - with(density) { 30.dp.toPx() })
     val isExpanded = offsetY.value <= (expandedOffset + with(density) { 6.dp.toPx() })
@@ -297,7 +300,7 @@ fun TastyDetailSheetContent(
                                             )
                                         } else {
                                             QuickReviewCard(
-                                                userName = "Emrullah Uygun",
+                                                userName = detailsUiState.nameAndSurname,
                                                 score = detailsUiState.quickScore,
                                                 onScoreChange = { onIntent(RestaurantDetailIntent.QuickScoreChanged(it)) },
                                                 onScoreSelected = { finalScore ->
