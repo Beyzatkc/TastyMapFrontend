@@ -6,6 +6,7 @@ import SearchGraphRoute
 import UploadGraphRoute
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.receiveAsFlow
+import org.beem.tastymap.getPlatform
 import org.beem.tastymap.ui.auth.ResetRoute
 import org.beem.tastymap.ui.auth.VerifyRoute
 import org.beem.tastymap.ui.post.EditPostRoute
@@ -23,15 +24,22 @@ import org.beem.tastymap.ui.profile.VisitRoute
 
 object DeepLinkManager {
     var initialBrowserUrl: String? = null
+    private val platform = getPlatform()
     private val _navigationEvents = Channel<Any>(Channel.BUFFERED)
     val navigationEvents = _navigationEvents.receiveAsFlow()
 
     var pendingInitialRoute: Any? = null
     var pendingRefreshRoute: Any? = null
 
-
-/*
     fun handleLink(url: String) {
+        if (platform.isWeb) {
+            handleWebLink(url)
+        } else {
+            handleMobileLink(url)
+        }
+    }
+
+    fun handleMobileLink(url: String) {
         try {
             println("DEEPLINK_MGR: Gelen Ham URL -> $url")
 
@@ -42,7 +50,6 @@ object DeepLinkManager {
             println("DEEPLINK_MGR: BasePath -> $basePath")
             println("DEEPLINK_MGR: QueryString -> $queryString")
 
-            // ⚠️ Global token kontrolü kaldırıldı! Artık her link kendi içinde ayrıştırılıyor.
 
             when {
                 basePath.contains("/auth/verify") -> {
@@ -98,12 +105,7 @@ object DeepLinkManager {
         }
     }
 
- */
-
-
-
-
-    fun handleLink(url: String) {
+    fun handleWebLink(url: String) {
         when {
             url.contains("#verify") -> {
                 println("E-posta doğrulama linki yakalandı")

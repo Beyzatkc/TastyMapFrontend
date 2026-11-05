@@ -71,7 +71,7 @@ class PendingViewModel(
     private var webSocketJob: Job? = null
     private var connectionState = ConnectionState.DISCONNECTED
 
-    private val _pendingLogin = Channel<AuthEffect>()
+    private val _pendingLogin = Channel<AuthEffect>(Channel.BUFFERED)
     val pendingLogin = _pendingLogin.receiveAsFlow()
 
 
@@ -158,7 +158,7 @@ class PendingViewModel(
                 println("status=${result.data.status} used=${result.data.isUsed}")
                 if (result.data.status == Status.APPROVED && result.data.isUsed == true) {
                     println("verifyLogin çağrılıyor")
-                    when (val verifyResult =authRepo.verifyLogin(dto)) {
+                    when (val verifyResult = authRepo.verifyLogin(dto)) {
                         is ResultWrapper.Success -> {
                             _uiMessage.send(UiMessage.Resource(Res.string.pending_login_approved))
                             _pendingLogin.send(AuthEffect.NavigateToHome)
@@ -181,7 +181,7 @@ class PendingViewModel(
                     false
                 }
             }
-            is ResultWrapper.Error ->{
+            is ResultWrapper.Error -> {
                 _uiMessage.send(UiMessage.Dynamic(result.message))
                 println("Bildirim durumu kontrol edilirken hata: ${result.message}")
                 false
@@ -259,16 +259,16 @@ class PendingViewModel(
                 _pendingLogin.send(AuthEffect.NavigateToLogin)
                 stopWebSocket()
             }
-
         }
     }
 
     private suspend fun handleRejected() {
-        stopWebSocket()
+        // 4. ÖNCE SEND, SONRA STOP
         _uiMessage.send(UiMessage.Resource(Res.string.pending_login_rejected))
         _pendingLogin.send(AuthEffect.NavigateToLogin)
-
+        stopWebSocket()
     }
+
 
     @OptIn(ExperimentalAtomicApi::class)
     fun stopWebSocket() {
