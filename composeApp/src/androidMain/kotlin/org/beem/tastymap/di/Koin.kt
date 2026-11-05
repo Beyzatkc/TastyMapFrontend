@@ -3,6 +3,8 @@ package org.beem.tastymap.di
 import com.russhwolf.settings.Settings
 import org.beem.tastymap.core.AndroidDeviceInfoProvider
 import org.beem.tastymap.core.provider.DeviceInfoProvider
+import org.beem.tastymap.map.AndroidLocationTracker
+import org.beem.tastymap.map.LocationTracker
 import org.koin.dsl.module
 
 import androidx.security.crypto.EncryptedSharedPreferences
@@ -41,6 +43,7 @@ val androidModule = module {
     }
 
     single<DeviceInfoProvider> { AndroidDeviceInfoProvider(get()) }
+    single<LocationTracker> { AndroidLocationTracker(get()) }
     single<HttpClientFactory> { MobileHttpClientFactory(get(), get(),get()) }
     single<Settings> {
         val masterKeyAlias = MasterKeys.getOrCreate(MasterKeys.AES256_GCM_SPEC)

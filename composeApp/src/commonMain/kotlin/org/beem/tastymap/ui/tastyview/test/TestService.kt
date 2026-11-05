@@ -1,0 +1,47 @@
+package org.beem.tastymap.ui.tastyview.test
+
+class TestService {
+    val list = listOf(
+        Test(1, "Test 1"),
+        Test(2, "Test 2"),
+        Test(3, "Test 3"),
+        Test(4, "Test 4"),
+        Test(5, "Test 5"),
+        Test(6, "Test 6"),
+        Test(7, "Test 7"),
+        Test(8, "Test 8"),
+        Test(9, "Test 9"),
+        Test(10, "Test 10"),
+        Test(11, "Test 11"),
+        Test(12, "Test 12"),
+        Test(13, "Test 13"),
+        Test(14, "Test 14"),
+        Test(15, "Test 15"),
+        Test(16, "Test 16"),
+        Test(17, "Test 17"),
+        Test(18, "Test 18"),
+        Test(19, "Test 19"),
+        Test(20, "Test 20"),
+        Test(21, "Test 21"),
+        Test(22, "Test 22"),
+        Test(23, "Test 23"),
+        Test(24, "Test 24"),
+        Test(25, "Test 25"),
+        Test(26, "Test 26"),
+        Test(27, "Test 27"),
+        Test(28, "Test 28"),
+        Test(29, "Test 29"),
+        Test(30, "Test 30"),
+        Test(31, "Test 31"),
+        Test(32, "Test 32"),
+        Test(33, "Test 33"),
+        Test(34, "Test 34"),
+        Test(35, "Test 35"),
+        Test(36, "Test 36"),
+    )
+
+    fun getTestList(page: Int, pageSize: Int): List<Test> {
+        return list.subList((page - 1) * pageSize, minOf(page * pageSize, list.size))
+    }
+
+}

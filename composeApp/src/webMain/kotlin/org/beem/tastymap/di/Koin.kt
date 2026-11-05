@@ -20,6 +20,8 @@ import org.beem.tastymap.core.provider.DeviceInfoProvider
 import org.beem.tastymap.core.provider.HttpClientFactory
 import org.beem.tastymap.database.TastyDatabase
 import org.koin.core.qualifier.named
+import org.beem.tastymap.map.LocationTracker
+import org.beem.tastymap.map.WebLocationTracker
 import org.koin.dsl.module
 import org.w3c.dom.Worker
 
@@ -89,4 +91,6 @@ val webModule = module {
     single<VerifyNavigator> {
         WebVerifyNavigator()
     }
+
+    single<LocationTracker> { WebLocationTracker() }
 }

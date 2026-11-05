@@ -1,3 +1,4 @@
+package org.beem.tastymap.core.network
 
 import io.ktor.client.HttpClient
 import io.ktor.client.HttpClientConfig

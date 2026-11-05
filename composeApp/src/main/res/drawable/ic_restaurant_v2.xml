@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="60dp"
+    android:height="76dp"
+    android:viewportWidth="512"
+    android:viewportHeight="640">
+
+    <!-- Shadow -->
+    <path
+        android:fillColor="#40000000"
+        android:pathData="M170,592C170,578 208,568 256,568C304,568 342,578 342,592C342,606 304,616 256,616C208,616 170,606 170,592Z" />
+
+    <!-- Outer Pin -->
+    <path
+        android:fillColor="#F5A623"
+        android:pathData="M256,36C145,36 56,125 56,236C56,317 99,391 147,453C188,506 231,548 256,575C281,548 324,506 365,453C413,391 456,317 456,236C456,125 367,36 256,36Z" />
+
+    <!-- Main Pin -->
+    <path
+        android:fillColor="#001970"
+        android:pathData="M256,58C157,58 78,137 78,236C78,309 117,376 161,432C196,477 233,514 256,540C279,514 316,477 351,432C395,376 434,309 434,236C434,137 355,58 256,58Z" />
+
+    <!-- Top highlight -->
+    <path
+        android:fillColor="#26FFFFFF"
+        android:pathData="M255,92C191,92 139,144 139,208C139,220 149,230 161,230C173,230 183,220 183,208C183,168 215,136 255,136C267,136 277,126 277,114C277,102 267,92 255,92Z" />
+
+    <!-- Badge ring -->
+    <path
+        android:fillColor="#E8EEF9"
+        android:pathData="M256,118C189,118 135,172 135,239C135,306 189,360 256,360C323,360 377,306 377,239C377,172 323,118 256,118Z" />
+
+    <!-- Badge -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M256,137C200,137 154,183 154,239C154,295 200,341 256,341C312,341 358,295 358,239C358,183 312,137 256,137Z" />
+
+    <!-- Cloche knob -->
+    <path
+        android:fillColor="#F5A623"
+        android:pathData="M256,176C265,176 272,183 272,192C272,201 265,208 256,208C247,208 240,201 240,192C240,183 247,176 256,176Z" />
+
+    <!-- Cloche dome -->
+    <path
+        android:fillColor="#001970"
+        android:pathData="M194,281C198,240 221,214 256,214C291,214 314,240 318,281L194,281Z" />
+
+    <!-- Tray -->
+    <path
+        android:fillColor="#001970"
+        android:pathData="M191,289L321,289C329,289 336,296 336,304C336,312 329,319 321,319L191,319C183,319 176,312 176,304C176,296 183,289 191,289Z" />
+
+    <!-- Small tray shine -->
+    <path
+        android:fillColor="#2FFFFFFF"
+        android:pathData="M210,293L278,293C284,293 289,298 289,304C289,306 288,308 287,310L210,310C204,310 199,305 199,299C199,295 204,293 210,293Z" />
+
+</vector>

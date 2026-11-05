@@ -1,11 +1,11 @@
 package org.beem.tastymap
 
-import JsFetchCredentials
 import io.ktor.client.HttpClientConfig
 import io.ktor.client.plugins.DefaultRequest
 import io.ktor.client.plugins.cookies.AcceptAllCookiesStorage
 import io.ktor.client.plugins.cookies.HttpCookies
 import io.ktor.client.request.header
+import org.beem.tastymap.core.network.JsFetchCredentials
 
 class JsPlatform: Platform {
     override val name: String = "Web with Kotlin/JS"

@@ -134,6 +134,11 @@ kotlin {
             implementation(libs.androidx.security.crypto)
             implementation(libs.moko.permissions)
             implementation("androidx.core:core-splashscreen:1.0.1")
+
+            implementation(libs.maplibre.android)
+            implementation(libs.google.gson)
+            implementation("com.google.android.gms:play-services-location:21.3.0")
+            implementation("com.google.accompanist:accompanist-permissions:0.34.0")
         }
 
         iosMain.dependencies {
@@ -200,7 +205,8 @@ android {
     }
     buildTypes {
         getByName("release") {
-            isMinifyEnabled = false
+            isMinifyEnabled = true
+            signingConfig = signingConfigs.getByName("debug")
         }
     }
     compileOptions {

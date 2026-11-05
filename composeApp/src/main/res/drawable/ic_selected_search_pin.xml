@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="68dp"
+    android:height="86dp"
+    android:viewportWidth="512"
+    android:viewportHeight="640">
+
+    <!-- 1. Zemin Yumuşak Gölgesi (Daha geniş ve belirgin) -->
+    <path
+        android:fillColor="#55000000"
+        android:pathData="M150,592C150,576 195,564 256,564C317,564 362,576 362,592C362,608 317,620 256,620C195,620 150,608 150,592Z" />
+
+    <!-- 2. Dış Kontur (Haritadan koparan beyaz çerçeve) -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M256,36C145,36 56,125 56,236C56,317 99,391 147,453C188,506 231,548 256,575C281,548 324,506 365,453C413,391 456,317 456,236C456,125 367,36 256,36Z" />
+
+    <!-- 3. Ana Gövde (Vurgulu Canlı Tasty Turuncusu) -->
+    <path
+        android:fillColor="#F5A623"
+        android:pathData="M256,58C157,58 78,137 78,236C78,309 117,376 161,432C196,477 233,514 256,540C279,514 316,477 351,432C395,376 434,309 434,236C434,137 355,58 256,58Z" />
+
+    <!-- 4. Üst Işık Yansıması (Glossy Highlight) -->
+    <path
+        android:fillColor="#40FFFFFF"
+        android:pathData="M255,92C191,92 139,144 139,208C139,220 149,230 161,230C173,230 183,220 183,208C183,168 215,136 255,136C267,136 277,126 277,114C277,102 267,92 255,92Z" />
+
+    <!-- 5. Dış Rozet Halkası (Derin Lacivert Kontrast) -->
+    <path
+        android:fillColor="#001970"
+        android:pathData="M256,118C189,118 135,172 135,239C135,306 189,360 256,360C323,360 377,306 377,239C377,172 323,118 256,118Z" />
+
+    <!-- 6. İç Rozet Göbeği (Beyaz Zemin) -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M256,137C200,137 154,183 154,239C154,295 200,341 256,341C312,341 358,295 358,239C358,183 312,137 256,137Z" />
+
+    <!-- 7. Arama / Hedef Dış Halkası (Lacivert Ring) -->
+    <path
+        android:fillColor="#001970"
+        android:pathData="M256,175C220.6,175 192,203.6 192,239C192,274.4 220.6,303 256,303C291.4,303 320,274.4 320,239C320,203.6 291.4,175 256,175ZM256,281C232.8,281 214,262.2 214,239C214,215.8 232.8,197 256,197C279.2,197 298,215.8 298,239C298,262.2 279.2,281 256,281Z" />
+
+    <!-- 8. Merkez Odak Çekirdeği (Canlı Turuncu Bullseye) -->
+    <path
+        android:fillColor="#F5A623"
+        android:pathData="M256,215C242.7,215 232,225.7 232,239C232,252.3 242.7,263 256,263C269.3,263 280,252.3 280,239C280,225.7 269.3,215 256,215Z" />
+
+</vector>

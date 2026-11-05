@@ -37,6 +37,10 @@ navigationCompose = "2.9.1"
 androidx-lifecycle = "2.9.6"
 kotlinxSerialization = "1.8.0"
 
+maplibre = "11.13.5"
+maplibre-geojson = "6.15.0"
+gson = "2.10.1"
+
 
 
 [libraries]
@@ -104,6 +108,9 @@ kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-c
 kotlinx-browser = { module = "org.jetbrains.kotlinx:kotlinx-browser", version.ref = "kotlinx-browser" }
 androidx-security-crypto = { module = "androidx.security:security-crypto", version.ref = "androidx-security" }
 
+maplibre-android = { module = "org.maplibre.gl:android-sdk", version.ref = "maplibre" }
+maplibre-geojson = { module = "org.maplibre.gl:android-sdk-geojson", version.ref = "maplibre-geojson" }
+google-gson = { module = "com.google.code.gson:gson", version.ref = "gson" }
 filekit-core = { module = "io.github.vinceglb:filekit-core", version.ref = "filekit" }
 filekit-compose = { module = "io.github.vinceglb:filekit-compose", version.ref = "filekit" }
 

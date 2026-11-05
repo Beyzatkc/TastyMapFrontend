@@ -9,7 +9,7 @@ import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 
-// 1. ÖZEL RENK PALETİ TANIMI (surface alanı eklendi)
+// 1. ÖZEL RENK PALETİ TANIMI (Tüm modüllerle uyumlu)
 data class CustomColors(
     val bottomBackground: Color,
     val navy: Color,
@@ -81,7 +81,6 @@ val DarkCustomColors = CustomColors(
     navy = Color(0xFF82A0FF),
     navyDark = Color(0xFF000F45),
     navySoft = Color(0xFF1E3A8A),
-
     backgroundBlue = Color(0xFF0F172A),
     background = Color(0xFF0F172A),
     surface = Color(0xFF1E293B),
@@ -150,7 +149,7 @@ private val TastyShapes = Shapes(
     large = RoundedCornerShape(24.dp)
 )
 
-// 3. TASTY THEME (Dark Mode dinamik CustomColors aktarımı sağlandı)
+// 3. TASTY THEME (Dinamik Dark/Light Mod Desteği)
 @Composable
 fun TastyTheme(
     useDarkTheme: Boolean = isSystemInDarkTheme(),

@@ -3,7 +3,10 @@ package org.beem.tastymap.ui.theme
 import androidx.compose.ui.graphics.Color
 
 object AppColors {
+    // Koyu Başlık ve Taban Renkleri (AI & Theme)
     val DarkBottomBackground = Color(0xFF14263D)
+    val darkHeaderColor = Color(0xFF18345A) // Koyu mavi lacivertimsi
+
     // Lacivert Tonları
     val NavyBlue = Color(0xFF001970)
     val NavyDark = Color(0xFF000F45)
@@ -11,15 +14,13 @@ object AppColors {
 
     // Arka Plan ve Yüzey Renkleri
     val BackBackgroundBlue = Color(0xFFF6F8FC)
-    val darkHeaderColor = Color(0xFF18345A) // koyu mavi lcvrtımsı
     val Background = Color(0xFFF8F9FA)       // Genel ekran arka planı (hafif sıcak nötr)
     val Surface = Color(0xFFFFFFFF)          // Kartlar, Sheet içi ana container
     val SurfaceVariant = Color(0xFFF1F4F9)   // Hafif ayrışan alt kartlar / input kutuları
-    val LightGray = Color(0xFFF5F5F5)        // acik gri
-    val WaveColor = Color(0xFFD6E4FF)        // pastel mavi
+    val LightGray = Color(0xFFF5F5F5)        // Açık gri
+    val WaveColor = Color(0xFFD6E4FF)        // Pastel mavi
     val placeHolderBack = Color(0xFFF2F2F7)
     val placeHolderIcon = Color(0xFF8E8E93)
-
 
     // Vurgu ve İkincil Renkler
     val EmeraldAccent = Color(0xFF00A86B)
@@ -46,4 +47,9 @@ object AppColors {
     val passwordGreen = Color(0xFF43A047)
     val passwordYellow = Color(0xFFFFB300)
     val passwordRed = Color(0xFFE53935)
+
+    // Harita Rota Renkleri (Map Module)
+    val RoutePrimary = GourmetOrange
+    val RouteOutline = Color(0xFFFFFFFF)
+    val RouteAlternative = Color(0xFF94A3B8)
 }

@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="56dp"
+    android:height="70dp"
+    android:viewportWidth="512"
+    android:viewportHeight="640">
+
+    <!-- Shadow -->
+    <path
+        android:fillColor="#33000000"
+        android:pathData="M176,586C176,576 212,568 256,568C300,568 336,576 336,586C336,596 300,604 256,604C212,604 176,596 176,586Z" />
+
+    <!-- Pin Body -->
+    <path
+        android:fillColor="#001970"
+        android:strokeColor="#00124D"
+        android:strokeWidth="8"
+        android:strokeLineJoin="round"
+        android:pathData="M256,46C154,46 72,128 72,230C72,371 194,500 256,564C318,500 440,371 440,230C440,128 358,46 256,46Z" />
+
+    <!-- Subtle highlight -->
+    <path
+        android:fillColor="#12FFFFFF"
+        android:pathData="M256,76C175,76 109,142 109,223C109,304 175,370 256,370C337,370 403,304 403,223C403,142 337,76 256,76Z" />
+
+    <!-- Inner badge -->
+    <path
+        android:fillColor="#FFF6F8FC"
+        android:pathData="M256,105C188,105 133,160 133,228C133,296 188,351 256,351C324,351 379,296 379,228C379,160 324,105 256,105Z" />
+
+    <!-- Outer gray navigation shape -->
+    <path
+        android:fillColor="#D9D9D9"
+        android:pathData="M256,148
+            C265,148 274,153 279,163
+            L333,289
+            C337,298 331,308 322,311
+            L274,323
+            C262,327 250,327 238,323
+            L190,311
+            C181,308 175,298 179,289
+            L233,163
+            C238,153 247,148 256,148Z" />
+
+    <!-- Middle blue shape -->
+    <path
+        android:fillColor="#2141D8"
+        android:pathData="M256,164
+            C264,164 270,168 275,177
+            L319,281
+            C323,289 318,297 310,299
+            L270,309
+            C260,312 252,312 242,309
+            L202,299
+            C194,297 189,289 193,281
+            L237,177
+            C242,168 248,164 256,164Z" />
+
+    <!-- Inner white shape -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M256,178
+            C262,178 267,181 271,189
+            L307,274
+            C310,280 306,286 300,288
+            L267,296
+            C259,298 253,298 245,296
+            L212,288
+            C206,286 202,280 205,274
+            L241,189
+            C245,181 250,178 256,178Z" />
+
+    <!-- Gloss -->
+    <path
+        android:fillColor="#1AFFFFFF"
+        android:pathData="M151,154C174,111 216,86 260,85C273,85 283,94 283,106C283,117 274,126 263,126C228,127 197,146 179,176C173,186 160,189 151,183C141,177 145,164 151,154Z" />
+
+</vector>
