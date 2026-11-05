@@ -1,7 +1,7 @@
 package org.beem.tastymap.map
 
-import cafe.adriel.voyager.core.model.ScreenModel
-import cafe.adriel.voyager.core.model.screenModelScope
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -43,10 +43,10 @@ import kotlin.time.Duration.Companion.milliseconds
 class MapScreenModel(
     private val locationTracker: LocationTracker,
     private val repository: MapRepository,
-    private val routeRepository: RouteRepositoryImpl
-): ScreenModel {
+    private val routeRepository: RouteRepository
+): ViewModel() {
     val userLocation = locationTracker.locationState
-        .stateIn(screenModelScope, SharingStarted.WhileSubscribed(5000), LocationData(0.0, 0.0))
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), LocationData(0.0, 0.0))
 
     private val _event = MutableSharedFlow<MapEvent>()
 
@@ -91,7 +91,7 @@ class MapScreenModel(
     }
 
     init {
-        screenModelScope.launch {
+        viewModelScope.launch {
             userLocation.collect { location ->
 
                 if (location.latitude == 0.0 && location.longitude == 0.0) return@collect
@@ -176,7 +176,7 @@ class MapScreenModel(
     }
 
     fun onCenterMapClicked(){
-        screenModelScope.launch {
+        viewModelScope.launch {
             val targetLoc = lastEmittedLocation ?: userLocation.value
             val targetZoom = if (currentCameraZoom >= 14.0) null else 15f
 
@@ -190,7 +190,7 @@ class MapScreenModel(
 
     fun fetchNearbyRestaurants(lat: Double, lng: Double) {
         searchJob?.cancel()
-        searchJob = screenModelScope.launch {
+        searchJob = viewModelScope.launch {
 
             _searchChipState.value = SearchChipState.LOADING
 
@@ -237,7 +237,7 @@ class MapScreenModel(
         if (lastSearchedLat != 0.0 && lastSearchedLng != 0.0) {
             val distance = GeoUtils.distanceInMeters(lastSearchedLat, lastSearchedLng, lat, lng)
             if (distance > 400.0) {
-                screenModelScope.launch {
+                viewModelScope.launch {
                     _searchChipState.value = SearchChipState.ACTIONABLE
                 }
             }
@@ -250,7 +250,7 @@ class MapScreenModel(
     }
 
     fun onMarkerClicked(restaurant: Restaurant) {
-        screenModelScope.launch{
+        viewModelScope.launch{
             val updatedRestaurant = repository.getPlaceById(restaurant.id)?.let { place ->
                 restaurant.copy(
                     rating = place.rating,
@@ -321,7 +321,7 @@ class MapScreenModel(
         targetLng: Double,
         forceRefresh: Boolean = false
     ) {
-        screenModelScope.launch {
+        viewModelScope.launch {
             val currentUserLoc = lastEmittedLocation ?: userLocation.value
             if (currentUserLoc.latitude == 0.0 && currentUserLoc.longitude == 0.0) {
                 _activeRoute.value = ActiveRouteState.Error("Konumunuz henüz alınamadı.")
@@ -385,7 +385,7 @@ class MapScreenModel(
     }
 
     fun clearRoute() {
-        screenModelScope.launch {
+        viewModelScope.launch {
             activeRouteCoordinates = emptyList()
             offRouteCount = 0
             isRerouting = false

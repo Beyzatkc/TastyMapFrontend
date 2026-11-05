@@ -1,8 +1,8 @@
 package org.beem.tastymap.ui.tastyview.icons
 
 import androidx.compose.runtime.*
-import org.beem.tastymap.composeapp.generated.resources.Res
 import org.jetbrains.compose.resources.ExperimentalResourceApi
+import tastymap.composeapp.generated.resources.Res
 
 object TastyMapIconsManager {
     private var _loadedIcons = mutableStateOf<Map<TastyMapIcon, String>>(emptyMap())

@@ -16,6 +16,7 @@ import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
 import androidx.navigation.navigation
 import org.beem.tastymap.ui.ai.AiChatScreen
+import org.beem.tastymap.ui.map.TastyMapScreen
 import org.beem.tastymap.ui.post.create.CreatePostScreen
 import org.beem.tastymap.ui.profile.myprofile.MyProfileScreen
 import org.beem.tastymap.ui.search.SearchScreen
@@ -28,9 +29,8 @@ fun NavGraphBuilder.mainGraph(navController: NavController) {
         // 1. HARİTA SEKMESİ GRAFİĞİ
         navigation<MapGraphRoute>(startDestination = MapTabRoute) {
             composable<MapTabRoute> {
-                // MapScreen(navController)
+                TastyMapScreen()
             }
-            // Harita sekmesi içindeyken açılabilecek diğer sayfalar (Örn: Yer detayı) buraya eklenebilir.
         }
 
         // 2. ARAMA SEKMESİ GRAFİĞİ

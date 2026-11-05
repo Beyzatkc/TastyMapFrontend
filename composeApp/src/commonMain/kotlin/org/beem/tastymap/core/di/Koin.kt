@@ -73,6 +73,7 @@ import org.beem.tastymap.ui.profile.otherprofile.ProfileViewModel
 import org.beem.tastymap.ui.profile.subscribers.SubscribersListViewModel
 import org.beem.tastymap.ui.search.SearchViewModel
 import org.beem.tastymap.ui.splash.SplashViewModel
+import org.koin.core.module.dsl.viewModel
 import org.koin.core.qualifier.named
 import org.koin.dsl.module
 
@@ -146,25 +147,25 @@ val appModule = module {
     single { VisitDataSource(get()) }
     single { PostDataSource(get()) }
     single { AiChatDataSource(get()) }
+    single { MapDataSource(get()) }
+    single { RouteDataSource(get()) }
+    single { PlaceDataSource(get()) }
+    single { SearchDataSource(get()) }
 
     single { NotificationBadgeManager() }
 
     // --- HARİTA & MEKAN MODÜLÜ BİLEŞENLERİ ---
-    single { MapDataSource(get(named("auth"))) }
     single { MapRepository(get()) }
-    single { RouteDataSource(get(named("auth"))) }
     single<RouteRepository> { RouteRepositoryImpl(get()) }
-    factory { MapScreenModel(get(), get(), get()) }
+    viewModel { MapScreenModel(get(), get(), get()) }
 
-    single { PlaceDataSource(get(named("auth"))) }
     single { InMemoryPlaceCache() }
     single { PlaceRepository(get(), get()) }
     factory { RestaurantDetailScreenModel(get()) }
     factory { AddReviewScreenModel(get()) }
 
-    single { SearchDataSource(get(named("auth"))) }
     single { SearchRepository(get()) }
-    factory { SearchScreenModel(get()) }
+    viewModel { SearchScreenModel(get()) }
 
     // Repositories
     single { AuthRepository(get(), get(), get(), get(), get()) }

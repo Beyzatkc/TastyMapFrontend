@@ -6,13 +6,16 @@ import io.ktor.client.request.get
 import io.ktor.client.request.header
 import io.ktor.client.request.parameter
 import io.ktor.http.HttpHeaders
+import org.beem.tastymap.core.network.AuthHttpClientManager
 import org.beem.tastymap.core.network.DevTokenProvider
 import org.beem.tastymap.data.model.BaseResponse
 import org.beem.tastymap.route.model.RouteDirectionDto
 
 class RouteDataSource(
-    private val client: HttpClient
+    private val authHttpClientManager: AuthHttpClientManager
 ) {
+    private val client: HttpClient get() = authHttpClientManager.getClient()
+
     suspend fun getDirections(
         placeId: String,
         userLat: Double,

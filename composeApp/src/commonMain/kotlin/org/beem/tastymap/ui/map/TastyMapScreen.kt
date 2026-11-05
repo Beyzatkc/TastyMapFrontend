@@ -13,8 +13,6 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.unit.dp
 import org.beem.tastymap.map.TastyMapComponent
 import org.beem.tastymap.permission.LocationPermissionWrapper
-import cafe.adriel.voyager.core.screen.Screen
-import cafe.adriel.voyager.koin.koinScreenModel
 import org.beem.tastymap.data.model.Restaurant
 import org.beem.tastymap.map.MapEvent
 import org.beem.tastymap.map.MapScreenModel
@@ -27,15 +25,15 @@ import org.beem.tastymap.ui.map.components.ActiveRouteBottomCard
 import org.beem.tastymap.ui.map.components.SearchThisAreaChip
 import org.beem.tastymap.ui.map.states.SearchChipState
 import org.beem.tastymap.ui.search.TastySearchOverlay
+import org.koin.compose.viewmodel.koinViewModel
 
 
-class TastyMapScreen : Screen {
-    @Composable
-    override fun Content() {
+@Composable
+    fun TastyMapScreen() {
         val myMaps = "https://api.maptiler.com/maps/019dbfbf-86a2-7d38-869e-bd6ebbcee298/style.json?key=DNr5GYdtJfA7ecaMmrh1"
 
-        val mapScreenModel: MapScreenModel = koinScreenModel()
-        val searchScreenModel: SearchScreenModel = koinScreenModel()
+        val mapScreenModel: MapScreenModel = koinViewModel<MapScreenModel>()
+        val searchScreenModel: SearchScreenModel = koinViewModel<SearchScreenModel>()
 
         val mapState = rememberTastyMapState()
 
@@ -236,5 +234,3 @@ class TastyMapScreen : Screen {
             }
         }
     }
-
-}

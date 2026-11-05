@@ -6,6 +6,7 @@ import org.beem.tastymap.place.RestaurantDetailScreenModel
 import org.beem.tastymap.place.state.RestaurantDetailIntent
 import org.beem.tastymap.ui.review.AddReviewBottomSheet
 import org.koin.compose.koinInject
+import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
 actual fun TastyDetailSheet(
@@ -14,7 +15,7 @@ actual fun TastyDetailSheet(
     onDismiss: () -> Unit,
     collapseToPeekTrigger: Int
 ) {
-    val detailScreenModel: RestaurantDetailScreenModel = koinInject()
+    val detailScreenModel: RestaurantDetailScreenModel = koinViewModel<RestaurantDetailScreenModel>()
     val pagingState by detailScreenModel.reviewsPagingState.collectAsState()
     val detailsUiState by detailScreenModel.detailsUiState.collectAsState()
 

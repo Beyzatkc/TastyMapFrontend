@@ -1,7 +1,7 @@
 package org.beem.tastymap.place
 
-import cafe.adriel.voyager.core.model.ScreenModel
-import cafe.adriel.voyager.core.model.screenModelScope
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -19,7 +19,7 @@ import org.beem.tastymap.place.util.RatingCalculator
 
 class RestaurantDetailScreenModel(
     private val repository: PlaceRepository
-) : ScreenModel {
+) : ViewModel() {
 
     private val _reviewsPagingState = MutableStateFlow(TastyPagingState<ReviewItem>())
     val reviewsPagingState: StateFlow<TastyPagingState<ReviewItem>> = _reviewsPagingState.asStateFlow()
@@ -169,7 +169,7 @@ class RestaurantDetailScreenModel(
     }
 
     fun loadPlaceDetails(placeId: String, forceRefresh: Boolean = false) {
-        screenModelScope.launch {
+        viewModelScope.launch {
             _detailsUiState.update { state ->
                 state.copy(
                     isLoading = true,
@@ -214,7 +214,7 @@ class RestaurantDetailScreenModel(
 
         pagingController = TastyPagingController(
             pageSize = 5,
-            scope = screenModelScope,
+            scope = viewModelScope,
             itemKeySelector = { it.id },
             fetchPage = { page, pageSize ->
                 when (val response = repository.loadReviews(placeId, page, pageSize)) {
@@ -229,7 +229,7 @@ class RestaurantDetailScreenModel(
             }
         )
 
-        collectJob = screenModelScope.launch {
+        collectJob = viewModelScope.launch {
             pagingController?.state?.collect { newState ->
                 _reviewsPagingState.value = newState
             }

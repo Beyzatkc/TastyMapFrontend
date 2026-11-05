@@ -6,18 +6,21 @@ import io.ktor.client.request.get
 import io.ktor.client.request.header
 import io.ktor.client.request.parameter
 import io.ktor.http.HttpHeaders
+import org.beem.tastymap.core.network.AuthHttpClientManager
 import org.beem.tastymap.core.network.DevTokenProvider
 import org.beem.tastymap.search.model.SearchResponse
 
 class SearchDataSource(
-    private val httpClient: HttpClient
+    private val authHttpClientManager: AuthHttpClientManager
 ) {
+    private val client: HttpClient get() = authHttpClientManager.getClient()
+
     suspend fun searchVenues(
         searchText: String,
         page: Int = 0,
         size: Int = 20
     ): SearchResponse {
-        return httpClient.get("search") {
+        return client.get("search") {
             parameter("searchText", searchText)
             parameter("page", page)
             parameter("size", size)

@@ -1,7 +1,7 @@
 package org.beem.tastymap.search
 
-import cafe.adriel.voyager.core.model.ScreenModel
-import cafe.adriel.voyager.core.model.screenModelScope
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -23,7 +23,7 @@ import kotlin.time.Duration.Companion.milliseconds
 @OptIn(FlowPreview::class)
 class SearchScreenModel(
     private val searchRepository: SearchRepository
-) : ScreenModel {
+) : ViewModel() {
 
     private val _uiState = MutableStateFlow(SearchUiState())
     val uiState = _uiState.asStateFlow()
@@ -34,7 +34,7 @@ class SearchScreenModel(
     private val searchQueryFlow = MutableStateFlow("")
 
     init {
-        screenModelScope.launch {
+        viewModelScope.launch {
             searchQueryFlow
                 .debounce(350.milliseconds)
                 .distinctUntilChanged()
@@ -75,7 +75,7 @@ class SearchScreenModel(
                 onVenueClicked(intent.venue)
             }
             is SearchIntent.SearchTriggered -> {
-                screenModelScope.launch {
+                viewModelScope.launch {
                     _event.emit(SearchEvent.HideKeyboard)
                 }
             }
@@ -88,7 +88,7 @@ class SearchScreenModel(
     }
 
     fun onVenueClicked(venue: SearchVenue) {
-        screenModelScope.launch {
+        viewModelScope.launch {
             _uiState.update { it.copy(query = "", results = emptyList(), isDropdownVisible = false) }
             _event.emit(SearchEvent.HideKeyboard)
             _event.emit(SearchEvent.VenueSelected(venue))

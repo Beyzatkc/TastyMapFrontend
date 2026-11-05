@@ -10,18 +10,19 @@ import org.maplibre.android.camera.CameraPosition
 import org.maplibre.android.camera.CameraUpdateFactory
 import org.maplibre.android.geometry.LatLng
 import org.maplibre.android.geometry.LatLngBounds
-import org.maplibre.android.maps.Style
-import org.maplibre.android.style.sources.GeoJsonSource
-import org.maplibre.geojson.Feature
-import org.maplibre.geojson.FeatureCollection
-import org.maplibre.geojson.Point
 import org.maplibre.android.maps.MapView
+import org.maplibre.android.maps.Style
 import org.maplibre.android.style.expressions.Expression
 import org.maplibre.android.style.layers.LineLayer
 import org.maplibre.android.style.layers.Property
 import org.maplibre.android.style.layers.PropertyFactory
 import org.maplibre.android.style.layers.SymbolLayer
+import org.maplibre.android.style.sources.GeoJsonSource
+import org.maplibre.geojson.Feature
+import org.maplibre.geojson.FeatureCollection
 import org.maplibre.geojson.LineString
+import org.maplibre.geojson.Point
+import kotlin.math.abs
 
 class MapControllerImp(
     private val map: MapView,
@@ -53,14 +54,13 @@ class MapControllerImp(
 
     override fun updateMapData(geoJson: String) {
         println("TastyMap -> updateMapData çağrıldı. Gelen GeoJSON boyutu: ${geoJson.length}")
-        println("TastyMap -> Gelen GeoJSON içeriği: $geoJson")
 
         map.post {
             try {
+                if (!style.isFullyLoaded) return@post
                 val source = style.getSourceAs<GeoJsonSource>(RESTAURANT_SOURCE_ID)
                 if (source != null) {
                     val featureCollection = FeatureCollection.fromJson(geoJson)
-                    println("TastyMap -> Parse edilen Feature sayısı: ${featureCollection.features()?.size ?: 0}")
                     source.setGeoJson(featureCollection)
                     println("TastyMap -> Source başarıyla güncellendi!")
                 } else {
@@ -68,7 +68,6 @@ class MapControllerImp(
                 }
             } catch (e: Exception) {
                 println("TastyMap HATA -> GeoJSON basılırken hata oluştu: ${e.message}")
-                e.printStackTrace()
             }
         }
     }
@@ -130,14 +129,12 @@ class MapControllerImp(
     }
 
     override fun addMarker(lat: Double, lng: Double, title: String) {
-        map.getMapAsync{
+        map.getMapAsync {
             it.addMarker(MarkerOptions().position(LatLng(lat, lng)).title(title))
         }
     }
 
-
     override fun userMarker(lat: Double, lng: Double, title: String, bearing: Float) {
-
         animator?.cancel()
 
         val startLat = if (lastLat == 0.0) lat else lastLat
@@ -149,21 +146,30 @@ class MapControllerImp(
             interpolator = android.view.animation.LinearInterpolator()
 
             addUpdateListener { valAnim ->
-                val fraction = valAnim.animatedValue as Float
+                try {
+                    // Stil yüklenmemişse veya geçersizse frame update'i atla
+                    if (!style.isFullyLoaded) return@addUpdateListener
 
-                val currentLat = startLat + (lat - startLat) * fraction
-                val currentLng = startLng + (lng - startLng) * fraction
-                val currentBearing = startBearing + (bearing - startBearing) * fraction
+                    val fraction = valAnim.animatedValue as Float
 
-                val point = Point.fromLngLat(currentLng, currentLat)
-                val feature = Feature.fromGeometry(point)
-                feature.addNumberProperty("bearing", currentBearing)
+                    val currentLat = startLat + (lat - startLat) * fraction
+                    val currentLng = startLng + (lng - startLng) * fraction
+                    val currentBearing = startBearing + (bearing - startBearing) * fraction
 
-                style.getSourceAs<GeoJsonSource>(SOURCE_ID)?.setGeoJson(feature)
+                    val point = Point.fromLngLat(currentLng, currentLat)
+                    val feature = Feature.fromGeometry(point)
+                    feature.addNumberProperty("bearing", currentBearing)
 
-                lastLat = currentLat
-                lastLng = currentLng
-                lastBearing = currentBearing
+                    val source = style.getSourceAs<GeoJsonSource>(SOURCE_ID)
+                    source?.setGeoJson(feature)
+
+                    lastLat = currentLat
+                    lastLng = currentLng
+                    lastBearing = currentBearing
+                } catch (e: Exception) {
+                    // Stil yenilenirken veya geçiş anında gelen istisnalarda çökmesini engelle
+                    valAnim.cancel()
+                }
             }
             start()
         }
@@ -179,6 +185,8 @@ class MapControllerImp(
 
         map.post {
             try {
+                if (!style.isFullyLoaded) return@post
+
                 val restaurantLayer = style.getLayerAs<SymbolLayer>(RESTAURANT_LAYER_ID)
                 if (restaurantLayer != null && !targetPlaceId.isNullOrBlank()) {
                     restaurantLayer.setFilter(
@@ -214,7 +222,6 @@ class MapControllerImp(
                             setProperties(
                                 PropertyFactory.lineColor(AppColors.NavySoft.toArgb()),
                                 PropertyFactory.lineWidth(4.5f),
-                                // Yuvarlak uç + sıfır çizgi boyu = Kusursuz Nokta (. . . .)
                                 PropertyFactory.lineCap(Property.LINE_CAP_ROUND),
                                 PropertyFactory.lineJoin(Property.LINE_JOIN_ROUND),
                                 PropertyFactory.lineDasharray(arrayOf(0.01f, 1.8f)),
@@ -285,7 +292,6 @@ class MapControllerImp(
                 }
             } catch (e: Exception) {
                 println("TastyMap HATA -> Rota çizilirken hata: ${e.message}")
-                e.printStackTrace()
             }
         }
     }
@@ -293,9 +299,9 @@ class MapControllerImp(
     override fun clearRoute() {
         map.post {
             try {
+                if (!style.isFullyLoaded) return@post
                 val restaurantLayer = style.getLayerAs<SymbolLayer>(RESTAURANT_LAYER_ID)
                 restaurantLayer?.setFilter(Expression.literal(true))
-                // Hem ana rotayı hem de noktalı bağlantıları tamamen sıfırlar
                 style.getSourceAs<GeoJsonSource>(ROUTE_SOURCE_ID)?.setGeoJson(FeatureCollection.fromFeatures(arrayOf()))
                 style.getSourceAs<GeoJsonSource>(CONNECTOR_SOURCE_ID)?.setGeoJson(FeatureCollection.fromFeatures(arrayOf()))
             } catch (e: Exception) {
@@ -319,18 +325,16 @@ class MapControllerImp(
     override fun showSelectedPin(placeId: String, lat: Double, lng: Double) {
         map.post {
             try {
+                if (!style.isFullyLoaded) return@post
                 val restaurantLayer = style.getLayerAs<SymbolLayer>(RESTAURANT_LAYER_ID)
-
                 restaurantLayer?.setFilter(Expression.literal(true))
 
                 if (restaurantLayer != null && placeId.isNotBlank()) {
-                    // id != placeId olanlar görünür kalsın, aranan mekan GONE olsun
                     restaurantLayer.setFilter(
                         Expression.neq(Expression.get("id"), Expression.literal(placeId))
                     )
                 }
 
-                // 2. Özel Vurgu / Odak Pinini Oluştur veya Koordinatını Güncelle
                 val point = Point.fromLngLat(lng, lat)
                 val featureCollection = FeatureCollection.fromFeature(Feature.fromGeometry(point))
                 val source = style.getSourceAs<GeoJsonSource>(SELECTED_PIN_SOURCE_ID)
@@ -343,13 +347,11 @@ class MapControllerImp(
                     val pinLayer = SymbolLayer(SELECTED_PIN_LAYER_ID, SELECTED_PIN_SOURCE_ID).apply {
                         setProperties(
                             PropertyFactory.iconImage("tm_selected_search_pin"),
-
                             PropertyFactory.iconAnchor(Property.ICON_ANCHOR_BOTTOM),
                             PropertyFactory.iconAllowOverlap(true),
                             PropertyFactory.iconIgnorePlacement(true)
                         )
                     }
-                    val restaurantLayer = style.getLayer(RESTAURANT_LAYER_ID)
 
                     if (restaurantLayer != null) {
                         style.addLayerAbove(pinLayer, RESTAURANT_LAYER_ID)
@@ -359,7 +361,6 @@ class MapControllerImp(
                 }
             } catch (e: Exception) {
                 println("TastyMap HATA -> Search Pin basılırken hata: ${e.message}")
-                e.printStackTrace()
             }
         }
     }
@@ -367,11 +368,10 @@ class MapControllerImp(
     override fun clearSelectedPin() {
         map.post {
             try {
-                // 1. Gizlenen orijinal mekan ikonunu geri getir (Filtreyi sıfırla)
+                if (!style.isFullyLoaded) return@post
                 val restaurantLayer = style.getLayerAs<SymbolLayer>(RESTAURANT_LAYER_ID)
                 restaurantLayer?.setFilter(Expression.literal(true))
 
-                // 2. Geçici arama pinini temizle
                 val source = style.getSourceAs<GeoJsonSource>(SELECTED_PIN_SOURCE_ID)
                 source?.setGeoJson(FeatureCollection.fromFeatures(arrayOf()))
             } catch (e: Exception) {
@@ -386,20 +386,17 @@ class MapControllerImp(
                 val currentZoom = mapLibreMap.cameraPosition.zoom
                 val prevZoom = lastZoomLevel
 
-                // İlk açılışta referans zoom değerini ata
                 if (prevZoom == null) {
                     lastZoomLevel = currentZoom
                     return@addOnCameraMoveListener
                 }
 
-                // Eğer zoom seviyesinde fark varsa (hassasiyet eşiği: 0.05)
-                if (kotlin.math.abs(currentZoom - prevZoom) > 0.05) {
+                if (abs(currentZoom - prevZoom) > 0.05) {
                     lastZoomLevel = currentZoom
                     onZoomChanged()
                 }
             }
 
-            // Harita durduğunda referans değeri güncelle
             mapLibreMap.addOnCameraIdleListener {
                 lastZoomLevel = mapLibreMap.cameraPosition.zoom
             }
@@ -419,5 +416,4 @@ class MapControllerImp(
             }
         }
     }
-
 }

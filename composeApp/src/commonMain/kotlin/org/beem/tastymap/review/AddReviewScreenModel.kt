@@ -1,9 +1,11 @@
 package org.beem.tastymap.review
 
-import cafe.adriel.voyager.core.model.StateScreenModel
-import cafe.adriel.voyager.core.model.screenModelScope
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import org.beem.tastymap.core.network.ResultWrapper
 import org.beem.tastymap.place.model.review.UserReviewSummaryDto
@@ -12,7 +14,10 @@ import org.beem.tastymap.review.model.ScoreType
 
 class AddReviewScreenModel(
     private val placeRepository: PlaceRepository
-) : StateScreenModel<AddReviewState>(AddReviewState()) {
+) : ViewModel() {
+
+    private val _state = MutableStateFlow(AddReviewState())
+    val state = _state.asStateFlow()
 
     private val _event = MutableSharedFlow<AddReviewEvent>(extraBufferCapacity = 1)
     val event = _event.asSharedFlow()
@@ -24,7 +29,7 @@ class AddReviewScreenModel(
                 it !in listOf(ScoreType.TASTE, ScoreType.SERVICE, ScoreType.PRICE_PERFORMANCE)
             }
 
-            mutableState.value = AddReviewState(
+            _state.value = AddReviewState(
                 isEditMode = true,
                 reviewId = existingReview.reviewId,
                 mainScore = existingReview.rating,
@@ -33,7 +38,7 @@ class AddReviewScreenModel(
                 isAdvancedExpanded = hasAdvancedCriteria
             )
         } else {
-            mutableState.value = AddReviewState(
+            _state.value = AddReviewState(
                 isEditMode = false,
                 reviewId = null,
                 mainScore = if (defaultScore > 0.0) defaultScore else 0.0,
@@ -45,37 +50,37 @@ class AddReviewScreenModel(
 
     fun initInitialScore(score: Double) {
         if (score > 0.0) {
-            mutableState.value = mutableState.value.copy(mainScore = score)
+            _state.value = _state.value.copy(mainScore = score)
         }
     }
 
     fun onMainScoreChange(score: Double) {
-        mutableState.value = mutableState.value.copy(mainScore = score)
+        _state.value = _state.value.copy(mainScore = score)
     }
 
     fun onCommentChange(comment: String) {
-        mutableState.value = mutableState.value.copy(comment = comment)
+        _state.value = _state.value.copy(comment = comment)
     }
 
     fun onSubScoreChange(type: ScoreType, score: Double) {
-        val currentScores = mutableState.value.subScores.toMutableMap()
+        val currentScores = _state.value.subScores.toMutableMap()
         currentScores[type] = score
-        mutableState.value = mutableState.value.copy(subScores = currentScores)
+        _state.value = _state.value.copy(subScores = currentScores)
     }
 
     fun toggleAdvancedCriteria() {
-        mutableState.value = mutableState.value.copy(
-            isAdvancedExpanded = !mutableState.value.isAdvancedExpanded
+        _state.value = _state.value.copy(
+            isAdvancedExpanded = !_state.value.isAdvancedExpanded
         )
     }
 
     // 1. Yeni Yorum Gönderme (POST)
     fun submitReview(placeId: String) {
-        val state = mutableState.value
+        val state = _state.value
         if (state.isSubmitting) return
 
-        screenModelScope.launch {
-            mutableState.value = state.copy(isSubmitting = true, errorMessage = null)
+        viewModelScope.launch {
+            _state.value = state.copy(isSubmitting = true, errorMessage = null)
             val evaluatedScores = state.subScores.filter { it.value > 0.0 }
 
             when (val result = placeRepository.submitReview(
@@ -85,7 +90,7 @@ class AddReviewScreenModel(
                 scores = evaluatedScores
             )) {
                 is ResultWrapper.Success -> {
-                    mutableState.value = mutableState.value.copy(isSubmitting = false)
+                    _state.value = _state.value.copy(isSubmitting = false)
                     val reviewItem = result.data.data
                     if (reviewItem != null) {
                         val userSummary = UserReviewSummaryDto(
@@ -102,7 +107,7 @@ class AddReviewScreenModel(
                 }
                 is ResultWrapper.Error -> {
                     val errorMsg = result.message ?: "Yorum gönderilirken bir hata oluştu"
-                    mutableState.value = mutableState.value.copy(
+                    _state.value = _state.value.copy(
                         isSubmitting = false,
                         errorMessage = errorMsg
                     )
@@ -114,12 +119,12 @@ class AddReviewScreenModel(
 
     // 2. Yorum Güncelleme (PATCH)
     fun updateReview(placeId: String) {
-        val state = mutableState.value
+        val state = _state.value
         val reviewId = state.reviewId ?: return
         if (state.isSubmitting) return
 
-        screenModelScope.launch {
-            mutableState.value = state.copy(isSubmitting = true, errorMessage = null)
+        viewModelScope.launch {
+            _state.value = state.copy(isSubmitting = true, errorMessage = null)
             val evaluatedScores = state.subScores.filter { it.value > 0.0 }
 
             when (val result = placeRepository.updateReview(
@@ -130,7 +135,7 @@ class AddReviewScreenModel(
                 scores = evaluatedScores
             )) {
                 is ResultWrapper.Success -> {
-                    mutableState.value = mutableState.value.copy(isSubmitting = false)
+                    _state.value = _state.value.copy(isSubmitting = false)
                     val reviewItem = result.data.data
                     if (reviewItem != null) {
                         val userSummary = UserReviewSummaryDto(
@@ -147,7 +152,7 @@ class AddReviewScreenModel(
                 }
                 is ResultWrapper.Error -> {
                     val errorMsg = result.message ?: "Yorum güncellenirken bir hata oluştu"
-                    mutableState.value = mutableState.value.copy(
+                    _state.value = _state.value.copy(
                         isSubmitting = false,
                         errorMessage = errorMsg
                     )
@@ -159,22 +164,22 @@ class AddReviewScreenModel(
 
     // 3. Yorum Silme (DELETE)
     fun deleteReview(placeId: String) {
-        val state = mutableState.value
+        val state = _state.value
         val reviewId = state.reviewId ?: return
         val currentScore = state.mainScore
         if (state.isDeleting) return
 
-        screenModelScope.launch {
-            mutableState.value = state.copy(isDeleting = true, errorMessage = null)
+        viewModelScope.launch {
+            _state.value = state.copy(isDeleting = true, errorMessage = null)
 
             when (val result = placeRepository.deleteReview(reviewId = reviewId, placeId = placeId)) {
                 is ResultWrapper.Success -> {
-                    mutableState.value = mutableState.value.copy(isDeleting = false)
+                    _state.value = _state.value.copy(isDeleting = false)
                     _event.emit(AddReviewEvent.Deleted(reviewId = reviewId, deletedScore = currentScore))
                 }
                 is ResultWrapper.Error -> {
                     val errorMsg = result.message ?: "Yorum silinirken bir hata oluştu"
-                    mutableState.value = mutableState.value.copy(
+                    _state.value = _state.value.copy(
                         isDeleting = false,
                         errorMessage = errorMsg
                     )
