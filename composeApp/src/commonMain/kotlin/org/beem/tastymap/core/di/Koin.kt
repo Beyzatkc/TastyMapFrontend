@@ -161,7 +161,7 @@ val appModule = module {
 
     single { InMemoryPlaceCache() }
     single { PlaceRepository(get(), get()) }
-    factory { RestaurantDetailScreenModel(get()) }
+    factory { RestaurantDetailScreenModel(get(), get()) }
     factory { AddReviewScreenModel(get()) }
 
     single { SearchRepository(get()) }

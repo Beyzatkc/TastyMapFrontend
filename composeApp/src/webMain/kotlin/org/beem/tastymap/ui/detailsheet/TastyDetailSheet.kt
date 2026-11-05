@@ -20,11 +20,12 @@ import kotlin.time.Duration.Companion.milliseconds
 @Composable
 actual fun TastyDetailSheet(
     restaurant: Restaurant,
-    pagingState: TastyPagingState<ReviewItem>,
-    onRender: (newState: TastyPagingState<ReviewItem>) -> Unit,
-    onLoadMoreReviews: () -> Unit,
-    onDismiss: () -> Unit
+    onDirectionsClick: () -> Unit,
+    onDismiss: () -> Unit,
+    collapseToPeekTrigger: Int
 ) {
+
+    /*
     val sheetId = "tastymap-premium-sheet"
 
     DisposableEffect(restaurant.id) {
@@ -161,4 +162,6 @@ actual fun TastyDetailSheet(
             }
         }
     }
+
+     */
 }

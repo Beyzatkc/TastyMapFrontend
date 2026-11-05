@@ -3,6 +3,7 @@ package org.beem.tastymap.place.state
 import org.beem.tastymap.place.model.details.PlaceDetailsResult
 
 data class PlaceDetailsUiState(
+    val nameAndSurname: String = "",
     val isLoading: Boolean = false,
     val details: PlaceDetailsResult? = null,
     val errorMessage: String? = null,

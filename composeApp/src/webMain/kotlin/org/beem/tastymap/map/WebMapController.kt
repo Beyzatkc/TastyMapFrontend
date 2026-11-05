@@ -26,8 +26,14 @@ class WebMapController : MapController {
         }
     }
 
-    override fun animateTo(lat: Double, lng: Double, zoom: Float) {
-        TastyMapBridge.flyTo(lat, lng, zoom.toDouble())
+    override fun jumpTo(lat: Double, lng: Double, zoom: Float) {
+        TODO("Not yet implemented")
+    }
+
+    override fun animateTo(lat: Double, lng: Double, zoom: Float?) {
+        zoom?.let {
+            TastyMapBridge.flyTo(lat, lng, zoom.toDouble())
+        }
     }
 
     override fun addMarker(lat: Double, lng: Double, title: String) {
@@ -67,6 +73,39 @@ class WebMapController : MapController {
 
             onRestaurantSelected(restaurant)
         }
+    }
+
+    override fun drawRoute(
+        mainRoute: List<List<Double>>,
+        startConnector: List<List<Double>>,
+        endConnector: List<List<Double>>,
+        targetPlaceId: String?
+    ) {
+        //TODO("Not yet implemented")
+    }
+
+    override fun clearRoute() {
+        //TODO("Not yet implemented")
+    }
+
+    override fun setOnCameraIdleListener(onCameraIdle: (centerLat: Double, centerLng: Double, zoom: Double) -> Unit) {
+        //TODO("Not yet implemented")
+    }
+
+    override fun showSelectedPin(placeId: String, lat: Double, lng: Double) {
+        //TODO("Not yet implemented")
+    }
+
+    override fun clearSelectedPin() {
+        //TODO("Not yet implemented")
+    }
+
+    override fun setOnZoomChangedListener(onZoomChanged: () -> Unit) {
+        //TODO("Not yet implemented")
+    }
+
+    override fun setOnMapClickListener(onMapClick: () -> Unit) {
+        //TODO("Not yet implemented")
     }
 
 
