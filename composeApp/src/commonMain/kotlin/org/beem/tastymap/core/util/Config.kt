@@ -20,7 +20,7 @@ object AppConfig {
 
  // === AKTİF ORTAM SEÇİMİ ===
  // Çalıştığın ortama göre sadece burayı değiştirmen yeterlidir:
- var currentEnv: Environment = Environment.PROD_NGROK_E
+ var currentEnv: Environment = Environment.PROD_NGROK
 
  // Protokoller güvenliğe (isSecure) göre otomatik belirlenir
  val httpProtocol: String get() = if (currentEnv.isSecure) "https" else "http"

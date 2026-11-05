@@ -5,20 +5,20 @@ import kotlinx.serialization.Serializable
 
 // --- MAP SEKMESİ ---
 @Serializable data object MapGraphRoute
-@Serializable data object MapTabRoute // Harita ana ekranı
+@Serializable data object map // Harita ana ekranı
 
 // --- ARAMA SEKMESİ ---
 @Serializable data object SearchGraphRoute
-@Serializable data object SearchTabRoute // Arama ana ekranı
+@Serializable data object search // Arama ana ekranı
 
 // --- AI SEKMESİ ---
 @Serializable data object AIGraphRoute
-@Serializable data object AITabRoute // AI ana ekranı
+@Serializable data object AI // AI ana ekranı
 
 // --- YÜKLEME SEKMESİ ---
 @Serializable data object UploadGraphRoute
-@Serializable data object UploadTabRoute // Yükleme ana ekranı
+@Serializable data object upload // Yükleme ana ekranı
 
 // --- PROFİL SEKMESİ ---
 @Serializable data object ProfileGraphRoute
-@Serializable data object ProfileTabRoute // Kendi profilimizin ana ekranı
+@Serializable data object my // Kendi profilimizin ana ekranı

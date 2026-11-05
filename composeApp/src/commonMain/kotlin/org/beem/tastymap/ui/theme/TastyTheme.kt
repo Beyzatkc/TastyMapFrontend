@@ -77,7 +77,7 @@ val LightCustomColors = CustomColors(
 )
 
 val DarkCustomColors = CustomColors(
-    bottomBackground = Color(0xFF000F45),
+    bottomBackground = Color(0xFF0F172A),
     navy = Color(0xFF82A0FF),
     navyDark = Color(0xFF000F45),
     navySoft = Color(0xFF1E3A8A),

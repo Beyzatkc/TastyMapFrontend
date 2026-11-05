@@ -5,7 +5,6 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.emitAll
-import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
@@ -58,7 +57,6 @@ class MyProfileRepository(
                         emitAll(
                             localDataSource
                                 .getProfileFlow(userId)
-                                .distinctUntilChanged()
                                 .onEach { profile ->
                                     if (profile != null) {
                                         memoryCache.put(userId, profile)
@@ -68,6 +66,7 @@ class MyProfileRepository(
                     }
                 }
             }
+            .distinctUntilChanged()
             .flowOn(dispatchers.io)
     }
 
@@ -86,27 +85,21 @@ class MyProfileRepository(
             .flowOn(dispatchers.io)
     }
 
-    suspend fun refreshMyProfile(): ResultWrapper<UserProfile> {
-        return try {
-            withContext(dispatchers.io) {
+    suspend fun refreshMyProfile(): ResultWrapper<UserProfile> = withContext(dispatchers.io) {
+        val result = safeApiCall { dataSource.getUserProfile() }
 
-                val userId = userManager.userSession.value?.userId
+        if (result is ResultWrapper.Success) {
+            val freshProfile = result.data.toDomain()
 
-                val remoteDto = dataSource.getUserProfile()
-                val freshProfile = remoteDto.toDomain()
+            // API'den gelen gerçek ID'yi kullanıyoruz (freshProfile.userId)
+            memoryCache.put(freshProfile.userId, freshProfile)
+            localDataSource.saveProfile(freshProfile)
 
-                memoryCache.put(userId, freshProfile)
-                localDataSource.saveProfile(freshProfile)
-
-                ResultWrapper.Success(freshProfile)
-            }
-        } catch (e: Exception) {
-            ResultWrapper.Error(
-                e.message.toString(), ErrorType.UNKNOWN_ERROR
-            )
+            ResultWrapper.Success(freshProfile)
+        } else {
+            result as ResultWrapper.Error
         }
     }
-
 
     suspend fun getActiveDevices(): ResultWrapper<ActiveDevicesResponse> = withContext(dispatchers.io) {
         safeApiCall { dataSource.getActiveDevices() }
@@ -118,7 +111,6 @@ class MyProfileRepository(
             response.imageUrl
         }
     }
-
 
     suspend fun updateProfile(request: UpdateProfile): ResultWrapper<MessageResponse> = withContext(dispatchers.io) {
         val result = safeApiCall { dataSource.updateProfile(request) }
@@ -192,11 +184,9 @@ class MyProfileRepository(
     }
 
     suspend fun logout(deviceId: String): ResultWrapper<Unit> = withContext(dispatchers.io) {
-        try {
-            safeApiCall { dataSource.logout(deviceId) }
-        } finally {
-            cacheManager.clearAllMemoryCaches()
-        }
+        val result = safeApiCall { dataSource.logout(deviceId) }
+        cacheManager.clearAllMemoryCaches()
+        result
     }
 
     suspend fun getAllUsers(): ResultWrapper<List<UserResponse>> = withContext(dispatchers.io) {

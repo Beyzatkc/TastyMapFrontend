@@ -73,7 +73,7 @@ import tastymap.composeapp.generated.resources.comments_disabled_msg_tr
             Spacer(modifier = Modifier.height(16.dp))
         }
 
-        val isError = !commentUiState.errorMessage.isNullOrBlank()
+        val isError = commentUiState.isInitialError
         val isEmpty = commentUiState.items.isEmpty()
 
         when {

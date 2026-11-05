@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import io.github.vinceglb.filekit.core.PlatformFile
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -36,22 +37,43 @@ class EditProfileViewModel(
             _uiState.update { it.copy(isLoading = true) }
 
             repo.getMyProfile()
-                .filterNotNull()
+                .catch { e ->
+                    _uiState.update {
+                        it.copy(
+                            isLoading = false,
+                            errorMessage = e.message ?: "Profil yüklenirken bir hata oluştu"
+                        )
+                    }
+                }
                 .collect { profile ->
-                    initialProfile = profile
+                    if (profile != null) {
+                        initialProfile = profile
 
-                    _uiState.update { currentState ->
-                        if (!isFormInitialized) {
-                            isFormInitialized = true
-                            currentState.copy(
-                                profile = profile,
-                                isLoading = false
-                            )
-                        } else {
-                            currentState.copy(isLoading = false)
+                        _uiState.update { currentState ->
+                            if (!isFormInitialized) {
+                                isFormInitialized = true
+                                currentState.copy(
+                                    profile = profile,
+                                    isLoading = false
+                                )
+                            } else {
+                                currentState.copy(isLoading = false)
+                            }
                         }
                     }
                 }
+        }
+
+        viewModelScope.launch {
+            val result = repo.refreshMyProfile()
+            if (result is ResultWrapper.Error && initialProfile == null) {
+                _uiState.update {
+                    it.copy(
+                        isLoading = false,
+                        errorMessage = result.message
+                    )
+                }
+            }
         }
     }
 

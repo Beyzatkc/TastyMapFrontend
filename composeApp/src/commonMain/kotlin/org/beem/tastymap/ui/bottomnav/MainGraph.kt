@@ -1,16 +1,16 @@
 package org.beem.tastymap.ui.bottomnav
 
 import AIGraphRoute
-import AITabRoute
+import AI
 import MainRoute
 import MapGraphRoute
-import MapTabRoute
+import map
 import ProfileGraphRoute
-import ProfileTabRoute
+import my
 import SearchGraphRoute
-import SearchTabRoute
+import search
 import UploadGraphRoute
-import UploadTabRoute
+import upload
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
@@ -27,15 +27,15 @@ fun NavGraphBuilder.mainGraph(navController: NavController) {
     ) {
 
         // 1. HARİTA SEKMESİ GRAFİĞİ
-        navigation<MapGraphRoute>(startDestination = MapTabRoute) {
-            composable<MapTabRoute> {
+        navigation<MapGraphRoute>(startDestination = map) {
+            composable<map> {
                 TastyMapScreen()
             }
         }
 
         // 2. ARAMA SEKMESİ GRAFİĞİ
-        navigation<SearchGraphRoute>(startDestination = SearchTabRoute) {
-            composable<SearchTabRoute> {
+        navigation<SearchGraphRoute>(startDestination = search) {
+            composable<search> {
                 SearchScreen(navController)
             }
             // EĞER ARAMA SEKMESİNDE BAŞKASININ PROFİLİNE TIKLANIRSA,
@@ -44,22 +44,22 @@ fun NavGraphBuilder.mainGraph(navController: NavController) {
         }
 
         // 3. AI SEKMESİ GRAFİĞİ
-        navigation<AIGraphRoute>(startDestination = AITabRoute) {
-            composable<AITabRoute> {
+        navigation<AIGraphRoute>(startDestination = AI) {
+            composable<AI> {
                 AiChatScreen(navController, false)
             }
         }
 
         // 4. YÜKLEME SEKMESİ GRAFİĞİ
-        navigation<UploadGraphRoute>(startDestination = UploadTabRoute) {
-            composable<UploadTabRoute> {
+        navigation<UploadGraphRoute>(startDestination = upload) {
+            composable<upload> {
                 CreatePostScreen(navController)
             }
         }
 
         // 5. KENDİ PROFİL SEKMESİ GRAFİĞİ
-        navigation<ProfileGraphRoute>(startDestination = ProfileTabRoute) {
-            composable<ProfileTabRoute> {
+        navigation<ProfileGraphRoute>(startDestination = my) {
+            composable<my> {
                 MyProfileScreen(navController = navController, showBackButton = false)
             }
             // Ayarlar, Bildirimler gibi kendi profiline ait sayfalar buraya eklenebilir.

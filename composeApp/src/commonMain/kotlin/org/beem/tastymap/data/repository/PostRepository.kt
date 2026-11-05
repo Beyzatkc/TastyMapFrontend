@@ -36,10 +36,6 @@ class PostRepository(
     fun isMe(userId: Long): Boolean {
         return userId == myId
     }
-    fun getMyPostsStream(
-        page: Int = 0,
-        size: Int = 15
-    ): Flow<List<PostGridResponse>> = getUserPostsStream(myId, page, size)
 
 
     suspend fun refreshPostDetail(postId: Long): ResultWrapper<PostResponse> = withContext(dispatchers.io) {

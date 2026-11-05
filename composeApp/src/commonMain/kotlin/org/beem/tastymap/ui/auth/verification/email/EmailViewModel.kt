@@ -39,7 +39,7 @@ class EmailViewModel(
     private val _verificationState = MutableStateFlow(VerificationUiState())
     val verificationState = _verificationState.asStateFlow()
 
-    private val _navigationState = Channel<EmailNavEffect>()
+    private val _navigationState = Channel<EmailNavEffect>(Channel.BUFFERED)
     val navigationState = _navigationState.receiveAsFlow()
 
     private val _uiMessage = Channel<UiMessage>()
@@ -228,28 +228,28 @@ class EmailViewModel(
             AuthLifecycleEvent.Stop -> {
                 println("FORGOT_LOG: STOP algılandı. Temizlik yapılıyor.")
                 lifecycleStopped = true
-                wasBackgrounded = true // <-- SENIOR DOKUNUŞ: Arka plana geçtiğimizi kaydettik
+                wasBackgrounded = true
                 lifecycleJob?.cancel()
                 stopWebSocket()
             }
             AuthLifecycleEvent.Pause -> Unit
         }
     }
-
-    private suspend fun collectEmailEvents(){
+    private suspend fun collectEmailEvents() {
         authWebSocketClient.events.collect { event ->
-            when(event.type){
+            when (event.type) {
                 SecurityEventType.EMAIL_VERIFIED -> {
                     println("EMailverfııedcalıstı")
-                    stopWebSocket()
                     clearContext()
+
                     _navigationState.send(EmailNavEffect.OnSuccess)
+
+                    stopWebSocket()
                 }
                 else -> Unit
             }
         }
     }
-
     fun stopWebSocket(){
         isConnecting.store(false)
         webSocketJob?.cancel()

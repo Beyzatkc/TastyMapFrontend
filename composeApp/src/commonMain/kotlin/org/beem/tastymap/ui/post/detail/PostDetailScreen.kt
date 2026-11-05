@@ -102,12 +102,14 @@ import org.beem.tastymap.ui.post.postlike.PostLikesBottomSheet
 import org.beem.tastymap.ui.post.postlike.PostLikesViewModel
 import org.beem.tastymap.ui.profile.ProfileRoute
 import org.beem.tastymap.ui.theme.LocalCustomColors
+import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 import tastymap.composeapp.generated.resources.Res
 import tastymap.composeapp.generated.resources.active_devices_retry
 import tastymap.composeapp.generated.resources.active_devices_retry_cd
 import tastymap.composeapp.generated.resources.be_first_to_comment
+import tastymap.composeapp.generated.resources.chat
 import tastymap.composeapp.generated.resources.delete_post
 import tastymap.composeapp.generated.resources.delete_post_message
 import tastymap.composeapp.generated.resources.delete_post_title
@@ -736,7 +738,7 @@ fun PostActionBar(
         if (post.isCommentEnabled) {
             IconButton(onClick = onCommentClick) {
                 Icon(
-                    imageVector = Icons.AutoMirrored.Outlined.Comment,
+                    painter = painterResource(Res.drawable.chat),
                     contentDescription = null,
                     tint = customColors.textPrimary,
                     modifier = Modifier.size(24.dp)

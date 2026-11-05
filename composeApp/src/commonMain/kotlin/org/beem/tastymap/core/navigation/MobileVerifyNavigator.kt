@@ -19,7 +19,12 @@ class MobileVerifyNavigator : VerifyNavigator {
     }
 
     override suspend fun verifyEmailNavigationTwo(navController: NavController) {
-
+        navController.navigate(LogRegRoute) {
+            popUpTo(0) {
+                inclusive = true
+            }
+            launchSingleTop = true
+        }
     }
 
     override suspend fun changePasswordOnSuccess(navController: NavController) {

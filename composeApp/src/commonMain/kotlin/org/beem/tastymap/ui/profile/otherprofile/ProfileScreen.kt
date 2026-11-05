@@ -157,6 +157,7 @@ fun ProfileScreen(
     val removeFollowerMessage = stringResource(Res.string.dialog_remove_follower_message, state.profile?.username ?: "")
     val removeFollowerConfirm = stringResource(Res.string.profile_action_remove_follower)
 
+    /*
     LaunchedEffect(selectedWebPostId, isWideScreen) {
         if (isWideScreen) {
             if (selectedWebPostId != null) {
@@ -166,6 +167,8 @@ fun ProfileScreen(
             }
         }
     }
+
+     */
     LaunchedEffect(state.errorMessage) {
         state.errorMessage?.let { message ->
             ToastManager.show(message)
@@ -273,7 +276,10 @@ fun ProfileScreen(
                 ) { innerPadding ->
                     TastyPullToRefreshBox(
                         isRefreshing = state.isRefreshing,
-                        onRefresh = { screenModel.refreshProfile() },
+                        onRefresh = {
+                            screenModel.refreshProfile()
+                            postViewModel.refresh(userId)
+                        },
                         modifier = Modifier
                             .fillMaxSize()
                             .padding(innerPadding)
@@ -287,7 +293,10 @@ fun ProfileScreen(
                                 contentAlignment = Alignment.Center
                             ) {
                                 FilledTonalButton(
-                                    onClick = { screenModel.refreshProfile() },
+                                    onClick = {
+                                        screenModel.refreshProfile()
+                                        postViewModel.refresh(userId)
+                                              },
                                     enabled = !state.isLoading,
                                     modifier = Modifier.height(48.dp),
                                     colors = ButtonDefaults.filledTonalButtonColors(
