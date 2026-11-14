@@ -23,6 +23,9 @@ import org.beem.tastymap.core.permission.PermissionManager
 import org.beem.tastymap.core.provider.AuthValidator
 import org.beem.tastymap.core.provider.HttpClientFactory
 import org.beem.tastymap.database.TastyDatabase
+import org.beem.tastymap.map.cache.MapStyleStorage
+import org.beem.tastymap.map.cache.PlatformMapStyleStorage
+import org.koin.android.ext.koin.androidContext
 
 
 val androidModule = module {
@@ -62,4 +65,5 @@ val androidModule = module {
     single <AuthValidator>{ MobileSessionValidator(get(),get()) }
     single<PermissionManager> { AndroidPermissionManager(get()) }
 
+    single<MapStyleStorage> { PlatformMapStyleStorage(androidContext()) }
 }

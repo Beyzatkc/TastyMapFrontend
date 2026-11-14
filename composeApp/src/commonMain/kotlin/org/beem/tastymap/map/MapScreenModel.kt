@@ -3,24 +3,13 @@ package org.beem.tastymap.map
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.asSharedFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonArray
-import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.JsonPrimitive
-import kotlinx.serialization.json.jsonArray
-import kotlinx.serialization.json.jsonObject
-import kotlinx.serialization.json.jsonPrimitive
 import org.beem.tastymap.core.network.ResultWrapper
-import org.beem.tastymap.core.network.safeApiCall
 import org.beem.tastymap.core.util.GeoUtils
 import org.beem.tastymap.data.model.LocationData
 import org.beem.tastymap.data.model.Restaurant
@@ -29,26 +18,29 @@ import org.beem.tastymap.map.model.GeoJson
 import org.beem.tastymap.map.model.MapRequest
 import org.beem.tastymap.map.repository.MapRepository
 import org.beem.tastymap.route.repository.RouteRepository
-import org.beem.tastymap.route.repository.RouteRepositoryImpl
 import org.beem.tastymap.ui.components.TastyMapIcon
+import org.beem.tastymap.ui.map.MapIntent
+import org.beem.tastymap.ui.map.states.CameraPositionState
+import org.beem.tastymap.ui.map.states.MapUiState
+import org.beem.tastymap.ui.map.states.RouteRenderData
 import org.beem.tastymap.ui.map.states.SearchChipState
-import kotlin.math.PI
+import org.beem.tastymap.ui.map.states.SelectedPinData
+import org.beem.tastymap.ui.map.MapEvent as MapEvent
 import kotlin.math.abs
-import kotlin.math.atan2
-import kotlin.math.cos
-import kotlin.math.sin
-import kotlin.math.sqrt
 import kotlin.time.Duration.Companion.milliseconds
 
 class MapScreenModel(
     private val locationTracker: LocationTracker,
     private val repository: MapRepository,
     private val routeRepository: RouteRepository
-): ViewModel() {
-    val userLocation = locationTracker.locationState
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), LocationData(0.0, 0.0))
+) : ViewModel() {
 
-    private val _event = MutableSharedFlow<MapEvent>()
+    private val _uiState = MutableStateFlow(MapUiState())
+    val uiState: StateFlow<MapUiState> = _uiState.asStateFlow()
+
+    // Tek seferlik kamera animasyonları için Channel (SharedFlow'dan daha güvenlidir, UI hazır olana kadar bekler)
+    private val _event = Channel<MapEvent>(Channel.BUFFERED)
+    val event = _event.receiveAsFlow()
 
     private val jsonConfig = Json {
         encodeDefaults = true
@@ -65,9 +57,6 @@ class MapScreenModel(
 
     private var lastSearchedLat: Double = 0.0
     private var lastSearchedLng: Double = 0.0
-    private var currentCameraLat: Double = 0.0
-    private var currentCameraLng: Double = 0.0
-    private var currentCameraZoom: Double = 0.0
 
     private var activeRouteCoordinates: List<List<Double>> = emptyList()
     private var offRouteCount = 0
@@ -75,25 +64,35 @@ class MapScreenModel(
     private val OFF_ROUTE_THRESHOLD_METERS = 35.0
     private val OFF_ROUTE_TRIGGER_COUNT = 2
 
-
-    private val _activeRoute = MutableStateFlow<ActiveRouteState>(ActiveRouteState.Idle)
-    val activeRoute = _activeRoute.asStateFlow()
-
-    private val _searchChipState = MutableStateFlow(SearchChipState.HIDDEN)
-    val searchChipState = _searchChipState.asStateFlow()
-
     private var isFirstLocationFixed = false
 
-    val event = _event.asSharedFlow()
-
-    fun startObservingLocation(){
-        locationTracker.startTracking()
+    init {
+        observeUserLocation()
     }
 
-    init {
-        viewModelScope.launch {
-            userLocation.collect { location ->
+    // VIEW'DEN GELEN TÜM INTENT'LERİN TEK MERKEZİ
+    fun onIntent(intent: MapIntent) {
+        when (intent) {
+            is MapIntent.StartLocationTracking -> locationTracker.startTracking()
+            is MapIntent.CenterOnUserClicked -> handleCenterOnUser()
+            is MapIntent.SearchThisAreaClicked -> handleSearchThisArea()
+            is MapIntent.CameraIdle -> handleCameraIdle(intent.lat, intent.lng, intent.zoom)
+            is MapIntent.MarkerClicked -> handleMarkerClicked(intent.restaurant)
+            is MapIntent.VenueSelectedFromSearch -> handleVenueSelectedFromSearch(intent.restaurant)
+            is MapIntent.DismissRestaurantSheet -> handleDismissRestaurantSheet()
+            is MapIntent.StartDirections -> fetchDirections(
+                placeId = intent.placeId,
+                targetLat = intent.targetLat,
+                targetLng = intent.targetLng,
+                forceRefresh = intent.forceRefresh
+            )
+            is MapIntent.ClearRoute -> handleClearRoute()
+        }
+    }
 
+    private fun observeUserLocation() {
+        viewModelScope.launch {
+            locationTracker.locationState.collect { location ->
                 if (location.latitude == 0.0 && location.longitude == 0.0) return@collect
 
                 val currentBearing = if (location.bearing != 0f) {
@@ -108,91 +107,120 @@ class MapScreenModel(
                 if (!isFirstLocationFixed) {
                     isFirstLocationFixed = true
 
-                    _event.emit(
-                        MapEvent.JumpTo(
+                    _uiState.update {
+                        it.copy(
+                            cameraPosition = CameraPositionState(
+                                lat = filteredLocation.latitude,
+                                lng = filteredLocation.longitude,
+                                zoom = 15.5f
+                            )
+                        )
+                    }
+                    _event.send(
+                        MapEvent.JumpCamera(
                             lat = filteredLocation.latitude,
                             lng = filteredLocation.longitude,
                             zoom = 15.5f
                         )
                     )
-
-                    fetchNearbyRestaurants(
-                        lat = filteredLocation.latitude,
-                        lng = filteredLocation.longitude
-                    )
+                    fetchNearbyRestaurants(filteredLocation.latitude, filteredLocation.longitude)
                 }
 
-                val distance = if (lastEmittedLocation == null) {
-                    Double.MAX_VALUE
-                } else {
+                val distance = lastEmittedLocation?.let {
                     GeoUtils.distanceInMeters(
                         filteredLocation.latitude, filteredLocation.longitude,
-                        lastEmittedLocation!!.latitude, lastEmittedLocation!!.longitude
+                        it.latitude, it.longitude
                     )
-                }
+                } ?: Double.MAX_VALUE
 
                 val bearingDelta = abs(currentBearing - lastEmittedBearing)
 
                 if (distance > 2.0 || bearingDelta > 10f) {
                     lastEmittedLocation = filteredLocation
                     lastEmittedBearing = currentBearing
-                    _event.emit(MapEvent.UserMarker(
-                        lat = filteredLocation.latitude,
-                        lng = filteredLocation.longitude,
-                        title = "Buradasınız",
-                        bearing = currentBearing
-                    ))
 
-
-                    val currentRoute = _activeRoute.value
-                    if (currentRoute is ActiveRouteState.Active && activeRouteCoordinates.isNotEmpty() && !isRerouting) {
-                        val distanceToRoute = GeoUtils.minDistanceToRoute(
-                            userLat = filteredLocation.latitude,
-                            userLng = filteredLocation.longitude,
-                            routeCoordinates = activeRouteCoordinates
+                    _uiState.update {
+                        it.copy(
+                            userLocation = filteredLocation,
+                            userBearing = currentBearing
                         )
-
-                        if (distanceToRoute > OFF_ROUTE_THRESHOLD_METERS) {
-                            offRouteCount++
-                            println("TastyMap Navigation -> Rotadan Sapıldı: $distanceToRoute m (Sayaç: $offRouteCount)")
-
-                            if (offRouteCount >= OFF_ROUTE_TRIGGER_COUNT) {
-                                isRerouting = true
-                                println("TastyMap Navigation -> Yeni rota isteniyor...")
-                                fetchDirections(
-                                    placeId = currentRoute.placeId,
-                                    targetLat = currentRoute.targetLat,
-                                    targetLng = currentRoute.targetLng,
-                                    forceRefresh = true
-                                )
-                            }
-                        } else {
-                            offRouteCount = 0
-                        }
                     }
+
+                    checkOffRoute(filteredLocation)
                 }
             }
         }
     }
 
-    fun onCenterMapClicked(){
-        viewModelScope.launch {
-            val targetLoc = lastEmittedLocation ?: userLocation.value
-            val targetZoom = if (currentCameraZoom >= 14.0) null else 15f
+    private fun checkOffRoute(userLoc: LocationData) {
+        val currentRoute = _uiState.value.activeRoute
+        if (currentRoute is ActiveRouteState.Active && activeRouteCoordinates.isNotEmpty() && !isRerouting) {
+            val distanceToRoute = GeoUtils.minDistanceToRoute(
+                userLat = userLoc.latitude,
+                userLng = userLoc.longitude,
+                routeCoordinates = activeRouteCoordinates
+            )
 
-            _event.emit(MapEvent.CenterOn(
-                lat = targetLoc.latitude,
-                lng = targetLoc.longitude,
-                zoom = targetZoom
-            ))
+            if (distanceToRoute > OFF_ROUTE_THRESHOLD_METERS) {
+                offRouteCount++
+                if (offRouteCount >= OFF_ROUTE_TRIGGER_COUNT) {
+                    isRerouting = true
+                    fetchDirections(
+                        placeId = currentRoute.placeId,
+                        targetLat = currentRoute.targetLat,
+                        targetLng = currentRoute.targetLng,
+                        forceRefresh = true
+                    )
+                }
+            } else {
+                offRouteCount = 0
+            }
         }
     }
 
-    fun fetchNearbyRestaurants(lat: Double, lng: Double) {
+    private fun handleCenterOnUser() {
+        viewModelScope.launch {
+            val targetLoc = lastEmittedLocation ?: _uiState.value.userLocation
+            if (targetLoc.latitude == 0.0 && targetLoc.longitude == 0.0) return@launch
+
+            val currentZoom = _uiState.value.cameraPosition.zoom
+            val targetZoom = if (currentZoom >= 14.0f) null else 15f
+
+            _event.send(
+                MapEvent.AnimateCamera(
+                    lat = targetLoc.latitude,
+                    lng = targetLoc.longitude,
+                    zoom = targetZoom
+                )
+            )
+        }
+    }
+
+    private fun handleCameraIdle(lat: Double, lng: Double, zoom: Double) {
+        _uiState.update {
+            it.copy(cameraPosition = CameraPositionState(lat, lng, zoom.toFloat()))
+        }
+
+        if (_uiState.value.activeRoute is ActiveRouteState.Active || searchJob?.isActive == true) return
+
+        if (lastSearchedLat != 0.0 && lastSearchedLng != 0.0) {
+            val distance = GeoUtils.distanceInMeters(lastSearchedLat, lastSearchedLng, lat, lng)
+            if (distance > 400.0) {
+                _uiState.update { it.copy(searchChipState = SearchChipState.ACTIONABLE) }
+            }
+        }
+    }
+
+    private fun handleSearchThisArea() {
+        val cam = _uiState.value.cameraPosition
+        if (cam.lat == 0.0 && cam.lng == 0.0) return
+        fetchNearbyRestaurants(cam.lat, cam.lng)
+    }
+
+    private fun fetchNearbyRestaurants(lat: Double, lng: Double) {
         searchJob?.cancel()
         searchJob = viewModelScope.launch {
-
-            _searchChipState.value = SearchChipState.LOADING
+            _uiState.update { it.copy(searchChipState = SearchChipState.LOADING) }
 
             lastSearchedLat = lat
             lastSearchedLng = lng
@@ -203,54 +231,30 @@ class MapScreenModel(
                 radius = 500,
                 keywords = listOf("restaurant", "meal_takeaway", "cafe")
             )
-            val response = repository.searchMap(request)
-            when(response){
+
+            when (val response = repository.searchMap(request)) {
                 is ResultWrapper.Success -> {
-                    _event.emit(MapEvent.UpdateMapGeoSource(
-                        source = rebuildGeoJson(response.data.geoJson)
-                    ))
-
-                    _searchChipState.value = SearchChipState.SUCCESS
-
+                    val rebuiltJson = rebuildGeoJson(response.data.geoJson)
+                    _uiState.update {
+                        it.copy(
+                            restaurantsGeoJson = rebuiltJson,
+                            searchChipState = SearchChipState.SUCCESS
+                        )
+                    }
                     delay(1000.milliseconds)
-                    _searchChipState.value = SearchChipState.HIDDEN
+                    _uiState.update { it.copy(searchChipState = SearchChipState.HIDDEN) }
                 }
                 is ResultWrapper.Error -> {
-                    println("Hata Oluştu: ${response.message}")
-
-                    _searchChipState.value = SearchChipState.ERROR
+                    _uiState.update { it.copy(searchChipState = SearchChipState.ERROR) }
                     delay(1500.milliseconds)
-                    _searchChipState.value = SearchChipState.HIDDEN
+                    _uiState.update { it.copy(searchChipState = SearchChipState.HIDDEN) }
                 }
             }
         }
     }
 
-
-    fun onCameraIdle(lat: Double, lng: Double, zoom: Double) {
-        currentCameraLat = lat
-        currentCameraLng = lng
-        currentCameraZoom = zoom
-
-        if (_activeRoute.value is ActiveRouteState.Active || searchJob?.isActive == true) return
-
-        if (lastSearchedLat != 0.0 && lastSearchedLng != 0.0) {
-            val distance = GeoUtils.distanceInMeters(lastSearchedLat, lastSearchedLng, lat, lng)
-            if (distance > 400.0) {
-                viewModelScope.launch {
-                    _searchChipState.value = SearchChipState.ACTIONABLE
-                }
-            }
-        }
-    }
-
-    fun onSearchThisAreaClicked() {
-        if (currentCameraLat == 0.0 && currentCameraLng == 0.0) return
-        fetchNearbyRestaurants(currentCameraLat, currentCameraLng)
-    }
-
-    fun onMarkerClicked(restaurant: Restaurant) {
-        viewModelScope.launch{
+    private fun handleMarkerClicked(restaurant: Restaurant) {
+        viewModelScope.launch {
             val updatedRestaurant = repository.getPlaceById(restaurant.id)?.let { place ->
                 restaurant.copy(
                     rating = place.rating,
@@ -263,74 +267,84 @@ class MapScreenModel(
                 )
             } ?: restaurant
 
-            _event.emit(MapEvent.CenterOn(
-                lat = updatedRestaurant.latitude,
-                lng = updatedRestaurant.longitude
-            ))
+            _uiState.update {
+                it.copy(
+                    selectedPin = SelectedPinData(
+                        placeId = updatedRestaurant.id,
+                        lat = updatedRestaurant.latitude,
+                        lng = updatedRestaurant.longitude
+                    ),
+                    activeRestaurant = updatedRestaurant
+                )
+            }
 
-            _event.emit(MapEvent.ShowSelectedPin(
-                placeId = updatedRestaurant.id,
-                lat = updatedRestaurant.latitude,
-                lng = updatedRestaurant.longitude
-            ))
-
-            _event.emit(MapEvent.OpenRestaurantDetails(updatedRestaurant))
-        }
-    }
-
-
-    private fun rebuildGeoJson(geoJson: GeoJson): String {
-        val updatedFeatures = geoJson.features.map { feature ->
-            val category = feature.properties.category
-
-            val tastyMapIcon = TastyMapIcon.entries.find {
-                it.name.lowercase() == category
-            } ?: TastyMapIcon.DEFAULT
-
-            val updatedProperties = feature.properties.copy(
-                iconToUse = tastyMapIcon.iconName,
-                iconScale = tastyMapIcon.iconScale
+            _event.send(
+                MapEvent.AnimateCamera(
+                    lat = updatedRestaurant.latitude,
+                    lng = updatedRestaurant.longitude
+                )
             )
-
-            feature.copy(properties = updatedProperties)
         }
-
-        val updatedGeoJson = geoJson.copy(features = updatedFeatures)
-
-        return jsonConfig.encodeToString(updatedGeoJson)
     }
 
+    private fun handleVenueSelectedFromSearch(restaurant: Restaurant) {
+        viewModelScope.launch {
+            _uiState.update {
+                it.copy(
+                    selectedPin = SelectedPinData(
+                        placeId = restaurant.id,
+                        lat = restaurant.latitude,
+                        lng = restaurant.longitude
+                    ),
+                    activeRestaurant = restaurant
+                )
+            }
 
-    private fun applyLowPassFilter(newLocation: LocationData): LocationData {
-        if (lastSmoothedLocation == null) {
-            lastSmoothedLocation = newLocation
-            return newLocation
+            _event.send(
+                MapEvent.AnimateCamera(
+                    lat = restaurant.latitude,
+                    lng = restaurant.longitude,
+                    zoom = 16f
+                )
+            )
         }
-
-        val smoothedLat = ALPHA * newLocation.latitude + (1 - ALPHA) * lastSmoothedLocation!!.latitude
-        val smoothedLng = ALPHA * newLocation.longitude + (1 - ALPHA) * lastSmoothedLocation!!.longitude
-
-        val smoothedLocation = LocationData(smoothedLat, smoothedLng)
-        lastSmoothedLocation = smoothedLocation
-        return smoothedLocation
     }
 
-    fun fetchDirections(
+    private fun handleDismissRestaurantSheet() {
+        _uiState.update {
+            it.copy(
+                activeRestaurant = null,
+                selectedPin = null
+            )
+        }
+    }
+
+    private fun fetchDirections(
         placeId: String,
         targetLat: Double,
         targetLng: Double,
         forceRefresh: Boolean = false
     ) {
         viewModelScope.launch {
-            val currentUserLoc = lastEmittedLocation ?: userLocation.value
+            val currentUserLoc = lastEmittedLocation ?: _uiState.value.userLocation
             if (currentUserLoc.latitude == 0.0 && currentUserLoc.longitude == 0.0) {
-                _activeRoute.value = ActiveRouteState.Error("Konumunuz henüz alınamadı.")
+                _uiState.update {
+                    it.copy(activeRoute = ActiveRouteState.Error("Konumunuz henüz alınamadı."))
+                }
                 return@launch
             }
 
-            // Yeniden hesaplanırken kullanıcı kartı yok olmasın
-            if (_activeRoute.value !is ActiveRouteState.Active) {
-                _activeRoute.value = ActiveRouteState.Loading
+            // Sheet'i ve seçili pini temizle, loading başlat
+            _uiState.update { state ->
+                state.copy(
+                    activeRestaurant = null,
+                    selectedPin = null,
+                    activeRoute = if (state.activeRoute !is ActiveRouteState.Active) {
+                        ActiveRouteState.Loading
+                    } else {
+                        state.activeRoute
+                    }
+                )
             }
 
             when (val result = routeRepository.fetchRoute(placeId, currentUserLoc.latitude, currentUserLoc.longitude, forceRefresh)) {
@@ -351,47 +365,77 @@ class MapScreenModel(
                         val targetPoint = listOf(targetLng, targetLat)
                         val endConnector = listOf(lastPoint, targetPoint)
 
-                        _activeRoute.value = ActiveRouteState.Active(
-                            placeId = placeId,
-                            distance = routeData.formattedDistance,
-                            duration = routeData.formattedDuration,
-                            targetLat = targetLat,
-                            targetLng = targetLng
-                        )
-
-                        _event.emit(
-                            MapEvent.DrawRoute(
-                                mainRouteCoordinates = mainCoordinates,
-                                startConnector = startConnector,
-                                endConnector = endConnector,
-                                formattedDistance = routeData.formattedDistance,
-                                formattedDuration = routeData.formattedDuration,
-                                targetLat = targetLat,
-                                targetLng = targetLng,
-                                targetPlaceId = placeId
+                        _uiState.update {
+                            it.copy(
+                                activeRoute = ActiveRouteState.Active(
+                                    placeId = placeId,
+                                    distance = routeData.formattedDistance,
+                                    duration = routeData.formattedDuration,
+                                    targetLat = targetLat,
+                                    targetLng = targetLng
+                                ),
+                                routeRenderData = RouteRenderData(
+                                    mainRoute = mainCoordinates,
+                                    startConnector = startConnector,
+                                    endConnector = endConnector,
+                                    targetPlaceId = placeId
+                                )
                             )
-                        )
+                        }
                     } else {
                         isRerouting = false
-                        _activeRoute.value = ActiveRouteState.Error("Uygun bir rota bulunamadı.")
+                        _uiState.update {
+                            it.copy(activeRoute = ActiveRouteState.Error("Uygun bir rota bulunamadı."))
+                        }
                     }
                 }
                 is ResultWrapper.Error -> {
                     isRerouting = false
-                    _activeRoute.value = ActiveRouteState.Error(result.message ?: "Rota hesaplanamadı.")
+                    _uiState.update {
+                        it.copy(activeRoute = ActiveRouteState.Error(result.message ?: "Rota hesaplanamadı."))
+                    }
                 }
             }
         }
     }
 
-    fun clearRoute() {
-        viewModelScope.launch {
-            activeRouteCoordinates = emptyList()
-            offRouteCount = 0
-            isRerouting = false
-            _activeRoute.value = ActiveRouteState.Idle
-            _event.emit(MapEvent.ClearRoute)
+    private fun handleClearRoute() {
+        activeRouteCoordinates = emptyList()
+        offRouteCount = 0
+        isRerouting = false
+        _uiState.update {
+            it.copy(
+                activeRoute = ActiveRouteState.Idle,
+                routeRenderData = null
+            )
         }
     }
 
+    private fun rebuildGeoJson(geoJson: GeoJson): String {
+        val updatedFeatures = geoJson.features.map { feature ->
+            val category = feature.properties.category
+            val tastyMapIcon = TastyMapIcon.entries.find {
+                it.name.lowercase() == category
+            } ?: TastyMapIcon.DEFAULT
+
+            val updatedProperties = feature.properties.copy(
+                iconToUse = tastyMapIcon.iconName,
+                iconScale = tastyMapIcon.iconScale
+            )
+            feature.copy(properties = updatedProperties)
+        }
+        return jsonConfig.encodeToString(geoJson.copy(features = updatedFeatures))
+    }
+
+    private fun applyLowPassFilter(newLocation: LocationData): LocationData {
+        if (lastSmoothedLocation == null) {
+            lastSmoothedLocation = newLocation
+            return newLocation
+        }
+        val smoothedLat = ALPHA * newLocation.latitude + (1 - ALPHA) * lastSmoothedLocation!!.latitude
+        val smoothedLng = ALPHA * newLocation.longitude + (1 - ALPHA) * lastSmoothedLocation!!.longitude
+        val smoothedLocation = LocationData(smoothedLat, smoothedLng)
+        lastSmoothedLocation = smoothedLocation
+        return smoothedLocation
+    }
 }

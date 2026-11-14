@@ -3,6 +3,7 @@ package org.beem.tastymap.ui.ai
 import org.beem.tastymap.data.model.ai.AiProvider
 import org.beem.tastymap.data.model.ai.AiSessionSummaryDto
 import org.beem.tastymap.data.model.ai.HydratedPlaceCardDto
+import org.beem.tastymap.ui.ai.model.AiQuotaState
 import org.beem.tastymap.ui.ai.model.ChatMessage
 
 data class AiChatState(
@@ -13,7 +14,7 @@ data class AiChatState(
     val isStreaming: Boolean = false,
     val isMessagesLoading: Boolean = false,
     val currentStatusMessage: String? = null,
-    val remainingQuotaPercentage: Double = 100.0,
+    val quotaState: AiQuotaState = AiQuotaState(),
 
     val previewPlace: HydratedPlaceCardDto? = null,
     val selectedProvider: AiProvider = AiProvider.GROQ,

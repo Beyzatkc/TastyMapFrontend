@@ -9,6 +9,7 @@ import org.beem.tastymap.data.model.ai.AiSessionSummaryDto
 import org.beem.tastymap.data.model.ai.AiStreamEvent
 import org.beem.tastymap.data.model.ai.RecommendationReq
 import org.beem.tastymap.data.model.ai.SliceResponse
+import org.beem.tastymap.data.model.ai.UserQuotaStatusDto
 import org.beem.tastymap.data.remote.AiChatDataSource
 
 class AiChatRepository(
@@ -43,5 +44,13 @@ class AiChatRepository(
     fun streamRecommendation(request: RecommendationReq): Flow<AiStreamEvent> {
         return remoteDataSource.streamRecommendation(request)
             .flowOn(dispatchers.io)
+    }
+
+    suspend fun getQuotaStatus(): Result<UserQuotaStatusDto> {
+        return withContext(dispatchers.io) {
+            runCatching {
+                remoteDataSource.getQuotaStatus()
+            }
+        }
     }
 }

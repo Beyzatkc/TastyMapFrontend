@@ -31,6 +31,7 @@ import org.beem.tastymap.domain.usecase.ToggleBlockUseCase
 import org.beem.tastymap.domain.usecase.ToggleFollowUseCase
 import org.beem.tastymap.map.MapScreenModel
 import org.beem.tastymap.map.api.MapDataSource
+import org.beem.tastymap.map.cache.MapStyleCacheManager
 import org.beem.tastymap.map.repository.MapRepository
 import org.beem.tastymap.place.RestaurantDetailScreenModel
 import org.beem.tastymap.place.api.PlaceDataSource
@@ -116,6 +117,7 @@ val appModule = module {
     single { VisitMemoryCache() }
     single { PostCommentMemoryCache() }
     single { PostMemoryCache() }
+    single { MapStyleCacheManager(get(), get()) }
     single { CacheManager(get(), get(), get(), get(), get(), get(), get(), get()) }
 
     // Use Case'ler
@@ -188,7 +190,7 @@ val appModule = module {
     factory { LogRegViewModel(get(), get(), get(), get()) }
     factory { PendingViewModel(get(), get(), get(), get()) }
     factory { EmailViewModel(get(), get()) }
-    factory { SplashViewModel(get(),get()) }
+    factory { SplashViewModel(get(),get(), get()) }
     factory { ForgotViewModel(get(), get(), get(), get()) }
     factory { ResetViewModel(get()) }
     factory { HealthViewModel(get()) }

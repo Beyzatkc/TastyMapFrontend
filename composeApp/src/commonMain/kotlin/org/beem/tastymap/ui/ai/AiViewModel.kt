@@ -12,6 +12,8 @@ import org.beem.tastymap.data.model.ai.AiStreamEvent
 import org.beem.tastymap.data.model.ai.RecommendationReq
 import org.beem.tastymap.data.repository.AiChatRepository
 import org.beem.tastymap.ui.ai.model.ChatMessage
+import org.beem.tastymap.ui.ai.model.toUiState
+import org.beem.tastymap.ui.ai.model.updateFromStream
 import kotlin.random.Random
 import kotlin.time.Clock
 
@@ -24,6 +26,7 @@ class AiViewModel(
 
     init {
         loadSessions(page = 0)
+        loadQuotaStatus()
     }
 
     fun onIntent(intent: AiChatIntent) {
@@ -187,7 +190,11 @@ class AiViewModel(
                         }
 
                         is AiStreamEvent.Quota -> {
-                            _state.update { it.copy(remainingQuotaPercentage = event.remainingPercentage) }
+                            _state.update { currentState ->
+                                currentState.copy(
+                                    quotaState = currentState.quotaState.updateFromStream(event.quota)
+                                )
+                            }
                         }
 
                         is AiStreamEvent.Completed -> {
@@ -353,4 +360,14 @@ class AiViewModel(
                 }
         }
     }
+
+    private fun loadQuotaStatus() {
+        viewModelScope.launch {
+            aiChatRepository.getQuotaStatus()
+                .onSuccess { quota ->
+                    _state.update { it.copy(quotaState = quota.toUiState()) }
+                }
+        }
+    }
+
 }

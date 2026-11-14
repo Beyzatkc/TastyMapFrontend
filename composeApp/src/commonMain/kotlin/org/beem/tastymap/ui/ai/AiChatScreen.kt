@@ -95,7 +95,7 @@ fun AiChatScreen(
                     AiChatSidebar(
                         sessions = sidebarSessions,
                         selectedSessionId = state.currentSessionId,
-                        remainingQuotaPercentage = 100.0, // Kota servisi entegre edilene kadar
+                        quotaState = state.quotaState, // Kota servisi entegre edilene kadar
                         customColors = customColors,
                         onIntent = onIntent
                     )
@@ -113,7 +113,7 @@ fun AiChatScreen(
                 AiChatSidebar(
                     sessions = sidebarSessions,
                     selectedSessionId = state.currentSessionId,
-                    remainingQuotaPercentage = 100.0,
+                    quotaState = state.quotaState,
                     customColors = customColors,
                     onIntent = onIntent
                 )
@@ -238,6 +238,7 @@ fun AiChatScreen(
                         inputText = state.inputText,
                         isStreaming = state.isStreaming,
                         isWideScreen = isWideScreen,
+                        hasQuota = state.quotaState.hasQuota,
                         customColors = customColors,
                         onIntent = onIntent
                     )

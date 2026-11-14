@@ -12,19 +12,24 @@ import kotlinx.coroutines.launch
 import org.beem.tastymap.core.local.UserManager
 import org.beem.tastymap.core.navigation.DeepLinkManager
 import org.beem.tastymap.data.model.auth.AuthStatus
+import org.beem.tastymap.map.MapConstants
+import org.beem.tastymap.map.cache.MapStyleCacheManager
 import org.beem.tastymap.ui.auth.ResetRoute
 import org.beem.tastymap.ui.auth.VerifyRoute
 import org.beem.tastymap.ui.profile.ProfileRoute
 
 class SplashViewModel(
     private val authRepository: AuthRepository,
-    private val userManager: UserManager
+    private val userManager: UserManager,
+    private val mapStyleCacheManager: MapStyleCacheManager
 ) : ViewModel() {
 
     private val _effect = MutableStateFlow<SplashEffect?>(null)
     val effect = _effect.asStateFlow()
 
     init {
+        mapStyleCacheManager.prefetch(MapConstants.DEFAULT_STYLE_URL)
+
         viewModelScope.launch(Dispatchers.Default) {
             checkAuthentication()
         }

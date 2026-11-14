@@ -29,75 +29,61 @@ import org.koin.compose.viewmodel.koinViewModel
 
 
 @Composable
-    fun TastyMapScreen() {
-        val myMaps = "https://api.maptiler.com/maps/019dbfbf-86a2-7d38-869e-bd6ebbcee298/style.json?key=DNr5GYdtJfA7ecaMmrh1"
+fun TastyMapScreen() {
+    val myMaps = "https://api.maptiler.com/maps/019dbfbf-86a2-7d38-869e-bd6ebbcee298/style.json?key=DNr5GYdtJfA7ecaMmrh1"
 
-        val mapScreenModel: MapScreenModel = koinViewModel<MapScreenModel>()
-        val searchScreenModel: SearchScreenModel = koinViewModel<SearchScreenModel>()
+    val mapScreenModel: MapScreenModel = koinViewModel<MapScreenModel>()
+    val searchScreenModel: SearchScreenModel = koinViewModel<SearchScreenModel>()
 
-        val mapState = rememberTastyMapState()
+    val uiState by mapScreenModel.uiState.collectAsState()
+    val mapState = rememberTastyMapState(uiState = uiState)
 
-        val userLocation by mapScreenModel.userLocation.collectAsState()
+    val selectedRestaurant = mapState.selectedRestaurant
+    val searchUiState by searchScreenModel.uiState.collectAsState()
+    val currentActiveRestaurant by rememberUpdatedState(uiState.activeRestaurant)
+    var collapseSheetTrigger by remember { mutableStateOf(0) }
+    val isSearchingActive = searchUiState.query.isNotEmpty() || searchUiState.isDropdownVisible
 
-        val selectedRestaurant = mapState.selectedRestaurant
+    val localFocusManager = LocalFocusManager.current
 
-        val activeRouteState by mapScreenModel.activeRoute.collectAsState()
-
-        val searchUiState by searchScreenModel.uiState.collectAsState()
-
-        var activeRestaurant by remember { mutableStateOf<Restaurant?>(null) }
-
-        var showSearchThisArea by remember { mutableStateOf(false) }
-
-        var collapseSheetTrigger by remember { mutableStateOf(0) }
-
-        val isSearchingActive = searchUiState.query.isNotEmpty() || searchUiState.isDropdownVisible
-
-        val searchChipState by mapScreenModel.searchChipState.collectAsState()
-
-        val localFocusManager = LocalFocusManager.current
-
-        LaunchedEffect(Unit) {
-            searchScreenModel.event.collect { event ->
-                when (event) {
-                    is SearchEvent.HideKeyboard -> {
-                        localFocusManager.clearFocus()
-                    }
-                    is SearchEvent.VenueSelected -> {
-                        val venue = event.venue
-
-                        if (venue.lat != null && venue.lng != null) {
-                            mapState.centerOn(venue.lat, venue.lng, zoom = 16f)
-                            mapState.showSelectedPin(
-                                placeId = venue.placeId,
-                                lat = venue.lat,
-                                lng = venue.lng
-                            )
-                        }
-
-                        activeRestaurant = venue.toRestaurant()
+    LaunchedEffect(Unit) {
+        searchScreenModel.event.collect { event ->
+            when (event) {
+                is SearchEvent.HideKeyboard -> {
+                    localFocusManager.clearFocus()
+                }
+                is SearchEvent.VenueSelected -> {
+                    val venue = event.venue
+                    if (venue.lat != null && venue.lng != null) {
+                        mapState.centerOn(venue.lat, venue.lng, zoom = 16f)
+                        mapState.showSelectedPin(
+                            placeId = venue.placeId,
+                            lat = venue.lat,
+                            lng = venue.lng
+                        )
+                        mapScreenModel.onIntent(MapIntent.VenueSelectedFromSearch(venue.toRestaurant()))
                     }
                 }
             }
         }
+    }
 
 
         DisposableEffect(mapState) {
-
             mapState.onZoomChangedCallback = {
-                if (activeRestaurant != null) {
+                if (currentActiveRestaurant != null) {
                     collapseSheetTrigger++
                 }
             }
 
             mapState.onMapClickCallback = {
-                if (activeRestaurant != null) {
+                if (currentActiveRestaurant != null) {
                     collapseSheetTrigger++
                 }
             }
 
             mapState.onCameraIdleCallback = { lat, lng, zoom ->
-                mapScreenModel.onCameraIdle(lat, lng, zoom)
+                mapScreenModel.onIntent(MapIntent.CameraIdle(lat, lng, zoom))
             }
             onDispose {
                 mapState.onZoomChangedCallback = null
@@ -108,60 +94,22 @@ import org.koin.compose.viewmodel.koinViewModel
         LaunchedEffect(Unit){
             mapScreenModel.event.collect{ event ->
                 when(event){
-                    is MapEvent.CenterOn -> {
-                        mapState.centerOn(event.lat, event.lng, event.zoom)
-                    }
-                    is MapEvent.UserMarker -> {
-                        mapState.userMarker(event.lat, event.lng, event.title, event.bearing)
-                    }
-
-                    is MapEvent.UpdateMapGeoSource -> {
-                        mapState.updateMapData(event.source)
-                    }
-
-                    is MapEvent.OpenRestaurantDetails -> {
-                        println("TastyMap UI -> OpenRestaurantDetails Eventi Geldi! Restoran: ${event.restaurant.name}")
-                        activeRestaurant = event.restaurant
-                    }
-                    is MapEvent.DrawRoute -> {
-                        mapState.drawRoute(
-                            mainRoute = event.mainRouteCoordinates,
-                            startConnector = event.startConnector,
-                            endConnector = event.endConnector,
-                            targetPlaceId = event.targetPlaceId
-                        )
-                    }
-                    is MapEvent.ClearRoute -> {
-                        mapState.clearRoute()
-                    }
-                    is MapEvent.ToggleSearchThisAreaButton -> {
-                        showSearchThisArea = event.visible
-                    }
-                    is MapEvent.ShowSelectedPin -> {
-                        mapState.showSelectedPin(event.placeId, event.lat, event.lng)
-                    }
-                    is MapEvent.ClearSelectedPin -> {
-                        mapState.clearSelectedPin()
-                    }
-
-                    is MapEvent.JumpTo -> {
-                        mapState.jumpTo(event.lat, event.lng, event.zoom)
-                    }
+                    is MapEvent.AnimateCamera -> mapState.centerOn(event.lat, event.lng, event.zoom)
+                    is MapEvent.JumpCamera -> mapState.jumpTo(event.lat, event.lng, event.zoom)
                 }
             }
-            mapScreenModel.startObservingLocation()
         }
 
         LaunchedEffect(selectedRestaurant) {
             selectedRestaurant?.let {
-                mapScreenModel.onMarkerClicked(it)
+                mapScreenModel.onIntent(MapIntent.MarkerClicked(it))
                 mapState.clearSelectedRestaurant()
             }
         }
 
         LocationPermissionWrapper(
             onPermissionGranted = {
-                mapScreenModel.startObservingLocation()
+                mapScreenModel.onIntent(MapIntent.StartLocationTracking)
             }
         ) {
             Box(modifier = Modifier
@@ -172,9 +120,9 @@ import org.koin.compose.viewmodel.koinViewModel
                     modifier = Modifier.fillMaxSize(),
                     mapUrl = myMaps,
                     state = mapState,
-                    userLocation = userLocation,
+                    userLocation = uiState.userLocation,
                     onFabClicked = {
-                        mapScreenModel.onCenterMapClicked()
+                        mapScreenModel.onIntent(MapIntent.CenterOnUserClicked)
                     }
                 )
                 TastySearchOverlay(
@@ -187,8 +135,8 @@ import org.koin.compose.viewmodel.koinViewModel
                 )
 
                 SearchThisAreaChip(
-                    state = if (isSearchingActive) SearchChipState.HIDDEN else searchChipState,
-                    onClick = mapScreenModel::onSearchThisAreaClicked,
+                    state = if (isSearchingActive) SearchChipState.HIDDEN else uiState.searchChipState,
+                    onClick = { mapScreenModel.onIntent(MapIntent.SearchThisAreaClicked) },
                     modifier = Modifier
                         .align(Alignment.TopCenter)
                         .statusBarsPadding()
@@ -196,36 +144,31 @@ import org.koin.compose.viewmodel.koinViewModel
                 )
 
                 ActiveRouteBottomCard(
-                    routeState = activeRouteState,
+                    routeState = uiState.activeRoute,
                     onCloseRoute = {
-                        mapScreenModel.clearRoute()
+                        mapScreenModel.onIntent(MapIntent.ClearRoute)
                     },
                     modifier = Modifier.align(Alignment.BottomCenter)
                 )
 
-                activeRestaurant?.let { restaurant ->
+                uiState.activeRestaurant?.let { restaurant ->
                     TastyDetailSheet(
                         restaurant = restaurant,
                         onDismiss = {
-                            activeRestaurant = null
+                            mapScreenModel.onIntent(MapIntent.DismissRestaurantSheet)
                             mapState.clearSelectedRestaurant()
                             mapState.clearSelectedPin()
                         },
                         collapseToPeekTrigger = collapseSheetTrigger,
                         onDirectionsClick = {
-                            val placeId = restaurant.id
-                            val targetLat = restaurant.latitude
-                            val targetLng = restaurant.longitude
-
-                            activeRestaurant = null // Sheet'i kapat
                             mapState.clearSelectedRestaurant()
                             mapState.clearSelectedPin()
-
-                            // Rotayı başlat
-                            mapScreenModel.fetchDirections(
-                                placeId = placeId,
-                                targetLat = targetLat,
-                                targetLng = targetLng
+                            mapScreenModel.onIntent(
+                                MapIntent.StartDirections(
+                                    placeId = restaurant.id,
+                                    targetLat = restaurant.latitude,
+                                    targetLng = restaurant.longitude
+                                )
                             )
                         }
                     )

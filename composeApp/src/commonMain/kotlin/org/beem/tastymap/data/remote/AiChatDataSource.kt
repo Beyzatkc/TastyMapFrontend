@@ -26,6 +26,7 @@ import org.beem.tastymap.data.model.ai.HydratedPlaceCardDto
 import org.beem.tastymap.data.model.ai.QuotaFeedbackPayloadDto
 import org.beem.tastymap.data.model.ai.RecommendationReq
 import org.beem.tastymap.data.model.ai.SliceResponse
+import org.beem.tastymap.data.model.ai.UserQuotaStatusDto
 
 class AiChatDataSource(private val authHttpClientManager: AuthHttpClientManager) {
 
@@ -109,7 +110,7 @@ class AiChatDataSource(private val authHttpClientManager: AuthHttpClientManager)
                                     }
                                     "quota_info" -> {
                                         val quota = sseJson.decodeFromString<QuotaFeedbackPayloadDto>(rawData)
-                                        emit(AiStreamEvent.Quota(quota.remainingQuotaPercentage))
+                                        emit(AiStreamEvent.Quota(quota))
                                     }
                                     "completed" -> {
                                         emit(AiStreamEvent.Completed)
@@ -131,5 +132,8 @@ class AiChatDataSource(private val authHttpClientManager: AuthHttpClientManager)
         }
     }
 
+    suspend fun getQuotaStatus(): UserQuotaStatusDto {
+        return client.get("api/v1/ai/quota").body()
+    }
 
 }

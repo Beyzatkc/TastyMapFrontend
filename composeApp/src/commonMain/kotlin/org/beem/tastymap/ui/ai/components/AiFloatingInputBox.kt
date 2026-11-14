@@ -5,6 +5,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowUpward
@@ -25,11 +26,14 @@ import org.beem.tastymap.ui.theme.CustomColors
 fun AiFloatingInputBox(
     inputText: String,
     isStreaming: Boolean,
+    hasQuota: Boolean,
     isWideScreen: Boolean,
     customColors: CustomColors,
     onIntent: (AiChatIntent) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val canSend = hasQuota && !isStreaming && inputText.isNotBlank()
+
     Box(
         modifier = modifier
             .fillMaxWidth()
@@ -55,6 +59,11 @@ fun AiFloatingInputBox(
                 TextField(
                     value = inputText,
                     onValueChange = { onIntent(AiChatIntent.InputTextChanged(it)) },
+                    keyboardActions = KeyboardActions(
+                        onSend = {
+                            if (canSend) onIntent(AiChatIntent.SendMessage)
+                        }
+                    ),
                     keyboardOptions = KeyboardOptions(
                         capitalization = KeyboardCapitalization.Sentences,
                         keyboardType = KeyboardType.Text,
@@ -84,7 +93,7 @@ fun AiFloatingInputBox(
                     maxLines = 3,
                     enabled = !isStreaming
                 )
-
+                /*
                 if (inputText.isNotBlank() && !isStreaming) {
                     Box(
                         modifier = Modifier
@@ -101,6 +110,45 @@ fun AiFloatingInputBox(
                             tint = Color.White,
                             modifier = Modifier.size(20.dp)
                         )
+                    }
+                }
+
+                 */
+                when {
+                    isStreaming -> {
+                        Box(
+                            modifier = Modifier
+                                .padding(end = 4.dp)
+                                .size(32.dp)
+                                .clip(CircleShape)
+                                .background(customColors.textPrimary.copy(alpha = 0.12f)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(10.dp)
+                                    .clip(RoundedCornerShape(2.dp))
+                                    .background(customColors.textPrimary)
+                            )
+                        }
+                    }
+                    canSend -> {
+                        Box(
+                            modifier = Modifier
+                                .padding(end = 4.dp)
+                                .size(32.dp)
+                                .clip(CircleShape)
+                                .background(customColors.gourmetOrange)
+                                .clickable { onIntent(AiChatIntent.SendMessage) },
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.ArrowUpward,
+                                contentDescription = "Gönder",
+                                tint = Color.White,
+                                modifier = Modifier.size(19.dp)
+                            )
+                        }
                     }
                 }
             }

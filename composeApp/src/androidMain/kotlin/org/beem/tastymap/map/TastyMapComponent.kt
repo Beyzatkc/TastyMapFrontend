@@ -14,7 +14,11 @@ import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -23,11 +27,13 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
-import org.beem.tastymap.R
 import org.beem.tastymap.data.model.LocationData
+import org.beem.tastymap.map.cache.MapStyleCacheManager
 import org.beem.tastymap.map.mapstylelayers.setupRestaurantLayer
 import org.beem.tastymap.map.mapstylelayers.setupUserLocationLayer
 import org.beem.tastymap.ui.theme.AppColors
+import org.koin.compose.koinInject
+import org.maplibre.android.maps.MapLibreMapOptions
 import org.maplibre.android.maps.MapView
 import org.maplibre.android.maps.Style
 
@@ -41,7 +47,25 @@ actual fun TastyMapComponent(
 ) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
-    val mapView = remember { MapView(context) }
+    val styleCacheManager: MapStyleCacheManager = koinInject()
+
+    var resolvedStyleJson by remember(mapUrl) { mutableStateOf<String?>(null) }
+    var styleFetchFailed by remember(mapUrl) { mutableStateOf(false) }
+
+    LaunchedEffect(mapUrl) {
+        styleCacheManager.getStyleJson(mapUrl)
+            .onSuccess { json -> resolvedStyleJson = json }
+            .onFailure { styleFetchFailed = true }
+    }
+
+    val mapView = remember {
+        val options = MapLibreMapOptions.createFromAttributes(context).apply {
+            textureMode(true)
+        }
+        MapView(context, options)
+    }
+
+    //val mapView = remember { MapView(context) }
 
     DisposableEffect(lifecycleOwner, mapView) {
         val observer = LifecycleEventObserver { _, event ->
@@ -60,27 +84,32 @@ actual fun TastyMapComponent(
 
         onDispose {
             lifecycleOwner.lifecycle.removeObserver(observer)
+            state.controller = null
+            mapView.onPause()
+            mapView.onStop()
             mapView.onDestroy()
         }
     }
 
     Box(modifier = modifier) {
-        AndroidView(
-            factory = {
-                mapView.apply {
-                    getMapAsync { mapLibreMap ->
-                        mapLibreMap.setStyle(Style.Builder().fromUri(mapUrl)) { style ->
-                            style.setupRestaurantLayer(context)
-                            style.setupUserLocationLayer(context = context)
+        if (resolvedStyleJson != null || styleFetchFailed) {
+            AndroidView(
+                factory = {
+                    mapView.apply {
+                        getMapAsync { mapLibreMap ->
+                            mapLibreMap.setStyle(Style.Builder().fromUri(mapUrl)) { style ->
+                                style.setupRestaurantLayer(context)
+                                style.setupUserLocationLayer(context = context)
 
-                            val controller = MapControllerImp(mapView, style)
-                            state.controller = controller
+                                val controller = MapControllerImp(mapView, style)
+                                state.controller = controller
+                            }
                         }
                     }
-                }
-            },
-            modifier = Modifier.fillMaxSize()
-        )
+                },
+                modifier = Modifier.fillMaxSize()
+            )
+        }
 
         FloatingActionButton(
             onClick = onFabClicked,

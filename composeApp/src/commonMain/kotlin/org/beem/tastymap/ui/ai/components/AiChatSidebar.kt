@@ -1,7 +1,18 @@
 package org.beem.tastymap.ui.ai.components
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.hoverable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsHoveredAsState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -9,15 +20,13 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.AutoAwesome
-import androidx.compose.material.icons.filled.ChatBubbleOutline
+import androidx.compose.material.icons.rounded.Add
+import androidx.compose.material.icons.rounded.AutoAwesome
 import androidx.compose.material.icons.outlined.DeleteOutline
+import androidx.compose.material.icons.rounded.EditNote
+import androidx.compose.material.icons.rounded.Star
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.derivedStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -25,8 +34,12 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import org.beem.tastymap.core.util.iso.resolveTimeGroup
 import org.beem.tastymap.ui.ai.AiChatIntent
+import org.beem.tastymap.ui.ai.model.AiQuotaState
 import org.beem.tastymap.ui.theme.CustomColors
+import org.beem.tastymap.ui.theme.getAppFontFamily
 
 data class ChatSessionItem(
     val sessionId: String,
@@ -38,14 +51,15 @@ data class ChatSessionItem(
 fun AiChatSidebar(
     sessions: List<ChatSessionItem>,
     selectedSessionId: String?,
-    remainingQuotaPercentage: Double,
+    quotaState: AiQuotaState,
     customColors: CustomColors,
     onIntent: (AiChatIntent) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val listState = rememberLazyListState()
+    val fontFamily = getAppFontFamily()
+    var isQuotaExpanded by remember { mutableStateOf(false) }
 
-    // Listenin sonuna gelindiğinde sayfalama tetikleme
     val shouldLoadMore = remember {
         derivedStateOf {
             val totalItems = listState.layoutInfo.totalItemsCount
@@ -54,147 +68,183 @@ fun AiChatSidebar(
         }
     }
 
+    val groupedSessions = remember (sessions) {
+        sessions
+            .groupBy { resolveTimeGroup(it.dateText) }
+            .toList()
+            .sortedBy { (group, _) -> group.ordinal }
+    }
+
     LaunchedEffect(shouldLoadMore.value) {
         if (shouldLoadMore.value) {
             onIntent(AiChatIntent.LoadMoreSessions)
         }
     }
 
-    Column(
+    Row(
         modifier = modifier
             .fillMaxHeight()
             .width(280.dp)
-            .background(customColors.darkHeaderColor)
-            .padding(16.dp)
+            .background(customColors.surface)
     ) {
-        // Başlık & Rozet
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.padding(bottom = 16.dp)
+        Column(
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxHeight()
+                .statusBarsPadding()
+                .navigationBarsPadding()
+                .padding(horizontal = 16.dp, vertical = 18.dp)
         ) {
-            Box(
-                modifier = Modifier
-                    .size(36.dp)
-                    .clip(CircleShape)
-                    .background(customColors.gourmetOrange.copy(alpha = 0.2f)),
-                contentAlignment = Alignment.Center
+            // 1. ÜST BÖLÜM (COLUMN İÇİNDE BAŞLIK, KOTA VE YENİ SOHBET BUTONU)
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(14.dp)
             ) {
-                Icon(
-                    imageVector = Icons.Default.AutoAwesome,
-                    contentDescription = null,
-                    tint = customColors.gourmetOrange,
-                    modifier = Modifier.size(20.dp)
-                )
-            }
-            Spacer(modifier = Modifier.width(10.dp))
-            Column {
-                Text(
-                    text = "Tasty AI Gurme",
-                    style = MaterialTheme.typography.titleMedium.copy(
-                        color = Color.White,
-                        fontWeight = FontWeight.Bold
-                    )
-                )
-                Text(
-                    text = "Günlük Kota: %${remainingQuotaPercentage.toInt()}",
-                    style = MaterialTheme.typography.labelSmall.copy(
-                        color = Color.White.copy(alpha = 0.6f)
-                    )
-                )
-            }
-        }
-
-        // Yeni Sohbet Butonu
-        Surface(
-            onClick = { onIntent(AiChatIntent.NewChat) },
-            color = Color.White.copy(alpha = 0.12f),
-            shape = RoundedCornerShape(24.dp),
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Row(
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Add,
-                    contentDescription = null,
-                    tint = customColors.gourmetOrange,
-                    modifier = Modifier.size(20.dp)
-                )
-                Spacer(modifier = Modifier.width(10.dp))
-                Text(
-                    text = "Yeni Sohbet",
-                    style = MaterialTheme.typography.bodyMedium.copy(
-                        color = Color.White,
-                        fontWeight = FontWeight.SemiBold
-                    )
-                )
-            }
-        }
-
-        Spacer(modifier = Modifier.height(20.dp))
-        Text(
-            text = "Son Sohbetler",
-            style = MaterialTheme.typography.labelSmall.copy(
-                color = Color.White.copy(alpha = 0.5f),
-                fontWeight = FontWeight.Bold
-            ),
-            modifier = Modifier.padding(start = 4.dp, bottom = 8.dp)
-        )
-
-        // Oturum Listesi
-        LazyColumn(
-            state = listState,
-            verticalArrangement = Arrangement.spacedBy(4.dp),
-            modifier = Modifier.weight(1f)
-        ) {
-            items(sessions, key = { it.sessionId }) { session ->
-                val isSelected = session.sessionId == selectedSessionId
+                // Marka & Kota Satırı
                 Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clip(RoundedCornerShape(12.dp))
-                        .background(
-                            if (isSelected) Color.White.copy(alpha = 0.18f)
-                            else Color.Transparent
-                        )
-                        .clickable { onIntent(AiChatIntent.SelectSession(session.sessionId)) }
-                        .padding(horizontal = 12.dp, vertical = 10.dp),
-                    verticalAlignment = Alignment.CenterVertically
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.ChatBubbleOutline,
-                        contentDescription = null,
-                        tint = if (isSelected) customColors.gourmetOrange else Color.White.copy(alpha = 0.6f),
-                        modifier = Modifier.size(16.dp)
+                    Row(
+                        modifier = Modifier.
+                            padding(start = 12.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "TastyAI",
+                            fontFamily = fontFamily,
+                            fontSize = 17.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = customColors.textPrimary
+                        )
+                    }
+                    HeaderQuotaPill(
+                        quotaState = quotaState,
+                        isExpanded = isQuotaExpanded,
+                        customColors = customColors,
+                        onToggle = { isQuotaExpanded = !isQuotaExpanded }
                     )
-                    Spacer(modifier = Modifier.width(10.dp))
-                    Text(
-                        text = session.title,
-                        style = MaterialTheme.typography.bodyMedium.copy(
-                            color = Color.White,
-                            fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal
-                        ),
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                        modifier = Modifier.weight(1f)
-                    )
+                }
 
-                    if (isSelected) {
-                        IconButton(
-                            onClick = { onIntent(AiChatIntent.DeleteSession(session.sessionId)) },
-                            modifier = Modifier.size(22.dp)
+                AnimatedVisibility(
+                    visible = isQuotaExpanded,
+                    enter = expandVertically(tween(220)) + fadeIn(tween(220)),
+                    exit = shrinkVertically(tween(180)) + fadeOut(tween(150))
+                ) {
+                    HeaderQuotaDetailPanel(
+                        quotaState = quotaState,
+                        customColors = customColors,
+                        modifier = Modifier.padding(top = 12.dp)
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(22.dp))
+
+            // 3. BALONCUKSUZ, TEMİZ OTURUM LİSTESİ
+            if (sessions.isEmpty()) {
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxWidth(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "Henüz sohbet geçmişin yok.",
+                        fontFamily = fontFamily,
+                        fontSize = 13.sp,
+                        color = customColors.textSecondary.copy(alpha = 0.6f)
+                    )
+                }
+            } else {
+                LazyColumn(
+                    state = listState,
+                    verticalArrangement = Arrangement.spacedBy(4.dp),
+                    modifier = Modifier.weight(1f)
+                ) {
+                    item(
+                        key = "new_chat"
+                    ) {
+                        val isNewChatSelected = selectedSessionId == null
+
+                        val newChatBgColor by animateColorAsState(
+                            targetValue = if (isNewChatSelected) {
+                                customColors.surfaceVariant
+                            } else {
+                                Color.Transparent
+                            },
+                            animationSpec = tween(180)
+                        )
+                        Surface(
+                            onClick = { onIntent(AiChatIntent.NewChat) },
+                            shape = RoundedCornerShape(12.dp),
+                            color = newChatBgColor,
+                            modifier = Modifier.fillMaxWidth()
                         ) {
-                            Icon(
-                                imageVector = Icons.Outlined.DeleteOutline,
-                                contentDescription = "Sil",
-                                tint = Color.White.copy(alpha = 0.7f),
-                                modifier = Modifier.size(16.dp)
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(start = 12.dp, end = 12.dp, top = 11.dp, bottom = 11.dp),//, horizontal = 14.dp, vertical = 11.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.Start
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Rounded.EditNote,
+                                    contentDescription = null,
+                                    tint = customColors.textPrimary,
+                                    modifier = Modifier.size(24.dp)
+                                )
+
+                                Spacer(modifier = Modifier.width(10.dp))
+
+                                Text(
+                                    text = "Yeni sohbet",
+                                    fontFamily = fontFamily,
+                                    fontSize = 15.sp,
+                                    fontWeight = if (isNewChatSelected) FontWeight.Bold else FontWeight.SemiBold,
+                                    color = customColors.textPrimary
+                                )
+                            }
+                        }
+                    }
+                    groupedSessions.forEach { (group, groupSessions) ->
+                        item(
+                            key =  "header_${group.name}"
+                        ) {
+                            Text(
+                                text = group.label,
+                                fontFamily = fontFamily,
+                                fontSize = 11.5.sp,
+                                letterSpacing = 0.8.sp,
+                                fontWeight = FontWeight.ExtraBold,
+                                color = customColors.textSecondary.copy(alpha = 0.75f),
+                                modifier = Modifier.padding(
+                                    start = 12.dp,
+                                    top = if (group == groupedSessions.first().first) 4.dp else 16.dp,
+                                    bottom = 2.dp
+                                )
+                            )
+                        }
+                        items(groupSessions, key = { it.sessionId }) { session ->
+                            val isSelected = session.sessionId == selectedSessionId
+                            SessionHistoryRow(
+                                session = session,
+                                isSelected = isSelected,
+                                customColors = customColors,
+                                onSelect = { onIntent(AiChatIntent.SelectSession(session.sessionId)) },
+                                onDelete = { onIntent(AiChatIntent.DeleteSession(session.sessionId)) }
                             )
                         }
                     }
                 }
             }
         }
+
+        // Sağ kenarda ana sohbet alanından ayıran ince çizgi
+        VerticalDivider(
+            thickness = 0.5.dp,
+            color = customColors.borderLight
+        )
     }
 }
