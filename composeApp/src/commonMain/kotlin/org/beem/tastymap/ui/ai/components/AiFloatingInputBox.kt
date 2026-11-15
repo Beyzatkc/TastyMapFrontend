@@ -1,5 +1,10 @@
 package org.beem.tastymap.ui.ai.components
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -20,19 +25,20 @@ import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import org.beem.tastymap.ui.ai.AiChatIntent
+import org.beem.tastymap.ui.ai.model.AiQuotaState
 import org.beem.tastymap.ui.theme.CustomColors
 
 @Composable
 fun AiFloatingInputBox(
     inputText: String,
     isStreaming: Boolean,
-    hasQuota: Boolean,
+    quotaState: AiQuotaState,
     isWideScreen: Boolean,
     customColors: CustomColors,
     onIntent: (AiChatIntent) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val canSend = hasQuota && !isStreaming && inputText.isNotBlank()
+    val canSend = quotaState.hasQuota && !isStreaming && inputText.isNotBlank()
 
     Box(
         modifier = modifier
@@ -50,104 +56,100 @@ fun AiFloatingInputBox(
             shadowElevation = 6.dp,
             modifier = Modifier.fillMaxWidth()
         ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 12.dp, vertical = 2.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                TextField(
-                    value = inputText,
-                    onValueChange = { onIntent(AiChatIntent.InputTextChanged(it)) },
-                    keyboardActions = KeyboardActions(
-                        onSend = {
-                            if (canSend) onIntent(AiChatIntent.SendMessage)
-                        }
-                    ),
-                    keyboardOptions = KeyboardOptions(
-                        capitalization = KeyboardCapitalization.Sentences,
-                        keyboardType = KeyboardType.Text,
-                        imeAction = ImeAction.Send
-                    ),
-                    placeholder = {
-                        Text(
-                            text = "Konya'da akşam için nereye gidelim?...",
-                            style = MaterialTheme.typography.bodyMedium.copy(
-                                color = customColors.textSecondary.copy(alpha = 0.7f)
-                            )
-                        )
-                    },
-                    modifier = Modifier
-                        .weight(1f)
-                        .heightIn(min = 40.dp, max = 100.dp),
-                    colors = TextFieldDefaults.colors(
-                        focusedContainerColor = Color.Transparent,
-                        unfocusedContainerColor = Color.Transparent,
-                        disabledContainerColor = Color.Transparent,
-                        focusedTextColor = customColors.textPrimary,
-                        unfocusedTextColor = customColors.textPrimary,
-                        cursorColor = customColors.blackWhite,
-                        focusedIndicatorColor = Color.Transparent,
-                        unfocusedIndicatorColor = Color.Transparent
-                    ),
-                    maxLines = 3,
-                    enabled = !isStreaming
-                )
-                /*
-                if (inputText.isNotBlank() && !isStreaming) {
-                    Box(
+            AnimatedContent(
+                targetState = quotaState.hasQuota,
+                transitionSpec = {
+                    fadeIn(tween(220)).togetherWith(fadeOut(tween(180)))
+                },
+                label = "inputQuotaTransition"
+            ) { hasAvailableQuota ->
+                if (!hasAvailableQuota) {
+                    QuotaExhaustedBar(
+                        dailyLimit = quotaState.dailyLimit,
+                        customColors = customColors,
+                        onUpgradeClick = { onIntent(AiChatIntent.ShowUpgradeSheet) }
+                    )
+                } else {
+                    Row(
                         modifier = Modifier
-                            .padding(end = 4.dp)
-                            .size(32.dp)
-                            .clip(CircleShape)
-                            .background(customColors.gourmetOrange)
-                            .clickable { onIntent(AiChatIntent.SendMessage) },
-                        contentAlignment = Alignment.Center
+                            .fillMaxWidth()
+                            .padding(horizontal = 12.dp, vertical = 2.dp),
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Icon(
-                            imageVector = Icons.Default.ArrowUpward,
-                            contentDescription = "Gönder",
-                            tint = Color.White,
-                            modifier = Modifier.size(20.dp)
+                        TextField(
+                            value = inputText,
+                            onValueChange = { onIntent(AiChatIntent.InputTextChanged(it)) },
+                            keyboardOptions = KeyboardOptions(
+                                capitalization = KeyboardCapitalization.Sentences,
+                                keyboardType = KeyboardType.Text,
+                                imeAction = ImeAction.Send
+                            ),
+                            keyboardActions = KeyboardActions(
+                                onSend = {
+                                    if (canSend) onIntent(AiChatIntent.SendMessage)
+                                }
+                            ),
+                            placeholder = {
+                                Text(
+                                    text = "Konya'da akşam için nereye gidelim?",
+                                    style = MaterialTheme.typography.bodyMedium.copy(
+                                        color = customColors.textSecondary.copy(alpha = 0.7f)
+                                    )
+                                )
+                            },
+                            modifier = Modifier
+                                .weight(1f)
+                                .heightIn(min = 40.dp, max = 100.dp),
+                            colors = TextFieldDefaults.colors(
+                                focusedContainerColor = Color.Transparent,
+                                unfocusedContainerColor = Color.Transparent,
+                                disabledContainerColor = Color.Transparent,
+                                focusedTextColor = customColors.textPrimary,
+                                unfocusedTextColor = customColors.textPrimary,
+                                cursorColor = customColors.gourmetOrange,
+                                focusedIndicatorColor = Color.Transparent,
+                                unfocusedIndicatorColor = Color.Transparent
+                            ),
+                            maxLines = 3,
+                            enabled = !isStreaming
                         )
-                    }
-                }
 
-                 */
-                when {
-                    isStreaming -> {
-                        Box(
-                            modifier = Modifier
-                                .padding(end = 4.dp)
-                                .size(32.dp)
-                                .clip(CircleShape)
-                                .background(customColors.textPrimary.copy(alpha = 0.12f)),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Box(
-                                modifier = Modifier
-                                    .size(10.dp)
-                                    .clip(RoundedCornerShape(2.dp))
-                                    .background(customColors.textPrimary)
-                            )
-                        }
-                    }
-                    canSend -> {
-                        Box(
-                            modifier = Modifier
-                                .padding(end = 4.dp)
-                                .size(32.dp)
-                                .clip(CircleShape)
-                                .background(customColors.gourmetOrange)
-                                .clickable { onIntent(AiChatIntent.SendMessage) },
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.ArrowUpward,
-                                contentDescription = "Gönder",
-                                tint = Color.White,
-                                modifier = Modifier.size(19.dp)
-                            )
+                        when {
+                            isStreaming -> {
+                                Box(
+                                    modifier = Modifier
+                                        .padding(end = 4.dp)
+                                        .size(32.dp)
+                                        .clip(CircleShape)
+                                        .background(customColors.textPrimary.copy(alpha = 0.12f)),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Box(
+                                        modifier = Modifier
+                                            .size(10.dp)
+                                            .clip(RoundedCornerShape(2.dp))
+                                            .background(customColors.textPrimary)
+                                    )
+                                }
+                            }
+                            canSend -> {
+                                Box(
+                                    modifier = Modifier
+                                        .padding(end = 4.dp)
+                                        .size(32.dp)
+                                        .clip(CircleShape)
+                                        .background(customColors.gourmetOrange)
+                                        .clickable { onIntent(AiChatIntent.SendMessage) },
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.ArrowUpward,
+                                        contentDescription = "Gönder",
+                                        tint = Color.White,
+                                        modifier = Modifier.size(19.dp)
+                                    )
+                                }
+                            }
                         }
                     }
                 }

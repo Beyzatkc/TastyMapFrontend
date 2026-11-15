@@ -15,6 +15,7 @@ data class AiChatState(
     val isMessagesLoading: Boolean = false,
     val currentStatusMessage: String? = null,
     val quotaState: AiQuotaState = AiQuotaState(),
+    val isUpgradeSheetVisible: Boolean = false,
 
     val previewPlace: HydratedPlaceCardDto? = null,
     val selectedProvider: AiProvider = AiProvider.GROQ,

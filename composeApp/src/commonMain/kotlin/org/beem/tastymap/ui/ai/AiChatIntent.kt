@@ -22,4 +22,7 @@ sealed interface AiChatIntent {
     data class DirectionsClicked(val place: HydratedPlaceCardDto) : AiChatIntent
 
     data class SelectProvider(val provider: AiProvider) : AiChatIntent
+
+    data object ShowUpgradeSheet : AiChatIntent
+    data object DismissUpgradeSheet : AiChatIntent
 }

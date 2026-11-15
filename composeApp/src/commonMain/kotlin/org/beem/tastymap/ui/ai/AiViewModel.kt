@@ -2,6 +2,7 @@ package org.beem.tastymap.ui.ai
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -16,6 +17,7 @@ import org.beem.tastymap.ui.ai.model.toUiState
 import org.beem.tastymap.ui.ai.model.updateFromStream
 import kotlin.random.Random
 import kotlin.time.Clock
+import kotlin.time.Duration.Companion.milliseconds
 
 class AiViewModel(
     private val aiChatRepository: AiChatRepository
@@ -80,6 +82,12 @@ class AiViewModel(
             }
             is AiChatIntent.SelectProvider -> {
                 _state.update { it.copy(selectedProvider = intent.provider) }
+            }
+            is AiChatIntent.ShowUpgradeSheet -> {
+                _state.update { it.copy(isUpgradeSheetVisible = true) }
+            }
+            is AiChatIntent.DismissUpgradeSheet -> {
+                _state.update { it.copy(isUpgradeSheetVisible = false) }
             }
         }
     }

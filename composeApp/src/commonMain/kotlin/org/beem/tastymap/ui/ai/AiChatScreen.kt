@@ -11,6 +11,7 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.rounded.EditNote
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -161,7 +162,7 @@ fun AiChatScreen(
                             modifier = Modifier.size(36.dp)
                         ) {
                             Icon(
-                                imageVector = Icons.Default.Add,
+                                imageVector = Icons.Rounded.EditNote,
                                 contentDescription = "Yeni Sohbet",
                                 tint = customColors.textSecondary
                             )
@@ -238,12 +239,18 @@ fun AiChatScreen(
                         inputText = state.inputText,
                         isStreaming = state.isStreaming,
                         isWideScreen = isWideScreen,
-                        hasQuota = state.quotaState.hasQuota,
+                        quotaState = state.quotaState,
                         customColors = customColors,
                         onIntent = onIntent
                     )
                 }
             }
         }
+    }
+    if (state.isUpgradeSheetVisible) {
+        AiProUpgradeSheet(
+            customColors = customColors,
+            onDismiss = { viewModel.onIntent(AiChatIntent.DismissUpgradeSheet) }
+        )
     }
 }
