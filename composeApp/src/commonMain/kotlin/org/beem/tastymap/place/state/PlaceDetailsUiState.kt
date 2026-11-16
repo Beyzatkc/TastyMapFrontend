@@ -8,5 +8,9 @@ data class PlaceDetailsUiState(
     val details: PlaceDetailsResult? = null,
     val errorMessage: String? = null,
     val quickScore: Double = 0.0,
-    val isAddReviewOpen: Boolean = false
+    val isAddReviewOpen: Boolean = false,
+
+    val isAiSummaryLoading: Boolean = false,
+    val aiSummaryText: String? = null,
+    val aiSummaryError: String? = null
 )

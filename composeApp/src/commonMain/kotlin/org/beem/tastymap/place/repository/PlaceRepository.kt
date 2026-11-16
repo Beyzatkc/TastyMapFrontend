@@ -4,6 +4,7 @@ import org.beem.tastymap.core.network.ResultWrapper
 import org.beem.tastymap.core.network.safeApiCall
 import org.beem.tastymap.core.util.toFormatTimestamp
 import org.beem.tastymap.data.model.BaseResponse
+import org.beem.tastymap.data.model.ai.summary.AiSummaryResponse
 import org.beem.tastymap.place.api.PlaceDataSource
 import org.beem.tastymap.place.cache.InMemoryPlaceCache
 import org.beem.tastymap.place.model.details.PlaceDetailsResult
@@ -22,6 +23,12 @@ class PlaceRepository(
     private val memoryCache: InMemoryPlaceCache
 ) {
 
+    suspend fun getPlaceAiSummary(placeId: String): ResultWrapper<AiSummaryResponse> {
+        //println("TastyMap Repo -> [$placeId] AI Özeti isteniyor...")
+        return safeApiCall {
+            placeDataSource.getPlaceAiSummary(placeId)
+        }
+    }
     suspend fun fetchPlaceDetails(
         placeId: String,
         forceRefresh: Boolean = false

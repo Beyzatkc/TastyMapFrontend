@@ -50,7 +50,9 @@ import org.beem.tastymap.ui.auth.ResetRoute
 import org.beem.tastymap.ui.auth.VerificationSuccessRoute
 import org.beem.tastymap.ui.auth.VerifyRoute
 import org.beem.tastymap.ui.common.NotificationBadgeManager
+import org.beem.tastymap.ui.profile.HealthWizardRoute
 import org.beem.tastymap.ui.profile.NotificationRoute
+import org.beem.tastymap.ui.profile.OnBoardingRoute
 import org.beem.tastymap.ui.profile.SettingsRoute
 import org.beem.tastymap.ui.splash.SplashRoute
 import org.beem.tastymap.ui.theme.LocalCustomColors
@@ -99,7 +101,9 @@ fun MainAppShell(
                 destination.hasRoute(EmailRoute::class) ||
                 destination.hasRoute(VerifyRoute::class) ||
                 destination.hasRoute(VerificationSuccessRoute::class) ||
-                destination.hasRoute(LoginPendingRoute::class)
+                destination.hasRoute(LoginPendingRoute::class)||
+                destination.hasRoute(OnBoardingRoute::class)||
+                destination.hasRoute(HealthWizardRoute::class)
     }
 
     LaunchedEffect(isAuthOrSplash) {

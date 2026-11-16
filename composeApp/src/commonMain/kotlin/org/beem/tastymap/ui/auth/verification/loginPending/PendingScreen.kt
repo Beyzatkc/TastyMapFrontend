@@ -1,5 +1,7 @@
 package org.beem.tastymap.ui.auth.verification.loginPending
 
+import MainRoute
+import MapGraphRoute
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -60,7 +62,7 @@ fun PendingScreen(
         viewModel.pendingLogin.collect { pendingLogin ->
             when (pendingLogin) {
                 is AuthEffect.NavigateToHome -> {
-                    navController.navigate(SplashRoute) { popUpTo(0) { inclusive = true } }
+                    navController.navigate(MainRoute) { popUpTo(0) { inclusive = true } }
                 }
                 is AuthEffect.NavigateToLogin -> {
                     navController.navigate(LogRegRoute) { popUpTo(0) { inclusive = true } }

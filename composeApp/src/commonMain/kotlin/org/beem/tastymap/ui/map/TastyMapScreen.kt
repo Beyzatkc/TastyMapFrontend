@@ -11,7 +11,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.unit.dp
-import org.beem.tastymap.map.TastyMapComponent
+//import org.beem.tastymap.map.TastyMapComponent
 import org.beem.tastymap.permission.LocationPermissionWrapper
 import org.beem.tastymap.data.model.Restaurant
 import org.beem.tastymap.map.MapEvent
@@ -168,6 +168,7 @@ import org.koin.compose.viewmodel.koinViewModel
                 .fillMaxSize()
                 .navigationBarsPadding()
             ) {
+                /*
                 TastyMapComponent(
                     modifier = Modifier.fillMaxSize(),
                     mapUrl = myMaps,
@@ -177,6 +178,8 @@ import org.koin.compose.viewmodel.koinViewModel
                         mapScreenModel.onCenterMapClicked()
                     }
                 )
+
+                 */
                 TastySearchOverlay(
                     onIntent = searchScreenModel::handleIntent,
                     uiState = searchUiState,

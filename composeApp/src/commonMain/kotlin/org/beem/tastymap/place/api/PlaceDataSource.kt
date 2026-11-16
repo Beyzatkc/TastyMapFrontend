@@ -15,6 +15,7 @@ import io.ktor.http.HttpHeaders
 import org.beem.tastymap.core.network.AuthHttpClientManager
 import org.beem.tastymap.core.network.DevTokenProvider
 import org.beem.tastymap.data.model.BaseResponse
+import org.beem.tastymap.data.model.ai.summary.AiSummaryResponse
 import org.beem.tastymap.place.model.details.PlaceDetailsResponse
 import org.beem.tastymap.place.model.review.ReviewItem
 import org.beem.tastymap.place.model.review.ReviewResponse
@@ -26,6 +27,11 @@ import org.beem.tastymap.review.model.UpdatedReviewRes
 class PlaceDataSource(private val authHttpClientManager: AuthHttpClientManager) {
 
     private val client: HttpClient get() = authHttpClientManager.getClient()
+
+    suspend fun getPlaceAiSummary(placeId: String): AiSummaryResponse {
+        return client.get("place-review/place/$placeId/ai-summary") {
+        }.body<AiSummaryResponse>()
+    }
 
     suspend fun getPlaceDetails(placeId: String): PlaceDetailsResponse {
         return client.get("places/nearby-details") {

@@ -9,7 +9,7 @@ import org.beem.tastymap.core.util.await
 import org.beem.tastymap.data.model.Restaurant
 import kotlin.js.ExperimentalWasmJsInterop
 import kotlin.js.js
-
+/*
 class WebMapController : MapController {
 
     private val jsonFormatter = Json {
@@ -131,3 +131,5 @@ class WebMapController : MapController {
         }.getOrNull()
     }
 }
+
+ */

@@ -183,6 +183,8 @@ class RestaurantDetailScreenModel(
         }
     }
 
+
+
     fun loadPlaceDetails(placeId: String, forceRefresh: Boolean = false) {
         viewModelScope.launch {
             _detailsUiState.update { state ->
@@ -213,10 +215,42 @@ class RestaurantDetailScreenModel(
             }
         }
     }
+    private fun loadAiSummary(placeId: String) {
+        viewModelScope.launch {
+            _detailsUiState.update {
+                it.copy(isAiSummaryLoading = true, aiSummaryError = null)
+            }
+
+            when (val result = repository.getPlaceAiSummary(placeId)) {
+                is ResultWrapper.Success -> {
+                    val summaryText = if (result.data.hasSummary) result.data.summaryText else null
+
+                    _detailsUiState.update {
+                        it.copy(
+                            isAiSummaryLoading = false,
+                            aiSummaryText = summaryText,
+                            aiSummaryError = null
+                        )
+                    }
+                }
+
+                is ResultWrapper.Error -> {
+                    _detailsUiState.update {
+                        it.copy(
+                            isAiSummaryLoading = false,
+                            aiSummaryText = null,
+                            aiSummaryError = result.message ?: "AI özeti yüklenemedi."
+                        )
+                    }
+                }
+            }
+        }
+    }
 
     fun loadPlaceData(placeId: String, forceRefresh: Boolean = false) {
         loadPlaceDetails(placeId, forceRefresh)
         loadReviewsForPlace(placeId)
+        loadAiSummary(placeId)
     }
 
     fun loadReviewsForPlace(placeId: String) {
