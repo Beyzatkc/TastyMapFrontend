@@ -239,7 +239,7 @@ class RestaurantDetailScreenModel(
                         it.copy(
                             isAiSummaryLoading = false,
                             aiSummaryText = null,
-                            aiSummaryError = result.message ?: "AI özeti yüklenemedi."
+                            aiSummaryError = result.message
                         )
                     }
                 }
@@ -272,7 +272,7 @@ class RestaurantDetailScreenModel(
                     }
                     is ResultWrapper.Error -> {
                         println("ScreenModel Paging Hatalı Yanıt: ${response.message}")
-                        throw Exception(response.message ?: "Yorumlar yüklenemedi")
+                        throw Exception(response.message)
                     }
                 }
             }

@@ -1,4 +1,4 @@
-package org.beem.tastymap.data.model
+package org.beem.tastymap.data.model.device
 
 import kotlinx.serialization.Serializable
 

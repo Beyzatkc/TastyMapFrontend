@@ -3,19 +3,26 @@ package org.beem.tastymap.ui.profile.myprofile.settings
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import org.beem.tastymap.core.auth.AuthEventBus
 import org.beem.tastymap.core.local.SettingsManager
 import org.beem.tastymap.core.network.ResultWrapper
+import org.beem.tastymap.core.permission.PermissionManager
 import org.beem.tastymap.core.provider.DeviceInfoProvider
+import org.beem.tastymap.data.repository.UserDeviceRepository
 
 import org.beem.tastymap.data.repository.profile.MyProfileRepository
 class SettingsViewModel(
     private val repo: MyProfileRepository,
+    private val userDeviceRepository: UserDeviceRepository,
     private val deviceInfoProvider: DeviceInfoProvider,
+    private val permissionManager: PermissionManager,
     private val settingsManager: SettingsManager,
     private val authEventBus: AuthEventBus
 ) : ViewModel() {
@@ -25,9 +32,29 @@ class SettingsViewModel(
 
     val languageCode = settingsManager.languageCode
 
+    val isNotificationsEnabled: StateFlow<Boolean> = userDeviceRepository
+        .observeNotificationPreference()
+        .map { it ?: false }
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5_000),
+            initialValue = false
+        )
 
     init {
         observePrivacyStatus()
+    }
+    fun toggleNotifications(enabled: Boolean) {
+        viewModelScope.launch {
+            if (enabled && !permissionManager.requestNotificationPermission()) {
+                return@launch
+            }
+
+            val result = userDeviceRepository.updateNotificationPreference(enabled)
+            if (result is ResultWrapper.Error) {
+                _uiState.update { it.copy(errorMessage = result.message) }
+            }
+        }
     }
 
     private fun observePrivacyStatus() {

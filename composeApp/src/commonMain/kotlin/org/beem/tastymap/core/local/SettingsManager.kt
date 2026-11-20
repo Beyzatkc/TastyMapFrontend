@@ -14,11 +14,16 @@ interface SettingsManager {
 
     val languageCode: StateFlow<String>
     fun setLanguageCode(code: String)
+
+    val isNotificationsEnabled: StateFlow<Boolean?>
+    fun setNotificationsEnabled(isEnabled: Boolean)
 }
+
 class SettingsManagerImpl(private val settings: Settings) : SettingsManager {
     companion object {
         private const val KEY_DARK_MODE = "is_dark_mode"
         private const val KEY_LANGUAGE = "selected_language_code"
+        private const val KEY_NOTIFICATIONS = "is_notifications_enabled"
         private const val DEFAULT_LANGUAGE = "tr"
     }
 
@@ -30,6 +35,10 @@ class SettingsManagerImpl(private val settings: Settings) : SettingsManager {
     )
     override val languageCode: StateFlow<String> = _languageCode.asStateFlow()
 
+    private val _isNotificationsEnabled = MutableStateFlow<Boolean?>(settings[KEY_NOTIFICATIONS])
+
+    override val isNotificationsEnabled: StateFlow<Boolean?> = _isNotificationsEnabled.asStateFlow()
+
     override fun setLanguageCode(code: String) {
         settings[KEY_LANGUAGE] = code
         _languageCode.value = code
@@ -38,5 +47,10 @@ class SettingsManagerImpl(private val settings: Settings) : SettingsManager {
     override fun setDarkMode(isEnabled: Boolean) {
         settings[KEY_DARK_MODE] = isEnabled
         _isDarkMode.value = isEnabled
+    }
+
+    override fun setNotificationsEnabled(isEnabled: Boolean) {
+        settings[KEY_NOTIFICATIONS] = isEnabled
+        _isNotificationsEnabled.value = isEnabled
     }
 }

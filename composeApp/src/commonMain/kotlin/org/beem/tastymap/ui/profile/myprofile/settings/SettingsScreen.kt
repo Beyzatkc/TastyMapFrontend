@@ -60,6 +60,7 @@ fun SettingsScreen(navController: NavController) {
     val settingsState by settingsViewModel.uiState.collectAsState()
 
     val isDarkModePref by settingsViewModel.isDarkMode.collectAsState()
+    val isNotificationsEnabled by settingsViewModel.isNotificationsEnabled.collectAsState()
     val isDarkModeActive = isDarkModePref ?: isSystemInDarkTheme()
 
     val currentLanguageCode by settingsViewModel.languageCode.collectAsState()
@@ -70,7 +71,6 @@ fun SettingsScreen(navController: NavController) {
 
         var showChangePasswordSheet by remember { mutableStateOf(false) }
         var showLogoutDialog by remember { mutableStateOf(false) }
-        var isNotificationsEnabled by remember { mutableStateOf(true) }
 
         LaunchedEffect(changePasswordState.successMessageRes) {
             changePasswordState.successMessageRes?.let { res ->
@@ -108,7 +108,7 @@ fun SettingsScreen(navController: NavController) {
                         )
                     },
                     navigationIcon = {
-                        IconButton(onClick = { navController.popBackStack() }) { // YENİ: popBackStack()
+                        IconButton(onClick = { navController.popBackStack() }) {
                             Icon(
                                 imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                                 contentDescription = "Geri",
@@ -263,7 +263,9 @@ fun SettingsScreen(navController: NavController) {
                                         trailingContent = {
                                             Switch(
                                                 checked = isNotificationsEnabled,
-                                                onCheckedChange = { isNotificationsEnabled = it },
+                                                onCheckedChange = { isChecked ->
+                                                    settingsViewModel.toggleNotifications(isChecked)
+                                                },
                                                 colors = SwitchDefaults.colors(
                                                     checkedThumbColor = customColors.surface,
                                                     checkedTrackColor = customColors.navy,

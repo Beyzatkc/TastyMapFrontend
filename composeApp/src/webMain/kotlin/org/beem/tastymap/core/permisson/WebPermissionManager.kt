@@ -19,6 +19,15 @@ private fun requestNotificationPermissionJs(onResult: (Boolean) -> Unit) {
     """)
 }
 
+/*
+private fun checkNotificationPermissionJs(): Boolean {
+    return js("""
+        ("Notification" in window) && (Notification.permission === "granted")
+    """) as Boolean
+}
+
+ */
+
 class WebPermissionManager : PermissionManager {
     override suspend fun requestNotificationPermission(): Boolean {
         return try {
@@ -32,4 +41,16 @@ class WebPermissionManager : PermissionManager {
             false
         }
     }
+    /*
+    override suspend fun checkNotificationPermission(): Boolean {
+        return try {
+            // Check işlemi JS tarafında senkron yapıldığı için coroutine kullanmamıza gerek yok
+            checkNotificationPermissionJs()
+        } catch (e: Exception) {
+            println("Web bildirim durumu kontrol edilirken bir hata oluştu: ${e.message}")
+            false
+        }
+    }
+
+     */
 }
