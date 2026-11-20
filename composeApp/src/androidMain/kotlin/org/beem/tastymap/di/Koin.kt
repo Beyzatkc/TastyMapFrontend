@@ -14,6 +14,7 @@ import app.cash.sqldelight.async.coroutines.synchronous
 import app.cash.sqldelight.db.SqlDriver
 import app.cash.sqldelight.driver.android.AndroidSqliteDriver
 import com.russhwolf.settings.SharedPreferencesSettings
+import dev.icerock.moko.permissions.PermissionsController
 import org.beem.tastymap.core.AndroidPermissionManager
 import org.beem.tastymap.core.local.MobileUserManager
 import org.beem.tastymap.core.local.UserManager
@@ -23,6 +24,7 @@ import org.beem.tastymap.core.permission.PermissionManager
 import org.beem.tastymap.core.provider.AuthValidator
 import org.beem.tastymap.core.provider.HttpClientFactory
 import org.beem.tastymap.database.TastyDatabase
+import org.koin.android.ext.koin.androidContext
 
 
 val androidModule = module {
@@ -60,6 +62,7 @@ val androidModule = module {
     }
     single<UserManager> { MobileUserManager(get()) }
     single <AuthValidator>{ MobileSessionValidator(get(),get()) }
-    single<PermissionManager> { AndroidPermissionManager(get()) }
+    single { PermissionsController(androidContext()) }
+    single<PermissionManager> { AndroidPermissionManager(androidContext(), get()) }
 
 }

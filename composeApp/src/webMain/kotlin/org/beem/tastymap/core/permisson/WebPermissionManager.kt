@@ -19,14 +19,12 @@ private fun requestNotificationPermissionJs(onResult: (Boolean) -> Unit) {
     """)
 }
 
-/*
-private fun checkNotificationPermissionJs(): Boolean {
-    return js("""
-        ("Notification" in window) && (Notification.permission === "granted")
-    """) as Boolean
-}
 
- */
+private fun checkNotificationPermissionJs(): Boolean = js(
+    """("Notification" in window) && (Notification.permission === "granted")"""
+)
+
+
 
 class WebPermissionManager : PermissionManager {
     override suspend fun requestNotificationPermission(): Boolean {
@@ -41,7 +39,7 @@ class WebPermissionManager : PermissionManager {
             false
         }
     }
-    /*
+
     override suspend fun checkNotificationPermission(): Boolean {
         return try {
             // Check işlemi JS tarafında senkron yapıldığı için coroutine kullanmamıza gerek yok
@@ -52,5 +50,5 @@ class WebPermissionManager : PermissionManager {
         }
     }
 
-     */
+
 }

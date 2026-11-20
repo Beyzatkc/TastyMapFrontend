@@ -34,7 +34,15 @@ class SettingsViewModel(
 
     val isNotificationsEnabled: StateFlow<Boolean> = userDeviceRepository
         .observeNotificationPreference()
-        .map { it ?: false }
+        .map { preference ->
+            val hasOsPermission = permissionManager.checkNotificationPermission()
+            println("DEBUG_NOTIF -> hasOsPermission: $hasOsPermission | preference: $preference")
+            if (!hasOsPermission) {
+                false
+            } else {
+                preference ?: true
+            }
+        }
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5_000),

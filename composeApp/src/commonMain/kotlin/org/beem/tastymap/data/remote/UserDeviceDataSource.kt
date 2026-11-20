@@ -7,10 +7,13 @@ import io.ktor.client.request.parameter
 import io.ktor.client.request.post
 import io.ktor.client.request.put
 import io.ktor.client.request.setBody
+import org.beem.tastymap.core.network.AuthHttpClientManager
 import org.beem.tastymap.data.model.device.FcmTokenUpdateRequest
 import org.beem.tastymap.data.model.device.NotificationPreferenceRequest
 
-class UserDeviceDataSource(private val client: HttpClient) {
+class UserDeviceDataSource(private val authHttpClientManager: AuthHttpClientManager) {
+    private val client: HttpClient
+        get() = authHttpClientManager.getClient()
     suspend fun updateFcm(request: FcmTokenUpdateRequest) {
          client.post("api/v1/devices/fcm-token"){
              setBody(request)

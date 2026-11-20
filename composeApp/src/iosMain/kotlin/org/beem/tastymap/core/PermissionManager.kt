@@ -20,7 +20,7 @@ class IosPermissionManager(
             false
         }
     }
-    /*
+
     override suspend fun checkNotificationPermission(): Boolean {
         return try {
             val state = controller.getPermissionState(Permission.REMOTE_NOTIFICATION)
@@ -30,5 +30,4 @@ class IosPermissionManager(
         }
     }
 
-     */
 }

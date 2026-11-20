@@ -151,6 +151,7 @@ val appModule = module {
     single { RouteDataSource(get()) }
     single { PlaceDataSource(get()) }
     single { SearchDataSource(get()) }
+    single { UserDeviceDataSource(get()) }
 
     single { NotificationBadgeManager() }
 
@@ -182,7 +183,9 @@ val appModule = module {
     single { VisitRepository(get(), get(), get()) }
     single { PostRepository(get(), get(), get(), get(), get(), get()) }
     single { AiChatRepository(get(), get()) }
-    factory { PostCommentRepository(get(), get(), get(), get()) }
+    single { PostCommentRepository(get(), get(), get(), get()) }
+    single { UserDeviceRepository(get(),get(),get())}
+
 
     // ViewModeller
     factory { LogRegViewModel(get(), get(), get(), get()) }
@@ -216,7 +219,7 @@ val appModule = module {
     factory { MyProfileViewModel(get()) }
     factory { MainViewModel(get(), get()) }
     factory { EditProfileViewModel(get()) }
-    factory { SettingsViewModel(get(), get(), get(), get()) }
+    factory { SettingsViewModel(get(), get(), get(), get(),get(),get()) }
     factory { ActiveDevicesViewModel(get()) }
     factory { ChangePasswordViewModel(get(), get(),get()) }
     factory { SearchViewModel(get()) }
