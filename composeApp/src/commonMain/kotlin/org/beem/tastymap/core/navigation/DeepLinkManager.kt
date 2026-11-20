@@ -13,6 +13,7 @@ import org.beem.tastymap.ui.post.EditPostRoute
 import org.beem.tastymap.ui.profile.AccountDeactivatedRoute
 import org.beem.tastymap.ui.profile.ActiveDevicesRoute
 import org.beem.tastymap.ui.profile.BlockedUsersRoute
+import org.beem.tastymap.ui.profile.ContactSupportRoute
 import org.beem.tastymap.ui.profile.DeleteAccountRoute
 import org.beem.tastymap.ui.profile.EditHealthRoute
 import org.beem.tastymap.ui.profile.EditProfileRoute
@@ -181,6 +182,7 @@ object DeepLinkManager {
             hashLower == "settings/deleteaccount" -> DeleteAccountRoute
             hashLower == "settings/accountdeactivated" -> AccountDeactivatedRoute
             hashLower == "settings/privacypolicy" -> PrivacyPolicyRoute
+            hashLower == "settings/support" -> ContactSupportRoute
 
             // 2. Eğer #profile/123 veya #profile/ahmet formatındaysa:
             hashLower.startsWith("profile/") -> {

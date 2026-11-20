@@ -37,6 +37,7 @@ import org.beem.tastymap.core.util.ToastManager
 import org.beem.tastymap.ui.components.responsiveContentWidth
 import org.beem.tastymap.ui.profile.ActiveDevicesRoute
 import org.beem.tastymap.ui.profile.BlockedUsersRoute
+import org.beem.tastymap.ui.profile.ContactSupportRoute
 import org.beem.tastymap.ui.profile.DeleteAccountRoute
 import org.beem.tastymap.ui.profile.EditHealthRoute
 import org.beem.tastymap.ui.profile.PrivacyPolicyRoute
@@ -327,7 +328,7 @@ fun SettingsScreen(navController: NavController) {
                                     SettingsOptionItem(
                                         icon = Icons.Default.HelpOutline,
                                         title = stringResource(Res.string.settings_contact_us),
-                                        onClick = { }
+                                        onClick = { navController.navigate(ContactSupportRoute) }
                                     )
                                     SettingsDivider()
                                     SettingsOptionItem(

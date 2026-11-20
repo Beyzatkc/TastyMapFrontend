@@ -46,4 +46,11 @@ class AndroidDeviceInfoProvider(private val context: Context) : DeviceInfoProvid
             ""
         }
     }
+    override suspend fun getDeviceInfo(): String {
+        val manufacturer = Build.MANUFACTURER.replaceFirstChar { it.uppercase() }
+        val model = Build.MODEL
+        val version = Build.VERSION.RELEASE
+        val sdk = Build.VERSION.SDK_INT
+        return "Android $version (API $sdk) - $manufacturer $model"
+    }
 }

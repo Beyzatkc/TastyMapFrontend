@@ -45,6 +45,10 @@ data object EditHealthRoute
 data object PrivacyPolicyRoute
 
 @Serializable
+@SerialName("settings/support")
+data object ContactSupportRoute
+
+@Serializable
 @SerialName("settings/visits")
 data object VisitRoute
 

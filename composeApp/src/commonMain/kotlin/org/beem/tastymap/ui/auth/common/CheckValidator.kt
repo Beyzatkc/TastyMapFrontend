@@ -14,6 +14,8 @@ import tastymap.composeapp.generated.resources.validation_password_lowercase
 import tastymap.composeapp.generated.resources.validation_password_min_length
 import tastymap.composeapp.generated.resources.validation_password_special_char
 import tastymap.composeapp.generated.resources.validation_password_uppercase
+import tastymap.composeapp.generated.resources.validation_support_message_empty
+import tastymap.composeapp.generated.resources.validation_support_message_min_length
 import tastymap.composeapp.generated.resources.validation_surname_empty
 import tastymap.composeapp.generated.resources.validation_surname_invalid
 import tastymap.composeapp.generated.resources.validation_surname_length
@@ -100,6 +102,15 @@ object CheckValidator {
             ValidationResult.Invalid(Res.string.error_explanation_limit)
         }else {
             ValidationResult.Valid
+        }
+    }
+    fun validateSupportMessage(message: String): ValidationResult {
+        val trimmed = message.trim()
+        return when {
+            trimmed.isBlank() -> ValidationResult.Invalid(Res.string.validation_support_message_empty)
+            trimmed.length < 10 -> ValidationResult.Invalid(Res.string.validation_support_message_min_length)
+            trimmed.length > 500 -> ValidationResult.Invalid(Res.string.error_explanation_limit)
+            else -> ValidationResult.Valid
         }
     }
 }

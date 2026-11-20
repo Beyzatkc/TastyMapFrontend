@@ -29,5 +29,9 @@ class IosDeviceInfoProvider: DeviceInfoProvider {
     override suspend fun getFingerprint(): String? {
         return null
     }
+    override suspend fun getDeviceInfo(): String {
+        val device = UIDevice.currentDevice
+        return "${device.systemName} ${device.systemVersion} - ${device.model}"
+    }
 
 }

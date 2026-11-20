@@ -600,4 +600,7 @@
     <string name="add_comment_placeholder">Yorum ekle...</string>
     <string name="replying_to_label">Yanıtlanıyor: %1$s</string>
     <string name="cancel_reply_content_desc">Yanıtlamayı İptal Et</string>
+
+    <string name="validation_support_message_empty">Mesaj alanı boş bırakılamaz.</string>
+    <string name="validation_support_message_min_length">Lütfen en az 10 karakterlik bir açıklama yazın.</string>
 </resources>

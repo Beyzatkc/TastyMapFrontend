@@ -9,6 +9,7 @@ import org.beem.tastymap.ui.profile.health.OnBoardingScreen
 import org.beem.tastymap.ui.profile.myprofile.MyProfileScreen
 import org.beem.tastymap.ui.profile.myprofile.editprofile.EditProfileScreen
 import org.beem.tastymap.ui.profile.myprofile.notification.NotificationScreen
+import org.beem.tastymap.ui.profile.myprofile.settings.support.ContactSupportScreen
 import org.beem.tastymap.ui.profile.myprofile.settings.PrivacyPolicyScreen
 import org.beem.tastymap.ui.profile.myprofile.settings.SettingsScreen
 import org.beem.tastymap.ui.profile.myprofile.settings.activedevices.ActiveDevicesScreen
@@ -53,6 +54,9 @@ fun NavGraphBuilder.profileGraph(navController: NavController) {
     }
     composable<PrivacyPolicyRoute> {
         PrivacyPolicyScreen(navController)
+    }
+    composable<ContactSupportRoute> {
+        ContactSupportScreen(navController)
     }
     composable<SettingsRoute> {
         SettingsScreen(navController)

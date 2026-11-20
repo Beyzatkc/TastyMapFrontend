@@ -8,7 +8,7 @@ import kotlinx.coroutines.launch
 import org.beem.tastymap.data.model.LocationData
 import org.beem.tastymap.ui.components.WebFabButton
 import org.w3c.dom.HTMLElement
-/*
+
 @Composable
 actual fun TastyMapComponent(
     modifier: Modifier,
@@ -81,4 +81,3 @@ actual fun TastyMapComponent(
     Box(modifier = modifier)
 }
 
- */

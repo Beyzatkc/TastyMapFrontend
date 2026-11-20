@@ -68,6 +68,7 @@ import org.beem.tastymap.ui.profile.myprofile.settings.activedevices.ActiveDevic
 import org.beem.tastymap.ui.profile.myprofile.settings.blockedusers.BlockedViewModel
 import org.beem.tastymap.ui.profile.myprofile.settings.changepassword.ChangePasswordViewModel
 import org.beem.tastymap.ui.profile.myprofile.settings.deleteaccount.DeleteAccountViewModel
+import org.beem.tastymap.ui.profile.myprofile.settings.support.SupportViewModel
 import org.beem.tastymap.ui.profile.myprofile.visit.VisitViewModel
 import org.beem.tastymap.ui.profile.otherprofile.ProfileViewModel
 import org.beem.tastymap.ui.profile.subscribers.SubscribersListViewModel
@@ -152,6 +153,7 @@ val appModule = module {
     single { PlaceDataSource(get()) }
     single { SearchDataSource(get()) }
     single { UserDeviceDataSource(get()) }
+    single { SupportDataSource(get()) }
 
     single { NotificationBadgeManager() }
 
@@ -185,6 +187,7 @@ val appModule = module {
     single { AiChatRepository(get(), get()) }
     single { PostCommentRepository(get(), get(), get(), get()) }
     single { UserDeviceRepository(get(),get(),get())}
+    single { SupportRepository(get(),get()) }
 
 
     // ViewModeller
@@ -226,6 +229,7 @@ val appModule = module {
     factory { NotificationViewModel(get(), get(), get()) }
     factory { BlockedViewModel(get(), get()) }
     factory { DeleteAccountViewModel(get(), get()) }
+    factory { SupportViewModel(get()) }
 
     single<VerifyNavigator> { MobileVerifyNavigator() }
 }

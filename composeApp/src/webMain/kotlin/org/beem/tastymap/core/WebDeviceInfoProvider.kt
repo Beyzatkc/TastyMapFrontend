@@ -75,4 +75,7 @@ class WebDeviceInfoProvider: DeviceInfoProvider {
             }
         }
     }
+    override suspend fun getDeviceInfo(): String {
+        return "Web - ${window.navigator.userAgent}"
+    }
 }

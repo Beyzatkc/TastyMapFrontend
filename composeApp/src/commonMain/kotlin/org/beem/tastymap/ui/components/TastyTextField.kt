@@ -37,6 +37,7 @@ fun TastyTextField(
     isPassword: Boolean = false,
     error: String? = null,
     singleLine: Boolean = true,
+    minLines: Int = 1,
     maxLines: Int = if (singleLine) 1 else Int.MAX_VALUE,
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
     leadingIcon: @Composable (() -> Unit)? = null
@@ -53,6 +54,7 @@ fun TastyTextField(
             isError = error != null,
             singleLine = singleLine,
             maxLines = maxLines,
+            minLines = minLines,
             visualTransformation = if (isPassword && !passwordVisible) PasswordVisualTransformation() else VisualTransformation.None,
             keyboardOptions = keyboardOptions,
             leadingIcon = leadingIcon,
