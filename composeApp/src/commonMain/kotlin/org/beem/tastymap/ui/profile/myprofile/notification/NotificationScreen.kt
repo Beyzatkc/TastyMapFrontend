@@ -25,13 +25,16 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import coil3.compose.AsyncImage
+import org.beem.tastymap.LocalIsWideScreen
 import org.beem.tastymap.core.util.ToastManager
 import org.beem.tastymap.core.util.formatToShortRelativeTime
 import org.beem.tastymap.data.model.socialnotifications.NotificationActionStatus
 import org.beem.tastymap.data.model.socialnotifications.SocialNotificationType
 import org.beem.tastymap.data.model.socialnotifications.SocialNotificationsResponse
 import org.beem.tastymap.domain.model.RelationStatus
+import org.beem.tastymap.ui.components.DialogConfig
 import org.beem.tastymap.ui.components.TastyButton
+import org.beem.tastymap.ui.components.TastyConfirmDialog
 import org.beem.tastymap.ui.components.TastyPullToRefreshBox
 import org.beem.tastymap.ui.components.responsiveContentWidth
 import org.beem.tastymap.ui.profile.ProfileRoute
@@ -47,8 +50,10 @@ fun NotificationScreen(navController: NavController) {
     val screenModel = koinViewModel<NotificationViewModel>()
     val uiState by screenModel.uiState.collectAsState()
     val customColors = LocalCustomColors.current
+    val isWideScreen = LocalIsWideScreen.current
 
     val listState = rememberLazyListState()
+    var pendingUnfollowNotification by remember { mutableStateOf<SocialNotificationsResponse?>(null) }
 
     LaunchedEffect(Unit) {
         screenModel.loadInitialData()
@@ -79,12 +84,14 @@ fun NotificationScreen(navController: NavController) {
         topBar = {
             TopAppBar(
                 navigationIcon = {
-                    IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = stringResource(Res.string.profile_back_cd),
-                            tint = customColors.textPrimary
-                        )
+                    if (!isWideScreen) {
+                        IconButton(onClick = { navController.popBackStack() }) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = stringResource(Res.string.profile_back_cd),
+                                tint = customColors.textPrimary
+                            )
+                        }
                     }
                 },
                 title = {
@@ -218,11 +225,15 @@ fun NotificationScreen(navController: NavController) {
                                             )
                                         },
                                         onToggleFollow = { status ->
-                                            screenModel.toggleFollow(
-                                                notification.id,
-                                                notification.actor.id,
-                                                status
-                                            )
+                                            if (status == RelationStatus.FOLLOWING) {
+                                                pendingUnfollowNotification = notification
+                                            } else {
+                                                screenModel.toggleFollow(
+                                                    notification.id,
+                                                    notification.actor.id,
+                                                    status
+                                                )
+                                            }
                                         }
                                     )
                                 }
@@ -248,6 +259,27 @@ fun NotificationScreen(navController: NavController) {
                 }
             }
         }
+    }
+    pendingUnfollowNotification?.let { targetNotification ->
+        TastyConfirmDialog(
+            config = DialogConfig(
+                title = stringResource(Res.string.dialog_unfollow_title),
+                message = stringResource(
+                    Res.string.dialog_unfollow_message,
+                    targetNotification.actor.username
+                ),
+                confirmText = stringResource(Res.string.profile_action_unfollow),
+                isDestructive = false,
+                onConfirm = {
+                    screenModel.toggleFollow(
+                        targetNotification.id,
+                        targetNotification.actor.id,
+                        RelationStatus.FOLLOWING
+                    )
+                }
+            ),
+            onDismiss = { pendingUnfollowNotification = null }
+        )
     }
 }
 

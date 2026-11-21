@@ -37,10 +37,12 @@ import io.github.vinceglb.filekit.core.PickerMode
 import io.github.vinceglb.filekit.core.PickerType
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import org.beem.tastymap.LocalIsWideScreen
 import org.beem.tastymap.core.camera.rememberCameraLauncher
 import org.beem.tastymap.core.util.ToastManager
 import org.beem.tastymap.data.model.post.PostAndVisitRequest
 import org.beem.tastymap.data.model.visit.VisitResponse
+import org.beem.tastymap.ui.components.AdaptiveSheetDialog
 import org.beem.tastymap.ui.components.TastyButton
 import org.beem.tastymap.ui.components.TastyTextField
 import org.beem.tastymap.ui.components.responsiveContentWidth
@@ -112,9 +114,7 @@ fun CreatePostScreen(navController: NavController) {
             delay(500)
             viewModel.resetSuccess()
 
-            // YENİ: Voyager tabNavigator.current = ProfileTab YERİNE standart alt sekme geçişi
             navController.navigate(ProfileGraphRoute) {
-                // route!! yerine .id kullanıyoruz (Type-Safe Navigation standartı)
                 popUpTo(navController.graph.findStartDestination().id) {
                     saveState = true
                 }
@@ -440,17 +440,22 @@ fun CreatePostScreen(navController: NavController) {
     }
 
     if (showVisitSheet) {
-        ModalBottomSheet(
+        val isWideScreen = LocalIsWideScreen.current
+        AdaptiveSheetDialog(
             onDismissRequest = { showVisitSheet = false },
             containerColor = customColors.background,
-            dragHandle = { BottomSheetDefaults.DragHandle() }
+            maxDialogWidth = 500.dp
         ) {
             Column(
                 modifier = Modifier
-                    .fillMaxHeight(0.75f)
+                    .then(
+                        if (isWideScreen) Modifier.heightIn(min = 240.dp, max = 540.dp)
+                        else Modifier.fillMaxHeight(0.75f)
+                    )
                     .fillMaxWidth()
                     .padding(horizontal = 20.dp)
             ) {
+                // Başlık bloğu kendi Column'u içinde olmalı
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -472,6 +477,7 @@ fun CreatePostScreen(navController: NavController) {
                     )
                 }
 
+                // when bloğu dışarıdaki Column'un içinde kalmalı
                 when {
                     uiState.isVisitsLoading -> {
                         Box(
@@ -534,6 +540,7 @@ fun CreatePostScreen(navController: NavController) {
                             }
                         }
                     }
+
                     uiState.visits.isEmpty() -> {
                         Box(
                             modifier = Modifier
@@ -548,14 +555,14 @@ fun CreatePostScreen(navController: NavController) {
                             )
                         }
                     }
+
                     else -> {
                         LazyColumn(
-                            modifier = Modifier.weight(1f),
+                            modifier = Modifier.weight(1f, fill = false),
                             verticalArrangement = Arrangement.spacedBy(10.dp),
                             contentPadding = PaddingValues(vertical = 8.dp)
                         ) {
                             itemsIndexed(uiState.visits) { index, visit ->
-
                                 if (index >= uiState.visits.size - 2) {
                                     LaunchedEffect(Unit) {
                                         viewModel.loadMoreVisits()
@@ -618,12 +625,10 @@ fun CreatePostScreen(navController: NavController) {
         }
     }
     if (showImagePickerSheet) {
-        ModalBottomSheet(
-            onDismissRequest = {
-                showImagePickerSheet = false
-            },
+        AdaptiveSheetDialog(
+            onDismissRequest = { showImagePickerSheet = false },
             containerColor = customColors.background,
-            dragHandle = { BottomSheetDefaults.DragHandle() }
+            maxDialogWidth = 380.dp
         ) {
             Column(
                 modifier = Modifier
@@ -662,7 +667,7 @@ fun CreatePostScreen(navController: NavController) {
                     )
                     ImagePickerOptionCard(
                         icon = Icons.Default.PhotoLibrary,
-                        title = "Galeri",
+                        title = stringResource(Res.string.gallery),
                         customColors = customColors,
                         onClick = {
                             showImagePickerSheet = false
@@ -675,8 +680,6 @@ fun CreatePostScreen(navController: NavController) {
     }
 }
 
-// ALTTTAKİ COMPOSABLE FONKSİYONLARDA (ImagePickerOptionCard, VisitListItemCard, VisitSelectorCard, PhotoUploadArea)
-// HİÇBİR VOYAGER KALINTISI OLMADIĞI İÇİN ONLARA DOKUNMADIM. AYNEN KALABİLİRLER.
 
 
 @Composable

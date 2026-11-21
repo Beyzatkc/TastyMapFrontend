@@ -295,12 +295,22 @@ private fun AppNavigationRail(
                         horizontalArrangement = Arrangement.Start,
                         modifier = Modifier.padding(vertical = 4.dp, horizontal = if (isHovered) 0.dp else 12.dp)
                     ) {
-                        Icon(
-                            painter = painterResource(Res.drawable.firsticon),
+                        Image(
+                            painter = painterResource(
+                                if (customColors.isDark) Res.drawable.applogodark else Res.drawable.applogo
+                            ),
                             contentDescription = "App Logo",
-                            tint = customColors.blackWhite, // <-- Temaya göre siyah/beyaz olur
-                            modifier = Modifier.size(if (isHovered) 45.dp else 42.dp)
+                            modifier = Modifier.size(if (isHovered) 60.dp else 55.dp)
                         )
+                        /*
+                        Icon(
+                            painter = painterResource(Res.drawable.applogo),
+                            contentDescription = "App Logo",
+                            tint = customColors.appLogo, // <-- Temaya göre siyah/beyaz olur
+                            modifier = Modifier.size(if (isHovered) 60.dp else 55.dp)
+                        )
+
+                         */
                         AnimatedVisibility(
                             visible = isHovered,
                             enter = fadeIn(tween(200)) + expandHorizontally(),

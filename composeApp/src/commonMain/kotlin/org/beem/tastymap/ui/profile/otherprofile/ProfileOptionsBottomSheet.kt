@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Block
-import androidx.compose.material.icons.filled.GroupRemove
 import androidx.compose.material.icons.filled.LockOpen
 import androidx.compose.material.icons.filled.PersonRemove
 import androidx.compose.material.icons.filled.Report
@@ -29,7 +28,17 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
-import org.beem.tastymap.domain.model.RelationStatus
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.IconButton
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import org.beem.tastymap.LocalIsWideScreen
 import org.beem.tastymap.ui.theme.LocalCustomColors
 import org.jetbrains.compose.resources.stringResource
 import tastymap.composeapp.generated.resources.Res
@@ -65,8 +74,8 @@ fun ProfileOptionsBottomSheet(
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = sheetState,
-        containerColor = customColors.surface, // DÜZELTME: placeHolderBack yerine surface kullanıldı
-        dragHandle = { BottomSheetDefaults.DragHandle(color = customColors.textTertiary) } // DÜZELTME: Tutamaç rengi uyumlu hale getirildi
+        containerColor = customColors.surface,
+        dragHandle = { BottomSheetDefaults.DragHandle(color = customColors.textTertiary) }
     ) {
         Column(
             modifier = Modifier
@@ -75,7 +84,7 @@ fun ProfileOptionsBottomSheet(
         ) {
             if (isFollower) {
                 BottomSheetActionRow(
-                    icon = Icons.Default.GroupRemove,
+                    icon = Icons.Default.PersonRemove,
                     text = stringResource(Res.string.profile_action_remove_follower),
                     tint = customColors.textPrimary,
                     onClick = { closeSheet { onRemoveFollowerClick() } }
@@ -125,6 +134,123 @@ private fun BottomSheetActionRow(
         Text(
             text = text,
             style = MaterialTheme.typography.bodyLarge.copy(color = tint, fontWeight = FontWeight.Medium)
+        )
+    }
+}
+@Composable
+fun ProfileOptionsMenu(
+    isBlockedByMe: Boolean,
+    isFollower: Boolean,
+    onBlockToggleClick: () -> Unit,
+    onRemoveFollowerClick: () -> Unit,
+    onReportClick: () -> Unit
+) {
+    var expanded by remember { mutableStateOf(false) }
+    val isWideScreen = LocalIsWideScreen.current
+    val customColors = LocalCustomColors.current
+
+    Box {
+        IconButton(onClick = { expanded = true }) {
+            Icon(
+                imageVector = Icons.Default.MoreVert,
+                contentDescription = "Seçenekler",
+                tint = Color.White
+            )
+        }
+
+        if (isWideScreen) {
+            DropdownMenu(
+                expanded = expanded,
+                onDismissRequest = { expanded = false },
+                containerColor = customColors.surface,
+                shape = RoundedCornerShape(14.dp),
+                shadowElevation = 6.dp
+            ) {
+                if (isFollower) {
+                    DropdownMenuItem(
+                        text = {
+                            Text(
+                                text = stringResource(Res.string.profile_action_remove_follower),
+                                color = customColors.textPrimary
+                            )
+                        },
+                        leadingIcon = {
+                            Icon(
+                                imageVector = Icons.Default.PersonRemove,
+                                contentDescription = null,
+                                tint = customColors.textSecondary
+                            )
+                        },
+                        onClick = {
+                            expanded = false
+                            onRemoveFollowerClick()
+                        }
+                    )
+                }
+
+                DropdownMenuItem(
+                    text = {
+                        Text(
+                            text = stringResource(
+                                if (isBlockedByMe) Res.string.profile_action_unblock
+                                else Res.string.profile_action_block
+                            ),
+                            color = if (isBlockedByMe) customColors.textPrimary else customColors.red
+                        )
+                    },
+                    leadingIcon = {
+                        Icon(
+                            imageVector = if (isBlockedByMe) Icons.Default.LockOpen else Icons.Default.Block,
+                            contentDescription = null,
+                            tint = if (isBlockedByMe) customColors.textSecondary else customColors.red
+                        )
+                    },
+                    onClick = {
+                        expanded = false
+                        onBlockToggleClick()
+                    }
+                )
+
+                DropdownMenuItem(
+                    text = {
+                        Text(
+                            text = stringResource(Res.string.profile_action_report),
+                            color = customColors.red
+                        )
+                    },
+                    leadingIcon = {
+                        Icon(
+                            imageVector = Icons.Default.Report,
+                            contentDescription = null,
+                            tint = customColors.red
+                        )
+                    },
+                    onClick = {
+                        expanded = false
+                        onReportClick()
+                    }
+                )
+            }
+        }
+    }
+
+    if (expanded && !isWideScreen) {
+        ProfileOptionsBottomSheet(
+            isBlockedByMe = isBlockedByMe,
+            isFollower = isFollower,
+            onDismiss = { expanded = false },
+            onBlockToggleClick = {
+                expanded = false
+                onBlockToggleClick()
+            },
+            onRemoveFollowerClick = {
+                expanded = false
+                onRemoveFollowerClick()
+            },
+            onReportClick = {
+                expanded = false
+                onReportClick()
+            }
         )
     }
 }

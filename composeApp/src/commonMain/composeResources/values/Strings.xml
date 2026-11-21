@@ -603,4 +603,48 @@
 
     <string name="validation_support_message_empty">Mesaj alanı boş bırakılamaz.</string>
     <string name="validation_support_message_min_length">Lütfen en az 10 karakterlik bir açıklama yazın.</string>
+
+    <!-- Contact Support Screen -->
+    <string name="support_title">Bize Ulaşın / Destek</string>
+    <string name="support_back_cd">Geri</string>
+    <string name="support_copy_cd">Kopyala</string>
+
+    <!-- Support Categories -->
+    <string name="support_category_bug">Hata Bildir</string>
+    <string name="support_category_ai_nutrition">AI &amp; Beslenme</string>
+    <string name="support_category_account">Hesap &amp; Güvenlik</string>
+    <string name="support_category_suggestion">Öneri</string>
+    <string name="support_category_other">Diğer</string>
+
+    <!-- Support Hero Card -->
+    <string name="support_hero_title">Nasıl yardımcı olabiliriz?</string>
+    <string name="support_hero_subtitle">Destek ekibimiz mesajlarınıza genellikle 24 saat içinde dönüş yapar.</string>
+
+    <!-- Support FAQ -->
+    <string name="support_faq_section_title">Sıkça Sorulan Sorular</string>
+    <string name="support_faq_q1">AI önerileri alerji ve beslenme tercihlerimi nasıl kullanıyor?</string>
+    <string name="support_faq_a1">Ayarlar &gt; Beslenme Tercihleri kısmından belirlediğiniz kısıtlamalar, mekan ve yemek önerilerinde otomatik olarak filtrelenir.</string>
+    <string name="support_faq_q2">Gizli hesap özelliğini açtığımda neler değişir?</string>
+    <string name="support_faq_a2">Hesabınız gizli moda alındığında profiliniz, ziyaret geçmişiniz ve paylaşımlarınız yalnızca onayladığınız kişiler tarafından görülebilir.</string>
+    <string name="support_faq_q3">Hesabıma başka bir cihazdan giriş yapıldığını nasıl anlarım?</string>
+    <string name="support_faq_a3">Ayarlar &gt; Aktif Cihazlar ekranından hesabınızın açık olduğu tüm cihazları görebilirsiniz.</string>
+    <string name="support_faq_q4">Hesabımı sildiğimde verilerim ne olur?</string>
+    <string name="support_faq_a4">Hesap silme talebi oluşturduğunuzda hesabınız 30 gün boyunca askıya alınır. Bu süre içinde tekrar giriş yaparsanız silme işlemi otomatik olarak iptal edilir. 30 gün sonunda giriş yapmazsanız ziyaret geçmişiniz, favorileriniz ve tüm profil verileriniz sistemden kalıcı olarak silinir.</string>
+
+    <!-- Support Form -->
+    <string name="support_form_section_title">Destek Talebi Oluştur</string>
+    <string name="support_select_topic">Konu Seçin</string>
+    <string name="support_message_label">Mesajınız</string>
+    <string name="support_message_placeholder">Yaşadığınız sorunu veya önerinizi detaylıca yazın...</string>
+    <string name="support_metadata_info">Sürüm (%1$s) ve cihaz bilgileri çözüm için otomatik eklenir.</string>
+    <string name="support_submit_button">Talebi Gönder</string>
+
+    <!-- Support Direct Contact -->
+    <string name="support_direct_contact_title">Doğrudan İletişim</string>
+    <string name="support_email_us">E-posta ile Ulaşın</string>
+
+    <!-- Support Toasts -->
+    <string name="support_request_success">Destek talebiniz alındı. Teşekkürler!</string>
+    <string name="support_email_app_not_found">E-posta uygulaması bulunamadı, adres kopyalandı</string>
+    <string name="support_email_copied">E-posta adresi kopyalandı</string>
 </resources>

@@ -33,6 +33,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import org.beem.tastymap.LocalIsWideScreen
 import org.beem.tastymap.core.util.ToastManager
 import org.beem.tastymap.ui.components.responsiveContentWidth
 import org.beem.tastymap.ui.profile.ActiveDevicesRoute
@@ -46,6 +47,7 @@ import org.beem.tastymap.ui.profile.myprofile.settings.changepassword.ChangePass
 import org.beem.tastymap.ui.profile.myprofile.settings.changepassword.ChangePasswordViewModel
 
 import org.beem.tastymap.ui.theme.LocalCustomColors
+import org.jetbrains.compose.resources.getString
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 import tastymap.composeapp.generated.resources.Res
@@ -60,6 +62,7 @@ fun SettingsScreen(navController: NavController) {
     val settingsViewModel = koinViewModel<SettingsViewModel>()
     val settingsState by settingsViewModel.uiState.collectAsState()
 
+    val isWideScreen = LocalIsWideScreen.current
     val isDarkModePref by settingsViewModel.isDarkMode.collectAsState()
     val isNotificationsEnabled by settingsViewModel.isNotificationsEnabled.collectAsState()
     val isDarkModeActive = isDarkModePref ?: isSystemInDarkTheme()
@@ -76,7 +79,7 @@ fun SettingsScreen(navController: NavController) {
         LaunchedEffect(changePasswordState.successMessageRes) {
             changePasswordState.successMessageRes?.let { res ->
                 showChangePasswordSheet = false
-                ToastManager.show(res.toString())
+                ToastManager.show(getString(res))
                 changePasswordViewModel.clearMessages()
             }
         }
@@ -109,12 +112,14 @@ fun SettingsScreen(navController: NavController) {
                         )
                     },
                     navigationIcon = {
-                        IconButton(onClick = { navController.popBackStack() }) {
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                contentDescription = "Geri",
-                                tint = customColors.textPrimary,
-                            )
+                        if (!isWideScreen) {
+                            IconButton(onClick = { navController.popBackStack() }) {
+                                Icon(
+                                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                    contentDescription = stringResource(Res.string.profile_back_cd),
+                                    tint = customColors.textPrimary,
+                                )
+                            }
                         }
                     },
                     colors = TopAppBarDefaults.topAppBarColors(

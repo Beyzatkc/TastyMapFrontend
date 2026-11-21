@@ -134,8 +134,6 @@ fun ProfileScreen(
     val isWideScreen = LocalIsWideScreen.current
     val postLikesViewModel = koinViewModel<PostLikesViewModel>()
     var selectedWebPostId by remember { mutableStateOf<Long?>(null) }
-
-    var showBottomSheet by remember { mutableStateOf(false) }
     var activeDialog by remember { mutableStateOf<DialogConfig?>(null) }
 
     val customColors = LocalCustomColors.current
@@ -157,25 +155,12 @@ fun ProfileScreen(
     val removeFollowerMessage = stringResource(Res.string.dialog_remove_follower_message, state.profile?.username ?: "")
     val removeFollowerConfirm = stringResource(Res.string.profile_action_remove_follower)
 
-    /*
-    LaunchedEffect(selectedWebPostId, isWideScreen) {
-        if (isWideScreen) {
-            if (selectedWebPostId != null) {
-                openPostUrl()
-            } else {
-                closePostUrl()
-            }
-        }
-    }
-
-     */
     LaunchedEffect(state.errorMessage) {
         state.errorMessage?.let { message ->
             ToastManager.show(message)
             screenModel.clearError()
         }
     }
-    // 1. Görme yetkisini yukarıda tek bir değişkene alıyoruz (Her yerde bunu kullanacağız)
     val profile = state.profile
     val canSeePosts = profile != null &&
             !profile.blockedByMe &&
@@ -258,13 +243,32 @@ fun ProfileScreen(
                                 )
                             },
                             actions = {
-                                IconButton(onClick = {
-                                    showBottomSheet = true
-                                }) {
-                                    Icon(
-                                        imageVector = Icons.Default.MoreVert,
-                                        contentDescription = "Seçenekler",
-                                        tint = Color.White
+                                state.profile?.let { currentProfile ->
+                                    val isBlockedByMe = currentProfile.blockedByMe == true
+                                    ProfileOptionsMenu(
+                                        isBlockedByMe = isBlockedByMe,
+                                        isFollower = currentProfile.isFollower,
+                                        onBlockToggleClick = {
+                                            activeDialog = DialogConfig(
+                                                title = if (isBlockedByMe) unblockTitle else blockTitle,
+                                                message = if (isBlockedByMe) unblockMessage else blockMessage,
+                                                confirmText = if (isBlockedByMe) unblockConfirm else blockConfirm,
+                                                isDestructive = !isBlockedByMe,
+                                                onConfirm = { screenModel.toggleBlockStatus(userId) }
+                                            )
+                                        },
+                                        onRemoveFollowerClick = {
+                                            activeDialog = DialogConfig(
+                                                title = removeFollowerTitle,
+                                                message = removeFollowerMessage,
+                                                confirmText = removeFollowerConfirm,
+                                                isDestructive = false,
+                                                onConfirm = { screenModel.removeFollower(userId) }
+                                            )
+                                        },
+                                        onReportClick = {
+                                            println("Kullanıcı şikayet edilecek: $userId")
+                                        }
                                     )
                                 }
                             },
@@ -969,43 +973,7 @@ fun ProfileScreen(
             }
         }
     }
-        if (showBottomSheet && state.profile != null) {
-            val profile = state.profile!!
-            ProfileOptionsBottomSheet(
-                isBlockedByMe = profile.blockedByMe == true,
-                isFollower = profile.isFollower,
-                onDismiss = { showBottomSheet = false },
-                onBlockToggleClick = {
-                    showBottomSheet = false
-                    val isBlockedByMe = profile.blockedByMe == true
-                    activeDialog = DialogConfig(
-                        title = if (isBlockedByMe) unblockTitle else blockTitle,
-                        message = if (isBlockedByMe) unblockMessage else blockMessage,
-                        confirmText = if (isBlockedByMe) unblockConfirm else blockConfirm,
-                        isDestructive = !isBlockedByMe,
-                        onConfirm = {
-                            screenModel.toggleBlockStatus(userId)
-                        }
-                    )
-                },
-                onRemoveFollowerClick = {
-                    showBottomSheet = false
-                    activeDialog = DialogConfig(
-                        title = removeFollowerTitle,
-                        message = removeFollowerMessage,
-                        confirmText = removeFollowerConfirm,
-                        isDestructive = false,
-                        onConfirm = {
-                            screenModel.removeFollower(userId)
-                        }
-                    )
-                },
-                onReportClick = {
-                    // Şikayet ekranına yönlendirme veya diyalog açma
-                    println("Kullanıcı şikayet edilecek: $userId")
-                }
-            )
-        }
+
         activeDialog?.let { config ->
             TastyConfirmDialog(
                 config = config,

@@ -13,13 +13,10 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Lock
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -31,7 +28,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import org.beem.tastymap.LocalIsWideScreen
 import org.beem.tastymap.ui.auth.common.PasswordStrength
+import org.beem.tastymap.ui.components.AdaptiveSheetDialog
 import org.beem.tastymap.ui.components.PasswordStrengthIndicator
 import org.beem.tastymap.ui.components.TastyButton
 import org.beem.tastymap.ui.components.TastyTextField
@@ -44,7 +43,6 @@ import tastymap.composeapp.generated.resources.change_password_new_again
 import tastymap.composeapp.generated.resources.change_password_submit_btn
 import tastymap.composeapp.generated.resources.change_password_title
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ChangePasswordBottomSheet(
     isActionLoading: Boolean = false,
@@ -57,7 +55,7 @@ fun ChangePasswordBottomSheet(
     onSubmitClick: (oldPassword: String, newPassword: String, againNew: String) -> Unit = { _, _, _ -> }
 ) {
     val customColors = LocalCustomColors.current
-    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val isWideScreen = LocalIsWideScreen.current
 
     var oldPassword by remember { mutableStateOf("") }
     var newPassword by remember { mutableStateOf("") }
@@ -72,21 +70,20 @@ fun ChangePasswordBottomSheet(
         )
     }
 
-    ModalBottomSheet(
-        onDismissRequest = onDismissRequest,
-        sheetState = sheetState,
-        shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
-        containerColor = customColors.surface
+    AdaptiveSheetDialog(
+        onDismissRequest = { if (!isActionLoading) onDismissRequest() },
+        containerColor = customColors.surface,
+        maxDialogWidth = 440.dp,
+        showCloseButtonOnWide = !isActionLoading
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = 24.dp)
-                .padding(bottom = 32.dp),
+                .padding(bottom = if (isWideScreen) 4.dp else 32.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-
             Text(
                 text = stringResource(Res.string.change_password_title),
                 style = MaterialTheme.typography.titleMedium.copy(

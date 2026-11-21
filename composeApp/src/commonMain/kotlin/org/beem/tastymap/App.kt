@@ -13,6 +13,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.rememberNavController
 import coil3.ImageLoader
@@ -29,6 +30,7 @@ import org.beem.tastymap.core.local.UserManager
 import org.beem.tastymap.core.navigation.DeepLinkManager
 import org.beem.tastymap.core.util.ToastManager
 import org.beem.tastymap.domain.auth.ClearSessionUseCase
+import org.beem.tastymap.ui.auth.ForgotRoute
 import org.beem.tastymap.ui.auth.LogRegRoute
 import org.beem.tastymap.ui.auth.ResetRoute
 import org.beem.tastymap.ui.auth.VerifyRoute
@@ -119,6 +121,15 @@ fun App(
 
             LaunchedEffect(navController) {
                 authEventBus.events.collect { event ->
+                    val currentDestination = navController.currentBackStackEntry?.destination
+                    val isAlreadyOnAuthScreen = currentDestination != null && listOf(
+                        LogRegRoute::class,
+                        VerifyRoute::class,
+                        ResetRoute::class,
+                        ForgotRoute::class
+                    ).any { currentDestination.hasRoute(it) }
+
+                    if (isAlreadyOnAuthScreen) return@collect
                     println("AUTH_EVENT_BUS TETİKLENDİ: $event")
                     clearSessionUseCase()
 

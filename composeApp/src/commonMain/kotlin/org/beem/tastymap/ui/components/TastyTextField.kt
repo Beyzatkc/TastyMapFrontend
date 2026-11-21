@@ -27,13 +27,13 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import org.beem.tastymap.ui.theme.LocalCustomColors
-
 @Composable
 fun TastyTextField(
     value: String,
     onValueChange: (String) -> Unit,
-    label: String,
+    label: String? = null,
     modifier: Modifier = Modifier,
+    placeholder: String? = null,
     isPassword: Boolean = false,
     error: String? = null,
     singleLine: Boolean = true,
@@ -49,7 +49,12 @@ fun TastyTextField(
         OutlinedTextField(
             value = value,
             onValueChange = onValueChange,
-            label = { Text(text = label, style = MaterialTheme.typography.bodyMedium) },
+            label = label?.let {
+                { Text(text = it, style = MaterialTheme.typography.bodyMedium) }
+            },
+            placeholder = placeholder?.let {
+                { Text(text = it, style = MaterialTheme.typography.bodyMedium) }
+            },
             modifier = Modifier.fillMaxWidth(),
             isError = error != null,
             singleLine = singleLine,
@@ -95,6 +100,10 @@ fun TastyTextField(
                 focusedLabelColor = customColors.navy,
                 unfocusedLabelColor = customColors.textSecondary,
                 errorLabelColor = customColors.error,
+
+                focusedPlaceholderColor = customColors.textTertiary,
+                unfocusedPlaceholderColor = customColors.textTertiary,
+                errorPlaceholderColor = customColors.textTertiary,
 
                 focusedLeadingIconColor = customColors.navy,
                 unfocusedLeadingIconColor = customColors.textSecondary,

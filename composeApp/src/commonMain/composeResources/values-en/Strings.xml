@@ -595,4 +595,48 @@
 
     <string name="validation_support_message_empty">Message cannot be empty.</string>
     <string name="validation_support_message_min_length">Please enter a description of at least 10 characters.</string>
+
+    <!-- Contact Support Screen -->
+    <string name="support_title">Contact Us / Support</string>
+    <string name="support_back_cd">Back</string>
+    <string name="support_copy_cd">Copy</string>
+
+    <!-- Support Categories -->
+    <string name="support_category_bug">Report a Bug</string>
+    <string name="support_category_ai_nutrition">AI &amp; Nutrition</string>
+    <string name="support_category_account">Account &amp; Security</string>
+    <string name="support_category_suggestion">Suggestion</string>
+    <string name="support_category_other">Other</string>
+
+    <!-- Support Hero Card -->
+    <string name="support_hero_title">How can we help?</string>
+    <string name="support_hero_subtitle">Our support team usually responds to your messages within 24 hours.</string>
+
+    <!-- Support FAQ -->
+    <string name="support_faq_section_title">Frequently Asked Questions</string>
+    <string name="support_faq_q1">How do AI recommendations use my allergy and dietary preferences?</string>
+    <string name="support_faq_a1">The restrictions you set in Settings &gt; Dietary Preferences are automatically filtered in venue and meal recommendations.</string>
+    <string name="support_faq_q2">What changes when I turn on the private account feature?</string>
+    <string name="support_faq_a2">When your account is set to private, your profile, visit history, and posts can only be seen by people you approve.</string>
+    <string name="support_faq_q3">How do I know if someone logged into my account from another device?</string>
+    <string name="support_faq_a3">You can view all devices where your account is currently signed in from the Settings &gt; Active Devices screen.</string>
+    <string name="support_faq_q4">What happens to my data when I delete my account?</string>
+    <string name="support_faq_a4">When you request account deletion, your account is suspended for 30 days. If you log in again during this period, the deletion is automatically canceled. If you do not log in after 30 days, your visit history, favorites, and all profile data are permanently deleted from the system.</string>
+
+    <!-- Support Form -->
+    <string name="support_form_section_title">Create Support Request</string>
+    <string name="support_select_topic">Select Topic</string>
+    <string name="support_message_label">Your Message</string>
+    <string name="support_message_placeholder">Describe your issue or suggestion in detail...</string>
+    <string name="support_metadata_info">Version (%1$s) and device info are automatically attached for troubleshooting.</string>
+    <string name="support_submit_button">Submit Request</string>
+
+    <!-- Support Direct Contact -->
+    <string name="support_direct_contact_title">Direct Contact</string>
+    <string name="support_email_us">Contact via Email</string>
+
+    <!-- Support Toasts -->
+    <string name="support_request_success">Your support request has been received. Thank you!</string>
+    <string name="support_email_app_not_found">No email app found, address copied</string>
+    <string name="support_email_copied">Email address copied</string>
 </resources>

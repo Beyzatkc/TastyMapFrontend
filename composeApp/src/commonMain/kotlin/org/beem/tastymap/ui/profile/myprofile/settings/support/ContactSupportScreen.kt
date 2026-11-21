@@ -34,20 +34,52 @@ import org.beem.tastymap.ui.components.TastyButton
 import org.beem.tastymap.ui.components.TastyTextField
 import org.beem.tastymap.ui.components.responsiveContentWidth
 import org.beem.tastymap.ui.theme.LocalCustomColors
+import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
+import tastymap.composeapp.generated.resources.Res
+import tastymap.composeapp.generated.resources.support_back_cd
+import tastymap.composeapp.generated.resources.support_category_account
+import tastymap.composeapp.generated.resources.support_category_ai_nutrition
+import tastymap.composeapp.generated.resources.support_category_bug
+import tastymap.composeapp.generated.resources.support_category_other
+import tastymap.composeapp.generated.resources.support_category_suggestion
+import tastymap.composeapp.generated.resources.support_copy_cd
+import tastymap.composeapp.generated.resources.support_direct_contact_title
+import tastymap.composeapp.generated.resources.support_email_app_not_found
+import tastymap.composeapp.generated.resources.support_email_copied
+import tastymap.composeapp.generated.resources.support_email_us
+import tastymap.composeapp.generated.resources.support_faq_a1
+import tastymap.composeapp.generated.resources.support_faq_a2
+import tastymap.composeapp.generated.resources.support_faq_a3
+import tastymap.composeapp.generated.resources.support_faq_a4
+import tastymap.composeapp.generated.resources.support_faq_q1
+import tastymap.composeapp.generated.resources.support_faq_q2
+import tastymap.composeapp.generated.resources.support_faq_q3
+import tastymap.composeapp.generated.resources.support_faq_q4
+import tastymap.composeapp.generated.resources.support_faq_section_title
+import tastymap.composeapp.generated.resources.support_form_section_title
+import tastymap.composeapp.generated.resources.support_hero_subtitle
+import tastymap.composeapp.generated.resources.support_hero_title
+import tastymap.composeapp.generated.resources.support_message_label
+import tastymap.composeapp.generated.resources.support_message_placeholder
+import tastymap.composeapp.generated.resources.support_metadata_info
+import tastymap.composeapp.generated.resources.support_request_success
+import tastymap.composeapp.generated.resources.support_select_topic
+import tastymap.composeapp.generated.resources.support_submit_button
+import tastymap.composeapp.generated.resources.support_title
 
 data class FaqItem(
-    val question: String,
-    val answer: String
+    val question: StringResource,
+    val answer: StringResource
 )
 
-private fun SupportCategory.toDisplayLabel(): String = when (this) {
-    SupportCategory.BUG -> "Hata Bildir"
-    SupportCategory.AI_NUTRITION -> "AI & Beslenme"
-    SupportCategory.ACCOUNT -> "Hesap & Güvenlik"
-    SupportCategory.SUGGESTION -> "Öneri"
-    SupportCategory.OTHER -> "Diğer"
+private fun SupportCategory.toDisplayLabel(): StringResource = when (this) {
+    SupportCategory.BUG -> Res.string.support_category_bug
+    SupportCategory.AI_NUTRITION -> Res.string.support_category_ai_nutrition
+    SupportCategory.ACCOUNT -> Res.string.support_category_account
+    SupportCategory.SUGGESTION -> Res.string.support_category_suggestion
+    SupportCategory.OTHER -> Res.string.support_category_other
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -70,9 +102,13 @@ fun ContactSupportScreen(
     val supportEmail = "beemdevops@gmail.com"
     val maxCharCount = 500
 
+    val successToastMsg = stringResource(Res.string.support_request_success)
+    val emailAppNotFoundMsg = stringResource(Res.string.support_email_app_not_found)
+    val emailCopiedMsg = stringResource(Res.string.support_email_copied)
+
     LaunchedEffect(uiState.isSuccess) {
         if (uiState.isSuccess) {
-            ToastManager.show("Destek talebiniz alındı. Teşekkürler!")
+            ToastManager.show(successToastMsg)
             messageText = ""
             supportViewModel.clearMessages()
         }
@@ -88,20 +124,20 @@ fun ContactSupportScreen(
     val faqList = remember {
         listOf(
             FaqItem(
-                question = "AI önerileri alerji ve beslenme tercihlerimi nasıl kullanıyor?",
-                answer = "Ayarlar > Beslenme Tercihleri kısmından belirlediğiniz kısıtlamalar, mekan ve yemek önerilerinde otomatik olarak filtrelenir."
+                question = Res.string.support_faq_q1,
+                answer = Res.string.support_faq_a1
             ),
             FaqItem(
-                question = "Gizli hesap özelliğini açtığımda neler değişir?",
-                answer = "Hesabınız gizli moda alındığında profiliniz, ziyaret geçmişiniz ve paylaşımlarınız yalnızca onayladığınız kişiler tarafından görülebilir."
+                question = Res.string.support_faq_q2,
+                answer = Res.string.support_faq_a2
             ),
             FaqItem(
-                question = "Hesabıma başka bir cihazdan giriş yapıldığını nasıl anlarım?",
-                answer = "Ayarlar > Aktif Cihazlar ekranından hesabınızın açık olduğu tüm cihazları görebilirsiniz."
+                question = Res.string.support_faq_q3,
+                answer = Res.string.support_faq_a3
             ),
             FaqItem(
-                question = "Hesabımı sildiğimde verilerim ne olur?",
-                answer = "Hesap silme talebi oluşturduğunuzda hesabınız 30 gün boyunca askıya alınır. Bu süre içinde tekrar giriş yaparsanız silme işlemi otomatik olarak iptal edilir. 30 gün sonunda giriş yapmazsanız ziyaret geçmişiniz, favorileriniz ve tüm profil verileriniz sistemden kalıcı olarak silinir."
+                question = Res.string.support_faq_q4,
+                answer = Res.string.support_faq_a4
             )
         )
     }
@@ -112,7 +148,7 @@ fun ContactSupportScreen(
             TopAppBar(
                 title = {
                     Text(
-                        text = "Bize Ulaşın / Destek",
+                        text = stringResource(Res.string.support_title),
                         style = MaterialTheme.typography.titleLarge.copy(
                             color = customColors.textPrimary,
                             fontSize = 20.sp,
@@ -124,7 +160,7 @@ fun ContactSupportScreen(
                     IconButton(onClick = { navController.popBackStack() }) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Geri",
+                            contentDescription = stringResource(Res.string.support_back_cd),
                             tint = customColors.textPrimary
                         )
                     }
@@ -178,7 +214,7 @@ fun ContactSupportScreen(
                             Spacer(modifier = Modifier.width(14.dp))
                             Column {
                                 Text(
-                                    text = "Nasıl yardımcı olabiliriz?",
+                                    text = stringResource(Res.string.support_hero_title),
                                     style = MaterialTheme.typography.titleMedium.copy(
                                         fontWeight = FontWeight.Bold,
                                         color = customColors.textPrimary
@@ -186,7 +222,7 @@ fun ContactSupportScreen(
                                 )
                                 Spacer(modifier = Modifier.height(2.dp))
                                 Text(
-                                    text = "Destek ekibimiz mesajlarınıza genellikle 24 saat içinde dönüş yapar.",
+                                    text = stringResource(Res.string.support_hero_subtitle),
                                     style = MaterialTheme.typography.bodySmall.copy(
                                         color = customColors.textSecondary
                                     )
@@ -199,7 +235,7 @@ fun ContactSupportScreen(
                 // 2. Sıkça Sorulan Sorular (Self-Service)
                 item {
                     Text(
-                        text = "Sıkça Sorulan Sorular",
+                        text = stringResource(Res.string.support_faq_section_title),
                         style = MaterialTheme.typography.labelMedium.copy(
                             color = customColors.textSecondary,
                             fontWeight = FontWeight.Bold
@@ -227,7 +263,7 @@ fun ContactSupportScreen(
                                         modifier = Modifier.fillMaxWidth()
                                     ) {
                                         Text(
-                                            text = faq.question,
+                                            text = stringResource(faq.question),
                                             style = MaterialTheme.typography.bodyMedium.copy(
                                                 fontWeight = FontWeight.Medium,
                                                 color = customColors.textPrimary
@@ -247,7 +283,7 @@ fun ContactSupportScreen(
                                         exit = shrinkVertically()
                                     ) {
                                         Text(
-                                            text = faq.answer,
+                                            text = stringResource(faq.answer),
                                             style = MaterialTheme.typography.bodySmall.copy(
                                                 color = customColors.textSecondary,
                                                 lineHeight = 18.sp
@@ -270,7 +306,7 @@ fun ContactSupportScreen(
                 // 3. Destek Talebi Formu
                 item {
                     Text(
-                        text = "Destek Talebi Oluştur",
+                        text = stringResource(Res.string.support_form_section_title),
                         style = MaterialTheme.typography.labelMedium.copy(
                             color = customColors.textSecondary,
                             fontWeight = FontWeight.Bold
@@ -289,7 +325,7 @@ fun ContactSupportScreen(
                             verticalArrangement = Arrangement.spacedBy(12.dp)
                         ) {
                             Text(
-                                text = "Konu Seçin",
+                                text = stringResource(Res.string.support_select_topic),
                                 style = MaterialTheme.typography.bodySmall.copy(
                                     fontWeight = FontWeight.SemiBold,
                                     color = customColors.textSecondary
@@ -306,7 +342,7 @@ fun ContactSupportScreen(
                                         onClick = { selectedCategory = category },
                                         label = {
                                             Text(
-                                                text = category.toDisplayLabel(),
+                                                text = stringResource(category.toDisplayLabel()),
                                                 style = MaterialTheme.typography.labelMedium.copy(
                                                     fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium
                                                 )
@@ -331,7 +367,8 @@ fun ContactSupportScreen(
                                         messageText = it
                                         supportViewModel.clearMessageError()
                                     },
-                                    label = "Yaşadığınız sorunu veya önerinizi detaylıca yazın...",
+                                    label = stringResource(Res.string.support_message_label),
+                                    placeholder = stringResource(Res.string.support_message_placeholder),
                                     error = uiState.messageError?.let { stringResource(it) },
                                     singleLine = false,
                                     minLines = 4,
@@ -360,7 +397,7 @@ fun ContactSupportScreen(
                                     modifier = Modifier.size(16.dp)
                                 )
                                 Text(
-                                    text = "Sürüm ($appVersion) ve cihaz bilgileri çözüm için otomatik eklenir.",
+                                    text = stringResource(Res.string.support_metadata_info, appVersion),
                                     style = MaterialTheme.typography.labelSmall.copy(
                                         color = customColors.textTertiary
                                     )
@@ -368,7 +405,7 @@ fun ContactSupportScreen(
                             }
 
                             TastyButton(
-                                text = "Talebi Gönder",
+                                text = stringResource(Res.string.support_submit_button),
                                 onClick = {
                                     supportViewModel.addSupport(
                                         category = selectedCategory,
@@ -386,10 +423,9 @@ fun ContactSupportScreen(
                     }
                 }
 
-                // 4. Doğrudan E-posta Kanalı
                 item {
                     Text(
-                        text = "Doğrudan İletişim",
+                        text = stringResource(Res.string.support_direct_contact_title),
                         style = MaterialTheme.typography.labelMedium.copy(
                             color = customColors.textSecondary,
                             fontWeight = FontWeight.Bold
@@ -409,7 +445,7 @@ fun ContactSupportScreen(
                                         uriHandler.openUri("mailto:$supportEmail")
                                     }.onFailure {
                                         clipboardManager.setText(AnnotatedString(supportEmail))
-                                        ToastManager.show("E-posta uygulaması bulunamadı, adres kopyalandı")
+                                        ToastManager.show(emailAppNotFoundMsg)
                                     }
                                 }
                                 .padding(horizontal = 16.dp, vertical = 14.dp),
@@ -424,7 +460,7 @@ fun ContactSupportScreen(
                             Spacer(modifier = Modifier.width(14.dp))
                             Column(modifier = Modifier.weight(1f)) {
                                 Text(
-                                    text = "E-posta ile Ulaşın",
+                                    text = stringResource(Res.string.support_email_us),
                                     style = MaterialTheme.typography.bodyMedium.copy(
                                         fontWeight = FontWeight.Medium,
                                         color = customColors.textPrimary
@@ -440,12 +476,12 @@ fun ContactSupportScreen(
                             IconButton(
                                 onClick = {
                                     clipboardManager.setText(AnnotatedString(supportEmail))
-                                    ToastManager.show("E-posta adresi kopyalandı")
+                                    ToastManager.show(emailCopiedMsg)
                                 }
                             ) {
                                 Icon(
                                     imageVector = Icons.Default.ContentCopy,
-                                    contentDescription = "Kopyala",
+                                    contentDescription = stringResource(Res.string.support_copy_cd),
                                     tint = customColors.textTertiary,
                                     modifier = Modifier.size(20.dp)
                                 )

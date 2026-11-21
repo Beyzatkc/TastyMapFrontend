@@ -1,6 +1,7 @@
 package org.beem.tastymap.ui.profile.subscribers
 
 import androidx.compose.animation.*
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -221,145 +222,180 @@ fun SubscribersListScreen(
                             )
                             .clip(boxShape)
                     ) {
-                        val isError = !uiState.errorMessage.isNullOrBlank()
-                        val isEmpty = uiState.items.isEmpty()
+                        AnimatedContent(
+                            targetState = selectedTab,
+                            transitionSpec = {
+                                val isMovingRight = targetState.ordinal > initialState.ordinal
+                                val enter = slideInHorizontally(animationSpec = tween(250)) { width ->
+                                    if (isMovingRight) width / 3 else -width / 3
+                                } + fadeIn(animationSpec = tween(250))
 
-                        when {
-                            uiState.isLoading && isEmpty && !isError -> {
-                                Box(
-                                    modifier = Modifier.fillMaxSize(),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    CircularProgressIndicator(color = customColors.gourmetOrange)
-                                }
-                            }
+                                val exit = slideOutHorizontally(animationSpec = tween(200)) { width ->
+                                    if (isMovingRight) -width / 3 else width / 3
+                                } + fadeOut(animationSpec = tween(200))
 
-                            isError && isEmpty -> {
-                                Box(
-                                    modifier = Modifier.fillMaxSize(),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    FilledTonalButton(
-                                        onClick = { screenModel.loadInitialData(userId, selectedTab) },
-                                        enabled = !uiState.isLoading,
-                                        modifier = Modifier.height(48.dp),
-                                        colors = ButtonDefaults.filledTonalButtonColors(
-                                            containerColor = customColors.surfaceVariant,
-                                            contentColor = customColors.textPrimary
-                                        )
+                                enter togetherWith exit
+                            },
+                            label = "SubscribersTabTransition"
+                        ) { _ ->
+                            val isError = !uiState.errorMessage.isNullOrBlank()
+                            val isEmpty = uiState.items.isEmpty()
+
+                            when {
+                                uiState.isLoading && isEmpty && !isError -> {
+                                    Box(
+                                        modifier = Modifier.fillMaxSize(),
+                                        contentAlignment = Alignment.Center
                                     ) {
-                                        AnimatedContent(
-                                            targetState = uiState.isLoading,
-                                            transitionSpec = { fadeIn() togetherWith fadeOut() },
-                                            label = "ButtonLoadingTransition"
-                                        ) { loading ->
-                                            if (loading) {
-                                                CircularProgressIndicator(
-                                                    modifier = Modifier.size(24.dp),
-                                                    strokeWidth = 2.5.dp,
-                                                    color = customColors.textPrimary
+                                        CircularProgressIndicator(color = customColors.gourmetOrange)
+                                    }
+                                }
+
+                                isError && isEmpty -> {
+                                    Box(
+                                        modifier = Modifier.fillMaxSize(),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        FilledTonalButton(
+                                            onClick = {
+                                                screenModel.loadInitialData(
+                                                    userId,
+                                                    selectedTab
                                                 )
-                                            } else {
-                                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                                    Icon(
-                                                        imageVector = Icons.Default.Refresh,
-                                                        contentDescription = stringResource(Res.string.active_devices_retry_cd),
+                                            },
+                                            enabled = !uiState.isLoading,
+                                            modifier = Modifier.height(48.dp),
+                                            colors = ButtonDefaults.filledTonalButtonColors(
+                                                containerColor = customColors.surfaceVariant,
+                                                contentColor = customColors.textPrimary
+                                            )
+                                        ) {
+                                            AnimatedContent(
+                                                targetState = uiState.isLoading,
+                                                transitionSpec = { fadeIn() togetherWith fadeOut() },
+                                                label = "ButtonLoadingTransition"
+                                            ) { loading ->
+                                                if (loading) {
+                                                    CircularProgressIndicator(
                                                         modifier = Modifier.size(24.dp),
-                                                        tint = customColors.textSecondary
+                                                        strokeWidth = 2.5.dp,
+                                                        color = customColors.textPrimary
                                                     )
-                                                    Spacer(modifier = Modifier.width(8.dp))
-                                                    Text(
-                                                        text = stringResource(Res.string.active_devices_retry),
-                                                        style = MaterialTheme.typography.titleSmall.copy(
-                                                            fontWeight = FontWeight.Bold,
-                                                            color = customColors.textSecondary
+                                                } else {
+                                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                                        Icon(
+                                                            imageVector = Icons.Default.Refresh,
+                                                            contentDescription = stringResource(Res.string.active_devices_retry_cd),
+                                                            modifier = Modifier.size(24.dp),
+                                                            tint = customColors.textSecondary
                                                         )
-                                                    )
+                                                        Spacer(modifier = Modifier.width(8.dp))
+                                                        Text(
+                                                            text = stringResource(Res.string.active_devices_retry),
+                                                            style = MaterialTheme.typography.titleSmall.copy(
+                                                                fontWeight = FontWeight.Bold,
+                                                                color = customColors.textSecondary
+                                                            )
+                                                        )
+                                                    }
                                                 }
                                             }
                                         }
                                     }
                                 }
-                            }
 
-                            filteredList.isEmpty() -> {
-                                Box(
-                                    modifier = Modifier.fillMaxSize(),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Text(
-                                        text = if (searchQuery.isNotBlank()) {
-                                            stringResource(Res.string.profile_no_results)
-                                        } else {
-                                            stringResource(Res.string.profile_empty_list)
-                                        },
-                                        style = MaterialTheme.typography.bodyMedium.copy(color = customColors.textSecondary)
-                                    )
-                                }
-                            }
-
-                            else -> {
-                                LazyColumn(
-                                    state = listState,
-                                    modifier = Modifier
-                                        .responsiveContentWidth()
-                                        .fillMaxHeight(),
-                                    contentPadding = PaddingValues(bottom = 16.dp, top = 8.dp)
-                                ) {
-                                    items(
-                                        items = filteredList,
-                                        key = { it.id }
-                                    ) { user ->
-                                        val unfollowTitle = stringResource(Res.string.dialog_unfollow_title)
-                                        val unfollowMessage = stringResource(Res.string.dialog_unfollow_message, user.username)
-                                        val unfollowConfirm = stringResource(Res.string.profile_action_unfollow)
-                                        SubscriberUserItem(
-                                            user = user,
-                                            onUserClick = {
-                                                if (screenModel.isMe(user.id)) {
-                                                    navController.navigate(MyProfileFullScreenRoute)
-                                                } else {
-                                                    navController.navigate(ProfileRoute(userId = user.id, username = user.username))
-                                                }
+                                filteredList.isEmpty() -> {
+                                    Box(
+                                        modifier = Modifier.fillMaxSize(),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Text(
+                                            text = if (searchQuery.isNotBlank()) {
+                                                stringResource(Res.string.profile_no_results)
+                                            } else {
+                                                stringResource(Res.string.profile_empty_list)
                                             },
-                                            onActionClick = {
-                                                val currentStatus = user.relationStatus ?: RelationStatus.NOT_FOLLOWING
-
-                                                if (currentStatus == RelationStatus.FOLLOWING) {
-                                                    activeDialog = DialogConfig(
-                                                        title = unfollowTitle,
-                                                        message = unfollowMessage,
-                                                        confirmText = unfollowConfirm,
-                                                        isDestructive = true,
-                                                        onConfirm = {
-                                                            screenModel.handleFollowAction(
-                                                                targetUserId = user.id,
-                                                                currentStatus = currentStatus
-                                                            )
-                                                        }
-                                                    )
-                                                } else {
-                                                    screenModel.handleFollowAction(
-                                                        targetUserId = user.id,
-                                                        currentStatus = currentStatus
-                                                    )
-                                                }
-                                            }
+                                            style = MaterialTheme.typography.bodyMedium.copy(color = customColors.textSecondary)
                                         )
                                     }
+                                }
 
-                                    if (uiState.isLoadingMore) {
-                                        item {
-                                            Box(
-                                                modifier = Modifier
-                                                    .fillMaxWidth()
-                                                    .padding(16.dp),
-                                                contentAlignment = Alignment.Center
-                                            ) {
-                                                CircularProgressIndicator(
-                                                    modifier = Modifier.size(24.dp),
-                                                    color = customColors.gourmetOrange
-                                                )
+                                else -> {
+                                    LazyColumn(
+                                        state = listState,
+                                        modifier = Modifier
+                                            .responsiveContentWidth()
+                                            .fillMaxHeight(),
+                                        contentPadding = PaddingValues(bottom = 16.dp, top = 8.dp)
+                                    ) {
+                                        items(
+                                            items = filteredList,
+                                            key = { it.id }
+                                        ) { user ->
+                                            val unfollowTitle =
+                                                stringResource(Res.string.dialog_unfollow_title)
+                                            val unfollowMessage = stringResource(
+                                                Res.string.dialog_unfollow_message,
+                                                user.username
+                                            )
+                                            val unfollowConfirm =
+                                                stringResource(Res.string.profile_action_unfollow)
+                                            SubscriberUserItem(
+                                                user = user,
+                                                onUserClick = {
+                                                    if (screenModel.isMe(user.id)) {
+                                                        navController.navigate(
+                                                            MyProfileFullScreenRoute
+                                                        )
+                                                    } else {
+                                                        navController.navigate(
+                                                            ProfileRoute(
+                                                                userId = user.id,
+                                                                username = user.username
+                                                            )
+                                                        )
+                                                    }
+                                                },
+                                                onActionClick = {
+                                                    val currentStatus = user.relationStatus
+                                                        ?: RelationStatus.NOT_FOLLOWING
+
+                                                    if (currentStatus == RelationStatus.FOLLOWING) {
+                                                        activeDialog = DialogConfig(
+                                                            title = unfollowTitle,
+                                                            message = unfollowMessage,
+                                                            confirmText = unfollowConfirm,
+                                                            isDestructive = true,
+                                                            onConfirm = {
+                                                                screenModel.handleFollowAction(
+                                                                    targetUserId = user.id,
+                                                                    currentStatus = currentStatus
+                                                                )
+                                                            }
+                                                        )
+                                                    } else {
+                                                        screenModel.handleFollowAction(
+                                                            targetUserId = user.id,
+                                                            currentStatus = currentStatus
+                                                        )
+                                                    }
+                                                }
+                                            )
+                                        }
+
+                                        if (uiState.isLoadingMore) {
+                                            item {
+                                                Box(
+                                                    modifier = Modifier
+                                                        .fillMaxWidth()
+                                                        .padding(16.dp),
+                                                    contentAlignment = Alignment.Center
+                                                ) {
+                                                    CircularProgressIndicator(
+                                                        modifier = Modifier.size(24.dp),
+                                                        color = customColors.gourmetOrange
+                                                    )
+                                                }
                                             }
                                         }
                                     }

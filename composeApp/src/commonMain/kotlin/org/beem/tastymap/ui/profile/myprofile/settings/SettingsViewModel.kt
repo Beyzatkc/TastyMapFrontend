@@ -36,7 +36,6 @@ class SettingsViewModel(
         .observeNotificationPreference()
         .map { preference ->
             val hasOsPermission = permissionManager.checkNotificationPermission()
-            println("DEBUG_NOTIF -> hasOsPermission: $hasOsPermission | preference: $preference")
             if (!hasOsPermission) {
                 false
             } else {
