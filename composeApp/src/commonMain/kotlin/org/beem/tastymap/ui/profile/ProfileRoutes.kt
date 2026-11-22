@@ -3,6 +3,7 @@ package org.beem.tastymap.ui.profile
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import org.beem.tastymap.ui.profile.subscribers.SubscriberListType
+import org.beem.tastymap.ui.report.ReportTargetType
 
 @Serializable
 @SerialName("healthwizard")
@@ -56,6 +57,12 @@ data object VisitRoute
 @SerialName("settings")
 data object SettingsRoute
 
+@Serializable
+data class ReportRoute(
+    val targetId: Long,
+    val targetUsername: String? = null,
+    val targetType: String = ReportTargetType.USER.name
+)
 
 @Serializable
 @SerialName("profile")

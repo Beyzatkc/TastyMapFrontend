@@ -639,4 +639,27 @@
     <string name="support_request_success">Your support request has been received. Thank you!</string>
     <string name="support_email_app_not_found">No email app found, address copied</string>
     <string name="support_email_copied">Email address copied</string>
+
+    <!-- Report Screen -->
+    <string name="report_close_cd">Close</string>
+    <string name="report_question_user">Why are you reporting this account?</string>
+    <string name="report_question_post">Why are you reporting this post?</string>
+    <string name="report_question_comment">Why are you reporting this comment?</string>
+    <string name="report_privacy_note">Your report is anonymous and your identity will never be shared with the reported user.</string>
+    <string name="report_reason_spam">Spam or misleading content</string>
+    <string name="report_reason_impersonation">Fake account or impersonation</string>
+    <string name="report_reason_inappropriate">Inappropriate photo or profile details</string>
+    <string name="report_reason_harassment">Harassment, bullying, or hate speech</string>
+    <string name="report_reason_scam">Scam or fraud</string>
+    <string name="report_reason_false_info">Inaccurate venue or food information</string>
+    <string name="report_selected_reason_label">Selected Reason</string>
+    <string name="report_details_label">Additional details (Optional)</string>
+    <string name="report_details_placeholder">Share any extra context that can help our review...</string>
+    <string name="report_submit_button">Submit Report</string>
+    <string name="report_success_title">Thanks for letting us know</string>
+    <string name="report_success_subtitle">Your feedback helps keep the TastyMap community safe. Our team will review your report shortly.</string>
+    <string name="report_block_user_named">Block @%1$s</string>
+    <string name="report_block_user_generic">Block user</string>
+    <string name="report_block_user_desc">You won\'t see their profile or posts again.</string>
+    <string name="report_done_button">Done</string>
 </resources>

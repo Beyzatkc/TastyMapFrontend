@@ -647,4 +647,27 @@
     <string name="support_request_success">Destek talebiniz alındı. Teşekkürler!</string>
     <string name="support_email_app_not_found">E-posta uygulaması bulunamadı, adres kopyalandı</string>
     <string name="support_email_copied">E-posta adresi kopyalandı</string>
+
+    <!-- Report Screen -->
+    <string name="report_close_cd">Kapat</string>
+    <string name="report_question_user">Bu hesabı neden şikayet ediyorsun?</string>
+    <string name="report_question_post">Bu gönderiyi neden şikayet ediyorsun?</string>
+    <string name="report_question_comment">Bu yorumu neden şikayet ediyorsun?</string>
+    <string name="report_privacy_note">Şikayetin gizli tutulur ve şikayet ettiğin kişiye kimliğin kesinlikle bildirilmez.</string>
+    <string name="report_reason_spam">Spam veya yanıltıcı içerik</string>
+    <string name="report_reason_impersonation">Sahte hesap veya taklitçilik</string>
+    <string name="report_reason_inappropriate">Uygunsuz fotoğraf veya profil bilgileri</string>
+    <string name="report_reason_harassment">Taciz, zorbalık veya nefret söylemi</string>
+    <string name="report_reason_scam">Dolandırıcılık veya aldatma</string>
+    <string name="report_reason_false_info">Yanlış mekan veya lezzet bilgisi</string>
+    <string name="report_selected_reason_label">Seçilen Sebep</string>
+    <string name="report_details_label">Ek detaylar (İsteğe bağlı)</string>
+    <string name="report_details_placeholder">İncelememize yardımcı olacak ek bilgileri buraya yazabilirsin...</string>
+    <string name="report_submit_button">Şikayeti Gönder</string>
+    <string name="report_success_title">Bildirdiğin için teşekkürler</string>
+    <string name="report_success_subtitle">Geri bildirimin TastyMap topluluğunu güvenli tutmamıza yardımcı oluyor. Ekibimiz şikayetini en kısa sürede inceleyecek.</string>
+    <string name="report_block_user_named">@%1$s kullanıcısını engelle</string>
+    <string name="report_block_user_generic">Kullanıcıyı engelle</string>
+    <string name="report_block_user_desc">Profilini ve gönderilerini bir daha görmezsin.</string>
+    <string name="report_done_button">Tamam</string>
 </resources>

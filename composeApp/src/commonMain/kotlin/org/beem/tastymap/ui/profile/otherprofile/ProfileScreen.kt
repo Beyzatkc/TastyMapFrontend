@@ -62,10 +62,13 @@ import org.beem.tastymap.ui.post.detail.WebPostDetailDialog
 import org.beem.tastymap.ui.post.otherpost.PostViewModel
 import org.beem.tastymap.ui.post.postcomment.CommentViewModel
 import org.beem.tastymap.ui.post.postlike.PostLikesViewModel
+import org.beem.tastymap.ui.profile.ReportRoute
 import org.beem.tastymap.ui.profile.SubscribersListRoute
 import org.beem.tastymap.ui.profile.common.ConnectionsDialogState
 import org.beem.tastymap.ui.profile.subscribers.SubscriberListType
 import org.beem.tastymap.ui.profile.subscribers.SubscribersListScreen
+import org.beem.tastymap.ui.report.ReportScreen
+import org.beem.tastymap.ui.report.ReportTargetType
 import org.beem.tastymap.ui.theme.LocalCustomColors
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
@@ -122,6 +125,7 @@ fun ProfileScreen(
             if (username.isNullOrBlank() || username == "null") null else username
         )
     }
+    var showReportDialog by remember { mutableStateOf(false) }
     var connectionsDialog by remember { mutableStateOf<ConnectionsDialogState?>(null)}
     val postViewModel = koinViewModel<PostViewModel>()
     val state by screenModel.profileState.collectAsState()
@@ -267,7 +271,17 @@ fun ProfileScreen(
                                             )
                                         },
                                         onReportClick = {
-                                            println("Kullanıcı şikayet edilecek: $userId")
+                                            if (isWideScreen) {
+                                                showReportDialog = true
+                                            } else {
+                                                navController.navigate(
+                                                    ReportRoute(
+                                                        targetId = currentProfile.userId,
+                                                        targetUsername = currentProfile.username,
+                                                        targetType = ReportTargetType.USER.name
+                                                    )
+                                                )
+                                            }
                                         }
                                     )
                                 }
@@ -940,6 +954,39 @@ fun ProfileScreen(
                 }
             }
         }
+    if (showReportDialog && state.profile != null) {
+        val currentProfile = state.profile!!
+        Dialog(
+            onDismissRequest = { showReportDialog = false },
+            properties = DialogProperties(usePlatformDefaultWidth = false)
+        ) {
+            Surface(
+                modifier = Modifier
+                    .fillMaxWidth(0.5f)
+                    .widthIn(max = 460.dp)
+                    .fillMaxHeight(0.8f)
+                    .heightIn(max = 640.dp),
+                shape = RoundedCornerShape(20.dp),
+                color = customColors.background,
+                shadowElevation = 24.dp
+            ) {
+                ReportScreen(
+                    targetId = currentProfile.userId,
+                    targetUsername = currentProfile.username,
+                    targetType = ReportTargetType.USER,
+                    navController = navController,
+                    onClose = { showReportDialog = false },
+                    onBlockUserClick = if (currentProfile.blockedByMe != true) {
+                        { screenModel.toggleBlockStatus(currentProfile.userId) }
+                    } else null,
+                    onSubmitReport = { reason, description ->
+
+                        println("Şikayet gönderildi -> targetId: ${currentProfile.userId}, reason: $reason, desc: $description")
+                    }
+                )
+            }
+        }
+    }
     connectionsDialog?.let { dialog ->
         Dialog(
             onDismissRequest = {

@@ -22,6 +22,8 @@ import org.beem.tastymap.ui.profile.otherprofile.ProfileScreen
 import org.beem.tastymap.ui.profile.subscribers.SubscriberListNavType
 import org.beem.tastymap.ui.profile.subscribers.SubscriberListType
 import org.beem.tastymap.ui.profile.subscribers.SubscribersListScreen
+import org.beem.tastymap.ui.report.ReportScreen
+import org.beem.tastymap.ui.report.ReportTargetType
 import kotlin.reflect.typeOf
 
 fun NavGraphBuilder.profileGraph(navController: NavController) {
@@ -58,6 +60,24 @@ fun NavGraphBuilder.profileGraph(navController: NavController) {
     composable<ContactSupportRoute> {
         ContactSupportScreen(navController)
     }
+
+    composable<ReportRoute> { backStackEntry ->
+        val route = backStackEntry.toRoute<ReportRoute>()
+        val parsedTargetType = runCatching {
+            ReportTargetType.valueOf(route.targetType)
+        }.getOrDefault(ReportTargetType.USER)
+
+        ReportScreen(
+            targetId = route.targetId,
+            targetUsername = route.targetUsername,
+            targetType = parsedTargetType,
+            navController = navController,
+            onSubmitReport = { reason, description ->
+                println("Şikayet gönderildi -> targetId: ${route.targetId}, reason: $reason, desc: $description")
+            }
+        )
+    }
+
     composable<SettingsRoute> {
         SettingsScreen(navController)
     }
