@@ -6,6 +6,7 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class RecommendationReq(
     @SerialName("sessionId") val sessionId: String?,
+    @SerialName("clientMessageId") val clientMessageId: String,
     @SerialName("query") val query: String,
     @SerialName("latitude") val latitude: Double? = null,
     @SerialName("longitude") val longitude: Double? = null,

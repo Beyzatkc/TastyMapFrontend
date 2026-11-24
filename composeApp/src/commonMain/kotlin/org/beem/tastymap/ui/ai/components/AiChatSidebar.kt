@@ -37,6 +37,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import org.beem.tastymap.core.util.iso.resolveTimeGroup
 import org.beem.tastymap.ui.ai.AiChatIntent
+import org.beem.tastymap.ui.ai.AiChatState
 import org.beem.tastymap.ui.ai.model.AiQuotaState
 import org.beem.tastymap.ui.theme.CustomColors
 import org.beem.tastymap.ui.theme.getAppFontFamily
@@ -51,7 +52,7 @@ data class ChatSessionItem(
 fun AiChatSidebar(
     sessions: List<ChatSessionItem>,
     selectedSessionId: String?,
-    quotaState: AiQuotaState,
+    state: AiChatState,
     customColors: CustomColors,
     onIntent: (AiChatIntent) -> Unit,
     modifier: Modifier = Modifier
@@ -59,6 +60,7 @@ fun AiChatSidebar(
     val listState = rememberLazyListState()
     val fontFamily = getAppFontFamily()
     var isQuotaExpanded by remember { mutableStateOf(false) }
+    val quotaState = state.quotaState
 
     val shouldLoadMore = remember {
         derivedStateOf {
@@ -70,6 +72,7 @@ fun AiChatSidebar(
 
     val groupedSessions = remember (sessions) {
         sessions
+            .distinctBy { it.sessionId }
             .groupBy { resolveTimeGroup(it.dateText) }
             .toList()
             .sortedBy { (group, _) -> group.ordinal }
@@ -142,99 +145,155 @@ fun AiChatSidebar(
 
             Spacer(modifier = Modifier.height(22.dp))
 
-            // 3. BALONCUKSUZ, TEMİZ OTURUM LİSTESİ
-            if (sessions.isEmpty()) {
-                Box(
-                    modifier = Modifier
-                        .weight(1f)
-                        .fillMaxWidth(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = "Henüz sohbet geçmişin yok.",
-                        fontFamily = fontFamily,
-                        fontSize = 13.sp,
-                        color = customColors.textSecondary.copy(alpha = 0.6f)
+            when {
+                state.isSessionsLoading && state.sessions.isEmpty() -> {
+                    SessionListShimmer(
+                        customColors = customColors,
+                        modifier = Modifier
+                            .weight(1f)
+                            .fillMaxWidth()
                     )
                 }
-            } else {
-                LazyColumn(
-                    state = listState,
-                    verticalArrangement = Arrangement.spacedBy(4.dp),
-                    modifier = Modifier.weight(1f)
-                ) {
-                    item(
-                        key = "new_chat"
+
+                state.sessionsLoadError != null && state.sessions.isEmpty() -> {
+                    SessionHistoryErrorView(
+                        message = state.sessionsLoadError,
+                        customColors = customColors,
+                        onRetry = { onIntent(AiChatIntent.RetryLoadSessions) },
+                        modifier = Modifier
+                            .weight(1f)
+                            .fillMaxWidth()
+                    )
+                }
+
+                sessions.isEmpty() -> {
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .fillMaxWidth(),
+                        contentAlignment = Alignment.Center
                     ) {
-                        val isNewChatSelected = selectedSessionId == null
-
-                        val newChatBgColor by animateColorAsState(
-                            targetValue = if (isNewChatSelected) {
-                                customColors.surfaceVariant
-                            } else {
-                                Color.Transparent
-                            },
-                            animationSpec = tween(180)
+                        Text(
+                            text = "Henüz sohbet geçmişin yok.",
+                            fontFamily = fontFamily,
+                            fontSize = 13.sp,
+                            color = customColors.textSecondary.copy(alpha = 0.6f)
                         )
-                        Surface(
-                            onClick = { onIntent(AiChatIntent.NewChat) },
-                            shape = RoundedCornerShape(12.dp),
-                            color = newChatBgColor,
-                            modifier = Modifier.fillMaxWidth()
+                    }
+                }
+                else -> {
+                    LazyColumn(
+                        state = listState,
+                        verticalArrangement = Arrangement.spacedBy(4.dp),
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        item(
+                            key = "new_chat"
                         ) {
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(start = 12.dp, end = 12.dp, top = 11.dp, bottom = 11.dp),//, horizontal = 14.dp, vertical = 11.dp),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.Start
+                            val isNewChatSelected = selectedSessionId == null
+
+                            val newChatBgColor by animateColorAsState(
+                                targetValue = if (isNewChatSelected) {
+                                    customColors.surfaceVariant
+                                } else {
+                                    Color.Transparent
+                                },
+                                animationSpec = tween(180)
+                            )
+                            Surface(
+                                onClick = { onIntent(AiChatIntent.NewChat) },
+                                shape = RoundedCornerShape(12.dp),
+                                color = newChatBgColor,
+                                modifier = Modifier.fillMaxWidth()
                             ) {
-                                Icon(
-                                    imageVector = Icons.Rounded.EditNote,
-                                    contentDescription = null,
-                                    tint = customColors.textPrimary,
-                                    modifier = Modifier.size(24.dp)
-                                )
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(start = 12.dp, end = 12.dp, top = 11.dp, bottom = 11.dp),//, horizontal = 14.dp, vertical = 11.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.Start
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Rounded.EditNote,
+                                        contentDescription = null,
+                                        tint = customColors.textPrimary,
+                                        modifier = Modifier.size(24.dp)
+                                    )
 
-                                Spacer(modifier = Modifier.width(10.dp))
+                                    Spacer(modifier = Modifier.width(10.dp))
 
+                                    Text(
+                                        text = "Yeni sohbet",
+                                        fontFamily = fontFamily,
+                                        fontSize = 15.sp,
+                                        fontWeight = if (isNewChatSelected) FontWeight.Bold else FontWeight.SemiBold,
+                                        color = customColors.textPrimary
+                                    )
+                                }
+                            }
+                        }
+                        groupedSessions.forEach { (group, groupSessions) ->
+                            item(
+                                key =  "header_${group.name}"
+                            ) {
                                 Text(
-                                    text = "Yeni sohbet",
+                                    text = group.label,
                                     fontFamily = fontFamily,
-                                    fontSize = 15.sp,
-                                    fontWeight = if (isNewChatSelected) FontWeight.Bold else FontWeight.SemiBold,
-                                    color = customColors.textPrimary
+                                    fontSize = 11.5.sp,
+                                    letterSpacing = 0.8.sp,
+                                    fontWeight = FontWeight.ExtraBold,
+                                    color = customColors.textSecondary.copy(alpha = 0.75f),
+                                    modifier = Modifier.padding(
+                                        start = 12.dp,
+                                        top = if (group == groupedSessions.first().first) 4.dp else 16.dp,
+                                        bottom = 2.dp
+                                    )
+                                )
+                            }
+                            items(groupSessions, key = { it.sessionId }) { session ->
+                                val isSelected = session.sessionId == selectedSessionId
+                                SessionHistoryRow(
+                                    session = session,
+                                    isSelected = isSelected,
+                                    customColors = customColors,
+                                    onSelect = { onIntent(AiChatIntent.SelectSession(session.sessionId)) },
+                                    onDelete = { onIntent(AiChatIntent.DeleteSession(session.sessionId)) }
                                 )
                             }
                         }
-                    }
-                    groupedSessions.forEach { (group, groupSessions) ->
-                        item(
-                            key =  "header_${group.name}"
-                        ) {
-                            Text(
-                                text = group.label,
-                                fontFamily = fontFamily,
-                                fontSize = 11.5.sp,
-                                letterSpacing = 0.8.sp,
-                                fontWeight = FontWeight.ExtraBold,
-                                color = customColors.textSecondary.copy(alpha = 0.75f),
-                                modifier = Modifier.padding(
-                                    start = 12.dp,
-                                    top = if (group == groupedSessions.first().first) 4.dp else 16.dp,
-                                    bottom = 2.dp
-                                )
-                            )
-                        }
-                        items(groupSessions, key = { it.sessionId }) { session ->
-                            val isSelected = session.sessionId == selectedSessionId
-                            SessionHistoryRow(
-                                session = session,
-                                isSelected = isSelected,
-                                customColors = customColors,
-                                onSelect = { onIntent(AiChatIntent.SelectSession(session.sessionId)) },
-                                onDelete = { onIntent(AiChatIntent.DeleteSession(session.sessionId)) }
-                            )
+                        if (state.isSessionsLoading) {
+                            item(key = "sessions_pagination_loading") {
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(vertical = 14.dp),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    CircularProgressIndicator(
+                                        color = customColors.gourmetOrange,
+                                        strokeWidth = 2.dp,
+                                        modifier = Modifier.size(18.dp)
+                                    )
+                                }
+                            }
+                        } else if (state.sessionsLoadError != null) {
+                            item(key = "sessions_pagination_error") {
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(vertical = 8.dp),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    TextButton(onClick = { onIntent(AiChatIntent.RetryLoadSessions) }) {
+                                        Text(
+                                            text = "Daha fazla yüklenemedi • Tekrar dene",
+                                            fontFamily = fontFamily,
+                                            fontSize = 12.sp,
+                                            color = customColors.gourmetOrange
+                                        )
+                                    }
+                                }
+                            }
                         }
                     }
                 }

@@ -17,6 +17,7 @@ import androidx.compose.ui.unit.sp
 import org.beem.tastymap.data.model.ai.HydratedPlaceCardDto
 import org.beem.tastymap.ui.ai.AiChatIntent
 import org.beem.tastymap.ui.theme.CustomColors
+import org.beem.tastymap.ui.theme.adaptiveTextPointer
 import org.beem.tastymap.ui.theme.getAppFontFamily
 
 private const val TAG_PLACE_CLICK = "PLACE_CLICK"
@@ -49,7 +50,9 @@ fun AiFormattedMessageText(
 
     var textLayoutResult by remember { mutableStateOf<TextLayoutResult?>(null) }
 
-    SelectionContainer {
+    SelectionContainer(
+        modifier = Modifier.adaptiveTextPointer()
+    ) {
         Text(
             text = annotatedString,
             fontFamily = fontFamily,

@@ -7,6 +7,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -95,8 +96,8 @@ fun AiChatScreen(
                 ModalDrawerSheet(drawerContainerColor = customColors.darkHeaderColor) {
                     AiChatSidebar(
                         sessions = sidebarSessions,
-                        selectedSessionId = state.currentSessionId,
-                        quotaState = state.quotaState, // Kota servisi entegre edilene kadar
+                        selectedSessionId = state.activeRemoteSessionId,
+                        state = state,
                         customColors = customColors,
                         onIntent = onIntent
                     )
@@ -113,8 +114,8 @@ fun AiChatScreen(
             if (isWideScreen) {
                 AiChatSidebar(
                     sessions = sidebarSessions,
-                    selectedSessionId = state.currentSessionId,
-                    quotaState = state.quotaState,
+                    selectedSessionId = state.activeRemoteSessionId,
+                    state = state,
                     customColors = customColors,
                     onIntent = onIntent
                 )
@@ -168,49 +169,21 @@ fun AiChatScreen(
                             )
                         }
                     }
-
-                    // Mesajlar Yüklenirken Loading
-                    if (state.isMessagesLoading) {
-                        Box(
-                            modifier = Modifier
-                                .weight(1f)
-                                .fillMaxWidth(),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            CircularProgressIndicator(color = customColors.gourmetOrange)
-                        }
-                    } else if (state.messages.isEmpty()) {
-                        AiWelcomeView(
-                            customColors = customColors,
-                            onIntent = onIntent,
-                            modifier = Modifier
-                                .weight(1f)
-                                .fillMaxWidth()
-                                .padding(bottom = 80.dp)
-                        )
-                    } else {
-                        // Mesaj Akışı
-                        LazyColumn(
-                            state = listState,
-                            modifier = Modifier
-                                .weight(1f)
-                                .fillMaxWidth()
-                                .padding(horizontal = if (isWideScreen) 80.dp else 16.dp),
-                            verticalArrangement = Arrangement.spacedBy(16.dp),
-                            contentPadding = PaddingValues(
-                                top = 16.dp,
-                                bottom = if (state.previewPlace != null) 240.dp else 100.dp
-                            )
-                        ) {
-                            items(state.messages, key = { it.id }) { message ->
-                                AiChatBubble(
-                                    message = message,
-                                    customColors = customColors,
-                                    onIntent = onIntent
-                                )
-                            }
-                        }
-                    }
+                    AiChatMessageArea(
+                        messages = state.messages,
+                        isMessagesLoading = state.isMessagesLoading,
+                        messagesLoadError = state.messagesLoadError,
+                        isStreaming = state.isStreaming,
+                        hasPreviewPlace = state.previewPlace != null,
+                        isLoadingOlderMessages = state.isLoadingOlderMessages,
+                        olderMessagesLoadError = state.olderMessagesLoadError,
+                        hasMoreOlderMessages = state.hasMoreOlderMessages,
+                        listState = listState,
+                        onIntent = onIntent,
+                        modifier = Modifier
+                            .weight(1f)
+                            .fillMaxWidth()
+                    )
                 }
                 Column(
                     modifier = Modifier
@@ -241,6 +214,7 @@ fun AiChatScreen(
                         isWideScreen = isWideScreen,
                         quotaState = state.quotaState,
                         customColors = customColors,
+                        enabled = !state.isMessagesLoading && state.messagesLoadError == null,
                         onIntent = onIntent
                     )
                 }

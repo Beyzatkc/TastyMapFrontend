@@ -14,6 +14,7 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -24,12 +25,15 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Check
 import androidx.compose.material.icons.outlined.ContentCopy
 import androidx.compose.material.icons.rounded.AutoAwesome
+import androidx.compose.material.icons.rounded.Refresh
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -44,6 +48,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.pointer.PointerIcon
+import androidx.compose.ui.input.pointer.pointerHoverIcon
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.TextStyle
@@ -62,9 +68,9 @@ fun AssistantMessageBlock(
     message: ChatMessage,
     customColors: CustomColors,
     onIntent: (AiChatIntent) -> Unit,
+    canRetry: Boolean,
     modifier: Modifier = Modifier
 ) {
-    val fontFamily = getAppFontFamily()
     val clipboardManager = LocalClipboardManager.current
     var isCopied by remember { mutableStateOf(false) }
 
@@ -74,17 +80,6 @@ fun AssistantMessageBlock(
             isCopied = false
         }
     }
-
-    val infiniteTransition = rememberInfiniteTransition(label = "thinkingPulse")
-    val pulseAlpha by infiniteTransition.animateFloat(
-        initialValue = 0.45f,
-        targetValue = 1.0f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(850, easing = FastOutSlowInEasing),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "pulseAlpha"
-    )
 
     Column(
         modifier = modifier
@@ -124,18 +119,33 @@ fun AssistantMessageBlock(
                     .fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                IconButton(
-                    onClick = {
-                        clipboardManager.setText(AnnotatedString(message.text))
-                        isCopied = true
-                    },
-                    modifier = Modifier.size(30.dp)
-                ) {
-                    Icon(
-                        imageVector = if (isCopied) Icons.Outlined.Check else Icons.Outlined.ContentCopy,
-                        contentDescription = "Yanıtı Kopyala",
-                        tint = if (isCopied) customColors.success else customColors.textTertiary,
-                        modifier = Modifier.size(15.dp)
+
+                if (message.text.isNotBlank()) {
+                    IconButton(
+                        onClick = {
+                            clipboardManager.setText(AnnotatedString(message.text))
+                            isCopied = true
+                        },
+                        modifier = Modifier
+                            .size(30.dp)
+                            .pointerHoverIcon(PointerIcon.Hand)
+                    ) {
+                        Icon(
+                            imageVector = if (isCopied) Icons.Outlined.Check else Icons.Outlined.ContentCopy,
+                            contentDescription = "Yanıtı Kopyala",
+                            tint = if (isCopied) customColors.success else customColors.textTertiary,
+                            modifier = Modifier.size(15.dp)
+                        )
+                    }
+                }
+
+                if (message.isError && canRetry) {
+                    if (message.text.isNotBlank()) {
+                        Spacer(modifier = Modifier.width(8.dp))
+                    }
+                    AiRetryPillButton(
+                        customColors = customColors,
+                        onClick = { onIntent(AiChatIntent.RetryLastMessage) }
                     )
                 }
             }
@@ -240,6 +250,45 @@ fun AssistantHeaderStatus(
                 fontSize = 13.5.sp,
                 fontWeight = FontWeight.SemiBold,
                 color = customColors.textSecondary
+            )
+        }
+    }
+}
+
+
+@Composable
+private fun AiRetryPillButton(
+    customColors: CustomColors,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val fontFamily = getAppFontFamily()
+    val accentColor = customColors.gourmetOrange // İstersen MaterialTheme.colorScheme.error yapabilirsin
+
+    Surface(
+        onClick = onClick,
+        shape = RoundedCornerShape(50),
+        color = accentColor.copy(alpha = 0.12f),
+        border = BorderStroke(1.dp, accentColor.copy(alpha = 0.30f)),
+        modifier = modifier.pointerHoverIcon(PointerIcon.Hand)
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.padding(horizontal = 12.dp, vertical = 5.dp)
+        ) {
+            Icon(
+                imageVector = Icons.Rounded.Refresh,
+                contentDescription = "Tekrar Dene",
+                tint = accentColor,
+                modifier = Modifier.size(14.dp)
+            )
+            Spacer(modifier = Modifier.width(5.dp))
+            Text(
+                text = "Tekrar Dene",
+                fontFamily = fontFamily,
+                fontSize = 12.5.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = accentColor
             )
         }
     }

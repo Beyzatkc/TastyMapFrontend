@@ -19,6 +19,7 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.serialization.json.Json
 import org.beem.tastymap.core.network.AuthHttpClientManager
 import org.beem.tastymap.data.model.ai.AiChatMessageResponse
+import org.beem.tastymap.data.model.ai.AiChatMessagesPageResponseDto
 import org.beem.tastymap.data.model.ai.AiSessionSummaryDto
 import org.beem.tastymap.data.model.ai.AiStreamEvent
 import org.beem.tastymap.data.model.ai.AiStreamPayloadDto
@@ -52,8 +53,17 @@ class AiChatDataSource(private val authHttpClientManager: AuthHttpClientManager)
     /**
      * Belirli bir oturumun mesajlarını ve canlı mekan kartlarını getirir.
      */
-    suspend fun getSessionMessages(sessionId: String): List<AiChatMessageResponse> {
-        return client.get("api/v1/ai/sessions/$sessionId/messages").body()
+    suspend fun getSessionMessages(
+        sessionId: String,
+        beforeId: Long? = null,
+        size: Int
+    ): AiChatMessagesPageResponseDto {
+        return client.get("api/v1/ai/sessions/$sessionId/messages"){
+            parameter("size", size)
+            if (beforeId != null) {
+                parameter("beforeId", beforeId)
+            }
+        }.body()
     }
 
     /**
@@ -96,6 +106,10 @@ class AiChatDataSource(private val authHttpClientManager: AuthHttpClientManager)
                         if (rawData.isNotEmpty()) {
                             try {
                                 when (currentEvent) {
+                                    "session_created" -> {
+                                        val aiSession = sseJson.decodeFromString<AiSessionSummaryDto>(rawData)
+                                        emit(AiStreamEvent.SessionCreated(aiSession))
+                                    }
                                     "status" -> {
                                         val payload = sseJson.decodeFromString<AiStreamPayloadDto>(rawData)
                                         emit(AiStreamEvent.Status(payload.content))

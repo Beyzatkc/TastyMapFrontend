@@ -7,17 +7,24 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import org.beem.tastymap.data.model.ai.AiStreamEvent
 import org.beem.tastymap.data.model.ai.RecommendationReq
 import org.beem.tastymap.data.repository.AiChatRepository
+import org.beem.tastymap.ui.ai.model.AiSessionRef
 import org.beem.tastymap.ui.ai.model.ChatMessage
 import org.beem.tastymap.ui.ai.model.toUiState
 import org.beem.tastymap.ui.ai.model.updateFromStream
 import kotlin.random.Random
 import kotlin.time.Clock
 import kotlin.time.Duration.Companion.milliseconds
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
 
 class AiViewModel(
     private val aiChatRepository: AiChatRepository
@@ -27,7 +34,12 @@ class AiViewModel(
     val state: StateFlow<AiChatState> = _state.asStateFlow()
 
     init {
-        loadSessions(page = 0)
+        observeSidebarSessions()
+        observeActiveSessionMessages()
+
+        if (aiChatRepository.sessionSummaries.value.isEmpty()) {
+            loadSessions(page = 0)
+        }
         loadQuotaStatus()
     }
 
@@ -89,190 +101,236 @@ class AiViewModel(
             is AiChatIntent.DismissUpgradeSheet -> {
                 _state.update { it.copy(isUpgradeSheetVisible = false) }
             }
+
+            AiChatIntent.RetryLastMessage -> handleRetryLastMessage()
+            AiChatIntent.RetryLoadSessions -> handleRetryLoadSessionAndQuota()
+            AiChatIntent.RetryLoadMessages -> handleRetryMessages()
+            AiChatIntent.LoadOlderMessages -> loadOlderMessages()
+        }
+    }
+
+    private fun observeSidebarSessions() {
+        viewModelScope.launch {
+            aiChatRepository.sessionSummaries.collect { cachedList ->
+                _state.update { it.copy(sessions = cachedList) }
+            }
+        }
+    }
+
+    private fun observeActiveSessionMessages() {
+        viewModelScope.launch {
+            _state
+                .map { it.sessionRef?.cacheKey }
+                .distinctUntilChanged()
+                .flatMapLatest { sessionKey ->
+                    if (sessionKey == null) flowOf(null)
+                    else aiChatRepository.observeSession(sessionKey)
+                }
+                .collect { cachedSession ->
+                    _state.update { current ->
+                        current.copy(
+                            messages = cachedSession?.messages.orEmpty(),
+                            isStreaming = cachedSession?.isStreaming ?: false
+                        )
+                    }
+                }
         }
     }
 
 
+    @OptIn(ExperimentalUuidApi::class)
     private fun handleSendMessage() {
+        val currentState = _state.value
         val query = _state.value.inputText.trim()
         if (query.isBlank() || _state.value.isStreaming) return
 
-        val timestamp = Random.nextLong(100000, 999999)
-        val userMsgId = "user_$timestamp"
-        val assistantMsgId = "asst_$timestamp"
+        val targetRef = currentState.sessionRef
+            ?: AiSessionRef.Pending("pending_${Clock.System.now().toEpochMilliseconds()}")
 
-
-        val userMessage = ChatMessage(
-            id = userMsgId,
-            text = query,
-            isFromUser = true
+        val request = RecommendationReq(
+            sessionId = targetRef.remoteId,
+            clientMessageId = Uuid.random().toString(),
+            query = query,
+            latitude = currentState.userLatitude,
+            longitude = currentState.userLongitude,
+            radiusKm = 5.0,
+            ignoreHealthProfile = false,
+            provider = currentState.selectedProvider.name
         )
-
-        val assistantMessage = ChatMessage(
-            id = assistantMsgId,
-            text = "",
-            isFromUser = false,
-            places = emptyList(),
-            statusMessage = "İsteğiniz inceleniyor...",
-            isLoading = true
-        )
-
-        val currentSessionId = _state.value.currentSessionId
 
         _state.update { current ->
             current.copy(
+                sessionRef = targetRef,
                 inputText = "",
                 isStreaming = true,
                 previewPlace = null,
-                messages = current.messages + userMessage + assistantMessage
+                errorMessage = null
             )
         }
 
-        val request = RecommendationReq(
-            sessionId = currentSessionId,
-            query = query,
-            latitude = _state.value.userLatitude,
-            longitude = _state.value.userLongitude,
+        aiChatRepository.sendMessageInBackground(
+            initialRef = targetRef,
+            request = request,
+            onSessionPromoted = { pendingKey, activeRef ->
+                _state.update { latest ->
+                    if (latest.sessionRef?.cacheKey == pendingKey) {
+                        latest.copy(sessionRef = activeRef)
+                    } else latest
+                }
+            },
+            onQuotaUpdated = { quotaEvent ->
+                _state.update { it.copy(quotaState = it.quotaState.updateFromStream(quotaEvent.quota)) }
+            },
+            onErrorMessage = { sessionKey, err ->
+                _state.update { latest ->
+                    if (latest.sessionRef?.cacheKey == sessionKey) {
+                        latest.copy(
+                            errorMessage = err
+                        )
+                    } else latest
+                }
+            }
+        )
+    }
+
+    private fun handleRetryLastMessage() {
+        val currentState = _state.value
+        if (currentState.isStreaming) return
+
+        val activeRef = currentState.sessionRef ?: return
+        val messages = currentState.messages
+
+        val lastAssistantMsg = messages.lastOrNull { !it.isFromUser && it.isError } ?: return
+        val lastUserMsg = messages.lastOrNull { it.isFromUser } ?: return
+        val idempotencyKey = lastUserMsg.clientMessageId ?: return
+
+        val retryRequest = RecommendationReq(
+            sessionId = activeRef.remoteId,
+            clientMessageId = idempotencyKey,
+            query = lastUserMsg.text,
+            latitude = currentState.userLatitude,
+            longitude = currentState.userLongitude,
             radiusKm = 5.0,
             ignoreHealthProfile = false,
-            provider = _state.value.selectedProvider.name
+            provider = currentState.selectedProvider.name
         )
 
-        viewModelScope.launch {
-            aiChatRepository.streamRecommendation(request)
-                .catch { error ->
-                    _state.update { current ->
-                        val updated = current.messages.map { msg ->
-                            if (msg.id == assistantMsgId) {
-                                msg.copy(
-                                    text = "Üzgünüm, bir bağlantı hatası oluştu.",
-                                    isLoading = false,
-                                    statusMessage = null
-                                )
-                            } else msg
-                        }
-                        current.copy(
-                            isStreaming = false,
-                            messages = updated,
-                            errorMessage = error.message
-                        )
-                    }
+        _state.update { it.copy(errorMessage = null) }
+
+        aiChatRepository.retryMessageInBackground(
+            sessionRef = activeRef,
+            assistantMessageId = lastAssistantMsg.id,
+            request = retryRequest,
+            onSessionPromoted = { pendingKey, newActiveRef ->
+                _state.update { latest ->
+                    if (latest.sessionRef?.cacheKey == pendingKey) {
+                        latest.copy(sessionRef = newActiveRef)
+                    } else latest
                 }
-                .collect { event ->
-                    when (event) {
-                        is AiStreamEvent.Status -> {
-                            _state.update { current ->
-                                val updated = current.messages.map { msg ->
-                                    if (msg.id == assistantMsgId) {
-                                        msg.copy(statusMessage = event.message)
-                                    } else msg
-                                }
-                                current.copy(messages = updated)
-                            }
-                        }
-
-                        is AiStreamEvent.Token -> {
-                            _state.update { current ->
-                                val updated = current.messages.map { msg ->
-                                    if (msg.id == assistantMsgId) {
-                                        msg.copy(
-                                            text = msg.text + event.chunk,
-                                            isLoading = false,
-                                            statusMessage = null
-                                        )
-                                    } else msg
-                                }
-                                current.copy(messages = updated)
-                            }
-                        }
-
-                        is AiStreamEvent.Places -> {
-                            _state.update { current ->
-                                val updated = current.messages.map { msg ->
-                                    if (msg.id == assistantMsgId) {
-                                        msg.copy(places = event.places)
-                                    } else msg
-                                }
-                                current.copy(messages = updated)
-                            }
-                        }
-
-                        is AiStreamEvent.Quota -> {
-                            _state.update { currentState ->
-                                currentState.copy(
-                                    quotaState = currentState.quotaState.updateFromStream(event.quota)
-                                )
-                            }
-                        }
-
-                        is AiStreamEvent.Completed -> {
-                            _state.update { current ->
-                                val updated = current.messages.map { msg ->
-                                    if (msg.id == assistantMsgId) {
-                                        msg.copy(isLoading = false, statusMessage = null)
-                                    } else msg
-                                }
-                                current.copy(
-                                    isStreaming = false,
-                                    messages = updated
-                                )
-                            }
-                            if (currentSessionId == null) {
-                                loadSessions(page = 0)
-                            }
-                        }
-
-                        is AiStreamEvent.Error -> {
-                            _state.update { current ->
-                                val updated = current.messages.map { msg ->
-                                    if (msg.id == assistantMsgId) {
-                                        msg.copy(
-                                            text = event.message.ifBlank { "Bir sorun oluştu." },
-                                            isLoading = false,
-                                            statusMessage = null
-                                        )
-                                    } else msg
-                                }
-                                current.copy(
-                                    isStreaming = false,
-                                    messages = updated,
-                                    errorMessage = event.message
-                                )
-                            }
-                        }
-                    }
+            },
+            onQuotaUpdated = { quotaEvent ->
+                _state.update { it.copy(quotaState = it.quotaState.updateFromStream(quotaEvent.quota)) }
+            },
+            onErrorMessage = { failedSessionKey, err ->
+                _state.update { latest ->
+                    if (latest.sessionRef?.cacheKey == failedSessionKey) {
+                        latest.copy(errorMessage = err)
+                    } else latest
                 }
-        }
+            }
+        )
+    }
+
+    private fun handleRetryMessages() {
+        val activeSessionId = (_state.value.sessionRef as? AiSessionRef.Active)?.sessionId ?: return
+        loadSessionMessages(activeSessionId, forceRefresh = true)
     }
 
     /**
      * Sol panel için geçmiş oturumları sayfalı olarak çeker.
      */
     private fun loadSessions(page: Int) {
+        if (_state.value.isSessionsLoading) return
+
         viewModelScope.launch {
-            _state.update { it.copy(isSessionsLoading = true) }
+            _state.update {
+                it.copy(
+                    isSessionsLoading = true,
+                    sessionsLoadError = null
+                )
+            }
 
             aiChatRepository.getUserSessions(page = page, size = 20)
                 .onSuccess { slice ->
                     _state.update { current ->
-                        val updatedList = if (page == 0) {
-                            slice.content
-                        } else {
-                            current.sessions + slice.content
-                        }
-
                         current.copy(
-                            sessions = updatedList,
                             isSessionsLoading = false,
                             currentSessionsPage = slice.number,
-                            hasMoreSessions = !slice.last && !slice.empty
+                            hasMoreSessions = !slice.last && !slice.empty,
+                            sessionsLoadError = null
                         )
                     }
                 }
-                .onFailure { error ->
-                    _state.update { it.copy(isSessionsLoading = false, errorMessage = error.message) }
+                .onFailure {
+                    _state.update {
+                        it.copy(
+                            isSessionsLoading = false,
+                            sessionsLoadError = "Sohbet geçmişi yüklenemedi."
+                        )
+                    }
                 }
         }
+    }
+
+    private fun loadOlderMessages() {
+        val current = _state.value
+        val sessionId = (current.sessionRef as? AiSessionRef.Active)?.sessionId ?: return
+        if (current.isLoadingOlderMessages || !current.hasMoreOlderMessages || current.isMessagesLoading) return
+
+        _state.update {
+            it.copy(
+                isLoadingOlderMessages = true,
+                olderMessagesLoadError = null
+            )
+        }
+
+        viewModelScope.launch {
+            aiChatRepository.loadOlderMessages(sessionId)
+                .onSuccess { hasMore ->
+                    _state.update { latest ->
+                        if (latest.sessionRef?.cacheKey == sessionId) {
+                            latest.copy(
+                                isLoadingOlderMessages = false,
+                                hasMoreOlderMessages = hasMore
+                            )
+                        } else latest
+                    }
+                }
+                .onFailure {
+                    _state.update { latest ->
+                        if (latest.sessionRef?.cacheKey == sessionId) {
+                            latest.copy(
+                                isLoadingOlderMessages = false,
+                                olderMessagesLoadError = "Eski mesajlar yüklenemedi"
+                            )
+                        } else latest
+                    }
+                }
+        }
+    }
+
+    private fun handleRetryLoadSessionAndQuota() {
+        val currentState = _state.value
+        if (currentState.isSessionsLoading) return
+
+        val targetPage = if (currentState.sessions.isEmpty()) {
+            loadQuotaStatus()
+            0
+        } else {
+            currentState.currentSessionsPage + 1
+        }
+
+        loadSessions(targetPage)
     }
 
     /**
@@ -288,44 +346,43 @@ class AiViewModel(
     /**
      * Tıklanan oturumun geçmiş mesajlarını ve mekan kartlarını getirir.
      */
-    private fun loadSessionMessages(sessionId: String) {
-        if (_state.value.currentSessionId == sessionId) {
-            _state.update { it.copy(isSidebarOpen = false) }
-            return
+    private fun loadSessionMessages(sessionId: String, forceRefresh: Boolean = false) {
+        val targetRef = AiSessionRef.Active(sessionId)
+
+        _state.update {
+            it.copy(
+                sessionRef = targetRef,
+                isMessagesLoading = true,
+                messagesLoadError = null,
+                isLoadingOlderMessages = false,
+                olderMessagesLoadError = null,
+                hasMoreOlderMessages = false,
+                previewPlace = null,
+                isSidebarOpen = false
+            )
         }
 
         viewModelScope.launch {
-            _state.update {
-                it.copy(
-                    currentSessionId = sessionId,
-                    isMessagesLoading = true,
-                    isSidebarOpen = false
-                )
-            }
-
-            aiChatRepository.getSessionMessages(sessionId)
-                .onSuccess { dtoList ->
-                    val uiMessages = dtoList.map { dto ->
-                        ChatMessage(
-                            id = dto.id.toString(),
-                            text = dto.content,
-                            isFromUser = dto.role == "USER",
-                            places = dto.places
-                        )
-                    }
-                    _state.update {
-                        it.copy(
-                            messages = uiMessages,
-                            isMessagesLoading = false
-                        )
+            aiChatRepository.loadSessionMessagesIfNeeded(sessionId, forceRefresh)
+                .onSuccess { session ->
+                    _state.update { latest ->
+                        if (latest.sessionRef?.cacheKey == sessionId) {
+                            latest.copy(
+                                isMessagesLoading = false,
+                                messagesLoadError = null,
+                                hasMoreOlderMessages = session.hasMoreOlderMessages
+                            )
+                        } else latest
                     }
                 }
                 .onFailure { error ->
-                    _state.update {
-                        it.copy(
-                            isMessagesLoading = false,
-                            errorMessage = error.message ?: "Mesajlar yüklenemedi"
-                        )
+                    _state.update { latest ->
+                        if (latest.sessionRef?.cacheKey == sessionId) {
+                            latest.copy(
+                                isMessagesLoading = false,
+                                messagesLoadError = "Mesajlar yüklenemedi. İnternet bağlantını kontrol edip tekrar dene."
+                            )
+                        } else latest
                     }
                 }
         }
@@ -337,10 +394,17 @@ class AiViewModel(
     private fun handleNewChat() {
         _state.update {
             it.copy(
-                currentSessionId = null,
+                sessionRef = null,
                 messages = emptyList(),
+                isStreaming = false,
                 inputText = "",
-                isSidebarOpen = false
+                previewPlace = null,
+                isSidebarOpen = false,
+                isMessagesLoading = false,
+                messagesLoadError = null,
+                isLoadingOlderMessages = false,
+                olderMessagesLoadError = null,
+                hasMoreOlderMessages = false
             )
         }
     }
@@ -352,15 +416,8 @@ class AiViewModel(
         viewModelScope.launch {
             aiChatRepository.deleteSession(sessionId)
                 .onSuccess {
-                    _state.update { current ->
-                        val filteredSessions = current.sessions.filterNot { it.sessionId == sessionId }
-                        val resetChat = current.currentSessionId == sessionId
-
-                        current.copy(
-                            sessions = filteredSessions,
-                            currentSessionId = if (resetChat) null else current.currentSessionId,
-                            messages = if (resetChat) emptyList() else current.messages
-                        )
+                    if (_state.value.activeRemoteSessionId == sessionId) {
+                        handleNewChat()
                     }
                 }
                 .onFailure { error ->

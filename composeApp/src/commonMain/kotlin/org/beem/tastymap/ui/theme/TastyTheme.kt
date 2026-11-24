@@ -5,6 +5,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
@@ -85,7 +86,7 @@ val DarkCustomColors = CustomColors(
     background = Color(0xFF0F172A),
     surface = Color(0xFF1E293B),
     darkHeaderColor = Color(0xFF0F172A),
-    lineAlpha = Color(0xFF334155).copy(alpha = 0.5f),
+    lineAlpha = Color(0xFF64748B).copy(alpha = 0.30f),
     wave = Color(0xFF1E3A8A),
     gray = Color(0xFF334155),
     placeHolderBack = AppColors.placeHolderBack,
@@ -157,9 +158,18 @@ fun TastyTheme(
 ) {
     val colors = if (useDarkTheme) DarkColors else LightColors
     val customColors = if (useDarkTheme) DarkCustomColors else LightCustomColors
+    val appPointers = remember(customColors) {
+        AppPointers(
+            text = createHighContrastTextPointerIcon(
+                fillColor = customColors.textPrimary,
+                strokeColor = customColors.surface
+            )
+        )
+    }
 
     CompositionLocalProvider(
-        LocalCustomColors provides customColors
+        LocalCustomColors provides customColors,
+        LocalAppPointers provides appPointers
     ) {
         MaterialTheme(
             colorScheme = colors,

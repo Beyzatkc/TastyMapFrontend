@@ -25,4 +25,10 @@ sealed interface AiChatIntent {
 
     data object ShowUpgradeSheet : AiChatIntent
     data object DismissUpgradeSheet : AiChatIntent
+
+    data object RetryLastMessage : AiChatIntent
+    data object RetryLoadSessions: AiChatIntent
+    data object RetryLoadMessages : AiChatIntent
+
+    data object LoadOlderMessages : AiChatIntent
 }

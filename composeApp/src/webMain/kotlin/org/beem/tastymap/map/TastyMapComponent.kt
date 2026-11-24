@@ -17,6 +17,8 @@ actual fun TastyMapComponent(
     state: TastyMapState,
     onFabClicked: () -> Unit
 ) {
+    Box(modifier = modifier)
+    /*
     val mapId = "tastymap-actual-container"
     var isMapInitialized by remember { mutableStateOf(false) }
     val coroutineScope = rememberCoroutineScope()
@@ -79,4 +81,6 @@ actual fun TastyMapComponent(
     }
 
     Box(modifier = modifier)
+
+     */
 }

@@ -4,9 +4,11 @@ import org.beem.tastymap.data.model.ai.HydratedPlaceCardDto
 
 data class ChatMessage(
     val id: String = "",
+    val clientMessageId: String? = null,
     val text: String,
     val isFromUser: Boolean,
     val places: List<HydratedPlaceCardDto> = emptyList(),
     val statusMessage: String? = null,
-    val isLoading: Boolean = false
+    val isLoading: Boolean = false,
+    val isError: Boolean = false
 )

@@ -118,7 +118,8 @@ val appModule = module {
     single { PostCommentMemoryCache() }
     single { PostMemoryCache() }
     single { MapStyleCacheManager(get(), get()) }
-    single { CacheManager(get(), get(), get(), get(), get(), get(), get(), get()) }
+    single { AiChatMemoryCache() }
+    single { CacheManager(get(), get(), get(), get(), get(), get(), get(), get(), get()) }
 
     // Use Case'ler
     single { ToggleFollowUseCase(get(), get()) }
@@ -183,7 +184,7 @@ val appModule = module {
     single { DeleteAccountRepository(get(), get(), get()) }
     single { VisitRepository(get(), get(), get()) }
     single { PostRepository(get(), get(), get(), get(), get(), get()) }
-    single { AiChatRepository(get(), get()) }
+    single { AiChatRepository(get(), get(), get()) }
     factory { PostCommentRepository(get(), get(), get(), get()) }
 
     // ViewModeller

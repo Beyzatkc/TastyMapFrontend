@@ -16,13 +16,28 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowUpward
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.KeyEvent
+import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.isShiftPressed
+import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.onPreviewKeyEvent
+import androidx.compose.ui.input.key.type
+import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import org.beem.tastymap.ui.ai.AiChatIntent
 import org.beem.tastymap.ui.ai.model.AiQuotaState
@@ -35,10 +50,25 @@ fun AiFloatingInputBox(
     quotaState: AiQuotaState,
     isWideScreen: Boolean,
     customColors: CustomColors,
+    enabled: Boolean,
     onIntent: (AiChatIntent) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val canSend = quotaState.hasQuota && !isStreaming && inputText.isNotBlank()
+    val isInputEnabled = enabled && !isStreaming
+    val canSend = isInputEnabled && quotaState.hasQuota && inputText.isNotBlank()
+    var textFieldValue by remember {
+        mutableStateOf(TextFieldValue(text = inputText, selection = TextRange(inputText.length)))
+    }
+
+    // ViewModel dışarıdan metni temizlediğinde (örn. mesaj gönderildiğinde) senkronize et
+    LaunchedEffect(inputText) {
+        if (inputText != textFieldValue.text) {
+            textFieldValue = TextFieldValue(
+                text = inputText,
+                selection = TextRange(inputText.length)
+            )
+        }
+    }
 
     Box(
         modifier = modifier
@@ -55,6 +85,7 @@ fun AiFloatingInputBox(
             tonalElevation = 2.dp,
             shadowElevation = 6.dp,
             modifier = Modifier.fillMaxWidth()
+                .alpha(if (enabled) 1f else 0.55f)
         ) {
             AnimatedContent(
                 targetState = quotaState.hasQuota,
@@ -77,8 +108,13 @@ fun AiFloatingInputBox(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         TextField(
-                            value = inputText,
-                            onValueChange = { onIntent(AiChatIntent.InputTextChanged(it)) },
+                            value = textFieldValue,
+                            onValueChange = { newValue ->
+                                textFieldValue = newValue
+                                if (newValue.text != inputText) {
+                                    onIntent(AiChatIntent.InputTextChanged(newValue.text))
+                                }
+                            },
                             keyboardOptions = KeyboardOptions(
                                 capitalization = KeyboardCapitalization.Sentences,
                                 keyboardType = KeyboardType.Text,
@@ -99,7 +135,35 @@ fun AiFloatingInputBox(
                             },
                             modifier = Modifier
                                 .weight(1f)
-                                .heightIn(min = 40.dp, max = 100.dp),
+                                .heightIn(min = 40.dp, max = 100.dp)
+                                .onPreviewKeyEvent{ keyEvent ->
+                                    val isEnterKey = keyEvent.key == Key.Enter || keyEvent.key == Key.NumPadEnter
+                                    when {
+                                        isEnterKey && keyEvent.isShiftPressed -> {
+                                            if (keyEvent.type == KeyEventType.KeyDown && isInputEnabled) {
+                                                val currentText = textFieldValue.text
+                                                val selStart = textFieldValue.selection.min
+                                                val selEnd = textFieldValue.selection.max
+                                                val updatedText = currentText.replaceRange(selStart, selEnd, "\n")
+                                                val newCursor = selStart + 1
+
+                                                textFieldValue = TextFieldValue(
+                                                    text = updatedText,
+                                                    selection = TextRange(newCursor)
+                                                )
+                                                onIntent(AiChatIntent.InputTextChanged(updatedText))
+                                            }
+                                            true
+                                        }
+                                        isEnterKey && !keyEvent.isShiftPressed -> {
+                                            if (keyEvent.type == KeyEventType.KeyDown && canSend) {
+                                                onIntent(AiChatIntent.SendMessage)
+                                            }
+                                            true
+                                        }
+                                        else -> false
+                                    }
+                                },
                             colors = TextFieldDefaults.colors(
                                 focusedContainerColor = Color.Transparent,
                                 unfocusedContainerColor = Color.Transparent,
@@ -111,7 +175,7 @@ fun AiFloatingInputBox(
                                 unfocusedIndicatorColor = Color.Transparent
                             ),
                             maxLines = 3,
-                            enabled = !isStreaming
+                            enabled = isInputEnabled
                         )
 
                         when {
